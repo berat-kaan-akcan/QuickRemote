@@ -1,0 +1,28 @@
+# Secret keys
+serviceAccountKey.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.env
+.env
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Flutter
+quick_remote_watch/build/
+quick_remote_watch/.dart_tool/
+quick_remote_watch/.flutter-plugins
+quick_remote_watch/.flutter-plugins-dependencies
+quick_remote_watch/.packages
+quick_remote_watch/.pub-cache/
+quick_remote_watch/.pub/
+quick_remote_watch/*.iml
+
+# OS
+Thumbs.db
+.DS_Store
