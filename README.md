@@ -60,20 +60,103 @@ QuickRemote/
 
 ### Gereksinimler
 
-- Flutter SDK (^3.10.3)
-- Python 3.x
-- Firebase projesi (Realtime Database aktif)
-- WearOS destekli akıllı saat veya emülatör
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (^3.10.3)
+- [Python 3.x](https://www.python.org/downloads/)
+- Google hesabı (Firebase için)
+- WearOS destekli akıllı saat veya [Android Studio WearOS Emülatörü](https://developer.android.com/training/wearables/get-started/creating#virtual-device)
 
-### 1. Firebase Kurulumu
+---
 
-1. [Firebase Console](https://console.firebase.google.com/)'dan yeni bir proje oluşturun
-2. **Realtime Database** oluşturun
-3. **Authentication** bölümünden **Anonymous sign-in** metodunu aktif edin
-4. Servis hesabı anahtarını indirip proje kök dizinine `serviceAccountKey.json` olarak kaydedin
-5. `google-services.json` dosyasını `quick_remote_watch/android/app/` dizinine koyun
+### 1. Repoyu Klonlayın
 
-### 2. Watch App (Flutter)
+```bash
+git clone https://github.com/berat-kaan-akcan/QuickRemote.git
+cd QuickRemote
+```
+
+---
+
+### 2. Firebase Projesi Oluşturun
+
+1. [Firebase Console](https://console.firebase.google.com/)'a gidin ve **Proje Ekle**'ye tıklayın
+2. Proje adı olarak istediğiniz bir isim verin (örn: `MyQuickRemote`)
+3. Google Analytics'i isteğe bağlı olarak kapatıp projeyi oluşturun
+
+---
+
+### 3. Realtime Database Kurulumu
+
+1. Firebase Console'da **Build → Realtime Database** sekmesine gidin
+2. **Veritabanı Oluştur** butonuna tıklayın
+3. Konum olarak size yakın bir bölge seçin (örn: `europe-west1`)
+4. **Test modunda başla** seçeneğini seçin (sonra güvenlik kurallarını değiştireceğiz)
+5. Veritabanı oluşturulduktan sonra **Kurallar** sekmesine gidin ve şu kuralları yapıştırın:
+
+```json
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}
+```
+
+6. **Yayınla** butonuna tıklayın
+
+> ⚠️ Bu kurallar sayesinde yalnızca giriş yapmış kullanıcılar veritabanına erişebilir.
+
+---
+
+### 4. Firebase Authentication Kurulumu
+
+1. Firebase Console'da **Build → Authentication** sekmesine gidin
+2. **Başlayın** butonuna tıklayın
+3. **Oturum açma yöntemi** sekmesinde **Anonim (Anonymous)** sağlayıcısını bulun
+4. **Etkinleştir** toggle'ını açıp **Kaydet**'e tıklayın
+
+---
+
+### 5. Kimlik Dosyalarını İndirin
+
+#### 📱 Watch App için: `google-services.json`
+
+1. Firebase Console'da **Proje Ayarları** (⚙️ ikonu) → **Genel** sekmesine gidin
+2. **Uygulamalarınız** bölümünde **Android** ikonuna tıklayarak yeni bir Android uygulaması ekleyin
+3. Paket adı olarak `com.example.quick_remote_watch` yazın
+4. **Uygulamayı kaydet** butonuna tıklayın
+5. **google-services.json** dosyasını indirin
+6. İndirdiğiniz dosyayı şu dizine koyun:
+   ```
+   QuickRemote/quick_remote_watch/android/app/google-services.json
+   ```
+7. Kalan adımları atlayıp Firebase Console'daki kurulumu tamamlayın
+
+#### 🖥️ PC Listener için: `serviceAccountKey.json`
+
+1. Firebase Console'da **Proje Ayarları** (⚙️ ikonu) → **Hizmet hesapları** sekmesine gidin
+2. **Yeni özel anahtar oluştur** butonuna tıklayın
+3. İndirilen JSON dosyasını proje kök dizinine `serviceAccountKey.json` olarak yeniden adlandırıp koyun:
+   ```
+   QuickRemote/serviceAccountKey.json
+   ```
+
+---
+
+### 6. `listener.py`'daki Database URL'sini Güncelleyin
+
+`listener.py` dosyasını açın ve 14. satırdaki URL'yi **kendi** Firebase Realtime Database URL'niz ile değiştirin:
+
+```python
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://SIZIN-PROJE-ID.firebasedatabase.app/'
+})
+```
+
+> 💡 Bu URL'yi Firebase Console → Realtime Database sayfasının üst kısmında bulabilirsiniz.
+
+---
+
+### 7. Watch App'i Çalıştırın (Flutter)
 
 ```bash
 cd quick_remote_watch
@@ -81,16 +164,18 @@ flutter pub get
 flutter run
 ```
 
-> ⚠️ WearOS emülatörü veya fiziksel saat bağlı olmalıdır.
+> ⚠️ WearOS emülatörü veya fiziksel saat bağlı ve eşleştirilmiş olmalıdır.
 
-### 3. PC Listener (Python)
+---
+
+### 8. PC Listener'ı Çalıştırın (Python)
 
 ```bash
 pip install firebase-admin pyautogui
 python listener.py
 ```
 
-Listener çalışmaya başladığında terminalde şu mesajı göreceksiniz:
+Başarılı bir şekilde çalıştığında şu mesajı göreceksiniz:
 
 ```
 PC Dinlemeye Başladı... (Çıkmak için pencereyi kapat)
