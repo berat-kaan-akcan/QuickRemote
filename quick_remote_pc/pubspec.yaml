@@ -1,0 +1,26 @@
+name: quick_remote_pc
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  ffi: ^2.2.0
+  flutter:
+    sdk: flutter
+  provider: ^6.1.5+1
+  qr_flutter: ^4.1.0
+  screen_retriever: ^0.2.0
+  system_tray: ^2.0.3
+  win32: ^6.0.0
+  window_manager: ^0.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

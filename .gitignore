@@ -13,15 +13,17 @@ venv/
 .vscode/
 .idea/
 
-# Flutter
-quick_remote_watch/build/
-quick_remote_watch/.dart_tool/
-quick_remote_watch/.flutter-plugins
-quick_remote_watch/.flutter-plugins-dependencies
-quick_remote_watch/.packages
-quick_remote_watch/.pub-cache/
-quick_remote_watch/.pub/
-quick_remote_watch/*.iml
+# Flutter – All sub-projects
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/*.iml
+**/android/build/
+quick_remote_watch/android/app/google-services.json
 
 # OS
 Thumbs.db
