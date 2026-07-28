@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:flutter/material.dart' hide Size;
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
+import 'dart:ui' as ui;
 import 'screens/home_screen.dart';
 import 'services/websocket_server.dart';
 
@@ -9,9 +11,9 @@ void main() async {
 
   await windowManager.ensureInitialized();
 
-  const windowOptions = WindowOptions(
-    size: Size(420, 580),
-    minimumSize: Size(380, 500),
+  final windowOptions = WindowOptions(
+    size: const ui.Size(420, 650),
+    minimumSize: const ui.Size(380, 550),
     center: true,
     title: 'QuickRemote PC',
     titleBarStyle: TitleBarStyle.normal,
@@ -60,6 +62,10 @@ class WebSocketServerProvider extends ChangeNotifier {
   double _laserY = 0;
   String _pin = '';
 
+  /// Stream controller for laser position updates (used by LaserOverlay).
+  final StreamController<ui.Offset> _laserPositionController =
+      StreamController<ui.Offset>.broadcast();
+
   String get localIP => _localIP;
   bool get isRunning => _isRunning;
   int get clientCount => _clientCount;
@@ -69,6 +75,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   double get laserX => _laserX;
   double get laserY => _laserY;
   String get pin => _pin;
+  Stream<ui.Offset> get laserPositionStream => _laserPositionController.stream;
 
   WebSocketServerProvider() {
     server.isRunning.addListener(_onRunningChanged);
@@ -113,6 +120,10 @@ class WebSocketServerProvider extends ChangeNotifier {
   void _onMouseMove(double x, double y) {
     _laserX = x;
     _laserY = y;
+    // Feed laser position stream for the overlay trail
+    if (_laserActive) {
+      _laserPositionController.add(ui.Offset(x, y));
+    }
     notifyListeners();
   }
 
@@ -135,6 +146,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.laserActive.removeListener(_onLaserChanged);
     server.pin.removeListener(_onPinChanged);
     server.onMouseMove = null;
+    _laserPositionController.close();
     server.stop();
     super.dispose();
   }

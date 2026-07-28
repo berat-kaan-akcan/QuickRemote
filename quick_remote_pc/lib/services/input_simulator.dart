@@ -62,6 +62,9 @@ class InputSimulator {
   /// End presentation (Escape)
   static void slideEnd() => pressKey(VK_ESCAPE);
 
+  /// Clear ink drawings on current slide (E key)
+  static void clearInk() => pressKey(0x45); // 'E' key is 0x45
+
   /// Lock workstation
   static void lockPC() => LockWorkStation();
 
@@ -83,15 +86,55 @@ class InputSimulator {
   /// Simulate left mouse click
   static void leftClick() {
     final inputs = calloc<INPUT>(2);
-
-    // Mouse type = INPUT_TYPE(0)
     inputs[0].type = const INPUT_TYPE(0);
     inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-
     inputs[1].type = const INPUT_TYPE(0);
     inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-
     SendInput(2, inputs, sizeOf<INPUT>());
+    calloc.free(inputs);
+  }
+
+  /// Simulate right mouse click
+  static void rightClick() {
+    final inputs = calloc<INPUT>(2);
+    inputs[0].type = const INPUT_TYPE(0);
+    inputs[0].mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+    inputs[1].type = const INPUT_TYPE(0);
+    inputs[1].mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+    SendInput(2, inputs, sizeOf<INPUT>());
+    calloc.free(inputs);
+  }
+
+  /// Left mouse button down
+  static void leftDown() {
+    final inputs = calloc<INPUT>(1);
+    inputs[0].type = const INPUT_TYPE(0);
+    inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+    SendInput(1, inputs, sizeOf<INPUT>());
+    calloc.free(inputs);
+  }
+
+  /// Left mouse button up
+  static void leftUp() {
+    final inputs = calloc<INPUT>(1);
+    inputs[0].type = const INPUT_TYPE(0);
+    inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+    SendInput(1, inputs, sizeOf<INPUT>());
+    calloc.free(inputs);
+  }
+
+  /// Simulate mouse scroll
+  static void scroll(double dy) {
+    // Win32 MOUSEEVENTF_WHEEL takes mouseData as amount of wheel movement.
+    // Positive value means wheel rotated forward (away from user, scrolling up)
+    // Negative value means wheel rotated backward (toward user, scrolling down)
+    // We get 'dy' from mobile which is delta movement of finger.
+    // Negative dy = finger goes up = scroll down = negative mouseData
+    final inputs = calloc<INPUT>(1);
+    inputs[0].type = const INPUT_TYPE(0);
+    inputs[0].mi.dwFlags = MOUSEEVENTF_WHEEL;
+    inputs[0].mi.mouseData = (-dy * 2).round(); // Negate: finger down = scroll down
+    SendInput(1, inputs, sizeOf<INPUT>());
     calloc.free(inputs);
   }
 
@@ -110,14 +153,48 @@ class InputSimulator {
       case 'END':
         slideEnd();
         break;
+      case 'CLEAR_INK':
+        clearInk();
+        break;
       case 'LOCK':
         lockPC();
         break;
       case 'LASER_CURSOR':
         toggleLaserCursor();
         break;
+      case 'MODE_ARROW':
+        pressKeyCombo([VK_CONTROL, 0x41]); // Ctrl + A
+        _isLaserActive = false;
+        break;
+      case 'MODE_LASER':
+        // PowerPoint'in kendi lazer işaretçisini aç (Ctrl + L)
+        pressKeyCombo([VK_CONTROL, 0x4C]); // Ctrl + L
+        _isLaserActive = true;
+        break;
+      case 'MODE_PEN':
+        pressKeyCombo([VK_CONTROL, 0x50]); // Ctrl + P
+        _isLaserActive = false;
+        break;
+      case 'MODE_ERASER':
+        pressKeyCombo([VK_CONTROL, 0x45]); // Ctrl + E
+        _isLaserActive = false;
+        break;
       case 'LEFT_CLICK':
         leftClick();
+        break;
+      case 'RIGHT_CLICK':
+        rightClick();
+        break;
+      case 'LEFT_DOWN':
+        leftDown();
+        break;
+      case 'LEFT_UP':
+        leftUp();
+        break;
+      case 'LASER_OFF':
+        // PowerPoint'te lazeri kapatmak için normal Ok moduna dön (Ctrl + A)
+        pressKeyCombo([VK_CONTROL, 0x41]); // Ctrl + A
+        _isLaserActive = false;
         break;
       default:
         debugPrint('Unknown command: $command');

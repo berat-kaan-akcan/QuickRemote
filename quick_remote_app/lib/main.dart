@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'services/websocket_service.dart';
+import 'providers/settings_provider.dart';
+import 'services/discovery_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +15,12 @@ class QuickRemoteApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => WebSocketService(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => WebSocketService()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => DiscoveryService()),
+      ],
       child: MaterialApp(
         title: 'QuickRemote',
         debugShowCheckedModeBanner: false,
