@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:nsd/nsd.dart' as nsd;
 import 'input_simulator.dart';
 import 'mouse_controller.dart';
 
@@ -21,6 +22,7 @@ class WebSocketServer {
   static const int _maxFailedAttempts = 5;
   static const Duration _blockDuration = Duration(seconds: 60);
   int _port = 8090;
+  nsd.Registration? _nsdRegistration;
 
   /// Callback for laser position updates (for overlay).
   void Function(double x, double y)? onMouseMove;
@@ -40,6 +42,8 @@ class WebSocketServer {
       'docker', 'wsl', 'vmnet', 'vethernet',
     ];
 
+    String? wifiIP;
+    String? ethernetIP;
     String? fallbackIP;
 
     for (final interface in interfaces) {
@@ -49,15 +53,17 @@ class WebSocketServer {
 
       for (final addr in interface.addresses) {
         if (!addr.isLoopback) {
-          if (nameLower.contains('wi-fi') || nameLower.contains('wifi') ||
-              nameLower.contains('wlan') || nameLower.contains('ethernet')) {
-            return addr.address;
+          if (nameLower.contains('wi-fi') || nameLower.contains('wifi') || nameLower.contains('wlan')) {
+            wifiIP ??= addr.address;
+          } else if (nameLower.contains('ethernet')) {
+            ethernetIP ??= addr.address;
           }
           fallbackIP ??= addr.address;
         }
       }
     }
-    return fallbackIP ?? '127.0.0.1';
+    
+    return wifiIP ?? ethernetIP ?? fallbackIP ?? '127.0.0.1';
   }
 
   /// Generate a random 4-digit PIN.
@@ -76,6 +82,18 @@ class WebSocketServer {
       _server = await HttpServer.bind(InternetAddress.anyIPv4, _port);
       isRunning.value = true;
       debugPrint('WebSocket server started on port $_port (PIN: ${pin.value})');
+
+      final hostname = Platform.localHostname;
+      try {
+        _nsdRegistration = await nsd.register(nsd.Service(
+          name: hostname,
+          type: '_quickremote._tcp',
+          port: _port,
+        ));
+        debugPrint('mDNS Service registered as $hostname');
+      } catch (e) {
+        debugPrint('Failed to register mDNS service: $e');
+      }
 
       _server!.listen(
         (HttpRequest request) async {
@@ -121,8 +139,8 @@ class WebSocketServer {
 
   void _handleClient(WebSocket ws, String remoteIP) {
     _clients.add(ws);
-    clientCount.value = _clients.length;
-    debugPrint('Client connected (awaiting auth). Total: ${_clients.length}');
+    // Don't update clientCount yet — only count authenticated clients
+    debugPrint('Client connected (awaiting auth). Total raw: ${_clients.length}');
 
     // Give the client 5 seconds to authenticate, otherwise disconnect
     Future.delayed(const Duration(seconds: 5), () {
@@ -142,8 +160,9 @@ class WebSocketServer {
             final authPin = message['auth'] as String?;
             if (authPin == pin.value) {
               _authenticatedClients.add(ws);
+              clientCount.value = _authenticatedClients.length;
               ws.add(jsonEncode({'type': 'auth', 'status': 'ok'}));
-              debugPrint('Client authenticated');
+              debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
             } else {
               // Track failed attempt for brute-force protection
               _failedAttempts[remoteIP] = (_failedAttempts[remoteIP] ?? 0) + 1;
@@ -160,6 +179,17 @@ class WebSocketServer {
 
           // Handle touch/gyro data (high-frequency, no logging)
           final type = message['type'] as String?;
+
+          // LASER type: use moveDelta so real mouse moves (PowerPoint native laser needs this)
+          if (type == 'LASER') {
+            final dx = (message['dx'] as num).toDouble();
+            final dy = (message['dy'] as num).toDouble();
+            mouseController.moveDelta(dx, dy);
+            onMouseMove?.call(mouseController.currentX, mouseController.currentY);
+            return;
+          }
+
+          // TOUCH type: move real mouse cursor (for pen/eraser drawing)
           if (type == 'TOUCH' || type == 'GYRO') {
             final dx = (message['dx'] as num).toDouble();
             final dy = (message['dy'] as num).toDouble();
@@ -175,7 +205,23 @@ class WebSocketServer {
             InputSimulator.executeCommand(command);
             debugPrint('Executed: $command');
 
+            // Update laser active state based on mode commands
+            if (command == 'MODE_LASER') {
+              laserActive.value = true;
+            } else if (command == 'LASER_OFF') {
+              laserActive.value = false;
+            } else if (command == 'MODE_ARROW' || command == 'MODE_PEN' || command == 'MODE_ERASER') {
+              laserActive.value = false;
+            }
+
             ws.add(jsonEncode({'type': 'ack', 'command': command}));
+            return;
+          }
+
+          if (type == 'SCROLL') {
+            final dy = (message['dy'] as num).toDouble();
+            InputSimulator.scroll(dy);
+            return;
           }
         } catch (e) {
           debugPrint('Error processing message: $e');
@@ -184,14 +230,14 @@ class WebSocketServer {
       onDone: () {
         _clients.remove(ws);
         _authenticatedClients.remove(ws);
-        clientCount.value = _clients.length;
+        clientCount.value = _authenticatedClients.length;
         laserActive.value = false;
-        debugPrint('Client disconnected. Total: ${_clients.length}');
+        debugPrint('Client disconnected. Authenticated count: ${_authenticatedClients.length}');
       },
       onError: (error) {
         _clients.remove(ws);
         _authenticatedClients.remove(ws);
-        clientCount.value = _clients.length;
+        clientCount.value = _authenticatedClients.length;
         debugPrint('Client error: $error');
       },
     );
@@ -209,6 +255,11 @@ class WebSocketServer {
     clientCount.value = 0;
     laserActive.value = false;
     pin.value = '';
+
+    if (_nsdRegistration != null) {
+      await nsd.unregister(_nsdRegistration!);
+      _nsdRegistration = null;
+    }
 
     await _server?.close(force: true);
     _server = null;

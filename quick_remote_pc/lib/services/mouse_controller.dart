@@ -1,3 +1,5 @@
+import 'dart:ffi';
+import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
 /// Controls the mouse cursor position on Windows using Win32 API.
@@ -23,7 +25,9 @@ class MouseController {
   double get currentX => _currentX;
   double get currentY => _currentY;
 
-  /// Move cursor by delta values (from gyroscope).
+  /// Move cursor by delta values (from touchpad/gyroscope).
+  /// Uses SendInput instead of SetCursorPos to generate proper WM_MOUSEMOVE
+  /// input events that applications like PowerPoint (pen/eraser mode) process.
   void moveDelta(double dx, double dy) {
     if (!_initialized) init();
 
@@ -34,7 +38,19 @@ class MouseController {
     _currentX = _currentX.clamp(0, _screenWidth.toDouble() - 1);
     _currentY = _currentY.clamp(0, _screenHeight.toDouble() - 1);
 
-    SetCursorPos(_currentX.toInt(), _currentY.toInt());
+    // Use SendInput with absolute coordinates to generate proper input events.
+    // SetCursorPos only moves the cursor without generating input messages,
+    // which causes PowerPoint pen/eraser to not receive movement data.
+    final normalX = (_currentX / _screenWidth * 65535).toInt();
+    final normalY = (_currentY / _screenHeight * 65535).toInt();
+
+    final inputs = calloc<INPUT>(1);
+    inputs[0].type = const INPUT_TYPE(0); // INPUT_MOUSE
+    inputs[0].mi.dx = normalX;
+    inputs[0].mi.dy = normalY;
+    inputs[0].mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+    SendInput(1, inputs, sizeOf<INPUT>());
+    calloc.free(inputs);
   }
 
   /// Move cursor to absolute position.

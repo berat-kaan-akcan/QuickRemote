@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/websocket_service.dart';
+import '../services/discovery_service.dart';
 import 'scan_screen.dart';
 import 'remote_screen.dart';
+import 'settings_screen.dart';
 
 /// Home screen - connection hub to scan QR and connect to PC.
 class HomeScreen extends StatefulWidget {
@@ -15,6 +20,54 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _connecting = false;
   String? _error;
+  List<Map<String, dynamic>> _recentDevices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentDevices();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DiscoveryService>().startScanning();
+    });
+  }
+
+  @override
+  void dispose() {
+    // stopScanning can be called safely without context if we hold a ref, but it's simpler to just let the service handle it or call it here.
+    // Actually, provider might already be disposed if we pop, but home_screen doesn't pop.
+    // Since home_screen is always alive, it's fine.
+    // context.read<DiscoveryService>().stopScanning(); 
+    super.dispose();
+  }
+
+  Future<void> _removeRecentDevice(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _recentDevices.removeAt(index);
+    });
+    final strList = _recentDevices.map((d) => jsonEncode(d)).toList();
+    await prefs.setStringList('recent_devices', strList);
+  }
+
+  Future<void> _loadRecentDevices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getStringList('recent_devices') ?? [];
+    setState(() {
+      _recentDevices = data.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+    });
+  }
+
+  Future<void> _saveRecentDevice(String host, int port, String pin) async {
+    final prefs = await SharedPreferences.getInstance();
+    final device = {'host': host, 'port': port, 'pin': pin};
+    
+    _recentDevices.removeWhere((d) => d['host'] == host && d['port'] == port);
+    _recentDevices.insert(0, device);
+    if (_recentDevices.length > 5) _recentDevices.removeLast();
+    
+    await prefs.setStringList('recent_devices', _recentDevices.map((e) => jsonEncode(e)).toList());
+    if (mounted) setState(() {});
+  }
 
   Future<void> _scanAndConnect() async {
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
@@ -38,6 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     if (success) {
+      await _saveRecentDevice(host, port, pin);
+      if (!mounted) return;
       setState(() => _connecting = false);
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const RemoteScreen()),
@@ -59,6 +114,20 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
+              // Header Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings_rounded, color: Colors.white54),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
               const Spacer(),
 
               // Logo & Title
@@ -105,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 textAlign: TextAlign.center,
               ),
 
-              const Spacer(),
+              const Spacer(flex: 1),
 
               // Error message
               if (_error != null) ...[
@@ -172,6 +241,100 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               const SizedBox(height: 16),
+
+              // Discovered Devices
+              Consumer<DiscoveryService>(
+                builder: (context, discovery, child) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Ağdaki Cihazlar',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (discovery.isDiscovering)
+                            const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF6C63FF)),
+                            )
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (discovery.devices.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text('Cihaz aranıyor...', style: TextStyle(color: Colors.white38, fontSize: 13)),
+                        )
+                      else
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: discovery.devices.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final dev = discovery.devices[index];
+                            return ListTile(
+                              onTap: () => _showManualConnect(context, defaultIp: dev.ip, defaultPort: dev.port.toString()),
+                              tileColor: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              leading: const Icon(Icons.computer_rounded, color: Color(0xFF6C63FF)),
+                              title: Text(dev.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                              subtitle: Text('${dev.ip}:${dev.port}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                              trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                },
+              ),
+
+              // Recent Devices
+              if (_recentDevices.isNotEmpty) ...[
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Son Bağlanılanlar',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  flex: 2,
+                  child: ListView.separated(
+                    itemCount: _recentDevices.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final dev = _recentDevices[index];
+                      return ListTile(
+                        onTap: () => _connectManually(dev['host'], dev['port'], pin: dev['pin']),
+                        tileColor: Colors.white.withValues(alpha: 0.05),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        leading: const Icon(Icons.history_rounded, color: Colors.white54),
+                        title: Text(dev['host'], style: const TextStyle(color: Colors.white)),
+                        subtitle: Text('Port: ${dev['port']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.close_rounded, color: Colors.white24, size: 20),
+                          onPressed: () => _removeRecentDevice(index),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -179,9 +342,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showManualConnect(BuildContext context) {
-    final hostController = TextEditingController();
-    final portController = TextEditingController(text: '8090');
+  void _showManualConnect(BuildContext context, {String? defaultIp, String? defaultPort}) {
+    final hostController = TextEditingController(text: defaultIp);
+    final portController = TextEditingController(text: defaultPort ?? '8090');
     final pinController = TextEditingController();
 
     showModalBottomSheet(
@@ -244,8 +407,9 @@ class _HomeScreenState extends State<HomeScreen> {
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
-            TextField(
+              TextField(
               controller: pinController,
+              onChanged: (_) => HapticFeedback.lightImpact(),
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'PIN',
@@ -338,6 +502,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     if (success) {
+      await _saveRecentDevice(host, port, pin);
+      if (!mounted) return;
       setState(() => _connecting = false);
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const RemoteScreen()),
