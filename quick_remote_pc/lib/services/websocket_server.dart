@@ -13,9 +13,7 @@ class WebSocketServer {
   final ValueNotifier<bool> isRunning = ValueNotifier(false);
   final ValueNotifier<int> clientCount = ValueNotifier(0);
   final ValueNotifier<String> lastCommand = ValueNotifier('');
-  final ValueNotifier<bool> laserActive = ValueNotifier(false);
   final ValueNotifier<String> pin = ValueNotifier('');
-  final MouseController mouseController = MouseController();
   final Set<WebSocket> _authenticatedClients = {};
   final Map<String, int> _failedAttempts = {};
   final Map<String, DateTime> _blockedIPs = {};
@@ -23,9 +21,6 @@ class WebSocketServer {
   static const Duration _blockDuration = Duration(seconds: 60);
   int _port = 8090;
   nsd.Registration? _nsdRegistration;
-
-  /// Callback for laser position updates (for overlay).
-  void Function(double x, double y)? onMouseMove;
 
   int get port => _port;
 
@@ -38,8 +33,14 @@ class WebSocketServer {
     );
 
     const virtualKeywords = [
-      'vmware', 'virtualbox', 'vbox', 'hyper-v',
-      'docker', 'wsl', 'vmnet', 'vethernet',
+      'vmware',
+      'virtualbox',
+      'vbox',
+      'hyper-v',
+      'docker',
+      'wsl',
+      'vmnet',
+      'vethernet',
     ];
 
     String? wifiIP;
@@ -53,7 +54,9 @@ class WebSocketServer {
 
       for (final addr in interface.addresses) {
         if (!addr.isLoopback) {
-          if (nameLower.contains('wi-fi') || nameLower.contains('wifi') || nameLower.contains('wlan')) {
+          if (nameLower.contains('wi-fi') ||
+              nameLower.contains('wifi') ||
+              nameLower.contains('wlan')) {
             wifiIP ??= addr.address;
           } else if (nameLower.contains('ethernet')) {
             ethernetIP ??= addr.address;
@@ -62,7 +65,7 @@ class WebSocketServer {
         }
       }
     }
-    
+
     return wifiIP ?? ethernetIP ?? fallbackIP ?? '127.0.0.1';
   }
 
@@ -85,40 +88,35 @@ class WebSocketServer {
 
       final hostname = Platform.localHostname;
       try {
-        _nsdRegistration = await nsd.register(nsd.Service(
-          name: hostname,
-          type: '_quickremote._tcp',
-          port: _port,
-        ));
+        _nsdRegistration = await nsd.register(
+          nsd.Service(name: hostname, type: '_quickremote._tcp', port: _port),
+        );
         debugPrint('mDNS Service registered as $hostname');
       } catch (e) {
         debugPrint('Failed to register mDNS service: $e');
       }
 
-      _server!.listen(
-        (HttpRequest request) async {
-          if (WebSocketTransformer.isUpgradeRequest(request)) {
-            // Check if IP is blocked due to brute-force
-            final remoteIP = request.connectionInfo?.remoteAddress.address ?? '';
-            if (_isIPBlocked(remoteIP)) {
-              debugPrint('Blocked IP tried to connect: $remoteIP');
-              request.response
-                ..statusCode = HttpStatus.forbidden
-                ..write('Too many failed attempts. Try again later.')
-                ..close();
-              return;
-            }
-            final ws = await WebSocketTransformer.upgrade(request);
-            _handleClient(ws, remoteIP);
-          } else {
+      _server!.listen((HttpRequest request) async {
+        if (WebSocketTransformer.isUpgradeRequest(request)) {
+          // Check if IP is blocked due to brute-force
+          final remoteIP = request.connectionInfo?.remoteAddress.address ?? '';
+          if (_isIPBlocked(remoteIP)) {
+            debugPrint('Blocked IP tried to connect: $remoteIP');
             request.response
-              ..statusCode = HttpStatus.ok
-              ..write('QuickRemote PC Server is running')
+              ..statusCode = HttpStatus.forbidden
+              ..write('Too many failed attempts. Try again later.')
               ..close();
+            return;
           }
-        },
-        onError: (error) => debugPrint('Server error: $error'),
-      );
+          final ws = await WebSocketTransformer.upgrade(request);
+          _handleClient(ws, remoteIP);
+        } else {
+          request.response
+            ..statusCode = HttpStatus.ok
+            ..write('QuickRemote PC Server is running')
+            ..close();
+        }
+      }, onError: (error) => debugPrint('Server error: $error'));
     } catch (e) {
       debugPrint('Failed to start server: $e');
       isRunning.value = false;
@@ -140,7 +138,9 @@ class WebSocketServer {
   void _handleClient(WebSocket ws, String remoteIP) {
     _clients.add(ws);
     // Don't update clientCount yet — only count authenticated clients
-    debugPrint('Client connected (awaiting auth). Total raw: ${_clients.length}');
+    debugPrint(
+      'Client connected (awaiting auth). Total raw: ${_clients.length}',
+    );
 
     // Give the client 5 seconds to authenticate, otherwise disconnect
     Future.delayed(const Duration(seconds: 5), () {
@@ -162,16 +162,22 @@ class WebSocketServer {
               _authenticatedClients.add(ws);
               clientCount.value = _authenticatedClients.length;
               ws.add(jsonEncode({'type': 'auth', 'status': 'ok'}));
-              debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
+              debugPrint(
+                'Client authenticated. Authenticated count: ${_authenticatedClients.length}',
+              );
             } else {
               // Track failed attempt for brute-force protection
               _failedAttempts[remoteIP] = (_failedAttempts[remoteIP] ?? 0) + 1;
               if (_failedAttempts[remoteIP]! >= _maxFailedAttempts) {
                 _blockedIPs[remoteIP] = DateTime.now().add(_blockDuration);
-                debugPrint('IP blocked due to too many failed attempts: $remoteIP');
+                debugPrint(
+                  'IP blocked due to too many failed attempts: $remoteIP',
+                );
               }
               ws.add(jsonEncode({'type': 'auth', 'status': 'fail'}));
-              debugPrint('Client auth failed (wrong PIN) from $remoteIP (attempt ${_failedAttempts[remoteIP]})');
+              debugPrint(
+                'Client auth failed (wrong PIN) from $remoteIP (attempt ${_failedAttempts[remoteIP]})',
+              );
               ws.close(4003, 'Invalid PIN');
             }
             return;
@@ -180,21 +186,22 @@ class WebSocketServer {
           // Handle touch/gyro data (high-frequency, no logging)
           final type = message['type'] as String?;
 
-          // LASER type: use moveDelta so real mouse moves (PowerPoint native laser needs this)
-          if (type == 'LASER') {
-            final dx = (message['dx'] as num).toDouble();
-            final dy = (message['dy'] as num).toDouble();
-            mouseController.moveDelta(dx, dy);
-            onMouseMove?.call(mouseController.currentX, mouseController.currentY);
-            return;
-          }
-
-          // TOUCH type: move real mouse cursor (for pen/eraser drawing)
           if (type == 'TOUCH' || type == 'GYRO') {
             final dx = (message['dx'] as num).toDouble();
             final dy = (message['dy'] as num).toDouble();
-            mouseController.moveDelta(dx, dy);
-            onMouseMove?.call(mouseController.currentX, mouseController.currentY);
+            final button = message['button'] as String?;
+
+            if (button == 'left') {
+              InputSimulator.leftDown();
+            } else if (button == 'right') {
+              InputSimulator.rightClick();
+            } else if (button == 'up') {
+              InputSimulator.leftUp();
+            }
+
+            if (dx != 0 || dy != 0) {
+              InputSimulator.pressKeyCombo([VK_CONTROL, 0x50]);
+            }
             return;
           }
 
@@ -204,15 +211,6 @@ class WebSocketServer {
             lastCommand.value = command;
             InputSimulator.executeCommand(command);
             debugPrint('Executed: $command');
-
-            // Update laser active state based on mode commands
-            if (command == 'MODE_LASER') {
-              laserActive.value = true;
-            } else if (command == 'LASER_OFF') {
-              laserActive.value = false;
-            } else if (command == 'MODE_ARROW' || command == 'MODE_PEN' || command == 'MODE_ERASER') {
-              laserActive.value = false;
-            }
 
             ws.add(jsonEncode({'type': 'ack', 'command': command}));
             return;
@@ -231,8 +229,9 @@ class WebSocketServer {
         _clients.remove(ws);
         _authenticatedClients.remove(ws);
         clientCount.value = _authenticatedClients.length;
-        laserActive.value = false;
-        debugPrint('Client disconnected. Authenticated count: ${_authenticatedClients.length}');
+        debugPrint(
+          'Client disconnected. Authenticated count: ${_authenticatedClients.length}',
+        );
       },
       onError: (error) {
         _clients.remove(ws);
@@ -253,7 +252,6 @@ class WebSocketServer {
     _failedAttempts.clear();
     _blockedIPs.clear();
     clientCount.value = 0;
-    laserActive.value = false;
     pin.value = '';
 
     if (_nsdRegistration != null) {

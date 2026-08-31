@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart' hide Size;
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -57,33 +56,20 @@ class WebSocketServerProvider extends ChangeNotifier {
   bool _isRunning = false;
   int _clientCount = 0;
   String _lastCommand = '';
-  bool _laserActive = false;
-  double _laserX = 0;
-  double _laserY = 0;
   String _pin = '';
-
-  /// Stream controller for laser position updates (used by LaserOverlay).
-  final StreamController<ui.Offset> _laserPositionController =
-      StreamController<ui.Offset>.broadcast();
 
   String get localIP => _localIP;
   bool get isRunning => _isRunning;
   int get clientCount => _clientCount;
   String get lastCommand => _lastCommand;
   int get port => server.port;
-  bool get laserActive => _laserActive;
-  double get laserX => _laserX;
-  double get laserY => _laserY;
   String get pin => _pin;
-  Stream<ui.Offset> get laserPositionStream => _laserPositionController.stream;
 
   WebSocketServerProvider() {
     server.isRunning.addListener(_onRunningChanged);
     server.clientCount.addListener(_onClientCountChanged);
     server.lastCommand.addListener(_onLastCommandChanged);
-    server.laserActive.addListener(_onLaserChanged);
     server.pin.addListener(_onPinChanged);
-    server.onMouseMove = _onMouseMove;
     _init();
   }
 
@@ -107,23 +93,8 @@ class WebSocketServerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _onLaserChanged() {
-    _laserActive = server.laserActive.value;
-    notifyListeners();
-  }
-
   void _onPinChanged() {
     _pin = server.pin.value;
-    notifyListeners();
-  }
-
-  void _onMouseMove(double x, double y) {
-    _laserX = x;
-    _laserY = y;
-    // Feed laser position stream for the overlay trail
-    if (_laserActive) {
-      _laserPositionController.add(ui.Offset(x, y));
-    }
     notifyListeners();
   }
 
@@ -143,10 +114,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.isRunning.removeListener(_onRunningChanged);
     server.clientCount.removeListener(_onClientCountChanged);
     server.lastCommand.removeListener(_onLastCommandChanged);
-    server.laserActive.removeListener(_onLaserChanged);
     server.pin.removeListener(_onPinChanged);
-    server.onMouseMove = null;
-    _laserPositionController.close();
     server.stop();
     super.dispose();
   }

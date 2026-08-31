@@ -28,27 +28,25 @@ class GyroscopeService extends ChangeNotifier {
     _isActive = true;
     notifyListeners();
 
-    // Notify PC to show laser overlay
-    _ws.sendCommand('LASER_ON');
+    _subscription =
+        gyroscopeEventStream(
+          samplingPeriod: const Duration(milliseconds: 30),
+        ).listen((GyroscopeEvent event) {
+          // event.y = rotation around Y axis (left/right tilt) → horizontal mouse
+          // event.x = rotation around X axis (forward/back tilt) → vertical mouse
+          // Values are in rad/s, multiply by sensitivity and time interval
+          final dx = event.y * _sensitivity;
+          final dy = event.x * _sensitivity;
 
-    _subscription = gyroscopeEventStream(
-      samplingPeriod: const Duration(milliseconds: 30),
-    ).listen((GyroscopeEvent event) {
-      // event.y = rotation around Y axis (left/right tilt) → horizontal mouse
-      // event.x = rotation around X axis (forward/back tilt) → vertical mouse
-      // Values are in rad/s, multiply by sensitivity and time interval
-      final dx = event.y * _sensitivity;
-      final dy = event.x * _sensitivity;
-
-      // Only send if there's meaningful movement
-      if (dx.abs() > 0.1 || dy.abs() > 0.1) {
-        _ws.sendRaw({
-          'type': 'GYRO',
-          'dx': double.parse(dx.toStringAsFixed(2)),
-          'dy': double.parse(dy.toStringAsFixed(2)),
+          // Only send if there's meaningful movement
+          if (dx.abs() > 0.1 || dy.abs() > 0.1) {
+            _ws.sendRaw({
+              'type': 'GYRO',
+              'dx': double.parse(dx.toStringAsFixed(2)),
+              'dy': double.parse(dy.toStringAsFixed(2)),
+            });
+          }
         });
-      }
-    });
   }
 
   /// Stop sending gyroscope data.
@@ -57,9 +55,6 @@ class GyroscopeService extends ChangeNotifier {
     _subscription = null;
     _isActive = false;
     notifyListeners();
-
-    // Notify PC to hide laser overlay
-    _ws.sendCommand('LASER_OFF');
   }
 
   void toggle() {

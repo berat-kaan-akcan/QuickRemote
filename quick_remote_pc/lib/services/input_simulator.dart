@@ -62,26 +62,11 @@ class InputSimulator {
   /// End presentation (Escape)
   static void slideEnd() => pressKey(VK_ESCAPE);
 
-  /// Clear ink drawings on current slide (E key)
-  static void clearInk() => pressKey(0x45); // 'E' key is 0x45
+  /// Clear ink drawings on current slide (Ctrl+E in PowerPoint)
+  static void clearInk() => pressKeyCombo([VK_CONTROL, 0x45]);
 
   /// Lock workstation
   static void lockPC() => LockWorkStation();
-
-  static bool _isLaserActive = false;
-
-  /// Toggle PowerPoint laser pointer using keyboard shortcuts (Ctrl+L / Ctrl+A)
-  static void toggleLaserCursor() {
-    if (_isLaserActive) {
-      // Turn laser off (Ctrl + A for Arrow in PowerPoint)
-      pressKeyCombo([VK_CONTROL, 0x41]); // 0x41 is 'A'
-      _isLaserActive = false;
-    } else {
-      // Turn laser on (Ctrl + L for Laser in PowerPoint)
-      pressKeyCombo([VK_CONTROL, 0x4C]); // 0x4C is 'L'
-      _isLaserActive = true;
-    }
-  }
 
   /// Simulate left mouse click
   static void leftClick() {
@@ -133,7 +118,8 @@ class InputSimulator {
     final inputs = calloc<INPUT>(1);
     inputs[0].type = const INPUT_TYPE(0);
     inputs[0].mi.dwFlags = MOUSEEVENTF_WHEEL;
-    inputs[0].mi.mouseData = (-dy * 2).round(); // Negate: finger down = scroll down
+    inputs[0].mi.mouseData = (-dy * 2)
+        .round(); // Negate: finger down = scroll down
     SendInput(1, inputs, sizeOf<INPUT>());
     calloc.free(inputs);
   }
@@ -159,25 +145,14 @@ class InputSimulator {
       case 'LOCK':
         lockPC();
         break;
-      case 'LASER_CURSOR':
-        toggleLaserCursor();
-        break;
       case 'MODE_ARROW':
         pressKeyCombo([VK_CONTROL, 0x41]); // Ctrl + A
-        _isLaserActive = false;
-        break;
-      case 'MODE_LASER':
-        // PowerPoint'in kendi lazer işaretçisini aç (Ctrl + L)
-        pressKeyCombo([VK_CONTROL, 0x4C]); // Ctrl + L
-        _isLaserActive = true;
         break;
       case 'MODE_PEN':
         pressKeyCombo([VK_CONTROL, 0x50]); // Ctrl + P
-        _isLaserActive = false;
         break;
       case 'MODE_ERASER':
         pressKeyCombo([VK_CONTROL, 0x45]); // Ctrl + E
-        _isLaserActive = false;
         break;
       case 'LEFT_CLICK':
         leftClick();
@@ -190,11 +165,6 @@ class InputSimulator {
         break;
       case 'LEFT_UP':
         leftUp();
-        break;
-      case 'LASER_OFF':
-        // PowerPoint'te lazeri kapatmak için normal Ok moduna dön (Ctrl + A)
-        pressKeyCombo([VK_CONTROL, 0x41]); // Ctrl + A
-        _isLaserActive = false;
         break;
       default:
         debugPrint('Unknown command: $command');

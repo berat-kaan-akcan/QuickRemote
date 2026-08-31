@@ -40,7 +40,11 @@ class HomeScreen extends StatelessWidget {
                         ),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.devices, color: Colors.white, size: 24),
+                      child: const Icon(
+                        Icons.devices,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -58,7 +62,9 @@ class HomeScreen extends StatelessWidget {
                           Text(
                             'PC Companion',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -96,11 +102,18 @@ class HomeScreen extends StatelessWidget {
                       }
                     },
                     icon: Icon(
-                      provider.isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                      provider.isRunning
+                          ? Icons.stop_rounded
+                          : Icons.play_arrow_rounded,
                     ),
                     label: Text(
-                      provider.isRunning ? 'Sunucuyu Durdur' : 'Sunucuyu Başlat',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      provider.isRunning
+                          ? 'Sunucuyu Durdur'
+                          : 'Sunucuyu Başlat',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     style: FilledButton.styleFrom(
                       backgroundColor: provider.isRunning
@@ -150,7 +163,9 @@ class _StatusChip extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: isRunning ? const Color(0xFF4CAF50) : const Color(0xFFFF5252),
+              color: isRunning
+                  ? const Color(0xFF4CAF50)
+                  : const Color(0xFFFF5252),
               shape: BoxShape.circle,
             ),
           ),
@@ -160,7 +175,9 @@ class _StatusChip extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isRunning ? const Color(0xFF4CAF50) : const Color(0xFFFF5252),
+              color: isRunning
+                  ? const Color(0xFF4CAF50)
+                  : const Color(0xFFFF5252),
             ),
           ),
         ],
@@ -177,7 +194,8 @@ class _RunningView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final qrData = 'quickremote://${provider.localIP}:${provider.port}:${provider.pin}';
+    final qrData =
+        'quickremote://${provider.localIP}:${provider.port}:${provider.pin}';
 
     return Column(
       children: [
@@ -196,7 +214,10 @@ class _RunningView extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 // Reserve space for text + spacing (~60px)
-                final availableForQR = (constraints.maxHeight - 60).clamp(80.0, 300.0);
+                final availableForQR = (constraints.maxHeight - 60).clamp(
+                  80.0,
+                  300.0,
+                );
                 final qrSize = availableForQR.clamp(80.0, 180.0);
                 return SingleChildScrollView(
                   child: Column(
@@ -210,7 +231,9 @@ class _RunningView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+                              color: const Color(
+                                0xFF6C63FF,
+                              ).withValues(alpha: 0.2),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
@@ -255,18 +278,29 @@ class _RunningView extends StatelessWidget {
 
                       // PIN display
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF9800).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFFFF9800,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFFF9800).withValues(alpha: 0.4),
+                            color: const Color(
+                              0xFFFF9800,
+                            ).withValues(alpha: 0.4),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.lock_rounded, color: Color(0xFFFF9800), size: 14),
+                            const Icon(
+                              Icons.lock_rounded,
+                              color: Color(0xFFFF9800),
+                              size: 14,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'PIN: ${provider.pin}',
@@ -290,52 +324,6 @@ class _RunningView extends StatelessWidget {
         ),
 
         const SizedBox(height: 12),
-
-        // Laser indicator
-        if (provider.laserActive)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF1744).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFFF1744).withValues(alpha: 0.4),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFFF1744),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF1744).withValues(alpha: 0.6),
-                        blurRadius: 10,
-                        spreadRadius: 3,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Lazer Aktif',
-                  style: TextStyle(
-                    color: Color(0xFFFF1744),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        if (!provider.laserActive)
-          const SizedBox(height: 4),
 
         // Last Command
         if (provider.lastCommand.isNotEmpty)
@@ -392,6 +380,10 @@ class _RunningView extends StatelessWidget {
         return Icons.stop_rounded;
       case 'LOCK':
         return Icons.lock_rounded;
+      case 'MODE_PEN':
+        return Icons.edit_rounded;
+      case 'MODE_ERASER':
+        return Icons.auto_fix_high_rounded;
       default:
         return Icons.touch_app_rounded;
     }
@@ -409,6 +401,10 @@ class _RunningView extends StatelessWidget {
         return '⏹️ Sunumu Bitir';
       case 'LOCK':
         return '🔒 PC Kilitle';
+      case 'MODE_PEN':
+        return '✏️ PowerPoint Kalem';
+      case 'MODE_ERASER':
+        return '🧽 PowerPoint Silgi';
       default:
         return command;
     }

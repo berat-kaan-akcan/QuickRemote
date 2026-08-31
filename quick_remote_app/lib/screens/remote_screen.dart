@@ -9,7 +9,7 @@ import '../widgets/presentation_timer.dart';
 final GlobalKey _presentationTimerKeyMain = GlobalKey();
 final GlobalKey _presentationTimerKeyTouchpad = GlobalKey();
 
-enum _DrawTool { laser, pen, eraser }
+enum _DrawTool { pen, eraser }
 
 /// Main remote control screen for presentation control.
 /// Has two views: main controls and touchpad mode.
@@ -23,7 +23,7 @@ class RemoteScreen extends StatefulWidget {
 class _RemoteScreenState extends State<RemoteScreen> {
   bool _touchpadMode = false;
   double _sensitivity = 8.0;
-  _DrawTool _drawTool = _DrawTool.laser;
+  _DrawTool _drawTool = _DrawTool.pen;
   late WebSocketService _wsRef;
 
   @override
@@ -85,8 +85,14 @@ class _RemoteScreenState extends State<RemoteScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Bağlantıyı Kes', style: TextStyle(color: Colors.white)),
-        content: const Text('Bağlantıyı kesip çıkmak istediğinize emin misiniz?', style: TextStyle(color: Colors.white70)),
+        title: const Text(
+          'Bağlantıyı Kes',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Bağlantıyı kesip çıkmak istediğinize emin misiniz?',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -94,7 +100,10 @@ class _RemoteScreenState extends State<RemoteScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Çıkış Yap', style: TextStyle(color: Color(0xFFFF5252))),
+            child: const Text(
+              'Çıkış Yap',
+              style: TextStyle(color: Color(0xFFFF5252)),
+            ),
           ),
         ],
       ),
@@ -117,103 +126,103 @@ class _RemoteScreenState extends State<RemoteScreen> {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF0D0D1A),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              _buildHeader(context, ws),
-              const SizedBox(height: 24),
-              PresentationTimer(key: _presentationTimerKeyMain),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                _buildHeader(context, ws),
+                const SizedBox(height: 24),
+                PresentationTimer(key: _presentationTimerKeyMain),
 
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 32),
-                    // Start/End
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.play_arrow_rounded,
-                            label: 'Başlat',
-                            color: const Color(0xFF4CAF50),
-                            onTap: () => _send(ws, 'START'),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 32),
+                      // Start/End
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _ActionButton(
+                              icon: Icons.play_arrow_rounded,
+                              label: 'Başlat',
+                              color: const Color(0xFF4CAF50),
+                              onTap: () => _send(ws, 'START'),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.stop_rounded,
-                            label: 'Bitir',
-                            color: const Color(0xFFFF5252),
-                            onTap: () => _send(ws, 'END'),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _ActionButton(
+                              icon: Icons.stop_rounded,
+                              label: 'Bitir',
+                              color: const Color(0xFFFF5252),
+                              onTap: () => _send(ws, 'END'),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Slide navigation
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _SlideButton(
-                            icon: Icons.arrow_back_rounded,
-                            label: 'Geri',
-                            onTap: () => _send(ws, 'PREV'),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _SlideButton(
-                            icon: Icons.arrow_forward_rounded,
-                            label: 'İleri',
-                            isPrimary: true,
-                            onTap: () => _send(ws, 'NEXT'),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Touchpad button
-                    SizedBox(
-                      width: double.infinity,
-                      child: _ActionButton(
-                        icon: Icons.touch_app_rounded,
-                        label: 'Touchpad',
-                        color: const Color(0xFF6C63FF),
-                        onTap: () {
-                          HapticFeedback.heavyImpact();
-                          setState(() => _touchpadMode = true);
-                        },
+                        ],
                       ),
-                    ),
 
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 32),
 
-                    // Lock
-                    SizedBox(
-                      width: double.infinity,
-                      child: _ActionButton(
-                        icon: Icons.lock_rounded,
-                        label: 'PC Kilitle',
-                        color: const Color(0xFFFF9800),
-                        onTap: () => _send(ws, 'LOCK'),
+                      // Slide navigation
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SlideButton(
+                              icon: Icons.arrow_back_rounded,
+                              label: 'Geri',
+                              onTap: () => _send(ws, 'PREV'),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _SlideButton(
+                              icon: Icons.arrow_forward_rounded,
+                              label: 'İleri',
+                              isPrimary: true,
+                              onTap: () => _send(ws, 'NEXT'),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 32),
+
+                      // Touchpad button
+                      SizedBox(
+                        width: double.infinity,
+                        child: _ActionButton(
+                          icon: Icons.touch_app_rounded,
+                          label: 'Touchpad',
+                          color: const Color(0xFF6C63FF),
+                          onTap: () {
+                            HapticFeedback.heavyImpact();
+                            setState(() => _touchpadMode = true);
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Lock
+                      SizedBox(
+                        width: double.infinity,
+                        child: _ActionButton(
+                          icon: Icons.lock_rounded,
+                          label: 'PC Kilitle',
+                          color: const Color(0xFFFF9800),
+                          onTap: () => _send(ws, 'LOCK'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -260,224 +269,212 @@ class _RemoteScreenState extends State<RemoteScreen> {
                         ),
                       ),
                     ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Touchpad',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Touchpad',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
                   ],
                 ),
 
-              const SizedBox(height: 16),
-              
-              // Sensitivity slider (moved to top)
-              Row(
-                children: [
-                  const Icon(Icons.speed, color: Colors.white30, size: 16),
-                  Expanded(
-                    child: Slider(
-                      value: _sensitivity,
-                      min: 2,
-                      max: 20,
-                      activeColor: const Color(0xFF6C63FF),
-                      inactiveColor: Colors.white10,
-                      onChanged: (v) => setState(() => _sensitivity = v),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 24,
-                    child: Text(
-                      _sensitivity.toInt().toString(),
-                      style: const TextStyle(color: Colors.white38, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
+                const SizedBox(height: 16),
 
-              const SizedBox(height: 8),
-              PresentationTimer(key: _presentationTimerKeyTouchpad),
-              const SizedBox(height: 12),
-
-              // Touchpad area
-              Expanded(
-                child: _Touchpad(
-                  ws: ws,
-                  sensitivity: _sensitivity,
-                  drawTool: _drawTool,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Draw tool selector (for double-tap mode)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+                // Sensitivity slider (moved to top)
+                Row(
                   children: [
-                    const Icon(Icons.touch_app, color: Colors.white24, size: 14),
-                    const SizedBox(width: 4),
-                    const Text(
-                      'Araç:',
-                      style: TextStyle(color: Colors.white30, fontSize: 11),
+                    const Icon(Icons.speed, color: Colors.white30, size: 16),
+                    Expanded(
+                      child: Slider(
+                        value: _sensitivity,
+                        min: 2,
+                        max: 20,
+                        activeColor: const Color(0xFF6C63FF),
+                        inactiveColor: Colors.white10,
+                        onChanged: (v) => setState(() => _sensitivity = v),
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _drawTool = _DrawTool.laser);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _drawTool == _DrawTool.laser
-                              ? const Color(0xFFFF1744).withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _drawTool == _DrawTool.laser
-                                ? const Color(0xFFFF1744).withValues(alpha: 0.5)
-                                : Colors.transparent,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.highlight, size: 14,
-                                color: _drawTool == _DrawTool.laser
-                                    ? const Color(0xFFFF1744)
-                                    : Colors.white38),
-                            const SizedBox(width: 4),
-                            Text('Lazer',
-                                style: TextStyle(
-                                  color: _drawTool == _DrawTool.laser
-                                      ? const Color(0xFFFF1744)
-                                      : Colors.white38,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                )),
-                          ],
+                    SizedBox(
+                      width: 24,
+                      child: Text(
+                        _sensitivity.toInt().toString(),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 12,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _drawTool = _DrawTool.pen);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _drawTool == _DrawTool.pen
-                              ? const Color(0xFF00E676).withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _drawTool == _DrawTool.pen
-                                ? const Color(0xFF00E676).withValues(alpha: 0.5)
-                                : Colors.transparent,
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+                PresentationTimer(key: _presentationTimerKeyTouchpad),
+                const SizedBox(height: 12),
+
+                // Touchpad area
+                Expanded(
+                  child: _Touchpad(
+                    ws: ws,
+                    sensitivity: _sensitivity,
+                    drawTool: _drawTool,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Draw tool selector (for double-tap mode)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.touch_app,
+                        color: Colors.white24,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Araç:',
+                        style: TextStyle(color: Colors.white30, fontSize: 11),
+                      ),
+                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() => _drawTool = _DrawTool.pen);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.edit, size: 14,
+                          decoration: BoxDecoration(
+                            color: _drawTool == _DrawTool.pen
+                                ? const Color(0xFF00E676).withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _drawTool == _DrawTool.pen
+                                  ? const Color(
+                                      0xFF00E676,
+                                    ).withValues(alpha: 0.5)
+                                  : Colors.transparent,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.edit,
+                                size: 14,
                                 color: _drawTool == _DrawTool.pen
                                     ? const Color(0xFF00E676)
-                                    : Colors.white38),
-                            const SizedBox(width: 4),
-                            Text('Kalem',
+                                    : Colors.white38,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Kalem',
                                 style: TextStyle(
                                   color: _drawTool == _DrawTool.pen
                                       ? const Color(0xFF00E676)
                                       : Colors.white38,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                )),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _drawTool = _DrawTool.eraser);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _drawTool == _DrawTool.eraser
-                              ? const Color(0xFFFF9800).withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _drawTool == _DrawTool.eraser
-                                ? const Color(0xFFFF9800).withValues(alpha: 0.5)
-                                : Colors.transparent,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.auto_fix_high, size: 14,
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() => _drawTool = _DrawTool.eraser);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _drawTool == _DrawTool.eraser
+                                ? const Color(0xFFFF9800).withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _drawTool == _DrawTool.eraser
+                                  ? const Color(
+                                      0xFFFF9800,
+                                    ).withValues(alpha: 0.5)
+                                  : Colors.transparent,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_fix_high,
+                                size: 14,
                                 color: _drawTool == _DrawTool.eraser
                                     ? const Color(0xFFFF9800)
-                                    : Colors.white38),
-                            const SizedBox(width: 4),
-                            Text('Silgi',
+                                    : Colors.white38,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Silgi',
                                 style: TextStyle(
                                   color: _drawTool == _DrawTool.eraser
                                       ? const Color(0xFFFF9800)
                                       : Colors.white38,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                )),
-                          ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Slide buttons at bottom
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SlideButton(
+                        icon: Icons.arrow_back_rounded,
+                        label: 'Geri',
+                        onTap: () => _send(ws, 'PREV'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _SlideButton(
+                        icon: Icons.arrow_forward_rounded,
+                        label: 'İleri',
+                        isPrimary: true,
+                        onTap: () => _send(ws, 'NEXT'),
                       ),
                     ),
                   ],
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Slide buttons at bottom
-              Row(
-                children: [
-                  Expanded(
-                    child: _SlideButton(
-                      icon: Icons.arrow_back_rounded,
-                      label: 'Geri',
-                      onTap: () => _send(ws, 'PREV'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SlideButton(
-                      icon: Icons.arrow_forward_rounded,
-                      label: 'İleri',
-                      isPrimary: true,
-                      onTap: () => _send(ws, 'NEXT'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildHeader(BuildContext context, WebSocketService ws) {
     return Row(
@@ -575,7 +572,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
   void _send(WebSocketService ws, String command) {
     HapticFeedback.mediumImpact();
-    if ((command == 'NEXT' || command == 'PREV') && context.read<SettingsProvider>().clearInkOnNext) {
+    if ((command == 'NEXT' || command == 'PREV') &&
+        context.read<SettingsProvider>().clearInkOnNext) {
       ws.sendCommand('CLEAR_INK');
     }
     ws.sendCommand(command);
@@ -624,28 +622,25 @@ class _TouchpadState extends State<_Touchpad> {
 
     _tapClickTimer?.cancel();
 
-    bool isDoubleTap = _lastPointerUpTime != null &&
+    bool isDoubleTap =
+        _lastPointerUpTime != null &&
         _lastPointerUpPosition != null &&
         now.difference(_lastPointerUpTime!).inMilliseconds < 350 &&
         (pos - _lastPointerUpPosition!).distance < 60;
 
-    if (isDoubleTap || widget.drawTool == _DrawTool.laser) {
-      // Double tap detected (or laser is selected, which is immediate)
+    if (isDoubleTap) {
+      // Double tap detected, enter the selected PowerPoint drawing tool.
       _isDrawActive = true;
 
       if (widget.drawTool == _DrawTool.pen) {
         widget.ws.sendCommand('MODE_PEN');
       } else if (widget.drawTool == _DrawTool.eraser) {
         widget.ws.sendCommand('MODE_ERASER');
-      } else if (widget.drawTool == _DrawTool.laser) {
-        widget.ws.sendCommand('MODE_LASER');
       }
-      
+
       Future.delayed(const Duration(milliseconds: 80), () {
         if (_isDrawActive && mounted) {
-          if (widget.drawTool != _DrawTool.laser) {
-            widget.ws.sendCommand('LEFT_DOWN');
-          }
+          widget.ws.sendCommand('LEFT_DOWN');
         }
       });
       HapticFeedback.mediumImpact();
@@ -667,11 +662,7 @@ class _TouchpadState extends State<_Touchpad> {
     final dx = event.delta.dx * widget.sensitivity;
     final dy = event.delta.dy * widget.sensitivity;
 
-    widget.ws.sendRaw({
-      'type': (_isDrawActive && widget.drawTool == _DrawTool.laser) ? 'LASER' : 'TOUCH',
-      'dx': dx,
-      'dy': dy,
-    });
+    widget.ws.sendRaw({'type': 'TOUCH', 'dx': dx, 'dy': dy});
   }
 
   void _onPointerUp(PointerUpEvent event) {
@@ -694,11 +685,7 @@ class _TouchpadState extends State<_Touchpad> {
     }
 
     if (_isDrawActive) {
-      if (widget.drawTool == _DrawTool.laser) {
-        widget.ws.sendCommand('LASER_OFF');
-      } else {
-        widget.ws.sendCommand('LEFT_UP');
-      }
+      widget.ws.sendCommand('LEFT_UP');
       widget.ws.sendCommand('MODE_ARROW');
     }
 
@@ -719,9 +706,6 @@ class _TouchpadState extends State<_Touchpad> {
     } else if (_isDrawActive && widget.drawTool == _DrawTool.eraser) {
       borderColor = const Color(0xFFFF9800);
       borderWidth = 2.5;
-    } else if (_isDrawActive && widget.drawTool == _DrawTool.laser) {
-      borderColor = const Color(0xFFFF1744);
-      borderWidth = 2.5;
     } else {
       borderColor = const Color(0xFF6C63FF).withValues(alpha: 0.2);
     }
@@ -735,10 +719,7 @@ class _TouchpadState extends State<_Touchpad> {
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: borderColor,
-            width: borderWidth,
-          ),
+          border: Border.all(color: borderColor, width: borderWidth),
           boxShadow: [
             BoxShadow(
               color: _isDrawActive
@@ -746,7 +727,7 @@ class _TouchpadState extends State<_Touchpad> {
                   : const Color(0xFF6C63FF).withValues(alpha: 0.05),
               blurRadius: 20,
               spreadRadius: 5,
-            )
+            ),
           ],
         ),
         child: Center(
@@ -754,64 +735,60 @@ class _TouchpadState extends State<_Touchpad> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (_isDrawActive && widget.drawTool == _DrawTool.pen) ...[
-                Icon(Icons.edit,
-                    color: const Color(0xFF00E676).withValues(alpha: 0.3),
-                    size: 48),
+                Icon(
+                  Icons.edit,
+                  color: const Color(0xFF00E676).withValues(alpha: 0.3),
+                  size: 48,
+                ),
                 const SizedBox(height: 8),
-                Text('Kalem',
-                    style: TextStyle(
-                      color: const Color(0xFF00E676).withValues(alpha: 0.4),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    )),
-              ] else if (_isDrawActive && widget.drawTool == _DrawTool.eraser) ...[
-                Icon(Icons.auto_fix_high,
-                    color: const Color(0xFFFF9800).withValues(alpha: 0.3),
-                    size: 48),
+                Text(
+                  'Kalem',
+                  style: TextStyle(
+                    color: const Color(0xFF00E676).withValues(alpha: 0.4),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ] else if (_isDrawActive &&
+                  widget.drawTool == _DrawTool.eraser) ...[
+                Icon(
+                  Icons.auto_fix_high,
+                  color: const Color(0xFFFF9800).withValues(alpha: 0.3),
+                  size: 48,
+                ),
                 const SizedBox(height: 8),
-                Text('Silgi',
-                    style: TextStyle(
-                      color: const Color(0xFFFF9800).withValues(alpha: 0.4),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    )),
-              ] else if (_isDrawActive && widget.drawTool == _DrawTool.laser) ...[
-                Icon(Icons.highlight,
-                    color: const Color(0xFFFF1744).withValues(alpha: 0.3),
-                    size: 48),
-                const SizedBox(height: 8),
-                Text('Lazer',
-                    style: TextStyle(
-                      color: const Color(0xFFFF1744).withValues(alpha: 0.4),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    )),
+                Text(
+                  'Silgi',
+                  style: TextStyle(
+                    color: const Color(0xFFFF9800).withValues(alpha: 0.4),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ] else ...[
-                Icon(Icons.touch_app_rounded,
-                    color: Colors.white.withValues(alpha: 0.08), size: 48),
+                Icon(
+                  Icons.touch_app_rounded,
+                  color: Colors.white.withValues(alpha: 0.08),
+                  size: 48,
+                ),
                 const SizedBox(height: 12),
-                if (widget.drawTool == _DrawTool.laser) ...[
-                  Text('Sürükleyin → Lazer',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      )),
-                ] else ...[
-                  Text('Tek dokunuş → Fare',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      )),
-                  const SizedBox(height: 4),
-                  Text('Çift dokunuş → Seçili Araç',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      )),
-                ],
+                Text(
+                  'Tek dokunuş → Fare',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Çift dokunuş → Seçili Araç',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ],
           ),
@@ -960,18 +937,24 @@ class _ClockWidgetState extends State<_ClockWidget> {
   Widget build(BuildContext context) {
     final h = _now.hour.toString().padLeft(2, '0');
     final m = _now.minute.toString().padLeft(2, '0');
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
       decoration: BoxDecoration(
         color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.2)),
+        border: Border.all(
+          color: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.access_time_rounded, color: Color(0xFF6C63FF), size: 20),
+          const Icon(
+            Icons.access_time_rounded,
+            color: Color(0xFF6C63FF),
+            size: 20,
+          ),
           const SizedBox(width: 8),
           Text(
             '$h:$m',
@@ -1025,129 +1008,164 @@ class _WatchLayoutState extends State<_WatchLayout> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldPop = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF1A1A2E),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text('Çıkış', style: TextStyle(color: Colors.white)),
-            content: const Text('Bağlantı kesilsin mi?', style: TextStyle(color: Colors.white70)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('İptal', style: TextStyle(color: Colors.white54)),
+        final shouldPop =
+            await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: const Color(0xFF1A1A2E),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: const Text(
+                  'Çıkış',
+                  style: TextStyle(color: Colors.white),
+                ),
+                content: const Text(
+                  'Bağlantı kesilsin mi?',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text(
+                      'İptal',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text(
+                      'Evet',
+                      style: TextStyle(color: Color(0xFFFF5252)),
+                    ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Evet', style: TextStyle(color: Color(0xFFFF5252))),
-              ),
-            ],
-          ),
-        ) ?? false;
+            ) ??
+            false;
         if (shouldPop) {
           widget.onExit();
         }
       },
       child: Scaffold(
         backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Top bar: Time + Connection
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 6, height: 6,
-                    decoration: BoxDecoration(
-                      color: widget.ws.isConnected
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFFF5252),
-                      shape: BoxShape.circle,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Top bar: Time + Connection
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: widget.ws.isConnected
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFFFF5252),
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$h:$m',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(width: 6),
+                    Text(
+                      '$h:$m',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              
-              // Next button (huge)
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.heavyImpact();
-                  widget.ws.sendCommand('NEXT');
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 40),
+                  ],
                 ),
-              ),
-              
-              const SizedBox(height: 12),
-              
-              // Prev + Lock buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        widget.ws.sendCommand('PREV');
-                      },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(Icons.arrow_back_rounded, color: Colors.white70, size: 24),
+                const Spacer(),
+
+                // Next button (huge)
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.heavyImpact();
+                    widget.ws.sendCommand('NEXT');
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
                       ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 40,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        widget.ws.sendCommand('LOCK');
-                      },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF9800).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFFF9800).withValues(alpha: 0.3)),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Prev + Lock buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          widget.ws.sendCommand('PREV');
+                        },
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white70,
+                            size: 24,
+                          ),
                         ),
-                        child: const Icon(Icons.lock_rounded, color: Color(0xFFFF9800), size: 20),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-            ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          widget.ws.sendCommand('LOCK');
+                        },
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFFF9800,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFFF9800,
+                              ).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.lock_rounded,
+                            color: Color(0xFFFF9800),
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }
