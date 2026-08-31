@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui' as ui;
 import 'package:provider/provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../services/websocket_service.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/presentation_timer.dart';
+import '../utils/throttler.dart';
+import 'settings_screen.dart';
 
-final GlobalKey _presentationTimerKeyMain = GlobalKey();
-final GlobalKey _presentationTimerKeyTouchpad = GlobalKey();
 
-enum _DrawTool { laser, pen, eraser }
+enum _DrawTool { laser, pen, highlighter, eraser }
 
 /// Main remote control screen for presentation control.
 /// Has two views: main controls and touchpad mode.
@@ -24,66 +25,137 @@ class _RemoteScreenState extends State<RemoteScreen> {
   bool _touchpadMode = false;
   double _sensitivity = 8.0;
   _DrawTool _drawTool = _DrawTool.laser;
+  final GlobalKey _presentationTimerKeyMain = GlobalKey();
+  final GlobalKey _presentationTimerKeyTouchpad = GlobalKey();
   late WebSocketService _wsRef;
+  bool _wasConnected = true;
 
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _wsRef = context.read<WebSocketService>();
+      _wasConnected = _wsRef.isConnected;
       _wsRef.addListener(_onConnectionChanged);
     });
   }
 
   void _onConnectionChanged() {
     if (!mounted) return;
-    if (!_wsRef.isConnected) {
+    
+    // Check for command errors first
+    if (_wsRef.lastCommandError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_wsRef.lastCommandError!),
+          backgroundColor: const Color(0xFFFF5252),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      _wsRef.clearCommandError();
+    }
+
+    if (_wasConnected && !_wsRef.isConnected) {
+      _wasConnected = false;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bağlantı koptu! Lütfen tekrar bağlanın.'),
-          backgroundColor: Color(0xFFFF5252),
+          content: Text('Bağlantı koptu, otomatik bağlanılıyor...'),
+          backgroundColor: Color(0xFFFF9800),
           duration: Duration(seconds: 3),
         ),
       );
-      Navigator.of(context).pop(); // Go back to Home Screen
+    } else if (!_wasConnected && _wsRef.isConnected) {
+      _wasConnected = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Yeniden bağlanıldı!'),
+          backgroundColor: Color(0xFF4CAF50),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
   @override
   void dispose() {
     _wsRef.removeListener(_onConnectionChanged);
+    WakelockPlus.disable();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final ws = context.watch<WebSocketService>();
-    final screenSize = MediaQuery.of(context).size;
-    final isCompact = screenSize.width < 300;
+    final int currentIndex = _touchpadMode ? 1 : 0;
 
-    if (isCompact) {
-      return _WatchLayout(
-        ws: ws,
-        onExit: () {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (_touchpadMode) {
+          setState(() {
+            _touchpadMode = false;
+          });
+          if (!ws.isConnected && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Bağlantı koptu, komut gönderilemedi.', style: TextStyle(color: Colors.white)),
+                backgroundColor: Color(0xFFFF9800),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          } else {
+            ws.sendCommand('MODE_ARROW');
+          }
+          return;
+        }
+        final shouldPop = await _showExitDialog();
+        if (shouldPop) {
           ws.removeListener(_onConnectionChanged);
           ws.disconnect();
-          if (mounted) Navigator.of(context).pop();
-        },
-      );
-    }
-
-    if (_touchpadMode) {
-      return _buildTouchpadView(ws);
-    }
-
-    return _buildMainView(ws);
+          if (context.mounted) Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0F172A),
+        resizeToAvoidBottomInset: false,
+        body: ws.connectionState == AppConnectionState.failed
+            ? _buildFailedView(ws)
+            : (_touchpadMode ? _buildTouchpadView(ws) : _buildMainView(ws)),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+          ),
+          child: BottomNavigationBar(
+            backgroundColor: const Color(0xFF0F172A),
+            selectedItemColor: Theme.of(context).colorScheme.secondary,
+            unselectedItemColor: Colors.white38,
+            currentIndex: currentIndex,
+            onTap: (index) {
+              HapticFeedback.lightImpact();
+              setState(() {
+                _touchpadMode = index == 1;
+              });
+              if (!_touchpadMode) {
+                ws.sendCommand('MODE_ARROW');
+              }
+            },
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.gamepad_rounded), label: 'Kontroller'),
+              BottomNavigationBarItem(icon: Icon(Icons.touch_app_rounded), label: 'Touchpad'),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<bool> _showExitDialog() async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: const Color(0xFF1E293B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Bağlantıyı Kes', style: TextStyle(color: Colors.white)),
         content: const Text('Bağlantıyı kesip çıkmak istediğinize emin misiniz?', style: TextStyle(color: Colors.white70)),
@@ -102,22 +174,87 @@ class _RemoteScreenState extends State<RemoteScreen> {
     return result ?? false;
   }
 
+  Widget _buildFailedView(WebSocketService ws) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off_rounded, color: Colors.white54, size: 64),
+          const SizedBox(height: 16),
+          const Text(
+            'Bağlantı Kurulamadı',
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Sunucuya ulaşılamıyor. Lütfen PC uygulamasının açık olduğundan emin olun.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white54, fontSize: 14),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () => ws.manualReconnect(),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Yeniden Bağlan'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () {
+              ws.removeListener(_onConnectionChanged);
+              ws.disconnect();
+              if (context.mounted) Navigator.of(context).pop();
+            },
+            child: const Text('Çıkış Yap', style: TextStyle(color: Colors.white54)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNotesDialog(BuildContext context, String notes) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.notes_rounded, color: Theme.of(context).colorScheme.primary),
+            SizedBox(width: 8),
+            Text('Konuşmacı Notları', style: TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
+            child: SingleChildScrollView(
+              child: Text(
+                notes,
+                style: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.5),
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Kapat', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Ekran 1: Ana Kontroller ───
   Widget _buildMainView(WebSocketService ws) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldPop = await _showExitDialog();
-        if (shouldPop) {
-          ws.removeListener(_onConnectionChanged);
-          ws.disconnect();
-          if (mounted) Navigator.of(context).pop();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFF0D0D1A),
-      body: SafeArea(
+    return SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -125,6 +262,78 @@ class _RemoteScreenState extends State<RemoteScreen> {
               _buildHeader(context, ws),
               const SizedBox(height: 24),
               PresentationTimer(key: _presentationTimerKeyMain),
+
+              if (!ws.isPptRunning) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Sunum Açık Değil, PowerPoint\'i başlatın',
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else if (ws.totalSlides > 0) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1F38),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.slideshow_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Slayt: ${ws.currentSlide} / ${ws.totalSlides}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (ws.slideNotes.isNotEmpty) ...[
+                        const SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () => _showNotesDialog(context, ws.slideNotes),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.notes_rounded, color: Theme.of(context).colorScheme.primary, size: 16),
+                                SizedBox(width: 4),
+                                Text('Notlar', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
 
               Expanded(
                 child: Column(
@@ -139,7 +348,14 @@ class _RemoteScreenState extends State<RemoteScreen> {
                             icon: Icons.play_arrow_rounded,
                             label: 'Başlat',
                             color: const Color(0xFF4CAF50),
-                            onTap: () => _send(ws, 'START'),
+                            onTap: !ws.isConnected ? null : () {
+                              HapticFeedback.heavyImpact();
+                              _send(ws, 'START');
+                            },
+                            onLongPress: !ws.isConnected ? null : () {
+                              HapticFeedback.heavyImpact();
+                              _showStartSlideDialog(context, ws);
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -148,7 +364,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
                             icon: Icons.stop_rounded,
                             label: 'Bitir',
                             color: const Color(0xFFFF5252),
-                            onTap: () => _send(ws, 'END'),
+                            onTap: !ws.isConnected ? null : () => _send(ws, 'END'),
                           ),
                         ),
                       ],
@@ -163,7 +379,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
                           child: _SlideButton(
                             icon: Icons.arrow_back_rounded,
                             label: 'Geri',
-                            onTap: () => _send(ws, 'PREV'),
+                            onTap: !ws.isConnected ? null : () => _send(ws, 'PREV'),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -172,29 +388,13 @@ class _RemoteScreenState extends State<RemoteScreen> {
                             icon: Icons.arrow_forward_rounded,
                             label: 'İleri',
                             isPrimary: true,
-                            onTap: () => _send(ws, 'NEXT'),
+                            onTap: !ws.isConnected ? null : () => _send(ws, 'NEXT'),
                           ),
                         ),
                       ],
                     ),
 
                     const SizedBox(height: 32),
-
-                    // Touchpad button
-                    SizedBox(
-                      width: double.infinity,
-                      child: _ActionButton(
-                        icon: Icons.touch_app_rounded,
-                        label: 'Touchpad',
-                        color: const Color(0xFF6C63FF),
-                        onTap: () {
-                          HapticFeedback.heavyImpact();
-                          setState(() => _touchpadMode = true);
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
 
                     // Lock
                     SizedBox(
@@ -203,7 +403,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
                         icon: Icons.lock_rounded,
                         label: 'PC Kilitle',
                         color: const Color(0xFFFF9800),
-                        onTap: () => _send(ws, 'LOCK'),
+                        onTap: !ws.isConnected ? null : () => _send(ws, 'LOCK'),
                       ),
                     ),
                   ],
@@ -212,26 +412,12 @@ class _RemoteScreenState extends State<RemoteScreen> {
             ],
           ),
         ),
-      ),
-    ),
-    );
+      );
   }
 
   // ─── Ekran 2: Touchpad Modu ───
   Widget _buildTouchpadView(WebSocketService ws) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          setState(() {
-            _touchpadMode = false;
-          });
-          ws.sendCommand('MODE_ARROW');
-        }
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFF0D0D1A),
-        body: SafeArea(
+    return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -239,35 +425,25 @@ class _RemoteScreenState extends State<RemoteScreen> {
                 // Top bar with back button
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() {
-                          _touchpadMode = false;
-                        });
-                        ws.sendCommand('MODE_ARROW');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          color: Colors.white70,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Touchpad',
-                    style: TextStyle(
+
+                  Text(
+                    ws.totalSlides > 0 ? 'Touchpad (Slayt: ${ws.currentSlide}/${ws.totalSlides})' : 'Touchpad',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.settings_rounded, color: Colors.white54, size: 22),
+                    tooltip: 'Ayarlar',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                      );
+                    },
                   ),
                   ],
                 ),
@@ -277,21 +453,21 @@ class _RemoteScreenState extends State<RemoteScreen> {
               // Sensitivity slider (moved to top)
               Row(
                 children: [
-                  const Icon(Icons.speed, color: Colors.white30, size: 16),
+                  const Icon(Icons.speed_rounded, color: Colors.white60, size: 16),
                   Expanded(
                     child: Slider(
                       value: _sensitivity,
                       min: 2,
                       max: 20,
-                      activeColor: const Color(0xFF6C63FF),
+                      activeColor: Theme.of(context).colorScheme.primary,
                       inactiveColor: Colors.white10,
                       onChanged: (v) => setState(() => _sensitivity = v),
                     ),
                   ),
                   SizedBox(
-                    width: 24,
+                    width: 50,
                     child: Text(
-                      _sensitivity.toInt().toString(),
+                      'Hız: ${_sensitivity.toInt()}',
                       style: const TextStyle(color: Colors.white38, fontSize: 12),
                     ),
                   ),
@@ -299,7 +475,64 @@ class _RemoteScreenState extends State<RemoteScreen> {
               ),
 
               const SizedBox(height: 8),
-              PresentationTimer(key: _presentationTimerKeyTouchpad),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: !ws.isConnected ? null : () {
+                        HapticFeedback.heavyImpact();
+                        _send(ws, 'START');
+                      },
+                      onLongPress: !ws.isConnected ? null : () {
+                        HapticFeedback.heavyImpact();
+                        _showStartSlideDialog(context, ws);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.play_arrow_rounded, color: Color(0xFF4CAF50), size: 18),
+                            const SizedBox(width: 4),
+                            const Text('Başlat', style: TextStyle(color: Color(0xFF4CAF50), fontSize: 12, fontWeight: FontWeight.w600)),
+                            const SizedBox(width: 2),
+                            Icon(Icons.arrow_drop_down_rounded, color: const Color(0xFF4CAF50).withValues(alpha: 0.7), size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  PresentationTimer(key: _presentationTimerKeyTouchpad),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: !ws.isConnected ? null : () => _send(ws, 'END'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF5252).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFF5252).withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.stop_rounded, color: Color(0xFFFF5252), size: 18),
+                            SizedBox(width: 4),
+                            Text('Bitir', style: TextStyle(color: Color(0xFFFF5252), fontSize: 12, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
 
               // Touchpad area
@@ -314,138 +547,245 @@ class _RemoteScreenState extends State<RemoteScreen> {
               const SizedBox(height: 16),
 
               // Draw tool selector (for double-tap mode)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    const Icon(Icons.touch_app, color: Colors.white24, size: 14),
-                    const SizedBox(width: 4),
-                    const Text(
-                      'Araç:',
-                      style: TextStyle(color: Colors.white30, fontSize: 11),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _drawTool = _DrawTool.laser);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _drawTool == _DrawTool.laser
-                              ? const Color(0xFFFF1744).withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _drawTool == _DrawTool.laser
-                                ? const Color(0xFFFF1744).withValues(alpha: 0.5)
-                                : Colors.transparent,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.highlight, size: 14,
+              // Draw tool selector (for double-tap mode)
+              Row(
+                children: [
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      label: 'Lazer',
+                      child: Tooltip(
+                        message: 'Lazer aracını seç',
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => _drawTool = _DrawTool.laser);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: _drawTool == _DrawTool.laser
+                                  ? const Color(0xFFFF1744).withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
                                 color: _drawTool == _DrawTool.laser
-                                    ? const Color(0xFFFF1744)
-                                    : Colors.white38),
-                            const SizedBox(width: 4),
-                            Text('Lazer',
-                                style: TextStyle(
-                                  color: _drawTool == _DrawTool.laser
-                                      ? const Color(0xFFFF1744)
-                                      : Colors.white38,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                )),
-                          ],
+                                    ? const Color(0xFFFF1744).withValues(alpha: 0.5)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.highlight_rounded, size: 14,
+                                    color: _drawTool == _DrawTool.laser
+                                        ? const Color(0xFFFF1744)
+                                        : Colors.white38),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text('Lazer',
+                                        style: TextStyle(
+                                          color: _drawTool == _DrawTool.laser
+                                              ? const Color(0xFFFF1744)
+                                              : Colors.white38,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        )),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _drawTool = _DrawTool.pen);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _drawTool == _DrawTool.pen
-                              ? const Color(0xFF00E676).withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _drawTool == _DrawTool.pen
-                                ? const Color(0xFF00E676).withValues(alpha: 0.5)
-                                : Colors.transparent,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.edit, size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      label: 'Kalem',
+                      child: Tooltip(
+                        message: 'Kalem aracını seç',
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            if (_drawTool == _DrawTool.pen) {
+                              _showColorPicker(context, ws, _DrawTool.pen);
+                            } else {
+                              setState(() => _drawTool = _DrawTool.pen);
+                            }
+                          },
+                          onLongPress: () {
+                            HapticFeedback.mediumImpact();
+                            _showColorPicker(context, ws, _DrawTool.pen);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: _drawTool == _DrawTool.pen
+                                  ? const Color(0xFF00E676).withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
                                 color: _drawTool == _DrawTool.pen
-                                    ? const Color(0xFF00E676)
-                                    : Colors.white38),
-                            const SizedBox(width: 4),
-                            Text('Kalem',
-                                style: TextStyle(
-                                  color: _drawTool == _DrawTool.pen
-                                      ? const Color(0xFF00E676)
-                                      : Colors.white38,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                )),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _drawTool = _DrawTool.eraser);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _drawTool == _DrawTool.eraser
-                              ? const Color(0xFFFF9800).withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _drawTool == _DrawTool.eraser
-                                ? const Color(0xFFFF9800).withValues(alpha: 0.5)
-                                : Colors.transparent,
+                                    ? const Color(0xFF00E676).withValues(alpha: 0.5)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.edit_rounded, size: 14,
+                                    color: _drawTool == _DrawTool.pen
+                                        ? const Color(0xFF00E676)
+                                        : Colors.white38),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text('Kalem',
+                                        style: TextStyle(
+                                          color: _drawTool == _DrawTool.pen
+                                              ? const Color(0xFF00E676)
+                                              : Colors.white38,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        )),
+                                  ),
+                                ),
+                                Icon(Icons.arrow_drop_down_rounded, size: 16, 
+                                    color: _drawTool == _DrawTool.pen ? const Color(0xFF00E676) : Colors.white54),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.auto_fix_high, size: 14,
-                                color: _drawTool == _DrawTool.eraser
-                                    ? const Color(0xFFFF9800)
-                                    : Colors.white38),
-                            const SizedBox(width: 4),
-                            Text('Silgi',
-                                style: TextStyle(
-                                  color: _drawTool == _DrawTool.eraser
-                                      ? const Color(0xFFFF9800)
-                                      : Colors.white38,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                )),
-                          ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      label: 'Vurgula',
+                      child: Tooltip(
+                        message: 'Vurgulayıcı aracını seç',
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            if (_drawTool == _DrawTool.highlighter) {
+                              _showColorPicker(context, ws, _DrawTool.highlighter);
+                            } else {
+                              setState(() => _drawTool = _DrawTool.highlighter);
+                            }
+                          },
+                          onLongPress: () {
+                            HapticFeedback.mediumImpact();
+                            _showColorPicker(context, ws, _DrawTool.highlighter);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: _drawTool == _DrawTool.highlighter
+                                  ? const Color(0xFFFFEA00).withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _drawTool == _DrawTool.highlighter
+                                    ? const Color(0xFFFFEA00).withValues(alpha: 0.5)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.border_color_rounded, size: 14,
+                                    color: _drawTool == _DrawTool.highlighter
+                                        ? const Color(0xFFFFEA00)
+                                        : Colors.white38),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text('Vurgula',
+                                        style: TextStyle(
+                                          color: _drawTool == _DrawTool.highlighter
+                                              ? const Color(0xFFFFEA00)
+                                              : Colors.white38,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        )),
+                                  ),
+                                ),
+                                Icon(Icons.arrow_drop_down_rounded, size: 16, 
+                                    color: _drawTool == _DrawTool.highlighter ? const Color(0xFFFFEA00) : Colors.white54),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      label: 'Silgi',
+                      child: Tooltip(
+                        message: 'Silgi aracını seç',
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => _drawTool = _DrawTool.eraser);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: _drawTool == _DrawTool.eraser
+                                  ? const Color(0xFFFF9800).withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _drawTool == _DrawTool.eraser
+                                    ? const Color(0xFFFF9800).withValues(alpha: 0.5)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.auto_fix_high_rounded, size: 14,
+                                    color: _drawTool == _DrawTool.eraser
+                                        ? const Color(0xFFFF9800)
+                                        : Colors.white38),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text('Silgi',
+                                        style: TextStyle(
+                                          color: _drawTool == _DrawTool.eraser
+                                              ? const Color(0xFFFF9800)
+                                              : Colors.white38,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        )),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
@@ -457,7 +797,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
                     child: _SlideButton(
                       icon: Icons.arrow_back_rounded,
                       label: 'Geri',
-                      onTap: () => _send(ws, 'PREV'),
+                      onTap: !ws.isConnected ? null : () => _send(ws, 'PREV'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -466,7 +806,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
                       icon: Icons.arrow_forward_rounded,
                       label: 'İleri',
                       isPrimary: true,
-                      onTap: () => _send(ws, 'NEXT'),
+                      onTap: !ws.isConnected ? null : () => _send(ws, 'NEXT'),
                     ),
                   ),
                 ],
@@ -474,10 +814,249 @@ class _RemoteScreenState extends State<RemoteScreen> {
             ],
           ),
         ),
-      ),
-    ),
-  );
-}
+      );
+  }
+  void _showStartSlideDialog(BuildContext context, WebSocketService ws) {
+    final TextEditingController controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Sunuma Başla', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white),
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: ws.totalSlides > 0 ? 'Slayt (1-${ws.totalSlides})' : 'Slayt Numarası (Örn: 5)',
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+              helperText: ws.totalSlides > 0 ? 'Maksimum ${ws.totalSlides} slayt girebilirsiniz.' : 'Boş bırakırsanız baştan başlar.',
+              helperStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            onSubmitted: (value) {
+              final slideNumber = value.trim();
+              if (slideNumber.isNotEmpty) {
+                final parsed = int.tryParse(slideNumber);
+                final maxSlide = ws.totalSlides > 0 ? ws.totalSlides : 9999;
+                if (parsed == null || parsed <= 0 || parsed > maxSlide) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Geçerli bir slayt numarası girin (1-$maxSlide)')),
+                  );
+                  return;
+                }
+                _send(ws, 'START_AT:$parsed');
+              } else {
+                _send(ws, 'START');
+              }
+              Navigator.pop(context);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal', style: TextStyle(color: Colors.white70)),
+            ),
+            FilledButton(
+              onPressed: () {
+                final slideNumber = controller.text.trim();
+                if (slideNumber.isNotEmpty) {
+                  final parsed = int.tryParse(slideNumber);
+                  final maxSlide = ws.totalSlides > 0 ? ws.totalSlides : 9999;
+                  if (parsed == null || parsed <= 0 || parsed > maxSlide) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Geçerli bir slayt numarası girin (1-$maxSlide)')),
+                    );
+                    return;
+                  }
+                  _send(ws, 'START_AT:$parsed');
+                } else {
+                  _send(ws, 'START');
+                }
+                Navigator.pop(context);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF4CAF50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Başlat', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showColorPicker(BuildContext context, WebSocketService ws, _DrawTool tool) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final colors = [
+          {'name': 'Kırmızı', 'color': const Color(0xFFFF1744), 'cmd': 'SET_PEN_COLOR:255'},
+          {'name': 'Mavi', 'color': const Color(0xFF2979FF), 'cmd': 'SET_PEN_COLOR:16711680'},
+          {'name': 'Yeşil', 'color': const Color(0xFF00E676), 'cmd': 'SET_PEN_COLOR:65280'},
+          {'name': 'Sarı', 'color': const Color(0xFFFFEA00), 'cmd': 'SET_PEN_COLOR:65535'},
+          {'name': 'Beyaz', 'color': const Color(0xFFFFFFFF), 'cmd': 'SET_PEN_COLOR:16777215'},
+          {'name': 'Mor', 'color': const Color(0xFFD500F9), 'cmd': 'SET_PEN_COLOR:8388736'},
+        ];
+
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B).withValues(alpha: 0.75),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag Handle
+                  Container(
+                    width: 48,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        tool == _DrawTool.pen ? Icons.edit : Icons.border_color_rounded,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${tool == _DrawTool.pen ? 'Kalem' : 'Vurgulayıcı'} Rengi',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Color Grid
+                  Wrap(
+                    spacing: 24,
+                    runSpacing: 24,
+                    alignment: WrapAlignment.center,
+                    children: colors.map((c) {
+                      final color = c['color'] as Color;
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          _send(ws, c['cmd'] as String);
+                          Navigator.pop(context);
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  width: 2.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.4),
+                                    blurRadius: 15,
+                                    spreadRadius: 2,
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              c['name'] as String,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Cancel Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: TextButton(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.08),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'İptal',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   Widget _buildHeader(BuildContext context, WebSocketService ws) {
     return Row(
@@ -485,12 +1064,12 @@ class _RemoteScreenState extends State<RemoteScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
+            gradient: LinearGradient(
+              colors: [Theme.of(context).colorScheme.primary, Color(0xFF00BCD4)],
             ),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(Icons.touch_app, color: Colors.white, size: 20),
+          child: const Icon(Icons.touch_app_rounded, color: Colors.white, size: 20),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -517,6 +1096,14 @@ class _RemoteScreenState extends State<RemoteScreen> {
             ],
           ),
         ),
+        if (!ws.isConnected && ws.connectionState != AppConnectionState.failed)
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white70, size: 22),
+            onPressed: () {
+              ws.manualReconnect();
+            },
+            tooltip: 'Yeniden Bağlan',
+          ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
@@ -533,19 +1120,30 @@ class _RemoteScreenState extends State<RemoteScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: ws.isConnected
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5252),
-                  shape: BoxShape.circle,
+              if (ws.connectionState == AppConnectionState.reconnecting || ws.connectionState == AppConnectionState.connecting)
+                Container(
+                  width: 10,
+                  height: 10,
+                  margin: const EdgeInsets.only(right: 5),
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF5252)),
+                  ),
+                )
+              else
+                Container(
+                  width: 7,
+                  height: 7,
+                  margin: const EdgeInsets.only(right: 5),
+                  decoration: BoxDecoration(
+                    color: ws.isConnected
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFFF5252),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
               Text(
-                ws.isConnected ? 'Bağlı' : 'Kopuk',
+                ws.isConnected ? 'Bağlı' : (ws.connectionState == AppConnectionState.reconnecting || ws.connectionState == AppConnectionState.connecting ? 'Bağlanıyor...' : 'Kopuk'),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -559,13 +1157,24 @@ class _RemoteScreenState extends State<RemoteScreen> {
         ),
         const SizedBox(width: 8),
         IconButton(
-          icon: const Icon(Icons.close, color: Colors.white54, size: 22),
+          icon: const Icon(Icons.settings_rounded, color: Colors.white54, size: 22),
+          tooltip: 'Ayarlar',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 22),
+          tooltip: 'Kapat',
           onPressed: () async {
             final shouldPop = await _showExitDialog();
             if (shouldPop) {
               ws.removeListener(_onConnectionChanged);
               ws.disconnect();
-              if (mounted) Navigator.of(context).pop();
+              if (context.mounted) Navigator.of(context).pop();
             }
           },
         ),
@@ -575,9 +1184,6 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
   void _send(WebSocketService ws, String command) {
     HapticFeedback.mediumImpact();
-    if ((command == 'NEXT' || command == 'PREV') && context.read<SettingsProvider>().clearInkOnNext) {
-      ws.sendCommand('CLEAR_INK');
-    }
     ws.sendCommand(command);
   }
 }
@@ -605,16 +1211,16 @@ class _TouchpadState extends State<_Touchpad> {
 
   // Active mode tracking
   bool _isDrawActive = false;
+  _DrawTool _activeTool = _DrawTool.laser;
 
-  // Tap vs drag detection
-  DateTime? _pointerStartTime;
-  double _totalDragDistance = 0;
-
-  Timer? _tapClickTimer;
+  // Throttling
+  final _throttler = EventThrottler(delay: const Duration(milliseconds: 16));
+  double _pendingDx = 0;
+  double _pendingDy = 0;
 
   @override
   void dispose() {
-    _tapClickTimer?.cancel();
+    _throttler.cancel();
     super.dispose();
   }
 
@@ -622,55 +1228,54 @@ class _TouchpadState extends State<_Touchpad> {
     final now = DateTime.now();
     final pos = event.localPosition;
 
-    _tapClickTimer?.cancel();
-
     bool isDoubleTap = _lastPointerUpTime != null &&
         _lastPointerUpPosition != null &&
         now.difference(_lastPointerUpTime!).inMilliseconds < 350 &&
         (pos - _lastPointerUpPosition!).distance < 60;
 
-    if (isDoubleTap || widget.drawTool == _DrawTool.laser) {
-      // Double tap detected (or laser is selected, which is immediate)
-      _isDrawActive = true;
+    _isDrawActive = true;
+    _activeTool = isDoubleTap ? widget.drawTool : _DrawTool.laser;
 
-      if (widget.drawTool == _DrawTool.pen) {
-        widget.ws.sendCommand('MODE_PEN');
-      } else if (widget.drawTool == _DrawTool.eraser) {
-        widget.ws.sendCommand('MODE_ERASER');
-      } else if (widget.drawTool == _DrawTool.laser) {
-        widget.ws.sendCommand('MODE_LASER');
-      }
-      
-      Future.delayed(const Duration(milliseconds: 80), () {
-        if (_isDrawActive && mounted) {
-          if (widget.drawTool != _DrawTool.laser) {
-            widget.ws.sendCommand('LEFT_DOWN');
-          }
-        }
-      });
-      HapticFeedback.mediumImpact();
-    } else {
-      _isDrawActive = false;
+    if (_activeTool == _DrawTool.pen) {
+      widget.ws.sendCommand('MODE_PEN');
+    } else if (_activeTool == _DrawTool.highlighter) {
+      widget.ws.sendCommand('MODE_HIGHLIGHTER');
+    } else if (_activeTool == _DrawTool.eraser) {
+      widget.ws.sendCommand('MODE_ERASER');
+    } else if (_activeTool == _DrawTool.laser) {
+      widget.ws.sendCommand('MODE_LASER');
     }
-
-    _pointerStartTime = now;
-    _totalDragDistance = 0;
-    _lastPointerUpTime = null;
-    _lastPointerUpPosition = null;
+    
+    Future.delayed(const Duration(milliseconds: 80), () {
+      if (_isDrawActive && mounted) {
+        if (_activeTool != _DrawTool.laser) {
+          widget.ws.sendCommand('LEFT_DOWN');
+        }
+      }
+    });
+    HapticFeedback.mediumImpact();
 
     setState(() {});
   }
 
   void _onPointerMove(PointerMoveEvent event) {
-    _totalDragDistance += event.delta.distance;
+    if (!_isDrawActive) return;
 
-    final dx = event.delta.dx * widget.sensitivity;
-    final dy = event.delta.dy * widget.sensitivity;
+    _pendingDx += event.delta.dx * widget.sensitivity;
+    _pendingDy += event.delta.dy * widget.sensitivity;
 
-    widget.ws.sendRaw({
-      'type': (_isDrawActive && widget.drawTool == _DrawTool.laser) ? 'LASER' : 'TOUCH',
-      'dx': dx,
-      'dy': dy,
+    _throttler.throttle(() {
+      if (!mounted) return;
+      if (_pendingDx == 0 && _pendingDy == 0) return;
+
+      widget.ws.sendTouchOrLaser(
+        _activeTool == _DrawTool.laser ? 'LASER' : 'TOUCH',
+        _pendingDx,
+        _pendingDy,
+      );
+
+      _pendingDx = 0;
+      _pendingDy = 0;
     });
   }
 
@@ -679,22 +1284,8 @@ class _TouchpadState extends State<_Touchpad> {
     _lastPointerUpTime = now;
     _lastPointerUpPosition = event.localPosition;
 
-    final duration = _pointerStartTime != null
-        ? now.difference(_pointerStartTime!).inMilliseconds
-        : 999;
-
-    if (!_isDrawActive && _totalDragDistance < 10 && duration < 300) {
-      _tapClickTimer?.cancel();
-      _tapClickTimer = Timer(const Duration(milliseconds: 350), () {
-        if (mounted) {
-          widget.ws.sendCommand('LEFT_CLICK');
-          HapticFeedback.selectionClick();
-        }
-      });
-    }
-
     if (_isDrawActive) {
-      if (widget.drawTool == _DrawTool.laser) {
+      if (_activeTool == _DrawTool.laser) {
         widget.ws.sendCommand('LASER_OFF');
       } else {
         widget.ws.sendCommand('LEFT_UP');
@@ -703,8 +1294,6 @@ class _TouchpadState extends State<_Touchpad> {
     }
 
     _isDrawActive = false;
-    _totalDragDistance = 0;
-
     setState(() {});
   }
 
@@ -713,17 +1302,20 @@ class _TouchpadState extends State<_Touchpad> {
     Color borderColor;
     double borderWidth = 2;
 
-    if (_isDrawActive && widget.drawTool == _DrawTool.pen) {
+    if (_isDrawActive && _activeTool == _DrawTool.pen) {
       borderColor = const Color(0xFF00E676);
       borderWidth = 2.5;
-    } else if (_isDrawActive && widget.drawTool == _DrawTool.eraser) {
+    } else if (_isDrawActive && _activeTool == _DrawTool.highlighter) {
+      borderColor = const Color(0xFFFFEA00);
+      borderWidth = 2.5;
+    } else if (_isDrawActive && _activeTool == _DrawTool.eraser) {
       borderColor = const Color(0xFFFF9800);
       borderWidth = 2.5;
-    } else if (_isDrawActive && widget.drawTool == _DrawTool.laser) {
+    } else if (_isDrawActive && _activeTool == _DrawTool.laser) {
       borderColor = const Color(0xFFFF1744);
       borderWidth = 2.5;
     } else {
-      borderColor = const Color(0xFF6C63FF).withValues(alpha: 0.2);
+      borderColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.2);
     }
 
     return Listener(
@@ -733,7 +1325,7 @@ class _TouchpadState extends State<_Touchpad> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: const Color(0xFF1E293B),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: borderColor,
@@ -743,7 +1335,7 @@ class _TouchpadState extends State<_Touchpad> {
             BoxShadow(
               color: _isDrawActive
                   ? borderColor.withValues(alpha: 0.15)
-                  : const Color(0xFF6C63FF).withValues(alpha: 0.05),
+                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
               blurRadius: 20,
               spreadRadius: 5,
             )
@@ -753,8 +1345,8 @@ class _TouchpadState extends State<_Touchpad> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_isDrawActive && widget.drawTool == _DrawTool.pen) ...[
-                Icon(Icons.edit,
+              if (_isDrawActive && _activeTool == _DrawTool.pen) ...[
+                Icon(Icons.edit_rounded,
                     color: const Color(0xFF00E676).withValues(alpha: 0.3),
                     size: 48),
                 const SizedBox(height: 8),
@@ -764,8 +1356,19 @@ class _TouchpadState extends State<_Touchpad> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     )),
-              ] else if (_isDrawActive && widget.drawTool == _DrawTool.eraser) ...[
-                Icon(Icons.auto_fix_high,
+              ] else if (_isDrawActive && _activeTool == _DrawTool.highlighter) ...[
+                Icon(Icons.border_color_rounded,
+                    color: const Color(0xFFFFEA00).withValues(alpha: 0.3),
+                    size: 48),
+                const SizedBox(height: 8),
+                Text('Vurgulayıcı',
+                    style: TextStyle(
+                      color: const Color(0xFFFFEA00).withValues(alpha: 0.4),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    )),
+              ] else if (_isDrawActive && _activeTool == _DrawTool.eraser) ...[
+                Icon(Icons.auto_fix_high_rounded,
                     color: const Color(0xFFFF9800).withValues(alpha: 0.3),
                     size: 48),
                 const SizedBox(height: 8),
@@ -775,8 +1378,8 @@ class _TouchpadState extends State<_Touchpad> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     )),
-              ] else if (_isDrawActive && widget.drawTool == _DrawTool.laser) ...[
-                Icon(Icons.highlight,
+              ] else if (_isDrawActive && _activeTool == _DrawTool.laser) ...[
+                Icon(Icons.highlight_rounded,
                     color: const Color(0xFFFF1744).withValues(alpha: 0.3),
                     size: 48),
                 const SizedBox(height: 8),
@@ -790,28 +1393,19 @@ class _TouchpadState extends State<_Touchpad> {
                 Icon(Icons.touch_app_rounded,
                     color: Colors.white.withValues(alpha: 0.08), size: 48),
                 const SizedBox(height: 12),
-                if (widget.drawTool == _DrawTool.laser) ...[
-                  Text('Sürükleyin → Lazer',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      )),
-                ] else ...[
-                  Text('Tek dokunuş → Fare',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      )),
-                  const SizedBox(height: 4),
-                  Text('Çift dokunuş → Seçili Araç',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      )),
-                ],
+                Text('Tek dokunuş → Lazer',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    )),
+                const SizedBox(height: 4),
+                Text('Çift dokunuş → Seçili Araç',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    )),
               ],
             ],
           ),
@@ -826,18 +1420,23 @@ class _SlideButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isPrimary;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _SlideButton({
     required this.icon,
     required this.label,
     this.isPrimary = false,
-    required this.onTap,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Semantics(
+      button: true,
+      label: label,
+      child: Opacity(
+      opacity: onTap == null ? 0.5 : 1.0,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -846,18 +1445,18 @@ class _SlideButton extends StatelessWidget {
           height: 140,
           decoration: BoxDecoration(
             gradient: isPrimary
-                ? const LinearGradient(
+                ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
+                    colors: [Theme.of(context).colorScheme.primary, Color(0xFF00BCD4)],
                   )
                 : null,
-            color: isPrimary ? null : const Color(0xFF1A1A2E),
+            color: isPrimary ? null : const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(20),
             border: isPrimary
                 ? null
                 : Border.all(
-                    color: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                   ),
           ),
           child: Column(
@@ -876,6 +1475,8 @@ class _SlideButton extends StatelessWidget {
             ],
           ),
         ),
+        ),
+      ),
       ),
     );
   }
@@ -886,21 +1487,29 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.color,
-    required this.onTap,
+    this.onTap,
+    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Semantics(
+      button: true,
+      label: label,
+      child: Opacity(
+      opacity: onTap == null ? 0.5 : 1.0,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
           height: 56,
@@ -922,232 +1531,16 @@ class _ActionButton extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              if (onLongPress != null) ...[
+                const SizedBox(width: 2),
+                Icon(Icons.arrow_drop_down_rounded, color: color.withValues(alpha: 0.7), size: 16),
+              ],
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ─── Clock Widget ───
-class _ClockWidget extends StatefulWidget {
-  const _ClockWidget();
-
-  @override
-  State<_ClockWidget> createState() => _ClockWidgetState();
-}
-
-class _ClockWidgetState extends State<_ClockWidget> {
-  late Timer _timer;
-  DateTime _now = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _now = DateTime.now());
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final h = _now.hour.toString().padLeft(2, '0');
-    final m = _now.minute.toString().padLeft(2, '0');
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.access_time_rounded, color: Color(0xFF6C63FF), size: 20),
-          const SizedBox(width: 8),
-          Text(
-            '$h:$m',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── WearOS Layout ───
-class _WatchLayout extends StatefulWidget {
-  final WebSocketService ws;
-  final VoidCallback onExit;
-  const _WatchLayout({super.key, required this.ws, required this.onExit});
-
-  @override
-  State<_WatchLayout> createState() => _WatchLayoutState();
-}
-
-class _WatchLayoutState extends State<_WatchLayout> {
-  late Timer _timer;
-  DateTime _now = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _now = DateTime.now());
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final h = _now.hour.toString().padLeft(2, '0');
-    final m = _now.minute.toString().padLeft(2, '0');
-
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldPop = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF1A1A2E),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text('Çıkış', style: TextStyle(color: Colors.white)),
-            content: const Text('Bağlantı kesilsin mi?', style: TextStyle(color: Colors.white70)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('İptal', style: TextStyle(color: Colors.white54)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Evet', style: TextStyle(color: Color(0xFFFF5252))),
-              ),
-            ],
-          ),
-        ) ?? false;
-        if (shouldPop) {
-          widget.onExit();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Top bar: Time + Connection
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 6, height: 6,
-                    decoration: BoxDecoration(
-                      color: widget.ws.isConnected
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFFF5252),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$h:$m',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              
-              // Next button (huge)
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.heavyImpact();
-                  widget.ws.sendCommand('NEXT');
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 40),
-                ),
-              ),
-              
-              const SizedBox(height: 12),
-              
-              // Prev + Lock buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        widget.ws.sendCommand('PREV');
-                      },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(Icons.arrow_back_rounded, color: Colors.white70, size: 24),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        widget.ws.sendCommand('LOCK');
-                      },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF9800).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFFF9800).withValues(alpha: 0.3)),
-                        ),
-                        child: const Icon(Icons.lock_rounded, color: Color(0xFFFF9800), size: 20),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-            ],
-          ),
         ),
       ),
-    ),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart' hide Size;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:ui' as ui;
@@ -40,9 +41,10 @@ class QuickRemotePC extends StatelessWidget {
         themeMode: ThemeMode.dark,
         darkTheme: ThemeData(
           brightness: Brightness.dark,
-          colorSchemeSeed: const Color(0xFF6C63FF),
+          scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
+          colorSchemeSeed: const Color(0xFF005B96),
           useMaterial3: true,
-          fontFamily: 'Segoe UI',
+          textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
         ),
         home: const HomeScreen(),
       ),
@@ -61,6 +63,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   double _laserX = 0;
   double _laserY = 0;
   String _pin = '';
+  bool _isPublicNetwork = false;
 
   /// Stream controller for laser position updates (used by LaserOverlay).
   final StreamController<ui.Offset> _laserPositionController =
@@ -75,6 +78,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   double get laserX => _laserX;
   double get laserY => _laserY;
   String get pin => _pin;
+  bool get publicNetwork => _isPublicNetwork;
   Stream<ui.Offset> get laserPositionStream => _laserPositionController.stream;
 
   WebSocketServerProvider() {
@@ -83,6 +87,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.lastCommand.addListener(_onLastCommandChanged);
     server.laserActive.addListener(_onLaserChanged);
     server.pin.addListener(_onPinChanged);
+    server.isPublicNetwork.addListener(_onPublicNetworkChanged);
     server.onMouseMove = _onMouseMove;
     _init();
   }
@@ -117,6 +122,11 @@ class WebSocketServerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _onPublicNetworkChanged() {
+    _isPublicNetwork = server.isPublicNetwork.value;
+    notifyListeners();
+  }
+
   void _onMouseMove(double x, double y) {
     _laserX = x;
     _laserY = y;
@@ -138,6 +148,10 @@ class WebSocketServerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void triggerSlideStateUpdate() {
+    server.triggerSlideStateUpdate();
+  }
+
   @override
   void dispose() {
     server.isRunning.removeListener(_onRunningChanged);
@@ -145,6 +159,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.lastCommand.removeListener(_onLastCommandChanged);
     server.laserActive.removeListener(_onLaserChanged);
     server.pin.removeListener(_onPinChanged);
+    server.isPublicNetwork.removeListener(_onPublicNetworkChanged);
     server.onMouseMove = null;
     _laserPositionController.close();
     server.stop();

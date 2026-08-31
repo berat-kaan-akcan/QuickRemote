@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'services/websocket_service.dart';
@@ -27,8 +28,10 @@ class QuickRemoteApp extends StatelessWidget {
         themeMode: ThemeMode.dark,
         darkTheme: ThemeData(
           brightness: Brightness.dark,
-          colorSchemeSeed: const Color(0xFF6C63FF),
+          scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
+          colorSchemeSeed: const Color(0xFF005B96),
           useMaterial3: true,
+          textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
         ),
         home: const HomeScreen(),
       ),

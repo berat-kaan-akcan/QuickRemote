@@ -17,8 +17,15 @@ dependencies:
   wakelock_plus: ^1.4.0
   web_socket_channel: ^3.0.3
   nsd: any
+  google_fonts: ^8.2.1
+  glassmorphism: ^3.0.0
+  crypto: ^3.0.7
+  quick_remote_shared:
+    path: ../packages/quick_remote_shared
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0

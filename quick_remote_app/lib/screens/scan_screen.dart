@@ -32,17 +32,53 @@ class _ScanScreenState extends State<ScanScreen> {
     debugPrint('QR Scanned: $value');
 
     // Expected format: quickremote://192.168.1.x:8090:1234
-    if (value.startsWith('quickremote://')) {
-      _scanned = true;
-      final address = value.replaceFirst('quickremote://', '');
-      final parts = address.split(':');
-      if (parts.length >= 2) {
-        final host = parts[0];
-        final port = int.tryParse(parts[1]) ?? 8090;
-        final pin = parts.length >= 3 ? parts[2] : '';
-        Navigator.of(context).pop({'host': host, 'port': port, 'pin': pin});
-      }
+    if (!value.startsWith('quickremote://')) {
+      _showQrError('Geçersiz QR kodu. "quickremote://" formatı bekleniyor.');
+      return;
     }
+
+    final address = value.replaceFirst('quickremote://', '');
+    final parts = address.split(':');
+
+    if (parts.length < 2) {
+      _showQrError('QR kodu beklenen formatta değil.\nFormat: quickremote://IP:PORT:PIN');
+      return;
+    }
+
+    final host = parts[0].trim();
+    if (host.isEmpty) {
+      _showQrError('QR kodunda IP adresi eksik.');
+      return;
+    }
+
+    // Flexible host format check (IPv4, IPv6, hostname)
+    final hostRegex = RegExp(r'^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|localhost|([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}|\[[a-fA-F0-9:]+\]|[a-zA-Z0-9-]+)$');
+    if (!hostRegex.hasMatch(host)) {
+      _showQrError('QR kodundaki IP/Host adresi geçersiz: $host');
+      return;
+    }
+
+    final port = int.tryParse(parts[1]);
+    if (port == null || port < 1 || port > 65535) {
+      _showQrError('QR kodunda geçersiz port numarası: ${parts[1]}');
+      return;
+    }
+
+    final pin = parts.length >= 3 ? parts[2] : '';
+
+    _scanned = true;
+    Navigator.of(context).pop({'host': host, 'port': port, 'pin': pin});
+  }
+
+  void _showQrError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFFF5252),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -84,7 +120,7 @@ class _ScanScreenState extends State<ScanScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFF6C63FF),
+                  color: Theme.of(context).colorScheme.primary,
                   width: 3,
                 ),
               ),
