@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
 import '../providers/settings_provider.dart';
 
 class PresentationTimer extends StatefulWidget {
@@ -17,6 +18,7 @@ class _PresentationTimerState extends State<PresentationTimer> {
   int _targetSeconds = 0; // 0 means just count up
   bool _isRunning = false;
   bool _isDurationSelected = false;
+  DateTime? _startTime;
 
   @override
   void dispose() {
@@ -41,20 +43,33 @@ class _PresentationTimerState extends State<PresentationTimer> {
   void _startTimer() {
     HapticFeedback.lightImpact();
     setState(() => _isRunning = true);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _elapsedSeconds++;
-      });
-      if (_targetSeconds > 0) {
-        int remaining = _targetSeconds - _elapsedSeconds;
-        final shouldWarn = context.read<SettingsProvider>().earlyWarningHaptic;
-        if ((remaining == 60 || remaining == 30) && shouldWarn) {
-          // Erken Uyarı: Çift titreşim (Bzz-Bzz)
-          HapticFeedback.mediumImpact();
-          Future.delayed(const Duration(milliseconds: 200), () => HapticFeedback.mediumImpact());
-        } else if (remaining == 0) {
-          // Süre Doldu: Ağır titreşim
-          HapticFeedback.heavyImpact(); 
+    
+    // Set or resume start time
+    _startTime = DateTime.now().subtract(Duration(seconds: _elapsedSeconds));
+    
+    // Run timer more frequently (e.g., 500ms) so it instantly updates when coming from background
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (!mounted || _startTime == null) return;
+      
+      final now = DateTime.now();
+      final newElapsed = now.difference(_startTime!).inSeconds;
+      
+      if (newElapsed != _elapsedSeconds) {
+        setState(() {
+          _elapsedSeconds = newElapsed;
+        });
+        
+        if (_targetSeconds > 0) {
+          int remaining = _targetSeconds - _elapsedSeconds;
+          final shouldWarn = context.read<SettingsProvider>().earlyWarningHaptic;
+          
+          if ((remaining == 60 || remaining == 30) && shouldWarn) {
+            // Erken Uyarı: Çift güçlü titreşim (Bzz-Bzz)
+            Vibration.vibrate(pattern: [0, 300, 100, 300]);
+          } else if (remaining == 0) {
+            // Süre Doldu: 3'lü güçlü titreşim
+            Vibration.vibrate(pattern: [0, 500, 150, 500, 150, 800]); 
+          }
         }
       }
     });
@@ -68,6 +83,7 @@ class _PresentationTimerState extends State<PresentationTimer> {
       _elapsedSeconds = 0;
       _targetSeconds = 0;
       _isDurationSelected = false;
+      _startTime = null;
     });
   }
 
@@ -116,6 +132,7 @@ class _PresentationTimerState extends State<PresentationTimer> {
                       controller: customController,
                       style: const TextStyle(color: Colors.white),
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
                         hintText: 'Özel süre girin (dk)',
                         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
@@ -129,7 +146,13 @@ class _PresentationTimerState extends State<PresentationTimer> {
                       ),
                       onSubmitted: (val) {
                         final m = int.tryParse(val);
-                        if (m != null && m > 0) _setDuration(ctx, m);
+                        if (m != null && m > 0) {
+                          _setDuration(ctx, m);
+                        } else {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(content: Text('Lütfen geçerli bir süre (tam sayı, saniye) girin.')),
+                          );
+                        }
                       },
                     ),
                   ),
@@ -137,10 +160,16 @@ class _PresentationTimerState extends State<PresentationTimer> {
                   FilledButton(
                     onPressed: () {
                       final m = int.tryParse(customController.text);
-                      if (m != null && m > 0) _setDuration(ctx, m);
+                      if (m != null && m > 0) {
+                        _setDuration(ctx, m);
+                      } else {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(content: Text('Lütfen geçerli bir süre (tam sayı, saniye) girin.')),
+                        );
+                      }
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C63FF),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text('Ayarla', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -166,6 +195,7 @@ class _PresentationTimerState extends State<PresentationTimer> {
       _targetSeconds = minutes * 60;
       _elapsedSeconds = 0;
       _isDurationSelected = true;
+      _startTime = null;
     });
   }
 
@@ -190,10 +220,10 @@ class _PresentationTimerState extends State<PresentationTimer> {
     Color textColor = isOvertime ? const Color(0xFFFF5252) : Colors.white;
     Color bgColor = isOvertime
         ? const Color(0xFFFF5252).withValues(alpha: 0.15)
-        : const Color(0xFF6C63FF).withValues(alpha: 0.15);
+        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
     Color borderColor = isOvertime
         ? const Color(0xFFFF5252).withValues(alpha: 0.5)
-        : const Color(0xFF6C63FF).withValues(alpha: 0.3);
+        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3);
 
     return GestureDetector(
       onTap: _toggleTimer,

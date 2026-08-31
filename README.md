@@ -1,8 +1,8 @@
-# ⌚ QuickRemote
+# 📱 QuickRemote
 
-**WearOS akıllı saatinizden ve telefonunuzdan bilgisayarınızı kontrol edin.**
+**Akıllı telefonunuzdan bilgisayarınızı kontrol edin.**
 
-QuickRemote, WearOS tabanlı bir akıllı saat veya akıllı telefondan bilgisayarınıza komut göndermenizi sağlayan bir uzaktan kumanda sistemidir. Cihazlar aynı ağ (Wi-Fi) üzerinde düşük gecikmeli WebSocket ile haberleşir.
+QuickRemote, bir akıllı telefondan bilgisayarınıza komut göndermenizi sağlayan bir uzaktan kumanda sistemidir. Cihazlar aynı ağ (Wi-Fi) üzerinde düşük gecikmeli WebSocket ile haberleşir.
 
 ---
 
@@ -21,13 +21,13 @@ QuickRemote, WearOS tabanlı bir akıllı saat veya akıllı telefondan bilgisay
 
 ```text
 ┌──────────────────┐        Wi-Fi (WebSocket)        ┌──────────────────┐
-│Watch/Phone Client│────────────────────────────────▶│  PC Server App   │
+│   Phone Client   │────────────────────────────────▶│  PC Server App   │
 │   (Flutter App)  │           (Local IP)            │  (Flutter Windows) │
 └──────────────────┘                                 └──────────────────┘
 ```
 
 1. **PC Server App (`quick_remote_pc`)** → Bilgisayarda bir WebSocket sunucusu başlatır. Eşleşme için bir PIN oluşturur.
-2. **Client Apps (`quick_remote_watch`, `quick_remote_app`)** → Aynı ağdaki bilgisayarın IP ve Portuna (PIN koduyla) bağlanır.
+2. **Client App (`quick_remote_app`)** → Aynı ağdaki bilgisayarın IP ve Portuna (PIN koduyla) bağlanır.
 3. İletişim, eski Firebase modelinin aksine yerel ağ üzerinden çok daha hızlı ve güvenli gerçekleşir.
 
 ---
@@ -37,15 +37,14 @@ QuickRemote, WearOS tabanlı bir akıllı saat veya akıllı telefondan bilgisay
 ```text
 QuickRemote/
 ├── quick_remote_app/        # Flutter Mobil Uygulaması (Telefon)
-├── quick_remote_pc/         # Flutter Masaüstü Uygulaması (Windows Sunucusu)
-└── quick_remote_watch/      # Flutter WearOS uygulaması (Akıllı Saat)
+└── quick_remote_pc/         # Flutter Masaüstü Uygulaması (Windows Sunucusu)
 ```
 
 ---
 
 ## 🛠️ Teknolojiler
 
-- **Client:** Flutter, Dart (Android, WearOS, iOS)
+- **Client:** Flutter, Dart (Android, iOS)
 - **Server:** Flutter, Dart, win32 (Windows Masaüstü)
 - **Bağlantı:** WebSocket (Yerel Ağ)
 
@@ -56,7 +55,7 @@ QuickRemote/
 ### Gereksinimler
 
 - [Flutter SDK](https://docs.flutter.dev/get-started/install)
-- Aynı Wi-Fi ağına bağlı cihazlar (PC ve Saat/Telefon)
+- Aynı Wi-Fi ağına bağlı cihazlar (PC ve Telefon)
 
 ---
 
@@ -82,17 +81,12 @@ flutter run -d windows
 
 ---
 
-### 3. Saat veya Mobil Uygulamayı Çalıştırın
+### 3. Mobil Uygulamayı Çalıştırın
 
-Telefonunuzda veya saatinizde istemci uygulamayı çalıştırın:
+Telefonunuzda istemci uygulamayı çalıştırın:
 
 ```bash
-# Telefon için:
 cd quick_remote_app
-flutter run
-
-# Saat için (Emülatör veya gerçek saat):
-cd quick_remote_watch
 flutter run
 ```
 
