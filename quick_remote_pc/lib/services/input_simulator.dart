@@ -1,6 +1,9 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+
+import 'dart:io';
+import 'dart:convert';
 import 'package:win32/win32.dart';
 
 /// Windows input simulator using Win32 SendInput API.
@@ -50,20 +53,87 @@ class InputSimulator {
 
   // --- Command handlers ---
 
-  /// Slide next (Right arrow)
-  static void slideNext() => pressKey(VK_RIGHT);
+  /// Slide next (Page Down)
+  static void slideNext() => pressKey(VK_NEXT);
 
-  /// Slide previous (Left arrow)
-  static void slidePrev() => pressKey(VK_LEFT);
+  /// Slide previous (Page Up)
+  static void slidePrev() => pressKey(VK_PRIOR);
 
   /// Start presentation (F5)
-  static void slideStart() => pressKey(VK_F5);
+  static Future<void> slideStart() async {
+    // Attempt to disable Protected View via COM automation
+    try {
+      await Process.run('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        r'''
+try {
+    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
+    if ($ppt -ne $null -and $ppt.ActiveProtectedViewWindow -ne $null) {
+        $ppt.ActiveProtectedViewWindow.Edit()
+        Start-Sleep -Milliseconds 150
+    }
+} catch {
+    Write-Error $_.Exception.Message
+}
+'''
+      ]).then((result) {
+        if (result.stderr.toString().isNotEmpty) {
+          debugPrint('PowerShell Error in slideStart: ${result.stderr}');
+        }
+      });
+    } catch (e) {
+      debugPrint('Exception in slideStart: $e');
+    }
+
+    // Send F5 to start presentation
+    pressKey(VK_F5);
+  }
+
+  /// Start presentation from a specific slide
+  static Future<void> slideStartAt(int slideNumber) async {
+    await slideStart();
+    
+    // Wait for the presentation to load in full screen
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    // Send the slide number digits
+    final chars = slideNumber.toString().codeUnits;
+    for (final charCode in chars) {
+      pressKey(charCode); // '0'-'9' map perfectly to VK_0 - VK_9
+    }
+    
+    // Press Enter to go to the slide
+    pressKey(VK_RETURN);
+  }
 
   /// End presentation (Escape)
-  static void slideEnd() => pressKey(VK_ESCAPE);
+  /// End presentation (Escape)
+  static Future<void> slideEnd() async {
+    // 1. Send ESC to exit presentation
+    pressKey(VK_ESCAPE);
 
-  /// Clear ink drawings on current slide (E key)
-  static void clearInk() => pressKey(0x45); // 'E' key is 0x45
+    // 2. Wait for the "Keep Ink" or "Save Changes" prompt to appear
+    await Future.delayed(const Duration(milliseconds: 350));
+
+    // 3. Check if a dialog took focus
+    final hwnd = GetForegroundWindow();
+    final classNamePtr = wsalloc(256);
+    GetClassName(hwnd, classNamePtr, 256);
+    final className = classNamePtr.toDartString();
+    free(classNamePtr);
+
+    // 4. If the foreground window is a standard dialog (#32770) or Office dialog (NUIDialog)
+    if (className == '#32770' || className == 'NUIDialog') {
+      // The default focused button is usually "Keep" or "Save".
+      // Pressing TAB moves focus to "Discard" (Çıkar) or "Don't Save".
+      pressKey(VK_TAB);
+      await Future.delayed(const Duration(milliseconds: 50));
+      // Press ENTER to click it.
+      pressKey(VK_RETURN);
+    }
+  }
 
   /// Lock workstation
   static void lockPC() => LockWorkStation();
@@ -138,8 +208,47 @@ class InputSimulator {
     calloc.free(inputs);
   }
 
+  static Future<void> setPenColor(int bgrColor) async {
+    final script = '''
+try {
+    \$ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
+    if (\$ppt -ne \$null -and \$ppt.SlideShowWindows.Count -gt 0) {
+        \$ppt.SlideShowWindows.Item(1).View.PointerColor.RGB = $bgrColor
+    }
+} catch {
+    Write-Error \$_.Exception.Message
+}
+''';
+    try {
+      final result = await Process.run('powershell', ['-NoProfile', '-NonInteractive', '-Command', script]);
+      if (result.stderr.toString().isNotEmpty) {
+        debugPrint('PowerShell Error in setPenColor: \${result.stderr}');
+      }
+    } catch (e) {
+      debugPrint('Exception in setPenColor: $e');
+    }
+  }
+
   /// Execute a command string from the client.
   static void executeCommand(String command) {
+    if (command.startsWith('SET_PEN_COLOR:')) {
+      final bgrStr = command.split(':')[1];
+      final bgr = int.tryParse(bgrStr);
+      if (bgr != null) {
+        setPenColor(bgr);
+      }
+      return;
+    }
+
+    if (command.startsWith('START_AT:')) {
+      final slideStr = command.split(':')[1];
+      final slideNumber = int.tryParse(slideStr);
+      if (slideNumber != null) {
+        slideStartAt(slideNumber);
+      }
+      return;
+    }
+
     switch (command) {
       case 'NEXT':
         slideNext();
@@ -153,9 +262,7 @@ class InputSimulator {
       case 'END':
         slideEnd();
         break;
-      case 'CLEAR_INK':
-        clearInk();
-        break;
+
       case 'LOCK':
         lockPC();
         break;
@@ -172,7 +279,11 @@ class InputSimulator {
         _isLaserActive = true;
         break;
       case 'MODE_PEN':
-        pressKeyCombo([VK_CONTROL, 0x50]); // Ctrl + P
+        pressKeyCombo([VK_CONTROL, 0x50]); // Ctrl + P (Kalem)
+        _isLaserActive = false;
+        break;
+      case 'MODE_HIGHLIGHTER':
+        pressKeyCombo([VK_CONTROL, 0x49]); // Ctrl + I (Vurgulayıcı)
         _isLaserActive = false;
         break;
       case 'MODE_ERASER':
@@ -199,5 +310,48 @@ class InputSimulator {
       default:
         debugPrint('Unknown command: $command');
     }
+  }
+
+  /// Get current slide state (current slide, total slides, notes)
+  static Future<Map<String, dynamic>?> getSlideState() async {
+    const script = r'''
+try {
+    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
+    if ($ppt -ne $null -and $ppt.SlideShowWindows.Count -gt 0) {
+        $view = $ppt.SlideShowWindows.Item(1).View
+        $current = $view.CurrentShowPosition
+        $total = $ppt.ActivePresentation.Slides.Count
+        $slide = $ppt.ActivePresentation.Slides.Item($current)
+        $notes = ""
+        if ($slide.HasNotesPage) {
+            $shapes = $slide.NotesPage.Shapes
+            foreach ($shape in $shapes) {
+                if ($shape.Type -eq 14 -or $shape.HasTextFrame) {
+                    $text = $shape.TextFrame.TextRange.Text
+                    if ($text -ne $null -and $text.Trim() -ne "") {
+                        $notes += $text + "`n"
+                    }
+                }
+            }
+        }
+        $data = @{
+            current = $current
+            total = $total
+            notes = $notes.Trim()
+        }
+        $data | ConvertTo-Json -Compress
+    }
+} catch {}
+''';
+    try {
+      final result = await Process.run('powershell', ['-NoProfile', '-NonInteractive', '-Command', script]);
+      final output = result.stdout.toString().trim();
+      if (output.isNotEmpty && output.startsWith('{')) {
+        return jsonDecode(output) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('Exception in getSlideState: $e');
+    }
+    return null;
   }
 }

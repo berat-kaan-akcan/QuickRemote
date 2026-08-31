@@ -17,6 +17,7 @@ class DiscoveryService extends ChangeNotifier {
   bool get isDiscovering => _isDiscovering;
 
   nsd.Discovery? _discovery;
+  bool _listenerAdded = false;
 
   Future<void> startScanning() async {
     if (_isDiscovering) return;
@@ -27,16 +28,19 @@ class DiscoveryService extends ChangeNotifier {
 
     try {
       _discovery = await nsd.startDiscovery('_quickremote._tcp', ipLookupType: nsd.IpLookupType.v4);
-      _discovery!.addListener(() {
-        _updateDevices();
-      });
-      // Ilk cihazlar için
+      if (!_listenerAdded) {
+        _discovery!.addListener(_updateDevices);
+        _listenerAdded = true;
+      }
+      // İlk cihazlar için
       _updateDevices();
     } catch (e) {
       if (kDebugMode) {
         print("mDNS Discovery error: $e");
       }
       _isDiscovering = false;
+      _discovery = null;
+      _listenerAdded = false;
       notifyListeners();
     }
   }
@@ -61,8 +65,24 @@ class DiscoveryService extends ChangeNotifier {
     if (!_isDiscovering || _discovery == null) return;
     
     _isDiscovering = false;
-    await nsd.stopDiscovery(_discovery!);
+    try {
+      if (_listenerAdded) {
+        _discovery!.removeListener(_updateDevices);
+        _listenerAdded = false;
+      }
+      await nsd.stopDiscovery(_discovery!);
+    } catch (e) {
+      if (kDebugMode) {
+        print("mDNS stop error: $e");
+      }
+    }
     _discovery = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    stopScanning();
+    super.dispose();
   }
 }

@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:nsd/nsd.dart' as nsd;
 import 'input_simulator.dart';
 import 'mouse_controller.dart';
 
-/// WebSocket server that listens for commands from mobile/watch clients.
+/// WebSocket server that listens for commands from mobile clients.
 class WebSocketServer {
   HttpServer? _server;
   final List<WebSocket> _clients = [];
@@ -23,6 +24,8 @@ class WebSocketServer {
   static const Duration _blockDuration = Duration(seconds: 60);
   int _port = 8090;
   nsd.Registration? _nsdRegistration;
+  Timer? _slideStateTimer;
+  Map<String, dynamic>? _lastSlideState;
 
   /// Callback for laser position updates (for overlay).
   void Function(double x, double y)? onMouseMove;
@@ -94,6 +97,8 @@ class WebSocketServer {
       } catch (e) {
         debugPrint('Failed to register mDNS service: $e');
       }
+
+      _startSlideStatePoller();
 
       _server!.listen(
         (HttpRequest request) async {
@@ -190,7 +195,7 @@ class WebSocketServer {
           }
 
           // TOUCH type: move real mouse cursor (for pen/eraser drawing)
-          if (type == 'TOUCH' || type == 'GYRO') {
+          if (type == 'TOUCH') {
             final dx = (message['dx'] as num).toDouble();
             final dy = (message['dy'] as num).toDouble();
             mouseController.moveDelta(dx, dy);
@@ -210,7 +215,7 @@ class WebSocketServer {
               laserActive.value = true;
             } else if (command == 'LASER_OFF') {
               laserActive.value = false;
-            } else if (command == 'MODE_ARROW' || command == 'MODE_PEN' || command == 'MODE_ERASER') {
+            } else if (command == 'MODE_ARROW' || command == 'MODE_PEN' || command == 'MODE_HIGHLIGHTER' || command == 'MODE_ERASER') {
               laserActive.value = false;
             }
 
@@ -245,6 +250,10 @@ class WebSocketServer {
 
   /// Stop the WebSocket server.
   Future<void> stop() async {
+    _slideStateTimer?.cancel();
+    _slideStateTimer = null;
+    _lastSlideState = null;
+
     for (final client in _clients) {
       await client.close();
     }
@@ -272,5 +281,35 @@ class WebSocketServer {
     for (final client in _authenticatedClients) {
       client.add(encoded);
     }
+  }
+
+  void _startSlideStatePoller() {
+    _slideStateTimer?.cancel();
+    _slideStateTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (_authenticatedClients.isEmpty) return; // Don't poll if no one is listening
+
+      final state = await InputSimulator.getSlideState();
+      if (state != null) {
+        // Compare with last state to avoid spamming
+        final current = state['current'];
+        final total = state['total'];
+        final notes = state['notes'];
+
+        if (_lastSlideState == null ||
+            _lastSlideState!['current'] != current ||
+            _lastSlideState!['total'] != total ||
+            _lastSlideState!['notes'] != notes) {
+          
+          _lastSlideState = state;
+          
+          broadcast({
+            'type': 'SLIDE_STATE',
+            'current': current,
+            'total': total,
+            'notes': notes,
+          });
+        }
+      }
+    });
   }
 }

@@ -33,10 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // stopScanning can be called safely without context if we hold a ref, but it's simpler to just let the service handle it or call it here.
-    // Actually, provider might already be disposed if we pop, but home_screen doesn't pop.
-    // Since home_screen is always alive, it's fine.
-    // context.read<DiscoveryService>().stopScanning(); 
+    // Stop mDNS scanning when the home screen is disposed.
+    // We grab the reference before super.dispose to be safe.
+    try {
+      context.read<DiscoveryService>().stopScanning();
+    } catch (_) {
+      // Provider might already be disposed in some edge cases.
+    }
     super.dispose();
   }
 
@@ -53,13 +56,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getStringList('recent_devices') ?? [];
     setState(() {
-      _recentDevices = data.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+      _recentDevices = data.map((e) {
+        final decoded = jsonDecode(e) as Map<String, dynamic>;
+        // Strip PIN from legacy entries for safety
+        decoded.remove('pin');
+        return decoded;
+      }).toList();
     });
   }
 
-  Future<void> _saveRecentDevice(String host, int port, String pin) async {
+  /// Save recent device WITHOUT storing the PIN.
+  Future<void> _saveRecentDevice(String host, int port) async {
     final prefs = await SharedPreferences.getInstance();
-    final device = {'host': host, 'port': port, 'pin': pin};
+    final device = {'host': host, 'port': port};
     
     _recentDevices.removeWhere((d) => d['host'] == host && d['port'] == port);
     _recentDevices.insert(0, device);
@@ -67,6 +76,22 @@ class _HomeScreenState extends State<HomeScreen> {
     
     await prefs.setStringList('recent_devices', _recentDevices.map((e) => jsonEncode(e)).toList());
     if (mounted) setState(() {});
+  }
+
+  /// Map [ConnectionError] to a user-friendly Turkish message.
+  String _errorMessage(ConnectionResult result, String host, int port) {
+    switch (result.error) {
+      case ConnectionError.wrongPin:
+        return 'PIN kodu yanlış.\nPC ekranındaki PIN\'i kontrol edin.';
+      case ConnectionError.timeout:
+        return 'Bağlantı zaman aşımına uğradı.\nAynı ağda olduğunuzdan emin olun.';
+      case ConnectionError.serverNotFound:
+        return 'Sunucu bulunamadı.\n$host:$port adresini ve ağ bağlantınızı kontrol edin.';
+      case ConnectionError.unknown:
+        return result.message ?? 'Bilinmeyen bir hata oluştu.\nTekrar deneyin.';
+      case ConnectionError.none:
+        return '';
+    }
   }
 
   Future<void> _scanAndConnect() async {
@@ -86,12 +111,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     final ws = context.read<WebSocketService>();
-    final success = await ws.connect(host, port, pin: pin);
+    final connResult = await ws.connect(host, port, pin: pin);
 
     if (!mounted) return;
 
-    if (success) {
-      await _saveRecentDevice(host, port, pin);
+    if (connResult.success) {
+      await _saveRecentDevice(host, port);
       if (!mounted) return;
       setState(() => _connecting = false);
       Navigator.of(context).push(
@@ -100,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       setState(() {
         _connecting = false;
-        _error = 'Bağlantı kurulamadı.\n$host:$port adresini kontrol edin.';
+        _error = _errorMessage(connResult, host, port);
       });
     }
   }
@@ -278,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: discovery.devices.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
+                          separatorBuilder: (context, index) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
                             final dev = discovery.devices[index];
                             return ListTile(
@@ -316,15 +341,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   flex: 2,
                   child: ListView.separated(
                     itemCount: _recentDevices.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final dev = _recentDevices[index];
                       return ListTile(
-                        onTap: () => _connectManually(dev['host'], dev['port'], pin: dev['pin']),
+                        // Open manual connect dialog with host/port pre-filled so user enters PIN
+                        onTap: () => _showManualConnect(
+                          context,
+                          defaultIp: dev['host']?.toString(),
+                          defaultPort: dev['port']?.toString(),
+                        ),
                         tileColor: Colors.white.withValues(alpha: 0.05),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         leading: const Icon(Icons.history_rounded, color: Colors.white54),
-                        title: Text(dev['host'], style: const TextStyle(color: Colors.white)),
+                        title: Text(dev['host'] ?? '', style: const TextStyle(color: Colors.white)),
                         subtitle: Text('Port: ${dev['port']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                         trailing: IconButton(
                           icon: const Icon(Icons.close_rounded, color: Colors.white24, size: 20),
@@ -497,12 +527,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     final ws = context.read<WebSocketService>();
-    final success = await ws.connect(host, port, pin: pin);
+    final connResult = await ws.connect(host, port, pin: pin);
 
     if (!mounted) return;
 
-    if (success) {
-      await _saveRecentDevice(host, port, pin);
+    if (connResult.success) {
+      await _saveRecentDevice(host, port);
       if (!mounted) return;
       setState(() => _connecting = false);
       Navigator.of(context).push(
@@ -511,7 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       setState(() {
         _connecting = false;
-        _error = 'Bağlantı kurulamadı.\n$host:$port adresini kontrol edin.';
+        _error = _errorMessage(connResult, host, port);
       });
     }
   }
