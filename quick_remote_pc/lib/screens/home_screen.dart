@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -89,13 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF005B96), Color(0xFF00BCD4)],
-                          ),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
@@ -105,7 +100,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.electric_bolt_rounded, color: Colors.white, size: 28),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset(
+                            'assets/images/logo.png', 
+                            width: 52, 
+                            height: 52,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -295,18 +298,12 @@ class _RunningDashboard extends StatelessWidget {
                                   )
                                 ]
                               ),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Color(0xFF005B96), Color(0xFF00BCD4)],
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.electric_bolt_rounded,
-                                  color: Colors.white,
-                                  size: 20,
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/logo.png', 
+                                  width: 36, 
+                                  height: 36,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
@@ -319,7 +316,17 @@ class _RunningDashboard extends StatelessWidget {
                       'Bağlanmak için QR kodu tarayın',
                       style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 12),
+                    Text(
+                      Platform.localHostname,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
                       '${provider.localIP}:${provider.port}',
                       style: const TextStyle(
@@ -716,7 +723,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               style: TextStyle(color: Colors.white54, fontSize: 13),
             ),
             value: _hideWarning,
-            activeTrackColor: const Color(0xFF00BCD4).withOpacity(0.5),
+            activeTrackColor: const Color(0xFF00BCD4).withValues(alpha: 0.5),
             activeThumbColor: const Color(0xFF00BCD4),
             onChanged: _saveSettings,
             contentPadding: EdgeInsets.zero,

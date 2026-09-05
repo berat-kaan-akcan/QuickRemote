@@ -6,7 +6,14 @@ import 'package:vibration/vibration.dart';
 import '../providers/settings_provider.dart';
 
 class PresentationTimer extends StatefulWidget {
-  const PresentationTimer({super.key});
+  final double fontSize;
+  final double iconSize;
+
+  const PresentationTimer({
+    super.key,
+    this.fontSize = 16.0,
+    this.iconSize = 18.0,
+  });
 
   @override
   State<PresentationTimer> createState() => _PresentationTimerState();
@@ -61,9 +68,10 @@ class _PresentationTimerState extends State<PresentationTimer> {
         
         if (_targetSeconds > 0) {
           int remaining = _targetSeconds - _elapsedSeconds;
-          final shouldWarn = context.read<SettingsProvider>().earlyWarningHaptic;
+          final settings = context.read<SettingsProvider>();
+          final shouldWarn = settings.earlyWarningHaptic;
           
-          if ((remaining == 60 || remaining == 30) && shouldWarn) {
+          if (shouldWarn && settings.warningTimes.contains(remaining)) {
             // Erken Uyarı: Çift güçlü titreşim (Bzz-Bzz)
             Vibration.vibrate(pattern: [0, 300, 100, 300]);
           } else if (remaining == 0) {
@@ -235,10 +243,10 @@ class _PresentationTimerState extends State<PresentationTimer> {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor),
         ),
         child: Row(
@@ -247,14 +255,14 @@ class _PresentationTimerState extends State<PresentationTimer> {
             Icon(
               _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: textColor,
-              size: 18,
+              size: widget.iconSize,
             ),
             const SizedBox(width: 8),
             Text(
               timeStr,
               style: TextStyle(
                 color: textColor,
-                fontSize: 16,
+                fontSize: widget.fontSize,
                 fontWeight: FontWeight.bold,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -264,7 +272,7 @@ class _PresentationTimerState extends State<PresentationTimer> {
               GestureDetector(
                 onTap: _resetTimer,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     color: textColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
@@ -272,7 +280,7 @@ class _PresentationTimerState extends State<PresentationTimer> {
                   child: Icon(
                     Icons.refresh_rounded,
                     color: textColor,
-                    size: 14,
+                    size: widget.iconSize * 0.8,
                   ),
                 ),
               ),

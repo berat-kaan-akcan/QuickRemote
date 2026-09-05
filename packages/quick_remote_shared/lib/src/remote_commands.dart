@@ -25,6 +25,10 @@ abstract class RemoteCommands {
   // Laser lifecycle
   static const laserOff = 'LASER_OFF';
 
+  // Screen controls
+  static const blackScreen = 'BLACK_SCREEN';
+  static const whiteScreen = 'WHITE_SCREEN';
+
   // Legacy alias kept for backwards‑compat (maps to modeLaser on PC)
   static const laserCursor = 'LASER_CURSOR';
 
@@ -36,7 +40,7 @@ abstract class RemoteCommands {
     next, prev, start, end, lock, refreshState,
     modeArrow, modeLaser, modePen, modeHighlighter, modeEraser,
     leftClick, rightClick, leftDown, leftUp,
-    laserOff, laserCursor,
+    laserOff, laserCursor, blackScreen, whiteScreen,
   };
 
   /// Parametreli komutların prefix'leri (ör: SET_PEN_COLOR:123, START_AT:5).
