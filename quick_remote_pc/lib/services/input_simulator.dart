@@ -160,6 +160,12 @@ try {
   /// Lock workstation
   static void lockPC() => LockWorkStation();
 
+  /// Black screen (B key)
+  static void blackScreen() => pressKey(0x42);
+
+  /// White screen (W key)
+  static void whiteScreen() => pressKey(0x57);
+
   static bool _isLaserActive = false;
 
   /// Toggle PowerPoint laser pointer using keyboard shortcuts (Ctrl+L / Ctrl+A)
@@ -270,6 +276,12 @@ try {
         break;
       case 'END':
         slideEnd();
+        break;
+      case 'BLACK_SCREEN':
+        blackScreen();
+        break;
+      case 'WHITE_SCREEN':
+        whiteScreen();
         break;
 
       case 'LOCK':

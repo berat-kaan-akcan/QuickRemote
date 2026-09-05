@@ -59,7 +59,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _saveRecentDevice(String host, int port, String pin) async {
     final prefs = await SharedPreferences.getInstance();
-    final device = {'host': host, 'port': port, 'pin': pin};
+    
+    String name = host;
+    // Try to resolve the PC name from discovered devices
+    if (mounted) {
+      try {
+        final discovery = context.read<DiscoveryService>();
+        final dev = discovery.devices.firstWhere((d) => d.ip == host);
+        name = dev.name;
+      } catch (_) {
+        // Not found in discovery, fallback to host
+      }
+    }
+
+    final device = {'name': name, 'host': host, 'port': port, 'pin': pin};
     
     _recentDevices.removeWhere((d) => d['host'] == host && d['port'] == port);
     _recentDevices.insert(0, device);
@@ -170,13 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [Color(0xFF005B96), Color(0xFF00BCD4)],
-                              ),
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
@@ -186,10 +193,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ],
                             ),
-                            child: const Icon(
-                              Icons.electric_bolt_rounded,
-                              color: Colors.white,
-                              size: 48,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Image.asset(
+                                'assets/images/logo.png', 
+                                width: 88, 
+                                height: 88,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -250,27 +261,49 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
 
                     // Connect button
-                    SizedBox(
+                    Container(
                       width: double.infinity,
                       height: 56,
-                      child: FilledButton.icon(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2979FF), Color(0xFF00BCD4)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2979FF).withValues(alpha: 0.4),
+                            blurRadius: 16,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
                         onPressed: _connecting ? null : _scanAndConnect,
                         icon: _connecting
                             ? const SizedBox(
-                                width: 20,
-                                height: 20,
+                                width: 22,
+                                height: 22,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                                  strokeWidth: 2.5,
                                   color: Colors.white,
                                 ),
                               )
-                            : const Icon(Icons.qr_code_scanner_rounded),
+                            : const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 24),
                         label: Text(
                           _connecting ? 'Bağlanıyor...' : 'QR Kod ile Bağlan',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 17, 
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
                         ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF005B96),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -383,8 +416,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           tileColor: Colors.white.withValues(alpha: 0.05),
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                           leading: const Icon(Icons.history_rounded, color: Colors.white54),
-                                          title: Text(dev['host'], style: const TextStyle(color: Colors.white)),
-                                          subtitle: Text('Port: ${dev['port']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                                          title: Text(dev['name'] ?? dev['host'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                          subtitle: Text('${dev['host']}:${dev['port']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                                           trailing: IconButton(
                                             icon: const Icon(Icons.close_rounded, color: Colors.white24, size: 20),
                                             tooltip: 'Geçmişten Sil',

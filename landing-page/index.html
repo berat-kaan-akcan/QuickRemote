@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QuickRemote — Akıllı telefonunuzdan PowerPoint sunumlarınızı kontrol edin. Slayt yönetimi, lazer işaretçi, çizim araçları ve touchpad desteği.">
+  <meta name="keywords" content="sunum kumandası, PowerPoint uzaktan kontrol, presentation remote, QuickRemote, kablosuz sunum, slayt kontrolü">
+  <meta name="author" content="QuickRemote">
+  <meta name="theme-color" content="#06080f">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="QuickRemote — Sunumlarınızı Telefonunuzdan Yönetin">
+  <meta property="og:description" content="PowerPoint sunumlarınızı akıllı telefonunuzdan kontrol edin. Slayt geçişleri, lazer işaretçi, çizim araçları, touchpad ve sunum zamanlayıcı — hepsi avucunuzun içinde.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/hero-mockup.jpg">
+
+  <title>QuickRemote — Sunumlarınızı Telefonunuzdan Yönetin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%23a855f7'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><path d='M30 55 L45 70 L70 35' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <!-- Logo -->
+      <a href="#" class="logo" aria-label="QuickRemote Ana Sayfa">
+        <div class="logo-icon">
+          <img src="assets/logo.png" alt="QuickRemote Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+        </div>
+        <span class="logo-text">Quick<span>Remote</span></span>
+      </a>
+
+      <!-- Navigation -->
+      <nav class="main-nav" aria-label="Ana gezinme">
+        <a href="#features">Özellikler</a>
+        <a href="#how-it-works">Nasıl Çalışır?</a>
+        <a href="#faq">SSS</a>
+        <a href="#contact">İletişim</a>
+      </nav>
+
+      <!-- Header CTA -->
+      <div class="header-cta">
+        <a href="#download" class="btn btn-primary btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Hemen İndir
+        </a>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menüyü aç">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" id="mobile-nav">
+    <button class="mobile-nav-close" id="mobile-nav-close" aria-label="Menüyü kapat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <a href="#features" class="mobile-nav-link">Özellikler</a>
+    <a href="#how-it-works" class="mobile-nav-link">Nasıl Çalışır?</a>
+    <a href="#faq" class="mobile-nav-link">SSS</a>
+    <a href="#contact" class="mobile-nav-link">İletişim</a>
+    <a href="#download" class="btn btn-primary" style="margin-top: 16px;">Hemen İndir</a>
+  </div>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" id="hero">
+    <div class="hero-grid"></div>
+    <div class="ambient-orb orb-blue"></div>
+    <div class="ambient-orb orb-purple"></div>
+
+    <div class="container">
+      <div class="hero-inner">
+        <!-- Text Content -->
+        <div class="hero-content reveal">
+          <div class="hero-badge">
+            <span class="dot"></span>
+            Sunum Kumandanız Cebinizde
+          </div>
+
+          <h1 class="hero-title">
+            Sunumlarınızın Kontrolü Artık <span class="highlight">Avucunuzun İçinde.</span>
+          </h1>
+
+          <p class="hero-description">
+            PowerPoint sunumlarınızı akıllı telefonunuzdan yönetin. Slayt geçişleri, lazer işaretçi, çizim araçları, touchpad ve sunum zamanlayıcı — hepsi tek bir uygulamada. Wi-Fi üzerinden düşük gecikmeli, güvenli bağlantı.
+          </p>
+
+          <div class="hero-buttons" id="download">
+            <a href="#" class="btn btn-primary">
+              <!-- Windows icon -->
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
+              </svg>
+              Windows Sunucu Uygulaması
+            </a>
+            <a href="#" class="btn btn-secondary">
+              <!-- Mobile icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              Mobil Kumanda Uygulaması
+            </a>
+          </div>
+
+          <div class="hero-trust">
+            <div class="trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              TLS/WSS şifreli bağlantı
+            </div>
+            <div class="trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Düşük gecikme (WebSocket)
+            </div>
+            <div class="trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              Ücretsiz · Açık kaynak
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual -->
+        <div class="hero-visual reveal reveal-delay-2">
+          <div class="hero-image-wrapper">
+            <img src="assets/hero-mockup.jpg" alt="QuickRemote — Telefondan PowerPoint sunum kontrolü" width="600" height="338" loading="eager">
+          </div>
+
+          <!-- Floating Badges -->
+          <div class="floating-badge badge-latency">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Slayt: 12 / 34
+          </div>
+          <div class="floating-badge badge-secure">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            PIN Korumalı · TLS
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== HOW IT WORKS ===================== -->
+  <section class="section how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Nasıl Çalışır?
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">3 Adımda Sunumunuzu Kontrol Edin</h2>
+        <p class="section-subtitle">
+          Karmaşık ayarlar gerekmez. Dakikalar içinde telefonunuzu kablosuz sunum kumandanıza dönüştürün.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <!-- Step 1 -->
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-number">1</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <h3>PC Uygulamasını Çalıştırın</h3>
+          <p>QuickRemote sunucu uygulamasını Windows bilgisayarınızda başlatın. Otomatik TLS sertifikası oluşturulur ve QR kod ekranda görüntülenir.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-number">2</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
+          <h3>Mobil Uygulamayı Açın</h3>
+          <p>Telefonunuzdaki QuickRemote uygulamasını açın. mDNS ile aynı ağdaki PC'ler otomatik listelenir veya QR kodu tarayın.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-number">3</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="8" height="8" rx="1"/>
+              <rect x="14" y="2" width="8" height="8" rx="1"/>
+              <rect x="2" y="14" width="8" height="8" rx="1"/>
+              <rect x="14" y="14" width="8" height="8" rx="1"/>
+            </svg>
+          </div>
+          <h3>QR Kod veya PIN ile Eşleştirin</h3>
+          <p>QR kodu okutun veya 4 haneli PIN kodunu girerek güvenli bağlantı kurun. SHA-256 doğrulama ile hemen sunumunuzu yönetmeye başlayın.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="section features" id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Özellikler
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Profesyonel Sunum Araçları</h2>
+        <p class="section-subtitle">
+          QuickRemote, sunumlarınızı kusursuz yönetmeniz için ihtiyacınız olan tüm araçları tek bir uygulamada sunar.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1: Slide Control -->
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">
+            <!-- Slides/presentation icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8"/>
+              <path d="M12 17v4"/>
+              <path d="M7 8l3 3-3 3"/>
+              <line x1="13" y1="11" x2="17" y2="11"/>
+            </svg>
+          </div>
+          <h3>Slayt Kontrolü</h3>
+          <p>Sunumu tek dokunuşla ilerletin veya geri alın. Sunumu başlatın (F5), belirli bir slayta atlayın, sonlandırın (ESC). Slayt numarası ve toplam sayı gerçek zamanlı olarak telefonunuza yansır.</p>
+        </div>
+
+        <!-- Feature 2: Drawing Tools -->
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">
+            <!-- Pen/drawing icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+              <path d="M2 2l7.586 7.586"/>
+              <circle cx="11" cy="11" r="2"/>
+            </svg>
+          </div>
+          <h3>Çizim Araçları</h3>
+          <p>Lazer işaretçi, kalem, vurgulayıcı (highlighter) ve silgi araçlarını doğrudan telefonunuzdan kontrol edin. Kalem rengini COM otomasyonu ile dinamik olarak değiştirin.</p>
+        </div>
+
+        <!-- Feature 3: Touchpad & Mouse -->
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">
+            <!-- Touchpad/cursor icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16v16H4z" rx="2"/>
+              <path d="M9 14l2.5-2.5L14 14"/>
+              <path d="M11.5 11.5V8"/>
+            </svg>
+          </div>
+          <h3>Touchpad ve Fare</h3>
+          <p>Telefonunuzun ekranını hassas bir trackpad olarak kullanın. Sol/sağ tıklama, sürükle-bırak desteği ve ayarlanabilir fare hassasiyeti ile tam kontrol.</p>
+        </div>
+
+        <!-- Feature 4: Security -->
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">
+            <!-- Shield/lock icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <rect x="9" y="10" width="6" height="5" rx="1"/>
+              <path d="M10 10V8a2 2 0 0 1 4 0v2"/>
+            </svg>
+          </div>
+          <h3>Güçlü Güvenlik</h3>
+          <p>TLS/WSS şifreli bağlantı, her oturumda rastgele 4 haneli PIN, SHA-256 doğrulama, brute-force koruması (5 başarısız deneme → 60s engel), sertifika sabitleme ve kimlik doğrulama zaman aşımı.</p>
+        </div>
+
+        <!-- Feature 5: Auto Discovery -->
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">
+            <!-- Wifi/discovery icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <circle cx="12" cy="20" r="1"/>
+            </svg>
+          </div>
+          <h3>Otomatik Keşif ve Eşleşme</h3>
+          <p>mDNS (_quickremote._tcp) ile aynı ağdaki PC'ler otomatik listelenir. QR kod tarama, manuel IP girişi veya son 5 cihaza hızlı yeniden bağlanma seçenekleri. Bağlantı koptuğunda otomatik yeniden bağlanma.</p>
+        </div>
+
+        <!-- Feature 6: Presentation Timer -->
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">
+            <!-- Timer/clock icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h3>Sunum Zamanlayıcı</h3>
+          <p>Sunumunuzun ne kadar sürdüğünü gerçek zamanlı takip edin. Konuşmacı notları, mevcut slayt numarası ve toplam slayt sayısı anında telefonunuza aktarılır.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CROSS-PLATFORM ===================== -->
+  <section class="section cross-platform" id="platforms">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Platformlar
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">İki Parçalı Sistem, Sorunsuz Bağlantı</h2>
+        <p class="section-subtitle">
+          Windows bilgisayarınıza sunucu uygulamasını kurun, telefonunuza kumanda uygulamasını indirin. Aynı Wi-Fi ağında anında eşleşin.
+        </p>
+      </div>
+
+      <div class="platform-showcase">
+        <!-- Windows -->
+        <div class="platform-item reveal reveal-delay-1">
+          <div class="platform-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
+              <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
+            </svg>
+          </div>
+          <h3>Windows Sunucu</h3>
+          <p>Windows 10/11 · Flutter Desktop<br>WebSocket sunucusu + Win32 API</p>
+        </div>
+
+        <!-- Connector -->
+        <div class="platform-connector reveal reveal-delay-2">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+
+        <!-- iOS -->
+        <div class="platform-item reveal reveal-delay-3">
+          <div class="platform-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+          </div>
+          <h3>iOS Kumanda</h3>
+          <p>iPhone ve iPad<br>Flutter · QR tarama · mDNS</p>
+        </div>
+
+        <!-- Connector -->
+        <div class="platform-connector reveal reveal-delay-4">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+
+        <!-- Android -->
+        <div class="platform-item reveal reveal-delay-5">
+          <div class="platform-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
+              <path d="M17.523 2.377l1.595-1.595a.436.436 0 0 0-.617-.617l-1.727 1.727A8.197 8.197 0 0 0 12 .784a8.197 8.197 0 0 0-4.774 1.108L5.499.165a.436.436 0 0 0-.617.617L6.477 2.377A7.63 7.63 0 0 0 3.07 8.56h17.86a7.63 7.63 0 0 0-3.407-6.183zM8.628 5.96a.718.718 0 1 1 .718-.718.718.718 0 0 1-.718.718zm6.744 0a.718.718 0 1 1 .718-.718.718.718 0 0 1-.718.718zM3.07 9.83v8.35A1.61 1.61 0 0 0 4.68 19.8h.87v3.06a1.3 1.3 0 0 0 2.6 0V19.8h3.7v3.06a1.3 1.3 0 0 0 2.6 0V19.8h.87a1.61 1.61 0 0 0 1.61-1.62V9.83zm-2.4 0a1.3 1.3 0 0 0-1.3 1.3v5.52a1.3 1.3 0 0 0 2.6 0v-5.52a1.3 1.3 0 0 0-1.3-1.3zm22.66 0a1.3 1.3 0 0 0-1.3 1.3v5.52a1.3 1.3 0 0 0 2.6 0v-5.52a1.3 1.3 0 0 0-1.3-1.3z"/>
+            </svg>
+          </div>
+          <h3>Android Kumanda</h3>
+          <p>Android telefon ve tablet<br>Flutter · QR tarama · mDNS</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TECH STACK ===================== -->
+  <section class="section tech-stack" id="tech">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Teknoloji
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Altyapı ve Protokoller</h2>
+        <p class="section-subtitle">
+          Güvenilir ve yüksek performanslı bir mimari üzerine inşa edildi.
+        </p>
+      </div>
+
+      <div class="tech-grid reveal">
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>Flutter & Dart</h4>
+            <p>Çapraz platform UI framework</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>WebSocket (WSS)</h4>
+            <p>Düşük gecikmeli çift yönlü iletişim</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>TLS 1.2+ Şifreleme</h4>
+            <p>Self-signed sertifika ile güvenli kanal</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8"/>
+              <path d="M12 17v4"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>Win32 & PowerShell COM</h4>
+            <p>SendInput API + PowerPoint otomasyonu</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <circle cx="12" cy="20" r="1"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>mDNS Keşif</h4>
+            <p>_quickremote._tcp ile otomatik servis bulma</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="8" height="8" rx="1"/>
+              <rect x="14" y="2" width="8" height="8" rx="1"/>
+              <rect x="2" y="14" width="8" height="8" rx="1"/>
+              <rect x="14" y="14" width="8" height="8" rx="1"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>Binary Protokol</h4>
+            <p>Fare/lazer verileri için yüksek frekanslı ikili format</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="section faq" id="faq">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Sıkça Sorulan Sorular
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Merak Ettikleriniz</h2>
+        <p class="section-subtitle">
+          QuickRemote hakkında en çok sorulan soruların yanıtları.
+        </p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item reveal reveal-delay-1">
+          <button class="faq-question" aria-expanded="false">
+            QuickRemote tam olarak ne yapıyor?
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>QuickRemote, akıllı telefonunuzu kablosuz bir sunum kumandası ve touchpad'e dönüştürür. PowerPoint sunumlarınızı uzaktan başlatabilir, slaytları ileri/geri geçebilir, lazer işaretçi, kalem ve vurgulayıcı gibi çizim araçlarını kullanabilir, fareyi kontrol edebilir ve sunum sürenizi takip edebilirsiniz.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-2">
+          <button class="faq-question" aria-expanded="false">
+            İnternet bağlantısı gerekli mi?
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>Hayır. QuickRemote tamamen yerel Wi-Fi ağı üzerinden çalışır. İnternet bağlantısı gerekmez. Bilgisayarınız ve telefonunuz aynı Wi-Fi ağına bağlı olduğu sürece sorunsuz çalışır. Tüm veriler yerel ağda kalır, dış sunuculara hiçbir şey gönderilmez.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-3">
+          <button class="faq-question" aria-expanded="false">
+            Güvenlik nasıl sağlanıyor?
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>Tüm iletişim TLS/WSS ile şifrelenir. Her oturumda rastgele 4 haneli PIN oluşturulur ve SHA-256 ile doğrulanır. 5 başarısız PIN denemesinde IP adresi 60 saniyeliğine engellenir. Bağlanan cihaz 10 saniye içinde doğrulanmazsa bağlantı otomatik kesilir. İlk bağlantıda sertifika parmak izi saklanarak certificate pinning uygulanır.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-4">
+          <button class="faq-question" aria-expanded="false">
+            Hangi platformları destekliyor?
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>Sunucu uygulaması Windows 10 ve Windows 11 üzerinde çalışır. Kumanda uygulaması ise Android ve iOS cihazlarda kullanılabilir. Her iki uygulama da Flutter ile geliştirilmiştir.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-5">
+          <button class="faq-question" aria-expanded="false">
+            Nasıl bağlanabilirim?
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>Üç farklı yöntemle bağlanabilirsiniz: (1) PC ekranındaki QR kodu telefonunuzla tarayarak, (2) mDNS otomatik keşif ile aynı ağdaki PC'lerin listesinden seçerek, (3) IP adresi ve PIN kodunu manuel olarak girerek. Ayrıca daha önce bağlandığınız son 5 cihaza hızlıca yeniden bağlanabilirsiniz.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-5">
+          <button class="faq-question" aria-expanded="false">
+            Çizim araçları nasıl çalışıyor?
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>QuickRemote, PowerPoint'in yerel çizim araçlarını uzaktan kontrol eder. Lazer işaretçi (Ctrl+L), kalem (Ctrl+P), vurgulayıcı (Ctrl+I) ve silgi (Ctrl+E) araçlarını telefonunuzdan seçebilirsiniz. Ayrıca COM otomasyonu sayesinde kalem rengini dinamik olarak değiştirebilirsiniz.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA SECTION ===================== -->
+  <section class="section cta-section" id="contact">
+    <div class="container">
+      <div class="cta-card reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Başlayın
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Bir Sonraki Sunumunuzda<br>QuickRemote Deneyin</h2>
+        <p class="section-subtitle">
+          Telefonunuzu profesyonel bir sunum kumandası, touchpad ve çizim aracına dönüştürün. Tamamen ücretsiz.
+        </p>
+        <div class="cta-buttons">
+          <a href="#" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
+            </svg>
+            Windows Sunucu Uygulaması
+          </a>
+          <a href="#" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            Mobil Kumanda Uygulaması
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <!-- Brand -->
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <div class="logo-icon">
+              <img src="assets/logo.png" alt="QuickRemote Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+            </div>
+            <span class="logo-text">Quick<span>Remote</span></span>
+          </a>
+          <p>Akıllı telefonunuzdan PowerPoint sunumlarınızı kontrol edin. Sunum yönetimi, fare kontrolü ve çizim araçları — hepsi avucunuzun içinde.</p>
+          <div class="social-links">
+            <!-- GitHub -->
+            <a href="https://github.com/berat-kaan-akcan/QuickRemote" class="social-link" aria-label="GitHub" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Product -->
+        <div class="footer-column">
+          <h4>Ürün</h4>
+          <a href="#features">Özellikler</a>
+          <a href="#how-it-works">Nasıl Çalışır?</a>
+          <a href="#download">İndirmeler</a>
+          <a href="https://github.com/berat-kaan-akcan/QuickRemote" target="_blank" rel="noopener">Kaynak Kod</a>
+        </div>
+
+        <!-- Support -->
+        <div class="footer-column">
+          <h4>Destek</h4>
+          <a href="#faq">Sıkça Sorulan Sorular</a>
+          <a href="https://github.com/berat-kaan-akcan/QuickRemote" target="_blank" rel="noopener">Dokümantasyon</a>
+          <a href="https://github.com/berat-kaan-akcan/QuickRemote/issues" target="_blank" rel="noopener">Hata Bildirin</a>
+        </div>
+
+        <!-- Legal -->
+        <div class="footer-column">
+          <h4>Yasal</h4>
+          <a href="#">Gizlilik Politikası</a>
+          <a href="#">Kullanım Koşulları</a>
+          <a href="#">Lisans</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2024 QuickRemote. Kişisel kullanım amaçlıdır.</p>
+        <div class="footer-legal">
+          <a href="#">Gizlilik</a>
+          <a href="#">Koşullar</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== JAVASCRIPT ===================== -->
+  <script>
+    // ---- Scroll Reveal (Intersection Observer) ----
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -60px 0px'
+    });
+
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // ---- Sticky Header Background ----
+    const header = document.getElementById('site-header');
+    let lastScroll = 0;
+
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.scrollY;
+      if (currentScroll > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+      lastScroll = currentScroll;
+    }, { passive: true });
+
+    // ---- Mobile Menu ----
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    const mobileNavClose = document.getElementById('mobile-nav-close');
+    const mobileNavLinks = mobileNav.querySelectorAll('.mobile-nav-link');
+
+    function openMobileMenu() {
+      mobileNav.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileMenu() {
+      mobileNav.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    mobileMenuBtn.addEventListener('click', openMobileMenu);
+    mobileNavClose.addEventListener('click', closeMobileMenu);
+    mobileNavLinks.forEach(link => {
+      link.addEventListener('click', closeMobileMenu);
+    });
+
+    // ---- FAQ Accordion ----
+    const faqItems = document.querySelectorAll('.faq-item');
+
+    faqItems.forEach(item => {
+      const question = item.querySelector('.faq-question');
+      question.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+
+        // Close all
+        faqItems.forEach(i => {
+          i.classList.remove('active');
+          i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+        });
+
+        // Open clicked (if it wasn't already open)
+        if (!isActive) {
+          item.classList.add('active');
+          question.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    // ---- Smooth scroll for anchor links ----
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          const headerOffset = 80;
+          const elementPosition = target.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -6,6 +6,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/presentation_analytics.dart';
 
 /// Describes why a connection attempt failed.
 enum ConnectionError {
@@ -81,15 +82,85 @@ class WebSocketService extends ChangeNotifier {
   // Command error state (for COMMAND_FAILED from PC)
   String? _lastCommandError;
 
+  // Analytics tracking
+  PresentationAnalytics? _analytics;
+  bool _isTracking = false;
+  /// Set when tracking auto-stops (presentation ended naturally).
+  /// UI should read once and clear via [clearCompletedAnalytics].
+  PresentationAnalytics? _completedAnalytics;
+
   int get currentSlide => _currentSlide;
   int get totalSlides => _totalSlides;
   String get slideNotes => _slideNotes;
   bool get isPptRunning => _isPptRunning;
+  bool get isTracking => _isTracking;
+  PresentationAnalytics? get analytics => _analytics;
+  PresentationAnalytics? get completedAnalytics => _completedAnalytics;
+
+  void clearCompletedAnalytics() {
+    _completedAnalytics = null;
+  }
 
   /// Non-null when the PC reports a command failure. Read once and clear.
   String? get lastCommandError => _lastCommandError;
   void clearCommandError() {
     _lastCommandError = null;
+  }
+
+  /// Start tracking slide analytics for a new presentation.
+  void startTracking() {
+    final now = DateTime.now();
+    _analytics = PresentationAnalytics(
+      id: now.toIso8601String(),
+      startTime: now,
+      totalSlideCount: _totalSlides,
+    );
+    _isTracking = true;
+
+    // Record the current slide as the first entry
+    if (_currentSlide > 0) {
+      _analytics!.slideRecords.add(SlideRecord(
+        slideNumber: _currentSlide,
+        enteredAt: now,
+      ));
+    }
+    debugPrint('Analytics: tracking started');
+  }
+
+  /// Stop tracking and return the completed analytics.
+  PresentationAnalytics? stopTracking() {
+    if (!_isTracking || _analytics == null) return null;
+
+    final now = DateTime.now();
+    // Close the last open slide record
+    if (_analytics!.slideRecords.isNotEmpty) {
+      final last = _analytics!.slideRecords.last;
+      last.exitedAt ??= now;
+    }
+    _analytics!.endTime = now;
+    _analytics = PresentationAnalytics(
+      id: _analytics!.id,
+      startTime: _analytics!.startTime,
+      endTime: now,
+      totalSlideCount: _totalSlides > 0 ? _totalSlides : _analytics!.totalSlideCount,
+      slideRecords: _analytics!.slideRecords,
+    );
+    _isTracking = false;
+
+    debugPrint('Analytics: tracking stopped, ${_analytics!.slideRecords.length} records');
+    return _analytics;
+  }
+
+  /// Auto-stop tracking when the presentation ends naturally
+  /// (slideshow closed or PowerPoint not running).
+  /// Sets [_completedAnalytics] so the UI can react via listener.
+  void _autoStopTracking() {
+    if (!_isTracking || _analytics == null) return;
+    final result = stopTracking();
+    if (result != null && result.slideRecords.isNotEmpty) {
+      _completedAnalytics = result;
+      debugPrint('Analytics: auto-stopped, ready for UI pickup');
+    }
   }
 
   /// Connect to the PC companion app via WebSocket.
@@ -216,6 +287,8 @@ class WebSocketService extends ChangeNotifier {
 
             if (message['type'] == 'SLIDE_STATE') {
               if (message.containsKey('data') && message['data'] == null) {
+                // Presentation ended (slideshow closed)
+                _autoStopTracking();
                 _currentSlide = 0;
                 _totalSlides = 0;
                 _slideNotes = '';
@@ -223,15 +296,35 @@ class WebSocketService extends ChangeNotifier {
                 return;
               }
               _isPptRunning = true;
-              _currentSlide = message['current'] as int? ?? 0;
-              _totalSlides = message['total'] as int? ?? 0;
+              final newSlide = message['current'] as int? ?? 0;
+              final newTotal = message['total'] as int? ?? 0;
               _slideNotes = message['notes'] as String? ?? '';
+
+              // Track slide change for analytics
+              if (_isTracking && _analytics != null && newSlide != _currentSlide && newSlide > 0) {
+                final now = DateTime.now();
+                // Close previous slide record
+                if (_analytics!.slideRecords.isNotEmpty) {
+                  final last = _analytics!.slideRecords.last;
+                  last.exitedAt ??= now;
+                }
+                // Open new slide record
+                _analytics!.slideRecords.add(SlideRecord(
+                  slideNumber: newSlide,
+                  enteredAt: now,
+                ));
+                debugPrint('Analytics: slide $newSlide entered');
+              }
+
+              _currentSlide = newSlide;
+              _totalSlides = newTotal;
               notifyListeners();
               return;
             }
 
             if (message['type'] == 'STATUS') {
               if (message['state'] == 'POWERPOINT_NOT_RUNNING') {
+                _autoStopTracking();
                 _isPptRunning = false;
                 notifyListeners();
               } else if (message['state'] == 'COMMAND_FAILED') {
