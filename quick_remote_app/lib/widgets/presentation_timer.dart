@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 import '../providers/settings_provider.dart';
+import '../utils/ui/app_bottom_sheet.dart';
+import '../utils/ui/app_popup_theme.dart';
 
 class PresentationTimer extends StatefulWidget {
   final double fontSize;
@@ -72,15 +74,55 @@ class _PresentationTimerState extends State<PresentationTimer> {
           final shouldWarn = settings.earlyWarningHaptic;
           
           if (shouldWarn && settings.warningTimes.contains(remaining)) {
-            // Erken Uyarı: Çift güçlü titreşim (Bzz-Bzz)
-            Vibration.vibrate(pattern: [0, 300, 100, 300]);
+            final pattern = settings.warningVibrations[remaining] ?? 'double';
+            _vibrateWithPattern(pattern);
+            
+            // Ufak bir bildirim
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Sürenin bitimine ${_formatTime(remaining)} kaldı!'),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: const Color(0xFF262C4A),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            );
           } else if (remaining == 0) {
-            // Süre Doldu: 3'lü güçlü titreşim
-            Vibration.vibrate(pattern: [0, 500, 150, 500, 150, 800]); 
+            // Süre Doldu
+            if (settings.timeOutVibrationEnabled) {
+              _vibrateWithPattern(settings.timeOutVibrationPattern);
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Sunum süresi doldu!'),
+                duration: const Duration(seconds: 3),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: const Color(0xFFFF5252),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            );
           }
         }
       }
     });
+  }
+
+  void _vibrateWithPattern(String pattern) {
+    switch (pattern) {
+      case 'short':
+        Vibration.vibrate(pattern: [0, 300]);
+        break;
+      case 'long':
+        Vibration.vibrate(pattern: [0, 800]);
+        break;
+      case 'triple':
+        Vibration.vibrate(pattern: [0, 500, 150, 500, 150, 800]);
+        break;
+      case 'double':
+      default:
+        Vibration.vibrate(pattern: [0, 300, 100, 300]);
+        break;
+    }
   }
 
   void _resetTimer() {
@@ -99,75 +141,44 @@ class _PresentationTimerState extends State<PresentationTimer> {
     HapticFeedback.mediumImpact();
     final customController = TextEditingController();
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF1A1F38),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, MediaQuery.of(ctx).viewInsets.bottom + 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Sunum Süresi Belirle',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                alignment: WrapAlignment.center,
-                children: [
-                  _DurationChip(label: 'Serbest', minutes: 0, onTap: (m) => _setDuration(ctx, m)),
-                  _DurationChip(label: '5 dk', minutes: 5, onTap: (m) => _setDuration(ctx, m)),
-                  _DurationChip(label: '10 dk', minutes: 10, onTap: (m) => _setDuration(ctx, m)),
-                  _DurationChip(label: '15 dk', minutes: 15, onTap: (m) => _setDuration(ctx, m)),
-                  _DurationChip(label: '20 dk', minutes: 20, onTap: (m) => _setDuration(ctx, m)),
-                  _DurationChip(label: '30 dk', minutes: 30, onTap: (m) => _setDuration(ctx, m)),
-                  _DurationChip(label: '45 dk', minutes: 45, onTap: (m) => _setDuration(ctx, m)),
-                  _DurationChip(label: '60 dk', minutes: 60, onTap: (m) => _setDuration(ctx, m)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: customController,
-                      style: const TextStyle(color: Colors.white),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        hintText: 'Özel süre girin (dk)',
-                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                      ),
-                      onSubmitted: (val) {
-                        final m = int.tryParse(val);
-                        if (m != null && m > 0) {
-                          _setDuration(ctx, m);
-                        } else {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            const SnackBar(content: Text('Lütfen geçerli bir süre (tam sayı, saniye) girin.')),
-                          );
-                        }
-                      },
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBottomSheet.buildTitle('Sunum Süresi Belirle', icon: Icons.timer_outlined),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                _DurationChip(label: 'Serbest', minutes: 0, onTap: (m) => _setDuration(ctx, m)),
+                _DurationChip(label: '5 dk', minutes: 5, onTap: (m) => _setDuration(ctx, m)),
+                _DurationChip(label: '10 dk', minutes: 10, onTap: (m) => _setDuration(ctx, m)),
+                _DurationChip(label: '15 dk', minutes: 15, onTap: (m) => _setDuration(ctx, m)),
+                _DurationChip(label: '20 dk', minutes: 20, onTap: (m) => _setDuration(ctx, m)),
+                _DurationChip(label: '30 dk', minutes: 30, onTap: (m) => _setDuration(ctx, m)),
+                _DurationChip(label: '45 dk', minutes: 45, onTap: (m) => _setDuration(ctx, m)),
+                _DurationChip(label: '60 dk', minutes: 60, onTap: (m) => _setDuration(ctx, m)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: customController,
+                    style: const TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: AppPopupTheme.inputDecoration(
+                      context: ctx,
+                      hintText: 'Özel süre girin (dk)',
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    onPressed: () {
-                      final m = int.tryParse(customController.text);
+                    onSubmitted: (val) {
+                      final m = int.tryParse(val);
                       if (m != null && m > 0) {
                         _setDuration(ctx, m);
                       } else {
@@ -176,22 +187,35 @@ class _PresentationTimerState extends State<PresentationTimer> {
                         );
                       }
                     },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Ayarla', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Sayaç üzerine basılı tutarak sıfırlayabilirsiniz.',
-                style: TextStyle(color: Colors.white38, fontSize: 12),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton(
+                  onPressed: () {
+                    final m = int.tryParse(customController.text);
+                    if (m != null && m > 0) {
+                      _setDuration(ctx, m);
+                    } else {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('Lütfen geçerli bir süre (tam sayı, saniye) girin.')),
+                      );
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius)),
+                  ),
+                  child: const Text('Ayarla', style: TextStyle(fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Sayaç üzerine basılı tutarak sıfırlayabilirsiniz.',
+              style: TextStyle(color: Colors.white38, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+          ],
         );
       },
     );

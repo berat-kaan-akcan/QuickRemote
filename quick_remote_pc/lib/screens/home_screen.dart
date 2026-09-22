@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
+import '../services/websocket_server.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -165,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
                   // Main Content
                   Expanded(
-                    child: provider.isRunning
+                    child: (provider.isRunning || provider.isStarting)
                         ? _RunningDashboard(provider: provider)
                         : const _StoppedDashboard(),
                   ),
@@ -187,7 +188,9 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isRunning ? const Color(0xFF00BCD4) : const Color(0xFFFF5252);
+    final color = (!isRunning || clientCount == 0) 
+        ? const Color(0xFFFF5252) 
+        : const Color(0xFF4CAF50);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -227,18 +230,80 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _RunningDashboard extends StatelessWidget {
+class _RunningDashboard extends StatefulWidget {
   final WebSocketServerProvider provider;
 
   const _RunningDashboard({required this.provider});
 
   @override
+  State<_RunningDashboard> createState() => _RunningDashboardState();
+}
+
+class _RunningDashboardState extends State<_RunningDashboard> {
+  bool _hasShownDialogForCurrentRun = false;
+  bool _isShowingNetworkDialog = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.provider.addListener(_checkAndShowWarning);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAndShowWarning());
+  }
+
+  @override
+  void dispose() {
+    widget.provider.removeListener(_checkAndShowWarning);
+    super.dispose();
+  }
+
+  void _checkAndShowWarning() {
+    if (widget.provider.publicNetwork && widget.provider.isRunning) {
+      if (!_isShowingNetworkDialog && !_hasShownDialogForCurrentRun) {
+        _hasShownDialogForCurrentRun = true;
+        _showNetworkChangeWarning();
+      }
+    } else {
+      _hasShownDialogForCurrentRun = false;
+    }
+  }
+
+  Future<void> _showNetworkChangeWarning() async {
+    if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    final hideWarning = prefs.getBool('hide_public_network_warning') ?? false;
+    if (hideWarning || !mounted) return;
+
+    _isShowingNetworkDialog = true;
+    final proceed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _PublicNetworkWarningDialog(
+        server: widget.provider.server,
+      ),
+    );
+    _isShowingNetworkDialog = false;
+
+    if (proceed != true && mounted) {
+      await widget.provider.stopServer();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = widget.provider;
     final qrData = 'quickremote://${provider.localIP}:${provider.port}:${provider.pin}';
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // Network Status Banner
+        _NetworkStatusBanner(
+          isPublic: provider.publicNetwork,
+          server: provider.server,
+        ),
+
+        const SizedBox(height: 8),
+
         // Glassmorphic QR Card
         Flexible(
           child: ClipRRect(
@@ -264,57 +329,101 @@ class _RunningDashboard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: provider.isStarting ? Colors.transparent : Colors.white,
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            QrImageView(
-                              data: qrData,
-                              version: QrVersions.auto,
-                              errorCorrectionLevel: QrErrorCorrectLevel.H,
-                              size: 160,
-                              backgroundColor: Colors.white,
-                              eyeStyle: const QrEyeStyle(
-                                eyeShape: QrEyeShape.circle,
-                                color: Color(0xFF0F172A),
-                              ),
-                              dataModuleStyle: const QrDataModuleStyle(
-                                dataModuleShape: QrDataModuleShape.circle,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 4,
-                                    spreadRadius: 1,
-                                  )
-                                ]
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/logo.png', 
-                                  width: 36, 
-                                  height: 36,
-                                  fit: BoxFit.cover,
+                            if (provider.isStarting)
+                              SizedBox(
+                                width: 160,
+                                height: 160,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      width: 80,
+                                      height: 80,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 4,
+                                        strokeCap: StrokeCap.round,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00BCD4)),
+                                        backgroundColor: Color(0x3300BCD4),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
+                                            blurRadius: 12,
+                                            spreadRadius: 2,
+                                          )
+                                        ]
+                                      ),
+                                      child: ClipOval(
+                                        child: Image.asset(
+                                          'assets/images/logo.png', 
+                                          width: 36, 
+                                          height: 36,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else ...[
+                              QrImageView(
+                                data: qrData,
+                                version: QrVersions.auto,
+                                errorCorrectionLevel: QrErrorCorrectLevel.H,
+                                size: 160,
+                                backgroundColor: Colors.white,
+                                eyeStyle: const QrEyeStyle(
+                                  eyeShape: QrEyeShape.circle,
+                                  color: Color(0xFF0F172A),
+                                ),
+                                dataModuleStyle: const QrDataModuleStyle(
+                                  dataModuleShape: QrDataModuleShape.circle,
+                                  color: Color(0xFF0F172A),
                                 ),
                               ),
-                            ),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    )
+                                  ]
+                                ),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/images/logo.png', 
+                                    width: 36, 
+                                    height: 36,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Bağlanmak için QR kodu tarayın',
-                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                    Text(
+                      provider.isStarting ? 'Ağ bilgileri alınıyor...' : 'Bağlanmak için QR kodu tarayın',
+                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -351,7 +460,7 @@ class _RunningDashboard extends StatelessWidget {
                           const Icon(Icons.lock_rounded, color: Color(0xFFFF9800), size: 16),
                           const SizedBox(width: 8),
                           Text(
-                            'PIN: ${provider.pin}',
+                            provider.isStarting ? 'PIN: ...' : 'PIN: ${provider.pin}',
                             style: const TextStyle(
                               color: Color(0xFFFF9800),
                               fontSize: 15,
@@ -451,23 +560,6 @@ class _StoppedDashboard extends StatelessWidget {
                   ),
                 );
               }
-              // Show public network warning if detected
-              if (provider.publicNetwork) {
-                final prefs = await SharedPreferences.getInstance();
-                final hideWarning = prefs.getBool('hide_public_network_warning') ?? false;
-
-                if (!hideWarning && context.mounted) {
-                  final proceed = await showDialog<bool>(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (ctx) => const _PublicNetworkWarningDialog(),
-                  );
-
-                  if (proceed != true) {
-                    await provider.stopServer();
-                  }
-                }
-              }
             },
             child: Container(
               padding: const EdgeInsets.all(32),
@@ -510,8 +602,79 @@ class _StoppedDashboard extends StatelessWidget {
   }
 }
 
+class _NetworkStatusBanner extends StatelessWidget {
+  final bool isPublic;
+  final WebSocketServer server;
+
+  const _NetworkStatusBanner({
+    required this.isPublic,
+    required this.server,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isPublic ? const Color(0xFFFF9800) : const Color(0xFF4CAF50);
+    final icon = isPublic ? Icons.wifi_tethering_rounded : Icons.shield_rounded;
+    final text = isPublic ? 'Ortak Ağ (Public)' : 'Güvenli Ağ (Private)';
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Icon(icon, key: ValueKey(isPublic), color: color, size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Text(
+                text,
+                key: ValueKey(text),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          if (isPublic) ...[
+            _HoverScale(
+              scale: 1.1,
+              onTap: () => server.openNetworkSettings(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Ayarlar',
+                  style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+
 class _PublicNetworkWarningDialog extends StatefulWidget {
-  const _PublicNetworkWarningDialog();
+  final WebSocketServer server;
+
+  const _PublicNetworkWarningDialog({required this.server});
 
   @override
   State<_PublicNetworkWarningDialog> createState() => _PublicNetworkWarningDialogState();
@@ -538,6 +701,22 @@ class _PublicNetworkWarningDialogState extends State<_PublicNetworkWarningDialog
             'QuickRemote sunucunuzu görebilir.\n\n'
             'Güvenilir bir ağda olduğunuzdan emin olun.',
             style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+          ),
+          const SizedBox(height: 16),
+          // Network action buttons
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => widget.server.openNetworkSettings(),
+              icon: const Icon(Icons.settings_rounded, size: 16),
+              label: const Text('Ağ Ayarlarını Aç', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF00BCD4),
+                side: const BorderSide(color: Color(0xFF00BCD4), width: 1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Row(

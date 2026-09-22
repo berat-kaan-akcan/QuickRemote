@@ -44,6 +44,20 @@
 | **Silgi** | Çizimleri temizleyin (Ctrl+E) |
 | **Kalem Rengi Değiştirme** | COM otomasyonu ile kalem rengini dinamik olarak değiştirin |
 
+### 🎵 Medya & Ses Kontrolü
+| Özellik | Açıklama |
+|---------|----------|
+| **Sistem Ses Kontrolü** | PC'nin sesini açın, kısın, belirli bir seviyeye getirin veya tamamen kapatın |
+| **Sistem Medya Kontrolü** | Spotify, YouTube vb. uygulamalarda medyayı oynatın, duraklatın, ileri/geri sarın |
+| **PPT Video Kontrolü** | PowerPoint içine gömülü videoları uzaktan başlatın/durdurun veya geri sarın |
+
+### 📊 Sunum Analitiği & Geçmiş
+| Özellik | Açıklama |
+|---------|----------|
+| **Sunum Geçmişi** | Geçmişte yaptığınız tüm sunumların listesini ve detaylarını görüntüleyin |
+| **Slayt Süreleri** | Hangi slaytta ne kadar süre harcadığınızı analiz edin |
+| **Ağ Uyarıları Raporu** | Herkese açık veya güvensiz ağlarda yapılan bağlantıların güvenlik analiz raporunu alın |
+
 ### 🔗 Bağlantı & Keşif
 | Özellik | Açıklama |
 |---------|----------|
@@ -52,6 +66,7 @@
 | **Manuel Bağlantı** | IP adresi ve port ile doğrudan bağlanın |
 | **Son Cihazlar** | Daha önce bağlandığınız cihazlara hızla yeniden bağlanın (son 5 cihaz saklanır) |
 | **Otomatik Yeniden Bağlanma** | Bağlantı koptuğunda otomatik olarak yeniden bağlanma desteği |
+| **Arka Plan Desteği** | Uygulama arka plandayken veya telefon kilitliyken dahi bağlantıyı koruyun ve kontrol etmeye devam edin |
 
 ### 🔒 Güvenlik
 | Özellik | Açıklama |
@@ -62,7 +77,7 @@
 | **Sertifika Sabitleme** | İlk bağlantıda sertifika parmak izi kaydedilir; değişiklik tespit edilirse kullanıcıya sorulur |
 | **Kimlik Doğrulama Zaman Aşımı** | Bağlanan istemci 10 saniye içinde doğrulanmazsa bağlantı kapatılır |
 | **Bilgisayar Kilitleme** | `Win + L` ile bilgisayarı uzaktan kilitleyin |
-| **Herkese Açık Ağ Uyarısı** | Public network algılandığında kullanıcı uyarılır |
+| **Canlı Ağ İzleme** | Ağ profiliniz sürekli izlenir; herkese açık ağ tespit edilirse uyarılır ve tek tıkla güvenli (private) ağa geçebilirsiniz |
 
 ---
 
@@ -98,32 +113,33 @@ QuickRemote/
 ├── quick_remote_app/              # 📱 Flutter Mobil Uygulaması (Android / iOS)
 │   └── lib/
 │       ├── main.dart              # Uygulama giriş noktası & tema yapılandırması
-│       ├── screens/
-│       │   ├── home_screen.dart   # Ana ekran – bağlantı yönetimi
-│       │   ├── remote_screen.dart # Uzaktan kumanda ekranı (kontroller + touchpad)
-│       │   ├── scan_screen.dart   # QR kod tarama ekranı
-│       │   └── settings_screen.dart # Ayarlar
-│       ├── services/
-│       │   ├── websocket_service.dart  # WebSocket istemcisi & otomatik yeniden bağlanma
-│       │   └── discovery_service.dart  # mDNS cihaz keşfi
-│       ├── providers/
-│       │   └── settings_provider.dart  # Ayar durumu yönetimi
-│       ├── widgets/
-│       │   └── presentation_timer.dart # Sunum zamanlayıcı widget'ı
-│       ├── utils/
-│       │   └── throttler.dart     # Fare hareketleri için throttle mekanizması
-│       └── constants/             # Sabitler
+│       ├── constants/             # Sabitler (renkler, ikonlar, API yolları vb.)
+│       ├── models/                # Veri modelleri (presentation_analytics vb.)
+│       ├── providers/             # Ayar durumu ve state yönetimi
+│       ├── repositories/          # Veri tabanı ve geçmiş kayıt işlemleri
+│       ├── screens/               # Uygulama arayüzleri
+│       │   ├── analytics/         # Sunum analitiği ve rapor ekranları
+│       │   ├── home/              # Ana ekran – bağlantı yönetimi
+│       │   ├── remote/            # Uzaktan kumanda ekranı (kontroller + touchpad)
+│       │   ├── settings/          # Ayarlar ve geçmiş
+│       │   └── scan_screen.dart   # QR kod tarama ekranı
+│       ├── services/              # Arka plan servisleri
+│       │   ├── discovery_service.dart  # mDNS cihaz keşfi
+│       │   └── websocket/         # WebSocket istemcisi, analitik ve state takibi
+│       ├── utils/                 # Yardımcı fonksiyonlar, throttle ve formatter
+│       └── widgets/               # Ortak kullanılan widgetlar (presentation_timer vb.)
 │
 ├── quick_remote_pc/               # 🖥️ Flutter Masaüstü Uygulaması (Windows)
 │   └── lib/
 │       ├── main.dart              # Uygulama giriş noktası & Provider yapılandırması
+│       ├── constants/             # Sabitler
+│       ├── providers/             # State yönetimi
 │       ├── screens/
 │       │   └── home_screen.dart   # Ana ekran – sunucu durumu, QR kod, bağlantı bilgileri
-│       ├── services/
-│       │   ├── websocket_server.dart  # TLS WebSocket sunucusu & istemci yönetimi
-│       │   ├── input_simulator.dart   # Win32 SendInput API & PowerShell COM otomasyonu
-│       │   └── mouse_controller.dart  # Fare konumu hesaplama & hareket
-│       └── constants/             # Sabitler
+│       └── services/
+│           ├── websocket_server.dart  # TLS WebSocket sunucusu & istemci yönetimi
+│           ├── input_simulator.dart   # Win32 SendInput API & PowerShell COM otomasyonu
+│           └── mouse_controller.dart  # Fare konumu hesaplama & hareket
 │
 ├── packages/
 │   └── quick_remote_shared/       # 📦 Paylaşılan Dart Paketi
@@ -159,6 +175,8 @@ QuickRemote/
 | **nsd** | mDNS cihaz keşfi |
 | **vibration** | Haptik geri bildirim |
 | **wakelock_plus** | Ekran uyku engelleme |
+| **flutter_background** | Uygulamanın arka planda kesintisiz çalışması |
+| **permission_handler** | Gerekli sistem izinlerinin yönetimi |
 | **crypto** | SHA-256 PIN hashleme |
 | **provider** | Durum yönetimi |
 | **google_fonts & glassmorphism** | Modern UI tasarımı |
@@ -169,7 +187,7 @@ QuickRemote/
 | **Flutter & Dart** | Windows masaüstü uygulaması |
 | **dart:io HttpServer** | TLS destekli WebSocket sunucusu |
 | **win32 & ffi** | Windows SendInput API ile tuş/fare simülasyonu |
-| **PowerShell COM** | PowerPoint COM otomasyonu (slayt durumu, kalem rengi vb.) |
+| **PowerShell COM & Scripts** | PowerPoint COM otomasyonu, Sistem Ses Seviyesi ve Medya (SMTC) kontrolü |
 | **nsd** | mDNS servis kaydı |
 | **qr_flutter** | QR kod oluşturma |
 | **window_manager** | Pencere yönetimi |
@@ -257,6 +275,9 @@ Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
 | `LEFT_CLICK` / `RIGHT_CLICK` | Sol / sağ fare tıklaması |
 | `LEFT_DOWN` / `LEFT_UP` | Fare sürükleme (basılı tut / bırak) |
 | `REFRESH_STATE` | Slayt durumunu yenile |
+| `MEDIA_PLAY_PAUSE` / `MEDIA_REWIND` | PPT gömülü video oynat/duraklat ve geri sar |
+| `VOLUME_UP` / `VOLUME_DOWN` / `VOLUME_MUTE` / `VOLUME_SET:<n>` | Sistem ses seviyesi kontrolleri |
+| `SYSTEM_MEDIA_PLAY_PAUSE` vb. | Sistem medya kontrolleri (Sonraki, Önceki, Durdur) |
 
 ---
 

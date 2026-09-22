@@ -32,6 +32,21 @@ abstract class RemoteCommands {
   // Legacy alias kept for backwards‑compat (maps to modeLaser on PC)
   static const laserCursor = 'LASER_CURSOR';
 
+  // PPT gömülü video kontrolü
+  static const mediaPlayPause = 'MEDIA_PLAY_PAUSE';
+  static const mediaRewind    = 'MEDIA_REWIND';
+
+  // Sistem ses kontrolü
+  static const volumeUp   = 'VOLUME_UP';
+  static const volumeDown = 'VOLUME_DOWN';
+  static const volumeMute = 'VOLUME_MUTE';
+
+  // Sistem medya transport (Spotify, YouTube vb.)
+  static const sysMediaPlayPause = 'SYSTEM_MEDIA_PLAY_PAUSE';
+  static const sysMediaNext      = 'SYSTEM_MEDIA_NEXT';
+  static const sysMediaPrev      = 'SYSTEM_MEDIA_PREV';
+  static const sysMediaStop      = 'SYSTEM_MEDIA_STOP';
+
   // ── High‑frequency message types ──
   static const typeLaser = 'LASER';
   static const typeTouch = 'TOUCH';
@@ -41,12 +56,17 @@ abstract class RemoteCommands {
     modeArrow, modeLaser, modePen, modeHighlighter, modeEraser,
     leftClick, rightClick, leftDown, leftUp,
     laserOff, laserCursor, blackScreen, whiteScreen,
+    // Medya & ses
+    mediaPlayPause, mediaRewind,
+    volumeUp, volumeDown, volumeMute,
+    sysMediaPlayPause, sysMediaNext, sysMediaPrev, sysMediaStop,
   };
 
   /// Parametreli komutların prefix'leri (ör: SET_PEN_COLOR:123, START_AT:5).
   static const allowedPrefixes = <String>{
     'SET_PEN_COLOR',
     'START_AT',
+    'VOLUME_SET',
   };
 
   /// All message‑type values the PC server will accept.
@@ -54,3 +74,4 @@ abstract class RemoteCommands {
     typeLaser, typeTouch,
   };
 }
+

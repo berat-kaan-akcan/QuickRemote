@@ -6,7 +6,14 @@ import '../models/presentation_analytics.dart';
 class SettingsProvider extends ChangeNotifier {
   // Early Warning Haptic Feedback
   bool _earlyWarningHaptic = true;
-  List<int> _warningTimes = [300, 60, 30]; // 5 min, 1 min, 30 sec
+  Map<int, String> _warningVibrations = {
+    300: 'double',
+    60: 'double',
+    30: 'double',
+  };
+  
+  bool _timeOutVibrationEnabled = true;
+  String _timeOutVibrationPattern = 'triple';
 
   // Presentation History
   List<PresentationAnalytics> _presentationHistory = [];
@@ -14,7 +21,14 @@ class SettingsProvider extends ChangeNotifier {
   static const String _historyKey = 'presentation_history';
 
   bool get earlyWarningHaptic => _earlyWarningHaptic;
-  List<int> get warningTimes => _warningTimes;
+  Map<int, String> get warningVibrations => _warningVibrations;
+  List<int> get warningTimes {
+    final times = _warningVibrations.keys.toList();
+    times.sort((a, b) => b.compareTo(a));
+    return times;
+  }
+  bool get timeOutVibrationEnabled => _timeOutVibrationEnabled;
+  String get timeOutVibrationPattern => _timeOutVibrationPattern;
   List<PresentationAnalytics> get presentationHistory =>
       List.unmodifiable(_presentationHistory);
 
@@ -25,10 +39,24 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _earlyWarningHaptic = prefs.getBool('early_warning_haptic') ?? true;
+    _timeOutVibrationEnabled = prefs.getBool('timeout_vibration_enabled') ?? true;
+    _timeOutVibrationPattern = prefs.getString('timeout_vibration_pattern') ?? 'triple';
     
     final timesStrList = prefs.getStringList('warning_times');
-    if (timesStrList != null) {
-      _warningTimes = timesStrList.map((e) => int.parse(e)).toList();
+    final vibrationsStr = prefs.getString('warning_vibrations');
+    
+    if (vibrationsStr != null) {
+      try {
+        final decoded = jsonDecode(vibrationsStr) as Map<String, dynamic>;
+        _warningVibrations = decoded.map((key, value) => MapEntry(int.parse(key), value as String));
+      } catch (e) {
+        debugPrint('Failed to parse warning vibrations: $e');
+      }
+    } else if (timesStrList != null) {
+      _warningVibrations = {};
+      for (var time in timesStrList) {
+        _warningVibrations[int.parse(time)] = 'double';
+      }
     }
 
     // Load presentation history
@@ -56,23 +84,50 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setBool('early_warning_haptic', value);
   }
 
-  Future<void> addWarningTime(int seconds) async {
-    if (!_warningTimes.contains(seconds) && seconds > 0) {
-      _warningTimes.add(seconds);
-      _warningTimes.sort((a, b) => b.compareTo(a)); // Sort descending (e.g. 300, 60, 30)
+  Future<void> addWarningTime(int seconds, {String pattern = 'double'}) async {
+    if (seconds > 0) {
+      _warningVibrations[seconds] = pattern;
       notifyListeners();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('warning_times', _warningTimes.map((e) => e.toString()).toList());
+      await _persistVibrations();
+    }
+  }
+
+  Future<void> updateWarningPattern(int seconds, String pattern) async {
+    if (_warningVibrations.containsKey(seconds)) {
+      _warningVibrations[seconds] = pattern;
+      notifyListeners();
+      await _persistVibrations();
     }
   }
 
   Future<void> removeWarningTime(int seconds) async {
-    if (_warningTimes.contains(seconds)) {
-      _warningTimes.remove(seconds);
+    if (_warningVibrations.containsKey(seconds)) {
+      _warningVibrations.remove(seconds);
       notifyListeners();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('warning_times', _warningTimes.map((e) => e.toString()).toList());
+      await _persistVibrations();
     }
+  }
+  
+  Future<void> _persistVibrations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stringMap = _warningVibrations.map((key, value) => MapEntry(key.toString(), value));
+    await prefs.setString('warning_vibrations', jsonEncode(stringMap));
+    // For backward compatibility just in case
+    await prefs.setStringList('warning_times', _warningVibrations.keys.map((e) => e.toString()).toList());
+  }
+
+  Future<void> setTimeOutVibrationEnabled(bool value) async {
+    _timeOutVibrationEnabled = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('timeout_vibration_enabled', value);
+  }
+
+  Future<void> setTimeOutVibrationPattern(String pattern) async {
+    _timeOutVibrationPattern = pattern;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('timeout_vibration_pattern', pattern);
   }
 
   // ─── Presentation History Management ───

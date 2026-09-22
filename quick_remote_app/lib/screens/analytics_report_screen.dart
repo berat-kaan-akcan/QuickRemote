@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/presentation_analytics.dart';
+import '../utils/formatters.dart';
+import 'analytics/utils/report_exporter.dart';
+import 'analytics/widgets/stat_card.dart';
+import 'analytics/widgets/slide_duration_list.dart';
 
 /// A premium-looking analytics report screen that displays
 /// per-slide timing data and aggregate statistics.
@@ -31,7 +34,7 @@ class AnalyticsReportScreen extends StatelessWidget {
         builder: (_, scrollController) => Container(
           decoration: const BoxDecoration(
             color: Color(0xFF0D0D1A),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: AnalyticsReportScreen(
             analytics: analytics,
@@ -42,70 +45,8 @@ class AnalyticsReportScreen extends StatelessWidget {
     );
   }
 
-  String _formatDuration(Duration d) {
-    final hours = d.inHours;
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    if (hours > 0) {
-      return '${hours}s ${minutes}dk ${seconds}sn';
-    } else if (minutes > 0) {
-      return '${minutes}dk ${seconds}sn';
-    } else {
-      return '${seconds}sn';
-    }
-  }
-
-  String _formatDurationShort(Duration d) {
-    final minutes = d.inMinutes;
-    final seconds = d.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  String _formatDate(DateTime dt) {
-    const months = [
-      '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-    ];
-    return '${dt.day} ${months[dt.month]} ${dt.year}, '
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _copyReport(BuildContext context) {
-    final buffer = StringBuffer();
-    buffer.writeln('📊 Sunum Raporu');
-    buffer.writeln('━━━━━━━━━━━━━━━━━━━━');
-    buffer.writeln('📅 Tarih: ${_formatDate(analytics.startTime)}');
-    buffer.writeln('⏱ Toplam Süre: ${_formatDuration(analytics.totalDuration)}');
-    buffer.writeln('📄 Slayt Sayısı: ${analytics.distinctSlideCount}');
-    buffer.writeln('📊 Ort. Süre/Slayt: ${_formatDuration(analytics.averageTimePerSlide)}');
-    buffer.writeln('🔄 Geçiş Sayısı: ${analytics.transitionCount}');
-    buffer.writeln('');
-    buffer.writeln('Slayt Detayları:');
-    buffer.writeln('─────────────────');
-
-    final tps = analytics.timePerSlide;
-    final sortedSlides = tps.keys.toList()..sort();
-    for (final slide in sortedSlides) {
-      buffer.writeln('  Slayt $slide: ${_formatDuration(tps[slide]!)}');
-    }
-
-    Clipboard.setData(ClipboardData(text: buffer.toString()));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Rapor panoya kopyalandı'),
-        backgroundColor: Color(0xFF4CAF50),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final tps = analytics.timePerSlide;
-    final sortedSlides = tps.keys.toList()..sort();
-    final maxDuration = tps.values.isEmpty
-        ? const Duration(seconds: 1)
-        : tps.values.reduce((a, b) => a > b ? a : b);
     final longest = analytics.longestSlide;
     final shortest = analytics.shortestSlide;
 
@@ -158,7 +99,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _formatDate(analytics.startTime),
+                        Formatters.formatDate(analytics.startTime),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 13,
@@ -178,24 +119,24 @@ class AnalyticsReportScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Row(
               children: [
-                _StatCard(
+                StatCard(
                   icon: Icons.timer_rounded,
                   label: 'Toplam Süre',
-                  value: _formatDuration(analytics.totalDuration),
+                  value: Formatters.formatDuration(analytics.totalDuration),
                   gradient: const [Color(0xFF6C63FF), Color(0xFF5A54E0)],
                 ),
                 const SizedBox(width: 10),
-                _StatCard(
+                StatCard(
                   icon: Icons.layers_rounded,
                   label: 'Slayt Sayısı',
                   value: '${analytics.distinctSlideCount}',
                   gradient: const [Color(0xFF4ECDC4), Color(0xFF3DBDB5)],
                 ),
                 const SizedBox(width: 10),
-                _StatCard(
+                StatCard(
                   icon: Icons.speed_rounded,
                   label: 'Ort/Slayt',
-                  value: _formatDurationShort(analytics.averageTimePerSlide),
+                  value: Formatters.formatDurationShort(analytics.averageTimePerSlide),
                   gradient: const [Color(0xFFFF6B6B), Color(0xFFE05555)],
                 ),
               ],
@@ -233,7 +174,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                         color: const Color(0xFFFF6B6B), size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      'S${longest.key}: ${_formatDurationShort(longest.value)}',
+                      'S${longest.key}: ${Formatters.formatDurationShort(longest.value)}',
                       style: const TextStyle(
                         color: Color(0xFFFF6B6B),
                         fontSize: 12,
@@ -247,7 +188,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                         color: const Color(0xFF4ECDC4), size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      'S${shortest.key}: ${_formatDurationShort(shortest.value)}',
+                      'S${shortest.key}: ${Formatters.formatDurationShort(shortest.value)}',
                       style: const TextStyle(
                         color: Color(0xFF4ECDC4),
                         fontSize: 12,
@@ -276,122 +217,8 @@ class AnalyticsReportScreen extends StatelessWidget {
           ),
         ),
 
-        // Slide bars
-        if (sortedSlides.isEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(40),
-              child: Center(
-                child: Text(
-                  'Slayt verisi bulunamadı',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4),
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          )
-        else
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final slideNum = sortedSlides[index];
-                final duration = tps[slideNum]!;
-                final ratio = maxDuration.inMilliseconds > 0
-                    ? duration.inMilliseconds / maxDuration.inMilliseconds
-                    : 0.0;
-
-                final isLongest = longest != null && slideNum == longest.key;
-                final isShortest = shortest != null && slideNum == shortest.key && !isLongest;
-
-                Color barColor;
-                if (isLongest) {
-                  barColor = const Color(0xFFFF6B6B);
-                } else if (isShortest) {
-                  barColor = const Color(0xFF4ECDC4);
-                } else {
-                  barColor = const Color(0xFF6C63FF);
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          'S$slideNum',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            Container(
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: ratio.clamp(0.03, 1.0),
-                              child: Container(
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      barColor.withValues(alpha: 0.8),
-                                      barColor.withValues(alpha: 0.5),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ratio > 0.15
-                                    ? Text(
-                                        _formatDurationShort(duration),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          fontFeatures: [FontFeature.tabularFigures()],
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                            ),
-                            if (ratio <= 0.15)
-                              Positioned(
-                                left: (ratio.clamp(0.03, 1.0) * MediaQuery.of(context).size.width * 0.65) + 8,
-                                top: 6,
-                                child: Text(
-                                  _formatDurationShort(duration),
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              childCount: sortedSlides.length,
-            ),
-          ),
+        // Slide bars List
+        SlideDurationList(analytics: analytics),
 
         // Bottom actions
         SliverToBoxAdapter(
@@ -401,7 +228,7 @@ class AnalyticsReportScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _copyReport(context),
+                    onPressed: () => ReportExporter.copyToClipboard(context, analytics),
                     icon: const Icon(Icons.copy_rounded, size: 18),
                     label: const Text('Panoya Kopyala'),
                     style: OutlinedButton.styleFrom(
@@ -456,67 +283,5 @@ class AnalyticsReportScreen extends StatelessWidget {
     }
 
     return content;
-  }
-}
-
-// ─── Stat Card Widget ───
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final List<Color> gradient;
-
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.gradient,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              gradient[0].withValues(alpha: 0.2),
-              gradient[1].withValues(alpha: 0.08),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: gradient[0].withValues(alpha: 0.3),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: gradient[0], size: 20),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
