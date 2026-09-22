@@ -57,6 +57,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   final WebSocketServer server = WebSocketServer();
   String _localIP = '...';
   bool _isRunning = false;
+  bool _isStarting = false;
   int _clientCount = 0;
   String _lastCommand = '';
   bool _laserActive = false;
@@ -71,6 +72,7 @@ class WebSocketServerProvider extends ChangeNotifier {
 
   String get localIP => _localIP;
   bool get isRunning => _isRunning;
+  bool get isStarting => _isStarting;
   int get clientCount => _clientCount;
   String get lastCommand => _lastCommand;
   int get port => server.port;
@@ -138,8 +140,14 @@ class WebSocketServerProvider extends ChangeNotifier {
   }
 
   Future<void> startServer() async {
-    await server.start();
-    _localIP = await server.getLocalIP();
+    _isStarting = true;
+    notifyListeners();
+    final futures = await Future.wait([
+      server.start(),
+      server.getLocalIP(),
+    ]);
+    _localIP = futures[1] as String;
+    _isStarting = false;
     notifyListeners();
   }
 

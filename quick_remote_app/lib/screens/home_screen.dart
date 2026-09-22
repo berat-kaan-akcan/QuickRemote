@@ -1,13 +1,14 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../services/websocket_service.dart';
-import '../services/discovery_service.dart';
+
+import '../../services/discovery_service.dart';
+import '../../repositories/device_history_repository.dart';
 import 'scan_screen.dart';
 import 'remote_screen.dart';
-import 'settings_screen.dart';
+import 'settings/settings_screen.dart';
+import 'home/utils/connection_handler.dart';
+import 'home/widgets/manual_connect_dialog.dart';
+import 'home/widgets/spinning_refresh_icon.dart';
 
 /// Home screen - connection hub to scan QR and connect to PC.
 class HomeScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _connecting = false;
   String? _error;
   List<Map<String, dynamic>> _recentDevices = [];
+  final DeviceHistoryRepository _repository = DeviceHistoryRepository();
 
   @override
   void initState() {
@@ -31,97 +33,63 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    // stopScanning can be called safely without context if we hold a ref, but it's simpler to just let the service handle it or call it here.
-    // Actually, provider might already be disposed if we pop, but home_screen doesn't pop.
-    // Since home_screen is always alive, it's fine.
-    // context.read<DiscoveryService>().stopScanning(); 
-    super.dispose();
-  }
-
-  Future<void> _removeRecentDevice(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _recentDevices.removeAt(index);
-    });
-    final strList = _recentDevices.map((d) => jsonEncode(d)).toList();
-    await prefs.setStringList('recent_devices', strList);
-  }
-
   Future<void> _loadRecentDevices() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList('recent_devices') ?? [];
+    final data = await _repository.getRecentDevices();
     setState(() {
-      _recentDevices = data.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+      _recentDevices = data;
     });
   }
 
   Future<void> _saveRecentDevice(String host, int port, String pin) async {
-    final prefs = await SharedPreferences.getInstance();
-    
     String name = host;
-    // Try to resolve the PC name from discovered devices
     if (mounted) {
       try {
         final discovery = context.read<DiscoveryService>();
         final dev = discovery.devices.firstWhere((d) => d.ip == host);
         name = dev.name;
       } catch (_) {
-        // Not found in discovery, fallback to host
+        // Fallback to host
       }
     }
+    final data = await _repository.saveRecentDevice(host, port, pin, name);
+    if (mounted) {
+      setState(() {
+        _recentDevices = data;
+      });
+    }
+  }
 
-    final device = {'name': name, 'host': host, 'port': port, 'pin': pin};
-    
-    _recentDevices.removeWhere((d) => d['host'] == host && d['port'] == port);
-    _recentDevices.insert(0, device);
-    if (_recentDevices.length > 5) _recentDevices.removeLast();
-    
-    await prefs.setStringList('recent_devices', _recentDevices.map((e) => jsonEncode(e)).toList());
-    if (mounted) setState(() {});
+  Future<void> _removeRecentDevice(int index) async {
+    final data = await _repository.removeRecentDevice(index);
+    if (mounted) {
+      setState(() {
+        _recentDevices = data;
+      });
+    }
   }
 
   Future<void> _scanAndConnect() async {
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(builder: (_) => const ScanScreen()),
     );
-
     if (result == null || !mounted) return;
 
     final host = result['host'] as String;
     final port = result['port'] as int;
     final pin = result['pin'] as String? ?? '';
 
+    await _executeConnection(host, port, pin);
+  }
+
+  Future<void> _executeConnection(String host, int port, String pin) async {
     setState(() {
       _connecting = true;
       _error = null;
     });
 
-    final ws = context.read<WebSocketService>();
-    var connResult = await ws.connect(host, port, pin: pin);
-
+    final connResult = await ConnectionHandler.connect(context, host, port, pin: pin);
+    
     if (!mounted) return;
-
-    if (!connResult.success && connResult.error == ConnectionError.certMismatch) {
-      final accepted = await _showCertMismatchDialog();
-      if (!mounted) return;
-      if (accepted && connResult.newFingerprint != null) {
-        connResult = await ws.acceptCertificateAndReconnect(
-          host,
-          connResult.newFingerprint!,
-          port: port,
-          pin: pin,
-        );
-        if (!mounted) return;
-      } else {
-        setState(() {
-          _connecting = false;
-          _error = null;
-        });
-        return;
-      }
-    }
 
     if (connResult.success) {
       await _saveRecentDevice(host, port, pin);
@@ -131,10 +99,29 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(builder: (_) => const RemoteScreen()),
       );
     } else {
-      setState(() {
-        _connecting = false;
-        _error = connResult.message ?? 'Bağlantı kurulamadı.\n$host:$port adresini kontrol edin.';
-      });
+      if (!connResult.wasCancelled) {
+        setState(() {
+          _connecting = false;
+          _error = connResult.errorMessage;
+        });
+      } else {
+        setState(() {
+          _connecting = false;
+          _error = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _showManualConnect(BuildContext context, {String? defaultIp, String? defaultPort}) async {
+    final result = await ManualConnectDialog.show(
+      context, 
+      defaultIp: defaultIp, 
+      defaultPort: defaultPort
+    );
+    
+    if (result != null && mounted) {
+      _executeConnection(result.host, result.port, result.pin);
     }
   }
 
@@ -147,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header Row — opaque background prevents any bleed-through
+            // Header Row
             ColoredBox(
               color: scaffoldBg,
               child: Padding(
@@ -169,8 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Branding section — opaque background + RepaintBoundary isolates
-            // the BoxShadow's saveLayer from the scroll layer entirely.
+            // Branding section
             Expanded(
               flex: 2,
               child: RepaintBoundary(
@@ -230,8 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Action buttons section — opaque background blocks any
-            // scroll content from showing through this area.
+            // Action buttons section
             ColoredBox(
               color: scaffoldBg,
               child: Padding(
@@ -331,9 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Device lists section — ClipRect hard-clips scroll content at
-            // the viewport boundary so nothing can paint outside this area.
-            // RepaintBoundary isolates scroll repaints from upper layers.
+            // Device lists section
             Expanded(
               flex: 3,
               child: RepaintBoundary(
@@ -344,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context, discovery, child) {
                         return Column(
                           children: [
-                            // Discovered devices header — pinned, does not scroll
+                            // Discovered devices header
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -360,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onTap: discovery.isDiscovering ? null : () => discovery.startScanning(),
                                   child: Padding(
                                     padding: const EdgeInsets.all(4.0),
-                                    child: _SpinningRefreshIcon(isSpinning: discovery.isDiscovering),
+                                    child: SpinningRefreshIcon(isSpinning: discovery.isDiscovering),
                                   ),
                                 ),
                               ],
@@ -412,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       return Padding(
                                         padding: const EdgeInsets.only(bottom: 8),
                                         child: ListTile(
-                                          onTap: () => _connectManually(dev['host'], dev['port'], pin: dev['pin']),
+                                          onTap: () => _executeConnection(dev['host'], dev['port'], dev['pin']),
                                           tileColor: Colors.white.withValues(alpha: 0.05),
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                           leading: const Icon(Icons.history_rounded, color: Colors.white54),
@@ -440,293 +423,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showManualConnect(BuildContext context, {String? defaultIp, String? defaultPort}) {
-    final hostController = TextEditingController(text: defaultIp);
-    final portController = TextEditingController(text: defaultPort ?? '8090');
-    final pinController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Manuel Bağlantı',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: hostController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'IP Adresi',
-                hintText: '192.168.1.x',
-                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: portController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Port',
-                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-              TextField(
-              controller: pinController,
-              onChanged: (_) => HapticFeedback.lightImpact(),
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'PIN',
-                hintText: 'PC ekranındaki 4 haneli PIN',
-                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                prefixIcon: Icon(
-                  Icons.lock_rounded,
-                  color: Colors.white.withValues(alpha: 0.4),
-                  size: 20,
-                ),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton(
-                onPressed: () {
-                  final host = hostController.text.trim();
-                  final port = int.tryParse(portController.text.trim()) ?? 0;
-                  final pin = pinController.text.trim();
-
-                  if (host.isEmpty) return;
-
-                  // IP validation (regex + octet range)
-                  final ipRegex = RegExp(r'^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|localhost|([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}|\[[a-fA-F0-9:]+\]|[a-zA-Z0-9-]+)$');
-                  if (!ipRegex.hasMatch(host)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Geçersiz Hostname veya IP adresi')),
-                    );
-                    return;
-                  }
-                  final octetsValid = host.split('.').every((p) {
-                    final n = int.tryParse(p);
-                    return n != null && n >= 0 && n <= 255;
-                  });
-                  if (!octetsValid) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Geçersiz Hostname veya IP adresi')),
-                    );
-                    return;
-                  }
-
-                  // Port range validation
-                  if (port < 1 || port > 65535) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Port 1-65535 arası olmalı')),
-                    );
-                    return;
-                  }
-
-                  Navigator.of(context).pop();
-                  _connectManually(host, port, pin: pin);
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF005B96),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Bağlan',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-      ),
-    );
-  }
-
-  Future<void> _connectManually(String host, int port, {String pin = ''}) async {
-    setState(() {
-      _connecting = true;
-      _error = null;
-    });
-
-    final ws = context.read<WebSocketService>();
-    var connResult = await ws.connect(host, port, pin: pin);
-
-    if (!mounted) return;
-
-    if (!connResult.success && connResult.error == ConnectionError.certMismatch) {
-      final accepted = await _showCertMismatchDialog();
-      if (!mounted) return;
-      if (accepted && connResult.newFingerprint != null) {
-        connResult = await ws.acceptCertificateAndReconnect(
-          host,
-          connResult.newFingerprint!,
-          port: port,
-          pin: pin,
-        );
-        if (!mounted) return;
-      } else {
-        setState(() {
-          _connecting = false;
-          _error = null;
-        });
-        return;
-      }
-    }
-
-    if (connResult.success) {
-      await _saveRecentDevice(host, port, pin);
-      if (!mounted) return;
-      setState(() => _connecting = false);
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const RemoteScreen()),
-      );
-    } else {
-      setState(() {
-        _connecting = false;
-        _error = connResult.message ?? 'Bağlantı kurulamadı.\n$host:$port adresini kontrol edin.';
-      });
-    }
-  }
-
-  Future<bool> _showCertMismatchDialog() async {
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        icon: const Icon(Icons.shield_rounded, color: Color(0xFFFF9800), size: 48),
-        title: const Text(
-          'Güvenlik Uyarısı',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: const Text(
-          'Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı.\n\n'
-          'PC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir.\n\n'
-          'Emin değilseniz bağlanmayın.',
-          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'İptal Et',
-              style: TextStyle(color: Colors.white54, fontWeight: FontWeight.w600),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFF9800),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text(
-              'Yine de Bağlan ve Güncelle',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    ) ?? false;
-  }
-}
-
-class _SpinningRefreshIcon extends StatefulWidget {
-  final bool isSpinning;
-  const _SpinningRefreshIcon({required this.isSpinning});
-
-  @override
-  State<_SpinningRefreshIcon> createState() => _SpinningRefreshIconState();
-}
-
-class _SpinningRefreshIconState extends State<_SpinningRefreshIcon> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    if (widget.isSpinning) {
-      _controller.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(_SpinningRefreshIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSpinning && !oldWidget.isSpinning) {
-      _controller.repeat();
-    } else if (!widget.isSpinning && oldWidget.isSpinning) {
-      _controller.stop();
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return RotationTransition(
-      turns: _controller,
-      child: Icon(
-        Icons.refresh_rounded,
-        color: widget.isSpinning ? const Color(0xFF005B96) : Colors.white54,
-        size: 20,
       ),
     );
   }

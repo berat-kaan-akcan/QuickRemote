@@ -17,15 +17,23 @@ class InputSimulator {
   static void pressKey(int vkCode) {
     final inputs = calloc<INPUT>(2);
 
+    final isExtended = (vkCode >= 0xAE && vkCode <= 0xB3) ||
+                       vkCode == VK_NEXT || vkCode == VK_PRIOR || 
+                       vkCode == VK_HOME || vkCode == VK_END ||
+                       vkCode == VK_LEFT || vkCode == VK_UP || 
+                       vkCode == VK_RIGHT || vkCode == VK_DOWN ||
+                       vkCode == VK_INSERT || vkCode == VK_DELETE;
+    final int extFlag = isExtended ? 0x0001 : 0; // KEYEVENTF_EXTENDEDKEY = 0x0001
+
     // Key down
     inputs[0].type = INPUT_KEYBOARD;
     inputs[0].ki.wVk = VIRTUAL_KEY(vkCode);
-    inputs[0].ki.dwFlags = KEYBD_EVENT_FLAGS(0);
+    inputs[0].ki.dwFlags = KEYBD_EVENT_FLAGS(extFlag); // was KEYBD_EVENT_FLAGS(0)
 
     // Key up
     inputs[1].type = INPUT_KEYBOARD;
     inputs[1].ki.wVk = VIRTUAL_KEY(vkCode);
-    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    inputs[1].ki.dwFlags = KEYBD_EVENT_FLAGS(KEYEVENTF_KEYUP | extFlag);
 
     SendInput(2, inputs, sizeOf<INPUT>());
     calloc.free(inputs);
@@ -38,17 +46,35 @@ class InputSimulator {
 
     // All keys down
     for (var i = 0; i < vkCodes.length; i++) {
+      final vk = vkCodes[i];
+      final isExtended = (vk >= 0xAE && vk <= 0xB3) ||
+                         vk == VK_NEXT || vk == VK_PRIOR || 
+                         vk == VK_HOME || vk == VK_END ||
+                         vk == VK_LEFT || vk == VK_UP || 
+                         vk == VK_RIGHT || vk == VK_DOWN ||
+                         vk == VK_INSERT || vk == VK_DELETE;
+      final int extFlag = isExtended ? 0x0001 : 0;
+
       inputs[i].type = INPUT_KEYBOARD;
-      inputs[i].ki.wVk = VIRTUAL_KEY(vkCodes[i]);
-      inputs[i].ki.dwFlags = KEYBD_EVENT_FLAGS(0);
+      inputs[i].ki.wVk = VIRTUAL_KEY(vk);
+      inputs[i].ki.dwFlags = KEYBD_EVENT_FLAGS(extFlag);
     }
 
     // All keys up (reverse order)
     for (var i = 0; i < vkCodes.length; i++) {
       final idx = vkCodes.length + i;
+      final vk = vkCodes[vkCodes.length - 1 - i];
+      final isExtended = (vk >= 0xAE && vk <= 0xB3) ||
+                         vk == VK_NEXT || vk == VK_PRIOR || 
+                         vk == VK_HOME || vk == VK_END ||
+                         vk == VK_LEFT || vk == VK_UP || 
+                         vk == VK_RIGHT || vk == VK_DOWN ||
+                         vk == VK_INSERT || vk == VK_DELETE;
+      final int extFlag = isExtended ? 0x0001 : 0;
+
       inputs[idx].type = INPUT_KEYBOARD;
-      inputs[idx].ki.wVk = VIRTUAL_KEY(vkCodes[vkCodes.length - 1 - i]);
-      inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
+      inputs[idx].ki.wVk = VIRTUAL_KEY(vk);
+      inputs[idx].ki.dwFlags = KEYBD_EVENT_FLAGS(KEYEVENTF_KEYUP | extFlag);
     }
 
     SendInput(count, inputs, sizeOf<INPUT>());
@@ -130,7 +156,6 @@ try {
     pressKey(VK_RETURN);
   }
 
-  /// End presentation (Escape)
   /// End presentation (Escape)
   static Future<void> slideEnd() async {
     // 1. Send ESC to exit presentation
@@ -223,6 +248,304 @@ try {
 
 
 
+  // ─── Ses kontrolü ───────────────────────────────────────────────────
+
+  static const String _audioControlCSharp = '''using System; using System.Runtime.InteropServices; namespace AudioControl { [Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)] public interface IAudioEndpointVolume { int RegisterControlChangeNotify(IntPtr pNotify); int UnregisterControlChangeNotify(IntPtr pNotify); int GetChannelCount(out uint pnChannelCount); int SetMasterVolumeLevel(float fLevelDB, System.Guid pguidEventContext); int SetMasterVolumeLevelScalar(float fLevel, System.Guid pguidEventContext); int GetMasterVolumeLevel(out float pfLevelDB); int GetMasterVolumeLevelScalar(out float pfLevel); int SetChannelVolumeLevel(uint nChannel, float fLevelDB, System.Guid pguidEventContext); int SetChannelVolumeLevelScalar(uint nChannel, float fLevel, System.Guid pguidEventContext); int GetChannelVolumeLevel(uint nChannel, out float pfLevelDB); int GetChannelVolumeLevelScalar(uint nChannel, out float pfLevel); int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, System.Guid pguidEventContext); int GetMute([MarshalAs(UnmanagedType.Bool)] out bool pbMute); } [Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)] public interface IMMDevice { int Activate(ref System.Guid iid, int dwClsCtx, IntPtr pActivationParams, [MarshalAs(UnmanagedType.IUnknown)] out object ppInterface); } [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)] public interface IMMDeviceEnumerator { int NotImpl1(); int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice ppDevice); } [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] public class MMDeviceEnumerator {} public class Audio { public static IAudioEndpointVolume GetVolumeObject() { IMMDeviceEnumerator enumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator()); IMMDevice device; enumerator.GetDefaultAudioEndpoint(0, 1, out device); Guid iid = new Guid("5CDF2C82-841E-4546-9722-0CF74078229A"); object obj; device.Activate(ref iid, 23, IntPtr.Zero, out obj); return (IAudioEndpointVolume)obj; } public static void SetVolume(float level) { GetVolumeObject().SetMasterVolumeLevelScalar(level, Guid.Empty); } public static float GetVolume() { float level; GetVolumeObject().GetMasterVolumeLevelScalar(out level); return level; } public static void SetMute(bool mute) { GetVolumeObject().SetMute(mute, Guid.Empty); } public static bool GetMute() { bool mute; GetVolumeObject().GetMute(out mute); return mute; } } }''';
+
+  /// PowerShell'de AudioControl.Audio sınıfını tanımlayan betik parçasını döndürür.
+  /// Base64 üzerinden C# kodunu okuyup Add-Type ile yükler (powershell çok satırlı stdin hatalarını aşar).
+  static String getAudioControlPSScript() {
+    final b64 = base64Encode(utf8.encode(_audioControlCSharp));
+    return '''
+    if (-not ("AudioControl.Audio" -as [type])) {
+        \$b = [System.Convert]::FromBase64String("$b64")
+        \$c = [System.Text.Encoding]::UTF8.GetString(\$b)
+        Add-Type -ErrorAction Stop -TypeDefinition \$c
+    }''';
+  }
+
+  /// Sistem sesini bir adım artır (VK_VOLUME_UP)
+  static void volumeUp()   => pressKey(0xAF);
+
+  /// Sistem sesini bir adım azalt (VK_VOLUME_DOWN)
+  static void volumeDown() => pressKey(0xAE);
+
+  /// Sistemi mute/unmute yap (VK_VOLUME_MUTE)
+  static void volumeMute() => pressKey(0xAD);
+
+  /// Windows varsayılan ses cihazının seviyesini 0-100 arasında ayarla.
+  /// PowerShell CoreAudio COM arayüzü kullanır — harici araç gerektirmez.
+  static Future<void> setVolume(int level) async {
+    final clamped = level.clamp(0, 100);
+    // IMMDeviceEnumerator / IAudioEndpointVolume COM arayüzü
+    final script = '''
+\$vol = [float]$clamped / 100.0
+try {
+${getAudioControlPSScript()}
+    [AudioControl.Audio]::SetVolume(\$vol)
+} catch {
+    Write-Output \$_.Exception.Message
+}
+Write-Output "OK"
+''';
+    try {
+      await _PowerShellRunner.execute(script);
+    } catch (e) {
+      debugPrint('setVolume error: $e');
+    }
+  }
+
+  // ─── PPT gömülü video kontrolü ──────────────────────────────────────
+
+  /// PowerPoint SlideShow penceresine focus ver (Win32 API).
+  /// HWND'yi PowerShell COM'dan alıp, Dart FFI ile focus ayarlar.
+  /// Dönüş: true = focus başarılı, false = başarısız.
+  static Future<bool> _focusPptSlideShow() async {
+    // PowerShell ile SlideShow HWND'sini al
+    const hwndScript = r'''
+try {
+    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
+    if ($ppt -ne $null -and $ppt.SlideShowWindows.Count -gt 0) {
+        Write-Output $ppt.SlideShowWindows.Item(1).HWND
+    } else {
+        Write-Output "0"
+    }
+} catch {
+    Write-Output "0"
+}
+''';
+    try {
+      final hwndStr = (await _PowerShellRunner.execute(hwndScript)).trim();
+      final hwndVal = int.tryParse(hwndStr) ?? 0;
+      if (hwndVal == 0) return false;
+
+      final hwnd = HWND(Pointer.fromAddress(hwndVal));
+
+      // Win32 API ile focus ayarla. SendInput her zaman o anki ön plan
+      // penceresine gider; bu nedenle aşağıda odağın gerçekten Slideshow
+      // penceresine geçtiğini ayrıca doğruluyoruz.
+      final foreHwnd = GetForegroundWindow();
+      if (foreHwnd == hwnd) return true;
+
+      final foreThread = GetWindowThreadProcessId(foreHwnd, nullptr);
+      final pidPtr = calloc<Uint32>();
+      final targetThread = GetWindowThreadProcessId(hwnd, pidPtr);
+      final targetPid = pidPtr.value;
+      calloc.free(pidPtr);
+      final curThread = GetCurrentThreadId();
+
+      AllowSetForegroundWindow(targetPid);
+
+      bool attached1 = false;
+      bool attached2 = false;
+      if (foreThread != curThread) {
+        attached1 = AttachThreadInput(curThread, foreThread, true);
+      }
+      if (foreThread != targetThread) {
+        attached2 = AttachThreadInput(curThread, targetThread, true);
+      }
+
+      // Slideshow penceresini restore etmek, tam ekran sunumu küçültebilir.
+      // Yalnızca görünür durumdaysa üstte/önde tutmak yeterlidir.
+      BringWindowToTop(hwnd);
+      SetForegroundWindow(hwnd);
+
+      if (attached1) AttachThreadInput(curThread, foreThread, false);
+      if (attached2) AttachThreadInput(curThread, targetThread, false);
+
+      // Focus'un yerleşmesi için kısa bekleme. SetForegroundWindow'un dönüşü,
+      // odağın gerçekten değiştiğini garanti etmez (Windows foreground lock).
+      await Future.delayed(const Duration(milliseconds: 200));
+      return GetForegroundWindow() == hwnd;
+    } catch (e) {
+      debugPrint('_focusPptSlideShow error: $e');
+      return false;
+    }
+  }
+
+  /// PowerPoint sunum modunda gömülü videoyu Oynat/Durdur.
+  ///
+  /// Strateji sırası:
+  /// 1. COM MediaPlayer.Play()/Pause() — en güvenilir, focus gerektirmez
+  /// 2. Win32 SendInput — focus + Tab + Alt+P doğrudan donanım düzeyinde
+  ///
+  /// Önceki sürümde PowerShell SendKeys kullanılıyordu ama bu Windows
+  /// System Media Transport Controls (SMTC) tarafından yakalanıp
+  /// Chrome'daki videoyu durduruyordu. SendInput bunu yapmaz.
+  static Future<void> pptMediaPlayPause() async {
+    // ── Strateji 1: COM ile doğrudan medya kontrolü ──
+    const comScript = r'''
+try {
+    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
+    if ($ppt -eq $null -or $ppt.SlideShowWindows.Count -eq 0) {
+        Write-Output "NO_SLIDESHOW"
+        return
+    }
+
+    $view  = $ppt.SlideShowWindows.Item(1).View
+    $slide = $view.Slide
+
+    $mediaControlled = $false
+    try {
+        # Video nesneleri Office sürümüne/ekleme şekline göre farklı Shape.Type
+        # değerleri kullanabilir. Player() çağrısı medya olmayan şekillerde hata
+        # verir; onu yakalayarak tüm şekilleri güvenle tarıyoruz.
+        # Player() metodu Shape'in Name string'ini bekler, Id integer'ını değil.
+        for ($i = 1; $i -le $slide.Shapes.Count; $i++) {
+            try {
+                $shape = $slide.Shapes.Item($i)
+                $player = $view.Player($shape.Name)
+                if ($player -ne $null) {
+                    # PpPlayerState: ppPlaying = 0, ppPaused = 1,
+                    # ppStopped = 2, ppMediaEnded = 3.
+                    # Oynuyorsa duraklat, aksi halde oynat.
+                    if ($player.State -eq 0) {
+                        $player.Pause()
+                    } else {
+                        $player.Play()
+                    }
+                    $mediaControlled = $true
+                    break
+                }
+            } catch {}
+        }
+    } catch {
+        $mediaControlled = $false
+    }
+
+    if ($mediaControlled) {
+        Write-Output "COM_OK"
+    } else {
+        Write-Output "COM_FAIL"
+    }
+} catch {
+    Write-Output "ERROR: $($_.Exception.Message)"
+}
+''';
+    try {
+      final result = (await _PowerShellRunner.execute(comScript)).trim();
+      debugPrint('pptMediaPlayPause COM: $result');
+
+      if (result == 'COM_OK') return;
+      if (result == 'NO_SLIDESHOW') return;
+
+      // ── Strateji 2: Win32 SendInput ile Tab + Space ──
+      // Focus'u PPT SlideShow penceresine ver
+      final focused = await _focusPptSlideShow();
+      debugPrint('pptMediaPlayPause focus: $focused');
+
+      // Odağı alamadıysak tuş gönderme: aksi halde Chrome/YouTube gibi
+      // ön plandaki uygulama bu kısayolu alır.
+      if (!focused) {
+        debugPrint('pptMediaPlayPause: slideshow focus unavailable; keyboard fallback skipped');
+        return;
+      }
+
+      // Tab tuşu — medya nesnesini seç
+      pressKey(VK_TAB);
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // Space — seçili medyayı oynat/durdur
+      // (PowerPoint sunum modunda video seçiliyken Space toggle yapar)
+      pressKey(VK_SPACE);
+
+      debugPrint('pptMediaPlayPause: SENDINPUT_OK (focused=$focused)');
+    } catch (e) {
+      debugPrint('pptMediaPlayPause error: $e');
+    }
+  }
+
+  /// Aktif slaytta gömülü videoyu başa sar.
+  ///
+  /// Strateji:
+  /// 1. COM Otomasyon: MediaPlayer.CurrentPosition = 0
+  /// 2. Win32 SendInput: Focus + Tab + Alt+Home (donanım düzeyinde)
+  static Future<void> pptMediaRewind() async {
+    // ── Strateji 1: COM ile başa sar ──
+    const comScript = r'''
+try {
+    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
+    if ($ppt -eq $null -or $ppt.SlideShowWindows.Count -eq 0) {
+        Write-Output "NO_SLIDESHOW"
+        return
+    }
+
+    $view  = $ppt.SlideShowWindows.Item(1).View
+    $slide = $view.Slide
+
+    $mediaControlled = $false
+    try {
+        # Player() metodu Shape'in Name string'ini bekler.
+        for ($i = 1; $i -le $slide.Shapes.Count; $i++) {
+            try {
+                $shape = $slide.Shapes.Item($i)
+                $player = $view.Player($shape.Name)
+                if ($player -ne $null) {
+                    $player.Pause()
+                    Start-Sleep -Milliseconds 50
+                    $player.CurrentPosition = 0
+                    $mediaControlled = $true
+                    break
+                }
+            } catch {}
+        }
+    } catch {
+        $mediaControlled = $false
+    }
+
+    if ($mediaControlled) {
+        Write-Output "COM_OK"
+    } else {
+        Write-Output "COM_FAIL"
+    }
+} catch {
+    Write-Output "ERROR: $($_.Exception.Message)"
+}
+''';
+    try {
+      final result = (await _PowerShellRunner.execute(comScript)).trim();
+      debugPrint('pptMediaRewind COM: $result');
+
+      if (result == 'COM_OK') return;
+      if (result == 'NO_SLIDESHOW') return;
+
+      // ── Strateji 2: Win32 SendInput ile Tab + Home ──
+      final focused = await _focusPptSlideShow();
+      debugPrint('pptMediaRewind focus: $focused');
+
+      if (!focused) {
+        debugPrint('pptMediaRewind: slideshow focus unavailable; keyboard fallback skipped');
+        return;
+      }
+
+      // Tab tuşu — medya nesnesini seç
+      pressKey(VK_TAB);
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // Home — seçili medyayı başa sar
+      // (Alt olmadan Home tuşu video timeline'ı başa sarar)
+      pressKey(VK_HOME);
+
+      debugPrint('pptMediaRewind: SENDINPUT_OK (focused=$focused)');
+    } catch (e) {
+      debugPrint('pptMediaRewind error: $e');
+    }
+  }
+
+  // ─── Sistem medya transport ──────────────────────────────────────────
+
+  /// Aktif medya uygulamasını Oynat/Durdur (VK_MEDIA_PLAY_PAUSE)
+  static void sysMediaPlayPause() => pressKey(0xB3);
+
+  /// Sonraki parçaya geç (VK_MEDIA_NEXT_TRACK)
+  static void sysMediaNext() => pressKey(0xB0);
+
+  /// Önceki parçaya geç (VK_MEDIA_PREV_TRACK)
+  static void sysMediaPrev() => pressKey(0xB1);
+
+  /// Medyayı durdur (VK_MEDIA_STOP)
+  static void sysMediaStop() => pressKey(0xB2);
+
   static Future<void> setPenColor(int bgrColor) async {
     final script = '''
 try {
@@ -260,6 +583,17 @@ try {
       final slideNumber = int.tryParse(slideStr);
       if (slideNumber != null) {
         slideStartAt(slideNumber);
+      }
+      return;
+    }
+
+    if (command.startsWith('VOLUME_SET:')) {
+      final levelStr = command.split(':')[1];
+      final level = int.tryParse(levelStr);
+      if (level != null && level >= 0 && level <= 100) {
+        setVolume(level);
+      } else {
+        debugPrint('Invalid VOLUME_SET value: $levelStr (must be 0-100)');
       }
       return;
     }
@@ -328,12 +662,154 @@ try {
         pressKeyCombo([VK_CONTROL, 0x41]); // Ctrl + A
         _isLaserActive = false;
         break;
+
+      // ── Ses kontrolü ──
+      case 'VOLUME_UP':
+        volumeUp();
+        break;
+      case 'VOLUME_DOWN':
+        volumeDown();
+        break;
+      case 'VOLUME_MUTE':
+        volumeMute();
+        break;
+
+      // ── PPT gömülü video ──
+      case 'MEDIA_PLAY_PAUSE':
+        pptMediaPlayPause();
+        break;
+      case 'MEDIA_REWIND':
+        pptMediaRewind();
+        break;
+
+      // ── Sistem medya transport ──
+      case 'SYSTEM_MEDIA_PLAY_PAUSE':
+        sysMediaPlayPause();
+        break;
+      case 'SYSTEM_MEDIA_NEXT':
+        sysMediaNext();
+        break;
+      case 'SYSTEM_MEDIA_PREV':
+        sysMediaPrev();
+        break;
+      case 'SYSTEM_MEDIA_STOP':
+        sysMediaStop();
+        break;
+
       default:
         debugPrint('Unknown command: $command');
     }
   }
 
   /// Get current slide state (current slide, total slides, notes)
+  static String getSmtcStatePSScript() {
+    return '''
+try {
+    \$managerType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media, ContentType=WindowsRuntime]
+    \$asyncOp = \$managerType::RequestAsync()
+
+    Add-Type -AssemblyName System.Runtime.WindowsRuntime
+
+    \$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { 
+        \$_.Name -eq 'AsTask' -and \$_.GetParameters().Count -eq 1 -and \$_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' 
+    })[0]
+
+    \$asTask = \$asTaskGeneric.MakeGenericMethod(\$managerType)
+    \$netTask = \$asTask.Invoke(\$null, @(\$asyncOp))
+    if (-not \$netTask.Wait(2000)) { throw "Timeout" }
+    \$manager = \$netTask.Result
+
+    \$session = \$manager.GetCurrentSession()
+    if (\$session -ne \$null) {
+        \$propsAsync = \$session.TryGetMediaPropertiesAsync()
+        
+        \$propsType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties, Windows.Media, ContentType=WindowsRuntime]
+        \$asTask2 = \$asTaskGeneric.MakeGenericMethod(\$propsType)
+        \$netTask2 = \$asTask2.Invoke(\$null, @(\$propsAsync))
+        if (-not \$netTask2.Wait(2000)) { throw "Timeout" }
+        \$props = \$netTask2.Result
+        
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+        \$posMs = 0
+        \$durMs = 0
+        \$isPlaying = \$false
+        try {
+            \$tl = \$session.GetTimelineProperties()
+            \$posMs = [int64]\$tl.Position.TotalMilliseconds
+            \$durMs = [int64]\$tl.EndTime.TotalMilliseconds
+            \$lastUpdated = \$tl.LastUpdatedTime
+            
+            \$playbackInfo = \$session.GetPlaybackInfo()
+            if (\$playbackInfo -ne \$null) {
+                \$isPlaying = (\$playbackInfo.PlaybackStatus -eq [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackStatus]::Playing)
+            }
+
+            if (\$isPlaying -and \$lastUpdated -ne \$null) {
+                \$now = [System.DateTimeOffset]::UtcNow
+                \$diff = \$now - \$lastUpdated
+                \$posMs += [int64]\$diff.TotalMilliseconds
+            }
+        } catch {}
+        
+        \$thumbBase64 = ""
+        if (\$props.Thumbnail -ne \$null) {
+            try {
+                \$thumbAsync = \$props.Thumbnail.OpenReadAsync()
+                \$asTaskStream = \$asTaskGeneric.MakeGenericMethod([Windows.Storage.Streams.IRandomAccessStreamWithContentType])
+                \$netTaskStream = \$asTaskStream.Invoke(\$null, @(\$thumbAsync))
+                if (-not \$netTaskStream.Wait(2000)) { throw "Timeout" }
+                \$stream = \$netTaskStream.Result
+
+                \$asStreamMethod = ([System.IO.WindowsRuntimeStreamExtensions].GetMethods() | Where-Object { \$_.Name -eq 'AsStreamForRead' -and \$_.GetParameters().Count -eq 1 })[0]
+                \$dotNetStream = \$asStreamMethod.Invoke(\$null, @(\$stream))
+
+                \$memoryStream = New-Object System.IO.MemoryStream
+                \$dotNetStream.CopyTo(\$memoryStream)
+                \$thumbBase64 = [Convert]::ToBase64String(\$memoryStream.ToArray())
+
+                \$dotNetStream.Close()
+                \$memoryStream.Close()
+            } catch {}
+        }
+        
+        \$data = @{
+            hasMedia = \$true
+            title = \$props.Title
+            artist = \$props.Artist
+            positionMs = \$posMs
+            durationMs = \$durMs
+            isPlaying = \$isPlaying
+            thumbnail = \$thumbBase64
+        }
+        \$data | ConvertTo-Json -Compress
+    } else {
+        Write-Output '{"hasMedia": false}'
+    }
+} catch {
+    \$msg = \$_.Exception.Message
+    \$data = @{
+        hasMedia = \$false
+        error = \$msg
+    }
+    \$data | ConvertTo-Json -Compress
+}
+''';
+  }
+
+  static Future<Map<String, dynamic>?> getSmtcState() async {
+    try {
+      final output = (await runPowerShellScript(getSmtcStatePSScript())).trim();
+      if (output.startsWith('{')) {
+        return jsonDecode(output) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting SMTC state: \$e');
+      return null;
+    }
+  }
+
   static Future<Map<String, dynamic>?> getSlideState() async {
     const script = r'''
 try {
@@ -342,23 +818,51 @@ try {
         $view = $ppt.SlideShowWindows.Item(1).View
         $current = $view.CurrentShowPosition
         $total = $ppt.ActivePresentation.Slides.Count
-        $slide = $ppt.ActivePresentation.Slides.Item($current)
+        
+        $isBlackScreen = $false
+        if ($current -gt $total) {
+            $isBlackScreen = $true
+            $current = $total
+        }
+
         $notes = ""
-        if ($slide.HasNotesPage) {
-            $shapes = $slide.NotesPage.Shapes
-            foreach ($shape in $shapes) {
-                if ($shape.Type -eq 14 -or $shape.HasTextFrame) {
-                    $text = $shape.TextFrame.TextRange.Text
-                    if ($text -ne $null -and $text.Trim() -ne "") {
-                        $notes += $text + "`n"
+        $hasMedia = $false
+        $shapeTypes = ""
+
+        if (-not $isBlackScreen) {
+            $slide = $ppt.ActivePresentation.Slides.Item($current)
+            if ($slide.HasNotesPage) {
+                $shapes = $slide.NotesPage.Shapes
+                foreach ($shape in $shapes) {
+                    if ($shape.Type -eq 14 -or $shape.HasTextFrame) {
+                        $text = $shape.TextFrame.TextRange.Text
+                        if ($text -ne $null -and $text.Trim() -ne "") {
+                            $notes += $text + "`n"
+                        }
                     }
                 }
             }
+
+            for ($i = 1; $i -le $slide.Shapes.Count; $i++) {
+                try {
+                    $s = $slide.Shapes.Item($i)
+                    $p = $view.Player($s.Name)
+                    if ($p -ne $null) {
+                        $hasMedia = $true
+                        break
+                    }
+                } catch {}
+            }
+            $shapeTypes = ($slide.Shapes | ForEach-Object { "$($_.Name):$($_.Type)" }) -join ", "
         }
+
         $data = @{
             current = $current
             total = $total
             notes = $notes.Trim()
+            hasMedia = $hasMedia
+            shapeTypes = $shapeTypes
+            isBlackScreen = $isBlackScreen
         }
         $data | ConvertTo-Json -Compress
     } else {
@@ -382,6 +886,11 @@ try {
     }
     return null;
   }
+
+  /// Dış kodun (WebSocketServer gibi) paylasılan PowerShell sürecini kullanabilmesi için
+  /// genel amaçlı bir PowerShell script çalıştırıcısı.
+  static Future<String> runPowerShellScript(String script) =>
+      _PowerShellRunner.execute(script);
 }
 
 class _PSJob {

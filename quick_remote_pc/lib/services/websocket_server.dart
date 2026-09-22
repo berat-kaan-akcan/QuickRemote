@@ -30,21 +30,28 @@ class WebSocketServer {
   Map<String, dynamic>? _lastSlideState;
   int _pptNotRunningSkipCount = 0;
   final Map<WebSocket, Timer> _authTimers = {};
-  final Map<WebSocket, Timer> _pingTimers = {};
   final Map<WebSocket, int> _invalidMessageCount = {};
   final Map<WebSocket, int> _lastBinaryPacketTime = {};
-  final Map<WebSocket, DateTime> _lastPongTime = {};
   final ValueNotifier<bool> isPublicNetwork = ValueNotifier(false);
+  // Ses durumu — VOLUME_SET sonrası broadcast için
+  int _lastBroadcastVolume = -1;
+  bool _lastBroadcastMuted = false;
+  Timer? _volumeStateTimer;
+  Timer? _networkCheckTimer;
 
   /// Callback for laser position updates (for overlay).
   void Function(double x, double y)? onMouseMove;
 
   int get port => _port;
 
+  String? _cachedIP;
+
   /// Get the local IP address of this machine.
   /// Uses PowerShell to find the active adapter with a default gateway (language-independent).
   /// Falls back to filtering virtual adapters if PowerShell fails.
   Future<String> getLocalIP() async {
+    if (_cachedIP != null) return _cachedIP!;
+
     // Primary method: PowerShell (Language independent, relies on default gateway)
     try {
       final result = await Process.run('powershell', [
@@ -55,6 +62,7 @@ class WebSocketServer {
       ]);
       final output = (result.stdout as String).trim();
       if (output.isNotEmpty && output.contains('.')) {
+        _cachedIP = output;
         return output;
       }
     } catch (e) {
@@ -83,12 +91,14 @@ class WebSocketServer {
         if (!addr.isLoopback) {
           fallbackIP ??= addr.address;
           // In fallback, just return the first non-virtual, non-loopback IP
+          _cachedIP = fallbackIP;
           return fallbackIP;
         }
       }
     }
     
-    return fallbackIP ?? '127.0.0.1';
+    _cachedIP = fallbackIP ?? '127.0.0.1';
+    return _cachedIP!;
   }
 
   /// Generate a random 4-digit PIN.
@@ -162,6 +172,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
 
     // Check network profile before starting
     isPublicNetwork.value = await _checkNetworkProfile();
+    _startNetworkMonitor();
 
     try {
       final ctx = await _loadOrGenerateCert();
@@ -171,7 +182,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
       for (var i = 0; i < maxRetries; i++) {
         try {
           _port = port + i;
-          _server = await HttpServer.bindSecure(InternetAddress.anyIPv4, _port, ctx);
+          _server = await HttpServer.bindSecure(InternetAddress.anyIPv6, _port, ctx);
           break;
         } on SocketException catch (e) {
           debugPrint('Port $_port is in use, trying next port... ($e)');
@@ -226,6 +237,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
               return;
             }
             final ws = await WebSocketTransformer.upgrade(request);
+            ws.pingInterval = const Duration(seconds: 30);
             _handleClient(ws, remoteIP);
           } else {
             request.response
@@ -258,11 +270,8 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
     _clients.remove(ws);
     _authTimers[ws]?.cancel();
     _authTimers.remove(ws);
-    _pingTimers[ws]?.cancel();
-    _pingTimers.remove(ws);
     _invalidMessageCount.remove(ws);
     _lastBinaryPacketTime.remove(ws);
-    _lastPongTime.remove(ws);
     if (_authenticatedClients.remove(ws)) {
       clientCount.value = _authenticatedClients.length;
       if (_authenticatedClients.isEmpty) {
@@ -349,23 +358,16 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
               _failedAttempts.remove(remoteIP);
               _blockedIPs.remove(remoteIP);
               clientCount.value = _authenticatedClients.length;
-              _lastPongTime[ws] = DateTime.now();
               ws.add(jsonEncode({'type': 'auth', 'status': 'ok'}));
-              
-              _pingTimers[ws]?.cancel();
-              _pingTimers[ws] = Timer.periodic(const Duration(seconds: 30), (timer) {
-                if (_authenticatedClients.contains(ws)) {
-                  ws.add(jsonEncode({'type': 'ping'}));
-                  final lastPong = _lastPongTime[ws] ?? DateTime.now();
-                  if (DateTime.now().difference(lastPong).inSeconds > 60) {
-                    debugPrint('Client timeout (no pong) - disconnecting');
-                    _closeConnection(ws, 4005, 'Ping timeout');
-                  }
-                }
-              });
 
               debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
               triggerSlideStateUpdate();
+              // Every newly connected phone needs the current value, even when
+              // another client already caused us to cache the same value.
+              Future.delayed(
+                const Duration(milliseconds: 350),
+                () => _broadcastVolumeState(force: true),
+              );
             } else {
               // Track failed attempt for brute-force protection
               _failedAttempts[remoteIP] = (_failedAttempts[remoteIP] ?? 0) + 1;
@@ -377,13 +379,6 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
               debugPrint('Client auth failed (wrong PIN) from $remoteIP (attempt ${_failedAttempts[remoteIP]})');
               _closeConnection(ws, 4003, 'Invalid PIN');
             }
-            return;
-          }
-
-          final type = message['type'] as String?;
-
-          if (type == 'pong') {
-            _lastPongTime[ws] = DateTime.now();
             return;
           }
 
@@ -409,6 +404,13 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
             InputSimulator.executeCommand(command);
             debugPrint('Executed: $command');
 
+            // Ses komutu ise ses durumunu broadcast et
+            if (command == 'VOLUME_UP' || command == 'VOLUME_DOWN' ||
+                command == 'VOLUME_MUTE' || command.startsWith('VOLUME_SET:')) {
+              // Kısa gecikme sonrası gerçek seviyeyi al ve yayınla
+              _scheduleVolumeStateBroadcast();
+            }
+
             // Update laser active state based on mode commands
             if (command == 'MODE_LASER') {
               laserActive.value = true;
@@ -420,8 +422,19 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
 
             if (command == 'NEXT' || command == 'PREV' || command == 'START' || command == 'END' || command.startsWith('START_AT:')) {
               triggerSlideStateUpdate(const Duration(milliseconds: 500));
+            } else if (command == 'MEDIA_PLAY_PAUSE' || command == 'MEDIA_NEXT' || command == 'MEDIA_PREV') {
+              triggerSlideStateUpdate(const Duration(milliseconds: 350));
             } else if (command == 'REFRESH_STATE') {
               triggerSlideStateUpdate();
+              if (_lastBroadcastVolume >= 0) {
+                ws.add(jsonEncode({
+                  'type': 'STATUS',
+                  'state': 'VOLUME_CHANGED',
+                  'volume': _lastBroadcastVolume,
+                  'muted': _lastBroadcastMuted,
+                }));
+              }
+              _broadcastVolumeState(force: true);
             }
 
             ws.add(jsonEncode({'type': 'ack', 'command': command}));
@@ -451,12 +464,11 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
 
   /// Stop the WebSocket server.
   Future<void> stop() async {
+    _stopNetworkMonitor();
     _slideStateTimer?.cancel();
     _slideStateTimer = null;
-    for (final t in _pingTimers.values) {
-      t.cancel();
-    }
-    _pingTimers.clear();
+    _volumeStateTimer?.cancel();
+    _volumeStateTimer = null;
     _lastSlideState = null;
 
     for (final client in _clients) {
@@ -468,10 +480,10 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
     _authenticatedClients.clear();
     _failedAttempts.clear();
     _blockedIPs.clear();
-    _lastPongTime.clear();
     clientCount.value = 0;
     laserActive.value = false;
     pin.value = '';
+    _cachedIP = null; // Clear cached IP when stopping so we can fetch again on next start if network changed.
 
     // We intentionally DO NOT unregister mDNS here to prevent "ghost duplicate" 
     // devices on the network due to Windows mDNS bugs when toggling fast.
@@ -497,7 +509,10 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
   void _startSlideStatePoller() {
     _slideStateTimer?.cancel();
     _pptNotRunningSkipCount = 0;
-    _slideStateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _slideStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _fetchAndBroadcastSmtcState();
+      _broadcastVolumeState();
+      
       if (_pptNotRunningSkipCount > 0) {
         _pptNotRunningSkipCount--;
         return;
@@ -506,13 +521,42 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
     });
   }
 
+  /// Coalesce slider updates and query Windows only after the user briefly stops.
+  /// This prevents a slow PowerShell request from reporting an older value.
+  void _scheduleVolumeStateBroadcast() {
+    _volumeStateTimer?.cancel();
+    _volumeStateTimer = Timer(
+      const Duration(milliseconds: 350),
+      _broadcastVolumeState,
+    );
+  }
+
+  Future<void> _fetchAndBroadcastSmtcState() async {
+    if (_authenticatedClients.isEmpty) return;
+    
+    final smtcState = await InputSimulator.getSmtcState();
+    
+    if (smtcState != null) {
+      broadcast({
+        'type': 'SMTC_STATE',
+        'hasMedia': smtcState['hasMedia'] ?? false,
+        'title': smtcState['title'],
+        'artist': smtcState['artist'],
+        'positionMs': smtcState['positionMs'] ?? 0,
+        'durationMs': smtcState['durationMs'] ?? 0,
+        'isPlaying': smtcState['isPlaying'] ?? false,
+        'thumbnail': smtcState['thumbnail'],
+      });
+    }
+  }
+
   Future<void> _fetchAndBroadcastSlideState() async {
     if (_authenticatedClients.isEmpty) return; // Don't poll if no one is listening
 
     final state = await InputSimulator.getSlideState();
     if (state != null) {
       if (state['error'] == 'POWERPOINT_NOT_RUNNING') {
-        _pptNotRunningSkipCount = 3; // Skip 3 ticks (15s) -> 20s total interval
+        _pptNotRunningSkipCount = 3; // Skip 3 ticks
         if (_lastSlideState == null || _lastSlideState!['error'] != 'POWERPOINT_NOT_RUNNING') {
           _lastSlideState = state;
           broadcast({
@@ -527,7 +571,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
         return;
       }
 
-      _pptNotRunningSkipCount = 0; // PowerPoint is running, reset to normal 5s interval
+      _pptNotRunningSkipCount = 0; // PowerPoint is running, reset to normal interval
 
       // Compare with last state to avoid spamming
       final current = state['current'];
@@ -538,6 +582,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
           _lastSlideState!['current'] != current ||
           _lastSlideState!['total'] != total ||
           _lastSlideState!['notes'] != notes ||
+          _lastSlideState!['hasMedia'] != state['hasMedia'] ||
           _lastSlideState!['error'] != null) {
         
         _lastSlideState = state;
@@ -547,6 +592,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
           'current': current,
           'total': total,
           'notes': notes,
+          'hasMedia': state['hasMedia'] ?? false,
         });
       }
     }
@@ -554,9 +600,48 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
 
   void triggerSlideStateUpdate([Duration delay = Duration.zero]) {
     if (delay == Duration.zero) {
+      _fetchAndBroadcastSmtcState();
       _fetchAndBroadcastSlideState();
     } else {
-      Future.delayed(delay, _fetchAndBroadcastSlideState);
+      Future.delayed(delay, () {
+        _fetchAndBroadcastSmtcState();
+        _fetchAndBroadcastSlideState();
+      });
+    }
+  }
+
+  /// Mevcut Windows ses seviyesini ve mute durumunu sorgulayarak istemcilere yayınlar.
+  Future<void> _broadcastVolumeState({bool force = false}) async {
+    if (_authenticatedClients.isEmpty) return;
+    final script = '''
+try {
+\${InputSimulator.getAudioControlPSScript()}
+    \$lv = [AudioControl.Audio]::GetVolume()
+    \$mu = [AudioControl.Audio]::GetMute()
+    Write-Output "{`"volume`":\$([int](\$lv * 100)),`"muted`":\$(if(\$mu){`"true`"}else{`"false`"})}"
+} catch {
+    Write-Output "ERROR"
+}
+''';
+    try {
+      final output = await InputSimulator.runPowerShellScript(script);
+      if (output.startsWith('{')) {
+        final data = jsonDecode(output) as Map<String, dynamic>;
+        final volume = (data['volume'] as num?)?.toInt() ?? -1;
+        final muted = data['muted'] as bool? ?? false;
+        if (force || volume != _lastBroadcastVolume || muted != _lastBroadcastMuted) {
+          _lastBroadcastVolume = volume;
+          _lastBroadcastMuted = muted;
+          broadcast({
+            'type': 'STATUS',
+            'state': 'VOLUME_CHANGED',
+            'volume': volume,
+            'muted': muted,
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('_broadcastVolumeState error: $e');
     }
   }
 
@@ -571,11 +656,90 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
         r'(Get-NetConnectionProfile | Where-Object {$_.IPv4Connectivity -ne "Disconnected"} | Select-Object -First 1).NetworkCategory',
       ]);
       final output = (result.stdout as String).trim();
-      debugPrint('Network profile: $output');
+      debugPrint('Network profile: \$output');
       return output.toLowerCase() == 'public';
     } catch (e) {
-      debugPrint('Failed to check network profile: $e');
+      debugPrint('Failed to check network profile: \$e');
       return false;
+    }
+  }
+
+  // ─── Live Network Monitoring ──────────────────────────────────────────────
+
+  /// Start periodic network profile monitoring (every 30 seconds).
+  void _startNetworkMonitor() {
+    _networkCheckTimer?.cancel();
+    _networkCheckTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) async {
+        final isPublic = await _checkNetworkProfile();
+        if (isPublic != isPublicNetwork.value) {
+          debugPrint('Network profile changed: ${isPublicNetwork.value ? "Public" : "Private"} → ${isPublic ? "Public" : "Private"}');
+          isPublicNetwork.value = isPublic;
+        }
+      },
+    );
+  }
+
+  /// Stop the periodic network profile monitor.
+  void _stopNetworkMonitor() {
+    _networkCheckTimer?.cancel();
+    _networkCheckTimer = null;
+  }
+
+  // ─── Network Settings Helpers ─────────────────────────────────────────────
+
+  /// Get the InterfaceAlias of the active network adapter.
+  Future<String?> getActiveInterfaceAlias() async {
+    try {
+      final result = await Process.run('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        r'(Get-NetConnectionProfile | Where-Object {$_.IPv4Connectivity -ne "Disconnected"} | Select-Object -First 1).InterfaceAlias',
+      ]);
+      final output = (result.stdout as String).trim();
+      return output.isNotEmpty ? output : null;
+    } catch (e) {
+      debugPrint('Failed to get interface alias: \$e');
+      return null;
+    }
+  }
+
+  /// Attempt to set the active network profile to Private.
+  /// Returns true if successful, false otherwise (e.g. if admin rights are needed).
+  Future<bool> setNetworkProfilePrivate() async {
+    try {
+      final alias = await getActiveInterfaceAlias();
+      if (alias == null) return false;
+
+      final result = await Process.run('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        'Set-NetConnectionProfile -InterfaceAlias "$alias" -NetworkCategory Private',
+      ]);
+
+      if (result.exitCode == 0) {
+        debugPrint('Network profile set to Private for $alias');
+        isPublicNetwork.value = false;
+        return true;
+      } else {
+        debugPrint('Failed to set network profile: ${result.stderr}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Error setting network profile: \$e');
+      return false;
+    }
+  }
+
+  /// Open Windows network settings.
+  Future<void> openNetworkSettings() async {
+    try {
+      await Process.run('explorer', ['ms-settings:network-wifi']);
+    } catch (e) {
+      debugPrint('Failed to open network settings: \$e');
     }
   }
 }

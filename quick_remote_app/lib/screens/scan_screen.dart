@@ -51,13 +51,6 @@ class _ScanScreenState extends State<ScanScreen> {
       return;
     }
 
-    // Flexible host format check (IPv4, IPv6, hostname)
-    final hostRegex = RegExp(r'^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|localhost|([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}|\[[a-fA-F0-9:]+\]|[a-zA-Z0-9-]+)$');
-    if (!hostRegex.hasMatch(host)) {
-      _showQrError('QR kodundaki IP/Host adresi geçersiz: $host');
-      return;
-    }
-
     final port = int.tryParse(parts[1]);
     if (port == null || port < 1 || port > 65535) {
       _showQrError('QR kodunda geçersiz port numarası: ${parts[1]}');
