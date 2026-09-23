@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,6 +6,7 @@ import '../../services/discovery_service.dart';
 import '../../repositories/device_history_repository.dart';
 import 'scan_screen.dart';
 import 'remote_screen.dart';
+import 'bluetooth_connect_screen.dart';
 import 'settings/settings_screen.dart';
 import 'home/utils/connection_handler.dart';
 import 'home/widgets/manual_connect_dialog.dart';
@@ -295,6 +297,43 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
+
+                    if (Platform.isAndroid) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF64B5F6), width: 2),
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: _connecting ? null : () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const BluetoothConnectScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.bluetooth_rounded, color: Color(0xFF64B5F6), size: 24),
+                          label: const Text(
+                            'Bluetooth ile Bağlan',
+                            style: TextStyle(
+                              fontSize: 17, 
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF64B5F6),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 12),
 
