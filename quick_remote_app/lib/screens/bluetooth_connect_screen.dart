@@ -93,6 +93,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       // Small delay so user sees "Bağlandı!" before navigating
       Future.delayed(const Duration(milliseconds: 800), () {
         if (!mounted) return;
+        if (_state != BtHidConnectionState.connected) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const BtRemoteScreen()),
         );

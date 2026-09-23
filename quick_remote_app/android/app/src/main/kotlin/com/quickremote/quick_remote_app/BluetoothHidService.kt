@@ -278,7 +278,9 @@ class BluetoothHidService(private val context: Context) {
                     Log.d(TAG, "Connecting to plugged device: ${pluggedDevice.name ?: pluggedDevice.address}")
                     val connectResult = hidDevice?.connect(pluggedDevice)
                     Log.d(TAG, "Connect result: $connectResult")
-                } else if (connectedHost == null) {
+                }
+                
+                if (connectedHost == null) {
                     Log.d(TAG, "Making discoverable")
                     makeDiscoverable()
                 }
