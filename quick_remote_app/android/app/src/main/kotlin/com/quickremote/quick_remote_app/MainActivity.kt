@@ -69,11 +69,25 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
 
-                // sendMouseMove(dx: Int, dy: Int)
+                // sendMouseMove(dx: Int, dy: Int, buttons: Int?)
                 "sendMouseMove" -> {
                     val dx = call.argument<Int>("dx") ?: 0
                     val dy = call.argument<Int>("dy") ?: 0
-                    btHidService.sendMouseReport(0, dx, dy)
+                    val buttons = call.argument<Int>("buttons") ?: 0
+                    btHidService.sendMouseReport(buttons, dx, dy)
+                    result.success(null)
+                }
+
+                // sendMouseDown(button: Int) — press and hold
+                "sendMouseDown" -> {
+                    val button = call.argument<Int>("button") ?: 1
+                    btHidService.sendMouseReport(button, 0, 0)
+                    result.success(null)
+                }
+
+                // sendMouseUp() — release all buttons
+                "sendMouseUp" -> {
+                    btHidService.sendMouseReport(0, 0, 0)
                     result.success(null)
                 }
 

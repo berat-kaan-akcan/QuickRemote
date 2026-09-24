@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../utils/ui/app_popup_theme.dart';
+import '../../../utils/ui/app_snackbar.dart';
 
 class ManualConnectData {
   final String host;
@@ -83,8 +84,10 @@ class ManualConnectDialog extends StatelessWidget {
                   if (host.isEmpty) return;
 
                   if (port < 1 || port > 65535) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(content: Text('Port 1-65535 arası olmalı')),
+                    AppSnackbar.show(
+                      ctx,
+                      message: 'Port 1-65535 arası olmalı',
+                      type: SnackbarType.warning,
                     );
                     return;
                   }

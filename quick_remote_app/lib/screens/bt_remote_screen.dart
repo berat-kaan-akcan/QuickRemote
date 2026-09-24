@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-
 import '../services/bluetooth/bt_hid_service.dart';
 import '../services/bluetooth/bt_key_mapping.dart';
+import '../utils/ui/app_snackbar.dart';
 import 'settings/settings_screen.dart';
 import 'bt_remote/views/bt_main_controls_view.dart';
 import 'bt_remote/views/bt_touchpad_view.dart';
@@ -26,38 +26,60 @@ class BtRemoteScreen extends StatefulWidget {
   State<BtRemoteScreen> createState() => _BtRemoteScreenState();
 }
 
-class _BtRemoteScreenState extends State<BtRemoteScreen> {
+class _BtRemoteScreenState extends State<BtRemoteScreen>
+    with WidgetsBindingObserver {
   final _bt = BtHidService.instance;
   StreamSubscription<BtHidConnectionState>? _sub;
 
   /// 0 = Kontroller, 1 = Touchpad, 2 = Medya
   int _currentTab = 0;
   String? _activeScreen; // 'BLACK' | 'WHITE' | null
+  bool _isIntentionalDisconnect = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
     _sub = _bt.stateStream.listen(_onBtState);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
     WakelockPlus.disable();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Uygulama ön plana geldi — bağlantıyı kontrol et
+      if (!_bt.isConnected && _bt.isAdvertisingRequested) {
+        _bt.ensureConnected();
+      }
+    }
   }
 
   void _onBtState(BtHidConnectionState state) {
     if (!mounted) return;
     setState(() {});
     if (state == BtHidConnectionState.disconnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bluetooth bağlantısı koptu.'),
-          backgroundColor: Color(0xFFFF9800),
-          duration: Duration(seconds: 3),
-        ),
+      if (!_isIntentionalDisconnect) {
+        AppSnackbar.show(
+          context,
+          message: 'Bluetooth bağlantısı koptu. Yeniden bağlanılıyor...',
+          type: SnackbarType.warning,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } else if (state == BtHidConnectionState.connected) {
+      AppSnackbar.show(
+        context,
+        message: 'Bluetooth bağlandı: ${_bt.connectedDeviceName ?? ""}',
+        type: SnackbarType.success,
+        duration: const Duration(seconds: 2),
       );
     }
   }
@@ -111,6 +133,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen> {
         }
         final shouldPop = await _showExitDialog();
         if (shouldPop) {
+          _isIntentionalDisconnect = true;
           await _bt.stopAdvertising();
           if (!context.mounted) return;
           Navigator.of(context).pop();
@@ -254,6 +277,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen> {
             final nav = Navigator.of(context);
             final shouldPop = await _showExitDialog();
             if (shouldPop && mounted) {
+              _isIntentionalDisconnect = true;
               await _bt.stopAdvertising();
               nav.pop();
             }

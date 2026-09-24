@@ -82,7 +82,7 @@ class BtMediaView extends StatelessWidget {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'Bluetooth modunda medya bilgisi ve ses seviyesi göstergesi görüntülenemez. Tam özellik için WiFi modunu kullanın.',
+                                'Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için WiFi modunu kullanın.',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.5),
                                   fontSize: 12,
@@ -224,110 +224,45 @@ class BtMediaView extends StatelessWidget {
     return _BtGlassPanel(
       borderColor: accent.withValues(alpha: 0.3),
       gradientColors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
-      child: Column(
-        children: [
-          // Mute butonu
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: isConnected
-                    ? () {
-                        HapticFeedback.lightImpact();
-                        send('VOLUME_MUTE');
-                      }
-                    : null,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: accent.withValues(alpha: 0.3)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.volume_off_rounded, color: accent, size: 16),
-                      SizedBox(width: 6),
-                      Text(
-                        'Sessiz',
-                        style: TextStyle(
-                          color: accent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  '–',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(40),
+            border: Border.all(color: accent.withValues(alpha: 0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.05),
+                blurRadius: 12,
+                spreadRadius: 1,
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Volume up/down buttons
-          Row(
+          child: Row(
             children: [
-              GestureDetector(
-                onTap: isConnected ? () { HapticFeedback.lightImpact(); send('VOLUME_DOWN'); } : null,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.remove_rounded, color: accent, size: 20),
-                ),
+              _PillBtn(
+                icon: Icons.remove_rounded,
+                color: accent,
+                isLeft: true,
+                onTap: isConnected ? () => send('VOLUME_DOWN') : null,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  child: FractionallySizedBox(
-                    widthFactor: 0.5,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ),
-                ),
+              Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
+              _PillBtn(
+                icon: Icons.volume_off_rounded,
+                color: accent,
+                onTap: isConnected ? () => send('VOLUME_MUTE') : null,
               ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: isConnected ? () { HapticFeedback.lightImpact(); send('VOLUME_UP'); } : null,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.add_rounded, color: accent, size: 20),
-                ),
+              Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
+              _PillBtn(
+                icon: Icons.add_rounded,
+                color: accent,
+                isRight: true,
+                onTap: isConnected ? () => send('VOLUME_UP') : null,
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -439,7 +374,7 @@ class _BtMediaBtnState extends State<_BtMediaBtn> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(widget.icon, color: widget.color, size: widget.large ? 24 : 20),
-                if (widget.large) ...[
+                if (widget.large && widget.label.isNotEmpty) ...[
                   const SizedBox(width: 8),
                   Text(
                     widget.label,
@@ -452,6 +387,64 @@ class _BtMediaBtnState extends State<_BtMediaBtn> {
                 ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Premium Pill Button Segment ──────────────────────────────────────────────
+class _PillBtn extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+  final bool isLeft;
+  final bool isRight;
+
+  const _PillBtn({
+    required this.icon,
+    required this.color,
+    this.onTap,
+    this.isLeft = false,
+    this.isRight = false,
+  });
+
+  @override
+  State<_PillBtn> createState() => _PillBtnState();
+}
+
+class _PillBtnState extends State<_PillBtn> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onTap != null;
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: enabled ? (_) => setState(() => _isPressed = true) : null,
+        onTapUp: enabled
+            ? (_) {
+                setState(() => _isPressed = false);
+                HapticFeedback.lightImpact();
+                widget.onTap!();
+              }
+            : null,
+        onTapCancel: enabled ? () => setState(() => _isPressed = false) : null,
+        child: AnimatedOpacity(
+          opacity: enabled ? (_isPressed ? 0.7 : 1.0) : 0.45,
+          duration: const Duration(milliseconds: 100),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: _isPressed ? widget.color.withValues(alpha: 0.15) : Colors.transparent,
+              borderRadius: BorderRadius.horizontal(
+                left: widget.isLeft ? const Radius.circular(40) : Radius.zero,
+                right: widget.isRight ? const Radius.circular(40) : Radius.zero,
+              ),
+            ),
+            child: Icon(widget.icon, color: widget.color, size: 24),
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../utils/ui/app_snackbar.dart';
 
 /// QR Code scanner screen to connect to PC companion app.
 class ScanScreen extends StatefulWidget {
@@ -65,12 +66,11 @@ class _ScanScreenState extends State<ScanScreen> {
 
   void _showQrError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFFF5252),
-        duration: const Duration(seconds: 3),
-      ),
+    AppSnackbar.show(
+      context,
+      message: message,
+      type: SnackbarType.error,
+      duration: const Duration(seconds: 3),
     );
   }
 

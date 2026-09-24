@@ -8,7 +8,7 @@ import '../widgets/shared_buttons.dart';
 import '../../../utils/throttler.dart';
 import '../utils/slide_picker_sheet.dart';
 
-enum DrawTool { laser, pen, highlighter, eraser, screen }
+enum DrawTool { laser, pen, highlighter, eraser }
 
 class TouchpadView extends StatefulWidget {
   final WebSocketService ws;
@@ -27,7 +27,6 @@ class TouchpadView extends StatefulWidget {
 class _TouchpadViewState extends State<TouchpadView> {
   final double _sensitivity = 8.0;
   DrawTool _drawTool = DrawTool.laser;
-  String _screenCommand = 'BLACK_SCREEN';
 
   void _send(String command) {
     HapticFeedback.mediumImpact();
@@ -222,187 +221,7 @@ class _TouchpadViewState extends State<TouchpadView> {
     );
   }
 
-  void _showScreenColorPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        final options = [
-          {
-            'name': 'Siyah',
-            'color': Colors.black,
-            'cmd': 'BLACK_SCREEN',
-            'icon': Icons.dark_mode_rounded,
-          },
-          {
-            'name': 'Beyaz',
-            'color': Colors.white,
-            'cmd': 'WHITE_SCREEN',
-            'icon': Icons.light_mode_rounded,
-          },
-        ];
 
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B).withValues(alpha: 0.85),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(32),
-                ),
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 48,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.desktop_windows_rounded,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Ekran Rengi',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  Wrap(
-                    spacing: 24,
-                    runSpacing: 24,
-                    alignment: WrapAlignment.center,
-                    children: options.map((opt) {
-                      final color = opt['color'] as Color;
-                      final icon = opt['icon'] as IconData;
-                      final name = opt['name'] as String;
-                      final cmd = opt['cmd'] as String;
-                      final isSelected = _screenCommand == cmd;
-                      return GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          setState(() {
-                            _screenCommand = cmd;
-                            _drawTool = DrawTool.screen;
-                          });
-                          _send(cmd);
-                          Navigator.pop(context);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? const Color(0xFF2979FF)
-                                      : Colors.white.withValues(alpha: 0.5),
-                                  width: isSelected ? 3.5 : 2,
-                                ),
-                                boxShadow: [
-                                  if (isSelected)
-                                    const BoxShadow(
-                                      color: Color(0xFF2979FF),
-                                      blurRadius: 15,
-                                      spreadRadius: 2,
-                                    ),
-                                  BoxShadow(
-                                    color: color.withValues(alpha: 0.3),
-                                    blurRadius: 10,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                icon,
-                                color: cmd == 'BLACK_SCREEN'
-                                    ? Colors.white
-                                    : Colors.black,
-                                size: 28,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              name,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? const Color(0xFF2979FF)
-                                    : Colors.white,
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.w800
-                                    : FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: TextButton(
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.pop(context);
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.08),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'İptal',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -809,22 +628,13 @@ class _TouchpadViewState extends State<TouchpadView> {
               Expanded(
                 child: Semantics(
                   button: true,
-                  label: 'Ekran',
+                  label: 'Temizle',
                   child: Tooltip(
-                    message: 'Ekran Aracı',
+                    message: 'Tüm çizimleri temizle',
                     child: GestureDetector(
                       onTap: () {
-                        HapticFeedback.lightImpact();
-                        if (_drawTool == DrawTool.screen) {
-                          _showScreenColorPicker(context);
-                        } else {
-                          setState(() => _drawTool = DrawTool.screen);
-                          _send(_screenCommand);
-                        }
-                      },
-                      onLongPress: () {
                         HapticFeedback.mediumImpact();
-                        _showScreenColorPicker(context);
+                        _send('ERASE_ALL');
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -833,62 +643,33 @@ class _TouchpadViewState extends State<TouchpadView> {
                           horizontal: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: _drawTool == DrawTool.screen
-                              ? (_screenCommand == 'BLACK_SCREEN'
-                                    ? Colors.grey.withValues(alpha: 0.2)
-                                    : Colors.white.withValues(alpha: 0.2))
-                              : Colors.white.withValues(alpha: 0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: _drawTool == DrawTool.screen
-                                ? (_screenCommand == 'BLACK_SCREEN'
-                                      ? Colors.grey.withValues(alpha: 0.5)
-                                      : Colors.white.withValues(alpha: 0.5))
-                                : Colors.transparent,
+                            color: Colors.transparent,
                           ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              _screenCommand == 'BLACK_SCREEN'
-                                  ? Icons.dark_mode_rounded
-                                  : Icons.light_mode_rounded,
+                              Icons.cleaning_services_rounded,
                               size: 14,
-                              color: _drawTool == DrawTool.screen
-                                  ? (_screenCommand == 'BLACK_SCREEN'
-                                        ? Colors.grey
-                                        : Colors.white)
-                                  : Colors.white38,
+                              color: Colors.white38,
                             ),
                             const SizedBox(width: 2),
                             Flexible(
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  _screenCommand == 'BLACK_SCREEN'
-                                      ? 'Siyah'
-                                      : 'Beyaz',
+                                  'Temizle',
                                   style: TextStyle(
-                                    color: _drawTool == DrawTool.screen
-                                        ? (_screenCommand == 'BLACK_SCREEN'
-                                              ? Colors.grey
-                                              : Colors.white)
-                                        : Colors.white38,
+                                    color: Colors.white38,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
-                            ),
-                            Icon(
-                              Icons.arrow_drop_down_rounded,
-                              size: 16,
-                              color: _drawTool == DrawTool.screen
-                                  ? (_screenCommand == 'BLACK_SCREEN'
-                                        ? Colors.grey
-                                        : Colors.white)
-                                  : Colors.white54,
                             ),
                           ],
                         ),
@@ -984,7 +765,7 @@ class _TouchpadState extends State<_Touchpad> {
 
     Future.delayed(const Duration(milliseconds: 150), () {
       if (_isDrawActive && mounted) {
-        if (_activeTool != DrawTool.laser && _activeTool != DrawTool.screen) {
+        if (_activeTool != DrawTool.laser) {
           widget.ws.sendCommand('LEFT_DOWN');
         }
       }
@@ -1005,7 +786,7 @@ class _TouchpadState extends State<_Touchpad> {
       if (_pendingDx == 0 && _pendingDy == 0) return;
 
       widget.ws.sendTouchOrLaser(
-        (_activeTool == DrawTool.laser || _activeTool == DrawTool.screen)
+        (_activeTool == DrawTool.laser)
             ? 'LASER'
             : 'TOUCH',
         _pendingDx,
@@ -1023,7 +804,7 @@ class _TouchpadState extends State<_Touchpad> {
     _lastPointerUpPosition = event.localPosition;
 
     if (_isDrawActive) {
-      if (_activeTool == DrawTool.laser || _activeTool == DrawTool.screen) {
+      if (_activeTool == DrawTool.laser) {
         widget.ws.sendCommand('LASER_OFF');
       } else {
         widget.ws.sendCommand('LEFT_UP');
@@ -1051,9 +832,6 @@ class _TouchpadState extends State<_Touchpad> {
       borderWidth = 2.5;
     } else if (_isDrawActive && _activeTool == DrawTool.laser) {
       borderColor = const Color(0xFFFF1744);
-      borderWidth = 2.5;
-    } else if (_isDrawActive && _activeTool == DrawTool.screen) {
-      borderColor = Colors.grey;
       borderWidth = 2.5;
     } else {
       borderColor = Theme.of(

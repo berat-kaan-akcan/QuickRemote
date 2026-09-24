@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../utils/ui/app_popup_theme.dart';
+import '../../../utils/ui/app_snackbar.dart';
 
 /// A8 ve A9'un birleştirilmiş hali.
 /// Belirli bir slayttan sunum başlatmak için bottom sheet açar.
@@ -109,10 +110,10 @@ class SlidePickerSheet {
       final parsed = int.tryParse(slideNumber);
       final maxSlide = totalSlides > 0 ? totalSlides : 9999;
       if (parsed == null || parsed <= 0 || parsed > maxSlide) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Geçerli bir slayt numarası girin (1-$maxSlide)'),
-          ),
+        AppSnackbar.show(
+          context,
+          message: 'Geçerli bir slayt numarası girin (1-$maxSlide)',
+          type: SnackbarType.error,
         );
         return;
       }

@@ -28,6 +28,7 @@ abstract class RemoteCommands {
   // Screen controls
   static const blackScreen = 'BLACK_SCREEN';
   static const whiteScreen = 'WHITE_SCREEN';
+  static const eraseAll = 'ERASE_ALL';
 
   // Legacy alias kept for backwards‑compat (maps to modeLaser on PC)
   static const laserCursor = 'LASER_CURSOR';
@@ -55,7 +56,7 @@ abstract class RemoteCommands {
     next, prev, start, end, lock, refreshState,
     modeArrow, modeLaser, modePen, modeHighlighter, modeEraser,
     leftClick, rightClick, leftDown, leftUp,
-    laserOff, laserCursor, blackScreen, whiteScreen,
+    laserOff, laserCursor, blackScreen, whiteScreen, eraseAll,
     // Medya & ses
     mediaPlayPause, mediaRewind,
     volumeUp, volumeDown, volumeMute,

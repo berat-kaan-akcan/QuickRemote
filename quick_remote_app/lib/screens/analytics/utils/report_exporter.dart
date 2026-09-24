@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../models/presentation_analytics.dart';
 import '../../../../utils/formatters.dart';
+import '../../../../utils/ui/app_snackbar.dart';
 
 class ReportExporter {
   /// Converts the presentation analytics to text format and copies it to the clipboard.
@@ -26,12 +27,11 @@ class ReportExporter {
     }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Rapor panoya kopyalandı'),
-        backgroundColor: Color(0xFF4CAF50),
-        duration: Duration(seconds: 2),
-      ),
+    AppSnackbar.show(
+      context,
+      message: 'Rapor panoya kopyalandı',
+      type: SnackbarType.success,
+      duration: const Duration(seconds: 2),
     );
   }
 }

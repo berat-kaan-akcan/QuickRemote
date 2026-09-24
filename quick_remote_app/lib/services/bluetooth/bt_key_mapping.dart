@@ -59,6 +59,7 @@ abstract class BtKeyMapping {
     // Screen blanking
     'BLACK_SCREEN': _KeyAction(0, [keyB]),
     'WHITE_SCREEN': _KeyAction(0, [keyW]),
+    'ERASE_ALL':    _KeyAction(0, [keyE]),
 
     // Drawing modes — PowerPoint shortcuts
     'MODE_ARROW':       _KeyAction(modLCtrl, [keyA]),

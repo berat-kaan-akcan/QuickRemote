@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -205,15 +206,56 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
         // Status text
         Center(
-          child: Text(
-            _state == BtHidConnectionState.advertising
-                ? 'Eşleştirme bekleniyor...'
-                : 'Hazırlanıyor...',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          child: Column(
+            children: [
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) => Opacity(
+                  opacity: 0.5 + (_pulseController.value * 0.5),
+                  child: Text(
+                    _state == BtHidConnectionState.advertising
+                        ? 'Eşleştirme bekleniyor...'
+                        : _state == BtHidConnectionState.disconnected
+                            ? 'Bağlantı bekleniyor...'
+                            : 'Hazırlanıyor...',
+                    style: TextStyle(
+                      color: _state == BtHidConnectionState.disconnected
+                          ? Colors.orangeAccent
+                          : Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              if (_state == BtHidConnectionState.advertising)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: _GlowingDots(animation: _pulseController),
+                )
+              else if (_state == BtHidConnectionState.disconnected)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) => Opacity(
+                      opacity: 0.4 + (_pulseController.value * 0.6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.warning_amber_rounded,
+                              color: Colors.orangeAccent, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Bağlanılmadı, tekrar deneniyor',
+                            style: TextStyle(color: Colors.orangeAccent),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 32),
@@ -495,6 +537,43 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _GlowingDots extends StatelessWidget {
+  final Animation<double> animation;
+  const _GlowingDots({required this.animation});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            // dalgalanma efekti için basit bir sinüs hesabı
+            final val = math.sin((animation.value * math.pi) + (index * math.pi / 4)).abs();
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              width: 8 + (val * 4),
+              height: 8 + (val * 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF64B5F6).withValues(alpha: 0.3 + (val * 0.7)),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF64B5F6).withValues(alpha: val * 0.6),
+                    blurRadius: 4 + (val * 8),
+                    spreadRadius: val * 3,
+                  ),
+                ],
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }

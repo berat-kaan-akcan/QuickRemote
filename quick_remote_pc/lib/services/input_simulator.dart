@@ -191,6 +191,9 @@ try {
   /// White screen (W key)
   static void whiteScreen() => pressKey(0x57);
 
+  /// Erase all ink annotations on current slide (E key in PowerPoint slideshow)
+  static void eraseAllInk() => pressKey(0x45);
+
   static bool _isLaserActive = false;
 
   /// Toggle PowerPoint laser pointer using keyboard shortcuts (Ctrl+L / Ctrl+A)
@@ -616,6 +619,9 @@ try {
         break;
       case 'WHITE_SCREEN':
         whiteScreen();
+        break;
+      case 'ERASE_ALL':
+        eraseAllInk();
         break;
 
       case 'LOCK':

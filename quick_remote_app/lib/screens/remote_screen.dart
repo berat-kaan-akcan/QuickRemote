@@ -10,6 +10,7 @@ import '../providers/settings_provider.dart';
 
 import 'remote/utils/hardware_key_handler.dart';
 import 'remote/utils/remote_dialogs.dart';
+import '../utils/ui/app_snackbar.dart';
 import 'remote/views/main_controls_view.dart';
 import 'remote/views/touchpad_view.dart';
 import 'remote/views/media_control_view.dart';
@@ -72,33 +73,30 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
     // Check for command errors
     if (_wsRef.lastCommandError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_wsRef.lastCommandError!),
-          backgroundColor: const Color(0xFFFF5252),
-          duration: const Duration(seconds: 3),
-        ),
+      AppSnackbar.show(
+        context,
+        message: _wsRef.lastCommandError!,
+        type: SnackbarType.error,
+        duration: const Duration(seconds: 3),
       );
       _wsRef.clearCommandError();
     }
 
     if (_wasConnected && !_wsRef.isConnected) {
       _wasConnected = false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bağlantı koptu, otomatik bağlanılıyor...'),
-          backgroundColor: Color(0xFFFF9800),
-          duration: Duration(seconds: 3),
-        ),
+      AppSnackbar.show(
+        context,
+        message: 'Bağlantı koptu, otomatik bağlanılıyor...',
+        type: SnackbarType.warning,
+        duration: const Duration(seconds: 3),
       );
     } else if (!_wasConnected && _wsRef.isConnected) {
       _wasConnected = true;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Yeniden bağlanıldı!'),
-          backgroundColor: Color(0xFF4CAF50),
-          duration: Duration(seconds: 2),
-        ),
+      AppSnackbar.show(
+        context,
+        message: 'Yeniden bağlanıldı!',
+        type: SnackbarType.success,
+        duration: const Duration(seconds: 2),
       );
     }
   }
