@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,9 +9,12 @@ import '../../remote/widgets/shared_buttons.dart';
 // Tab 1: Touchpad View  (WiFi TouchpadView ile aynı tasarım)
 // BT'de renk seçici ve slayt picker çalışmaz → kaldırıldı.
 // Fare hareketi doğrudan BT HID mouse report olarak gönderilir.
+//
+// Performans: Pointer move event'leri throttle edilir ve delta biriktirilir.
+// Bu sayede BT HID channel flood edilmez ve hareket akıcı olur.
 // ═════════════════════════════════════════════════════════════════════════════
 
-enum BtDrawTool { laser, pen, highlighter, eraser, screen }
+enum BtDrawTool { laser, pen, highlighter, eraser }
 
 class BtTouchpadView extends StatefulWidget {
   final BtHidService bt;
@@ -30,13 +34,28 @@ class BtTouchpadView extends StatefulWidget {
 
 class _BtTouchpadViewState extends State<BtTouchpadView> {
   BtDrawTool _drawTool = BtDrawTool.laser;
-  String _screenCommand = 'BLACK_SCREEN';
+
   bool _isDrawActive = false;
   BtDrawTool _activeTool = BtDrawTool.laser;
   DateTime? _lastPointerUpTime;
   Offset? _lastPointerUpPosition;
 
-  static const double _sensitivity = 2.5;
+  // ── Throttling & delta accumulation ────────────────────────────────────
+  static const double _sensitivity = 4.0;
+  static const Duration _throttleInterval = Duration(milliseconds: 16);
+
+  double _pendingDx = 0;
+  double _pendingDy = 0;
+  Timer? _throttleTimer;
+
+  /// Son gönderilen mod — aynı modu tekrar göndermemek için.
+  String? _lastSentMode;
+
+  @override
+  void dispose() {
+    _throttleTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,9 +196,6 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     } else if (_isDrawActive && _activeTool == BtDrawTool.laser) {
       borderColor = const Color(0xFFFF1744);
       borderWidth = 2.5;
-    } else if (_isDrawActive && _activeTool == BtDrawTool.screen) {
-      borderColor = Colors.grey;
-      borderWidth = 2.5;
     } else {
       borderColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.2);
     }
@@ -292,69 +308,44 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
           activeColor: const Color(0xFFFF9800),
         ),
         const SizedBox(width: 4),
-        // Ekran tool
+        // Temizle (Tüm çizimleri sil) button
         Expanded(
           child: Semantics(
             button: true,
-            label: 'Ekran',
+            label: 'Temizle',
             child: Tooltip(
-              message: 'Ekran Aracı',
+              message: 'Tüm çizimleri temizle',
               child: GestureDetector(
                 onTap: () {
-                  HapticFeedback.lightImpact();
-                  if (_drawTool == BtDrawTool.screen) {
-                    // Toggle screen command
-                    setState(() {
-                      _screenCommand = _screenCommand == 'BLACK_SCREEN'
-                          ? 'WHITE_SCREEN'
-                          : 'BLACK_SCREEN';
-                    });
-                    widget.send(_screenCommand);
-                  } else {
-                    setState(() => _drawTool = BtDrawTool.screen);
-                    widget.send(_screenCommand);
-                  }
+                  HapticFeedback.mediumImpact();
+                  widget.send('ERASE_ALL');
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                   decoration: BoxDecoration(
-                    color: _drawTool == BtDrawTool.screen
-                        ? (_screenCommand == 'BLACK_SCREEN'
-                              ? Colors.grey.withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.2))
-                        : Colors.white.withValues(alpha: 0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: _drawTool == BtDrawTool.screen
-                          ? (_screenCommand == 'BLACK_SCREEN'
-                                ? Colors.grey.withValues(alpha: 0.5)
-                                : Colors.white.withValues(alpha: 0.5))
-                          : Colors.transparent,
+                      color: Colors.transparent,
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        _screenCommand == 'BLACK_SCREEN'
-                            ? Icons.dark_mode_rounded
-                            : Icons.light_mode_rounded,
+                        Icons.cleaning_services_rounded,
                         size: 14,
-                        color: _drawTool == BtDrawTool.screen
-                            ? (_screenCommand == 'BLACK_SCREEN' ? Colors.grey : Colors.white)
-                            : Colors.white38,
+                        color: Colors.white38,
                       ),
                       const SizedBox(width: 2),
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            _screenCommand == 'BLACK_SCREEN' ? 'Siyah' : 'Beyaz',
+                            'Temizle',
                             style: TextStyle(
-                              color: _drawTool == BtDrawTool.screen
-                                  ? (_screenCommand == 'BLACK_SCREEN' ? Colors.grey : Colors.white)
-                                  : Colors.white38,
+                              color: Colors.white38,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -431,6 +422,9 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
 
   // ── Pointer handling ─────────────────────────────────────────────────────
 
+  /// Whether the HID left mouse button is currently held down (for drawing).
+  bool _isLeftButtonHeld = false;
+
   void _onPointerDown(PointerDownEvent event) {
     final now = DateTime.now();
     final pos = event.localPosition;
@@ -443,25 +437,29 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     _isDrawActive = true;
     _activeTool = isDoubleTap ? _drawTool : BtDrawTool.laser;
 
-    // Send mode command via BT HID
-    if (_activeTool == BtDrawTool.pen) {
-      widget.send('MODE_PEN');
-    } else if (_activeTool == BtDrawTool.highlighter) {
-      widget.send('MODE_HIGHLIGHTER');
-    } else if (_activeTool == BtDrawTool.eraser) {
-      widget.send('MODE_ERASER');
-    } else if (_activeTool == BtDrawTool.laser) {
-      widget.send('MODE_LASER');
+    // Reset pending deltas
+    _pendingDx = 0;
+    _pendingDy = 0;
+    _isLeftButtonHeld = false;
+
+    // Send mode command via BT HID — only if different from last sent mode
+    final modeCmd = _modeCommandFor(_activeTool);
+    if (modeCmd != _lastSentMode) {
+      widget.send(modeCmd);
+      _lastSentMode = modeCmd;
     }
 
-    // For pen/highlighter/eraser, simulate LEFT_DOWN after mode switch
-    Future.delayed(const Duration(milliseconds: 150), () {
-      if (_isDrawActive && mounted) {
-        if (_activeTool != BtDrawTool.laser && _activeTool != BtDrawTool.screen) {
-          widget.send('LEFT_DOWN');
+    // For pen/highlighter/eraser: hold left mouse button down via HID
+    // (WiFi'daki LEFT_DOWN davranışı — buton basılı kalır)
+    if (_activeTool != BtDrawTool.laser) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_isDrawActive && mounted) {
+          _isLeftButtonHeld = true;
+          widget.bt.sendMouseDown(button: 1);
         }
-      }
-    });
+      });
+    }
+
     HapticFeedback.mediumImpact();
     setState(() {});
   }
@@ -469,10 +467,44 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   void _onPointerMove(PointerMoveEvent event) {
     if (!_isDrawActive) return;
 
-    final dx = (event.delta.dx * _sensitivity).round().clamp(-127, 127);
-    final dy = (event.delta.dy * _sensitivity).round().clamp(-127, 127);
-    if (dx != 0 || dy != 0) {
-      widget.bt.sendMouseMove(dx, dy);
+    // Accumulate deltas
+    _pendingDx += event.delta.dx * _sensitivity;
+    _pendingDy += event.delta.dy * _sensitivity;
+
+    // Schedule a throttled flush if not already scheduled and not in-flight
+    _throttleTimer ??= Timer(_throttleInterval, _flushPendingMove);
+  }
+
+  void _flushPendingMove() {
+    _throttleTimer = null;
+
+    if (!_isDrawActive || !mounted) return;
+
+    final int dx = _pendingDx.round().clamp(-127, 127);
+    final int dy = _pendingDy.round().clamp(-127, 127);
+    
+    // Subtract the portion we are sending now
+    _pendingDx -= dx;
+    _pendingDy -= dy;
+
+    if (dx == 0 && dy == 0) {
+      // Re-schedule if there are fractional pending deltas that didn't round to 1
+      if (_pendingDx.abs() > 0.5 || _pendingDy.abs() > 0.5) {
+        _throttleTimer ??= Timer(_throttleInterval, _flushPendingMove);
+      }
+      return;
+    }
+
+    // During drawing (pen/highlighter/eraser), keep left button held in every
+    // HID report so the OS doesn't release it between moves.
+    final int buttons = _isLeftButtonHeld ? 1 : 0;
+
+    // Fire and forget for lowest latency
+    widget.bt.sendMouseMove(dx, dy, buttons: buttons);
+
+    // If there is still leftover delta (because we clamped at 127), schedule another flush
+    if (_pendingDx.abs() >= 1 || _pendingDy.abs() >= 1) {
+      _throttleTimer ??= Timer(_throttleInterval, _flushPendingMove);
     }
   }
 
@@ -480,16 +512,49 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     _lastPointerUpTime = DateTime.now();
     _lastPointerUpPosition = event.localPosition;
 
+    // Flush any remaining deltas immediately
+    _throttleTimer?.cancel();
+    _throttleTimer = null;
+    if (_pendingDx != 0 || _pendingDy != 0) {
+      final dx = _pendingDx.round().clamp(-127, 127);
+      final dy = _pendingDy.round().clamp(-127, 127);
+      _pendingDx = 0;
+      _pendingDy = 0;
+      if (dx != 0 || dy != 0) {
+        final int buttons = _isLeftButtonHeld ? 1 : 0;
+        widget.bt.sendMouseMove(dx, dy, buttons: buttons);
+      }
+    }
+
     if (_isDrawActive) {
-      if (_activeTool == BtDrawTool.laser || _activeTool == BtDrawTool.screen) {
+      if (_activeTool == BtDrawTool.laser) {
         widget.send('LASER_CURSOR');
       } else {
-        widget.send('LEFT_UP');
+        // Release the held mouse button via HID
+        if (_isLeftButtonHeld) {
+          widget.bt.sendMouseUp();
+          _isLeftButtonHeld = false;
+        }
       }
       widget.send('MODE_ARROW');
+      _lastSentMode = 'MODE_ARROW';
     }
 
     _isDrawActive = false;
     setState(() {});
+  }
+
+  /// Returns the mode command string for a given tool.
+  static String _modeCommandFor(BtDrawTool tool) {
+    switch (tool) {
+      case BtDrawTool.pen:
+        return 'MODE_PEN';
+      case BtDrawTool.highlighter:
+        return 'MODE_HIGHLIGHTER';
+      case BtDrawTool.eraser:
+        return 'MODE_ERASER';
+      case BtDrawTool.laser:
+        return 'MODE_LASER';
+    }
   }
 }
