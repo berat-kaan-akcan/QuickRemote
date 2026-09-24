@@ -4,6 +4,7 @@ import '../../providers/settings_provider.dart';
 import '../../models/presentation_analytics.dart';
 import '../../utils/formatters.dart';
 import '../../utils/ui/app_dialog.dart';
+import '../../utils/ui/app_snackbar.dart';
 import '../analytics_report_screen.dart';
 
 class PresentationHistoryScreen extends StatelessWidget {
@@ -96,11 +97,11 @@ class PresentationHistoryScreen extends StatelessWidget {
         ),
         onDismissed: (_) {
           settings.deletePresentationAnalytics(analytics.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sunum kaydı silindi'),
-              duration: Duration(seconds: 2),
-            ),
+          AppSnackbar.show(
+            context,
+            message: 'Sunum kaydı silindi',
+            type: SnackbarType.success,
+            duration: const Duration(seconds: 2),
           );
         },
         child: Material(
@@ -190,12 +191,11 @@ class PresentationHistoryScreen extends StatelessWidget {
 
     if (confirmed && context.mounted) {
       context.read<SettingsProvider>().clearPresentationHistory();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sunum geçmişi temizlendi'),
-          backgroundColor: Color(0xFF4CAF50),
-          duration: Duration(seconds: 2),
-        ),
+      AppSnackbar.show(
+        context,
+        message: 'Sunum geçmişi temizlendi',
+        type: SnackbarType.success,
+        duration: const Duration(seconds: 2),
       );
     }
   }

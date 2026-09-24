@@ -5,6 +5,7 @@ import 'package:vibration/vibration.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
 import '../../utils/ui/app_popup_theme.dart';
+import '../../utils/ui/app_snackbar.dart';
 
 class TimerSettingsScreen extends StatelessWidget {
   const TimerSettingsScreen({super.key});
@@ -400,8 +401,10 @@ class TimerSettingsScreen extends StatelessWidget {
                               context.read<SettingsProvider>().addWarningTime(seconds);
                               Navigator.of(ctx).pop();
                             } else {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                const SnackBar(content: Text('Lütfen geçerli bir sayı girin.')),
+                              AppSnackbar.show(
+                                ctx,
+                                message: 'Lütfen geçerli bir sayı girin.',
+                                type: SnackbarType.error,
                               );
                             }
                           },

@@ -6,6 +6,7 @@ import 'package:vibration/vibration.dart';
 import '../providers/settings_provider.dart';
 import '../utils/ui/app_bottom_sheet.dart';
 import '../utils/ui/app_popup_theme.dart';
+import '../utils/ui/app_snackbar.dart';
 
 class PresentationTimer extends StatefulWidget {
   final double fontSize;
@@ -78,28 +79,22 @@ class _PresentationTimerState extends State<PresentationTimer> {
             _vibrateWithPattern(pattern);
             
             // Ufak bir bildirim
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Sürenin bitimine ${_formatTime(remaining)} kaldı!'),
-                duration: const Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: const Color(0xFF262C4A),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
+            AppSnackbar.show(
+              context,
+              message: 'Sürenin bitimine ${_formatTime(remaining)} kaldı!',
+              type: SnackbarType.warning,
+              duration: const Duration(seconds: 2),
             );
           } else if (remaining == 0) {
             // Süre Doldu
             if (settings.timeOutVibrationEnabled) {
               _vibrateWithPattern(settings.timeOutVibrationPattern);
             }
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Sunum süresi doldu!'),
-                duration: const Duration(seconds: 3),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: const Color(0xFFFF5252),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
+            AppSnackbar.show(
+              context,
+              message: 'Sunum süresi doldu!',
+              type: SnackbarType.error,
+              duration: const Duration(seconds: 3),
             );
           }
         }
@@ -182,8 +177,10 @@ class _PresentationTimerState extends State<PresentationTimer> {
                       if (m != null && m > 0) {
                         _setDuration(ctx, m);
                       } else {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(content: Text('Lütfen geçerli bir süre (tam sayı, saniye) girin.')),
+                        AppSnackbar.show(
+                          ctx,
+                          message: 'Lütfen geçerli bir süre (tam sayı, saniye) girin.',
+                          type: SnackbarType.error,
                         );
                       }
                     },
@@ -196,8 +193,10 @@ class _PresentationTimerState extends State<PresentationTimer> {
                     if (m != null && m > 0) {
                       _setDuration(ctx, m);
                     } else {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(content: Text('Lütfen geçerli bir süre (tam sayı, saniye) girin.')),
+                      AppSnackbar.show(
+                        ctx,
+                        message: 'Lütfen geçerli bir süre (tam sayı, saniye) girin.',
+                        type: SnackbarType.error,
                       );
                     }
                   },

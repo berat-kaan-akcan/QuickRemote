@@ -153,14 +153,39 @@ class BluetoothHidService(private val context: Context) {
     }
 
     // ── State ─────────────────────────────────────────────────────────────────
-
+    
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var hidDevice: BluetoothHidDevice? = null
     private var connectedHost: BluetoothDevice? = null
     private var isRegistered = false
 
+    /** True while the user explicitly wants BT HID active. */
+    private var isAdvertisingRequested = false
+
     /** Callback to Flutter: "connected" | "disconnected" | "unsupported" | "error:<msg>" */
     var onStateChanged: ((String) -> Unit)? = null
+
+    // ── Auto-reconnect ───────────────────────────────────────────────────────
+
+    private var lastConnectedAddress: String? = null
+    private var reconnectHandler: android.os.Handler? = null
+    private var reconnectAttempt = 0
+    private val maxReconnectAttempts = 5
+    private val baseReconnectDelayMs = 2000L
+
+    private val prefs by lazy {
+        context.getSharedPreferences("bt_hid_prefs", Context.MODE_PRIVATE)
+    }
+
+    private fun saveLastDevice(address: String) {
+        lastConnectedAddress = address
+        prefs.edit().putString("last_device_address", address).apply()
+    }
+
+    private fun loadLastDevice(): String? {
+        lastConnectedAddress = prefs.getString("last_device_address", null)
+        return lastConnectedAddress
+    }
 
     // ── Public API ────────────────────────────────────────────────────────────
 
@@ -178,6 +203,10 @@ class BluetoothHidService(private val context: Context) {
             onStateChanged?.invoke("unsupported")
             return
         }
+        isAdvertisingRequested = true
+        reconnectAttempt = 0
+        loadLastDevice()
+
         val mgr = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = mgr.adapter
 
@@ -186,11 +215,25 @@ class BluetoothHidService(private val context: Context) {
             return
         }
 
+        if (reconnectHandler == null) {
+            reconnectHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        }
+
+        // If we already have a HID proxy and it's registered, try to reconnect
+        if (hidDevice != null && isRegistered) {
+            Log.d(TAG, "HID already registered, attempting reconnect")
+            tryReconnectToLastDevice()
+            return
+        }
+
         bluetoothAdapter!!.getProfileProxy(context, profileListener, BluetoothProfile.HID_DEVICE)
     }
 
     /** Disconnect from host and unregister HID app. */
     fun stopAdvertising() {
+        isAdvertisingRequested = false
+        cancelReconnect()
+
         connectedHost?.let { host ->
             hidDevice?.disconnect(host)
         }
@@ -243,6 +286,81 @@ class BluetoothHidService(private val context: Context) {
         dev.sendReport(host, REPORT_ID_CONSUMER.toInt(), ByteArray(2))
     }
 
+    // ── Auto-reconnect logic ─────────────────────────────────────────────────
+
+    private fun scheduleReconnect() {
+        if (!isAdvertisingRequested) return
+        if (connectedHost != null) return
+        if (reconnectAttempt >= maxReconnectAttempts) {
+            Log.d(TAG, "Max reconnect attempts reached ($maxReconnectAttempts)")
+            return
+        }
+
+        val delay = baseReconnectDelayMs * (1L shl reconnectAttempt.coerceAtMost(4))
+        reconnectAttempt++
+        Log.d(TAG, "Scheduling reconnect attempt $reconnectAttempt in ${delay}ms")
+
+        reconnectHandler?.postDelayed({
+            if (isAdvertisingRequested && connectedHost == null) {
+                tryReconnectToLastDevice()
+            }
+        }, delay)
+    }
+
+    private fun tryReconnectToLastDevice() {
+        val hid = hidDevice ?: return
+        if (connectedHost != null) return
+
+        // First check if already connected (e.g. OS reconnected in background)
+        val connectedDevices = hid.connectedDevices
+        if (connectedDevices.isNotEmpty()) {
+            val device = connectedDevices.first()
+            connectedHost = device
+            saveLastDevice(device.address)
+            reconnectAttempt = 0
+            Log.d(TAG, "Already connected to ${device.name}")
+            onStateChanged?.invoke("connected:${device.name ?: device.address}")
+            return
+        }
+
+        // Try last known device
+        val targetAddress = lastConnectedAddress
+        if (targetAddress != null) {
+            val bonded = bluetoothAdapter?.bondedDevices ?: emptySet()
+            val target = bonded.find { it.address == targetAddress }
+            if (target != null) {
+                Log.d(TAG, "Attempting reconnect to ${target.name ?: target.address}")
+                val result = hid.connect(target)
+                Log.d(TAG, "Reconnect attempt result: $result")
+                if (!result) {
+                    // connect() failed immediately — schedule another try
+                    scheduleReconnect()
+                }
+                // If result is true, wait for onConnectionStateChanged callback
+                return
+            }
+        }
+
+        // No last device or not bonded — try any bonded device
+        val bonded = bluetoothAdapter?.bondedDevices ?: emptySet()
+        for (device in bonded) {
+            Log.d(TAG, "Trying bonded device: ${device.name ?: device.address}")
+            val result = hid.connect(device)
+            if (result) {
+                Log.d(TAG, "Connect initiated to ${device.name}")
+                return
+            }
+        }
+
+        // Nothing worked — schedule another attempt
+        scheduleReconnect()
+    }
+
+    private fun cancelReconnect() {
+        reconnectHandler?.removeCallbacksAndMessages(null)
+        reconnectAttempt = 0
+    }
+
     // ── Profile Listener ──────────────────────────────────────────────────────
 
     private val profileListener = object : BluetoothProfile.ServiceListener {
@@ -257,6 +375,7 @@ class BluetoothHidService(private val context: Context) {
             if (devices.isNotEmpty()) {
                 val device = devices.first()
                 connectedHost = device
+                saveLastDevice(device.address)
                 Log.d(TAG, "HID already connected to ${device.name}")
                 onStateChanged?.invoke("connected:${device.name ?: device.address}")
             }
@@ -266,6 +385,11 @@ class BluetoothHidService(private val context: Context) {
 
         override fun onServiceDisconnected(profile: Int) {
             hidDevice = null
+            // Profile proxy disconnected — try to re-acquire if still requested
+            if (isAdvertisingRequested) {
+                Log.d(TAG, "Profile proxy lost, re-acquiring...")
+                bluetoothAdapter?.getProfileProxy(context, this, BluetoothProfile.HID_DEVICE)
+            }
         }
     }
 
@@ -278,11 +402,9 @@ class BluetoothHidService(private val context: Context) {
                     Log.d(TAG, "Connecting to plugged device: ${pluggedDevice.name ?: pluggedDevice.address}")
                     val connectResult = hidDevice?.connect(pluggedDevice)
                     Log.d(TAG, "Connect result: $connectResult")
-                }
-                
-                if (connectedHost == null) {
-                    Log.d(TAG, "Making discoverable")
-                    makeDiscoverable()
+                } else if (connectedHost == null) {
+                    // Try to reconnect to last known device first
+                    tryReconnectToLastDevice()
                 }
             } else {
                 Log.d(TAG, "HID app unregistered")
@@ -293,15 +415,24 @@ class BluetoothHidService(private val context: Context) {
             when (state) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     connectedHost = device
+                    saveLastDevice(device.address)
+                    cancelReconnect()
                     Log.d(TAG, "HID connected to ${device.name}")
                     onStateChanged?.invoke("connected:${device.name ?: device.address}")
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    if (connectedHost?.address == device.address) {
+                    val wasConnected = connectedHost?.address == device.address
+                    if (wasConnected) {
                         connectedHost = null
                     }
                     Log.d(TAG, "HID disconnected from ${device.name}")
                     onStateChanged?.invoke("disconnected")
+
+                    // Auto-reconnect if still requested
+                    if (wasConnected && isAdvertisingRequested) {
+                        Log.d(TAG, "Connection lost, will attempt auto-reconnect")
+                        scheduleReconnect()
+                    }
                 }
             }
         }
