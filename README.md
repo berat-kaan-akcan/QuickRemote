@@ -64,6 +64,7 @@
 | **QR Kod ile Eşleşme** | PC uygulamasındaki QR kodu telefonunuzla tarayarak anında bağlanın |
 | **mDNS Otomatik Keşif** | Aynı ağdaki PC'ler otomatik olarak listelenir (`_quickremote._tcp`) |
 | **Manuel Bağlantı** | IP adresi ve port ile doğrudan bağlanın |
+| **Bluetooth Bağlantısı** | Wi-Fi olmadan doğrudan Bluetooth (HID) üzerinden PC'nizi kontrol edin *(Yeni)* |
 | **Son Cihazlar** | Daha önce bağlandığınız cihazlara hızla yeniden bağlanın (son 5 cihaz saklanır) |
 | **Otomatik Yeniden Bağlanma** | Bağlantı koptuğunda otomatik olarak yeniden bağlanma desteği |
 | **Arka Plan Desteği** | Uygulama arka plandayken veya telefon kilitliyken dahi bağlantıyı koruyun ve kontrol etmeye devam edin |
@@ -111,35 +112,38 @@
 ```text
 QuickRemote/
 ├── quick_remote_app/              # 📱 Flutter Mobil Uygulaması (Android / iOS)
-│   └── lib/
-│       ├── main.dart              # Uygulama giriş noktası & tema yapılandırması
-│       ├── constants/             # Sabitler (renkler, ikonlar, API yolları vb.)
-│       ├── models/                # Veri modelleri (presentation_analytics vb.)
-│       ├── providers/             # Ayar durumu ve state yönetimi
-│       ├── repositories/          # Veri tabanı ve geçmiş kayıt işlemleri
-│       ├── screens/               # Uygulama arayüzleri
-│       │   ├── analytics/         # Sunum analitiği ve rapor ekranları
-│       │   ├── home/              # Ana ekran – bağlantı yönetimi
-│       │   ├── remote/            # Uzaktan kumanda ekranı (kontroller + touchpad)
-│       │   ├── settings/          # Ayarlar ve geçmiş
-│       │   └── scan_screen.dart   # QR kod tarama ekranı
-│       ├── services/              # Arka plan servisleri
-│       │   ├── discovery_service.dart  # mDNS cihaz keşfi
-│       │   └── websocket/         # WebSocket istemcisi, analitik ve state takibi
-│       ├── utils/                 # Yardımcı fonksiyonlar, throttle ve formatter
-│       └── widgets/               # Ortak kullanılan widgetlar (presentation_timer vb.)
+│   ├── lib/
+│   │   ├── main.dart              # Uygulama giriş noktası & tema yapılandırması
+│   │   ├── constants/             # Sabitler (renkler, ikonlar, API yolları vb.)
+│   │   ├── models/                # Veri modelleri (presentation_analytics, draw_tool vb.)
+│   │   ├── providers/             # Ayar durumu ve state yönetimi
+│   │   ├── repositories/          # Veri tabanı ve geçmiş kayıt işlemleri
+│   │   ├── screens/               # Uygulama arayüzleri (Modüler Yapı)
+│   │   │   ├── analytics/         # Sunum analitiği ve rapor ekranları
+│   │   │   ├── bt_remote/         # Bluetooth kontrol ekranları (Yeni)
+│   │   │   ├── home/              # Ana ekran – bağlantı yönetimi
+│   │   │   ├── remote/            # Uzaktan kumanda ekranı (kontroller + touchpad)
+│   │   │   └── settings/          # Ayarlar ve geçmiş
+│   │   ├── services/              # Arka plan servisleri
+│   │   │   ├── bluetooth/         # Bluetooth HID servisleri (Yeni)
+│   │   │   ├── websocket/         # WebSocket istemcisi, analitik ve state takibi
+│   │   │   └── discovery_service.dart
+│   │   ├── utils/                 # Yardımcı fonksiyonlar, UI bileşenleri (app_dialog vb.)
+│   │   └── widgets/               # Ortak kullanılan widgetlar (presentation_timer vb.)
+│   └── test/                      # 🧪 Birim ve Widget Testleri
+│       ├── settings_provider_test.dart
+│       └── widget_test.dart
 │
 ├── quick_remote_pc/               # 🖥️ Flutter Masaüstü Uygulaması (Windows)
 │   └── lib/
 │       ├── main.dart              # Uygulama giriş noktası & Provider yapılandırması
-│       ├── constants/             # Sabitler
-│       ├── providers/             # State yönetimi
+│       ├── providers/             # State yönetimi (server_provider vb.)
 │       ├── screens/
-│       │   └── home_screen.dart   # Ana ekran – sunucu durumu, QR kod, bağlantı bilgileri
-│       └── services/
-│           ├── websocket_server.dart  # TLS WebSocket sunucusu & istemci yönetimi
-│           ├── input_simulator.dart   # Win32 SendInput API & PowerShell COM otomasyonu
-│           └── mouse_controller.dart  # Fare konumu hesaplama & hareket
+│       │   └── home/              # Ana ekran – ağ durumu, public network uyarıları, ayarlar
+│       ├── services/              # Arka plan servisleri
+│       │   ├── input/             # Girdi simülatörleri (Klavye, Fare, PPT, SMTC)
+│       │   └── server/            # Sunucu yönetimi (Auth, Network, State)
+│       └── widgets/               # Ortak kullanılan widgetlar (hover efektleri vb.)
 │
 ├── packages/
 │   └── quick_remote_shared/       # 📦 Paylaşılan Dart Paketi
@@ -170,6 +174,7 @@ QuickRemote/
 |-----------|----------|
 | **Flutter & Dart** | Çapraz platform UI (Android & iOS) |
 | **web_socket_channel** | WebSocket istemcisi |
+| **Bluetooth (HID)** | Wi-Fi olmadan PC'yi Bluetooth üzerinden kontrol etme |
 | **mobile_scanner** | QR kod tarama |
 | **sensors_plus** | Cihaz sensörleri (jiroskop) |
 | **nsd** | mDNS cihaz keşfi |
@@ -305,6 +310,7 @@ Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
 - **10 saniye** içinde kimlik doğrulanmazsa bağlantı kesilir
 - Sertifika parmak izi istemci tarafında saklanır (**certificate pinning**)
 - Herkese açık ağ tespit edildiğinde sunucu tarafında **uyarı gösterilir**
+
 
 ---
 

@@ -34,6 +34,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
   late HardwareKeyHandler _hardwareKeyHandler;
   bool _wasConnected = true;
   bool _wsRefReady = false;
+  bool _canPop = false;
+  String? _persistentError;
 
   @override
   void initState() {
@@ -58,6 +60,11 @@ class _RemoteScreenState extends State<RemoteScreen> {
   void _onConnectionChanged() {
     if (!mounted) return;
 
+    if (_wsRef.connectionState == AppConnectionState.connecting ||
+        _wsRef.connectionState == AppConnectionState.reconnecting) {
+      _persistentError = null;
+    }
+
     // Check for auto-completed analytics (presentation ended naturally)
     if (_wsRef.completedAnalytics != null) {
       final analytics = _wsRef.completedAnalytics!;
@@ -73,6 +80,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
     // Check for command errors
     if (_wsRef.lastCommandError != null) {
+      _persistentError = _wsRef.lastCommandError;
       AppSnackbar.show(
         context,
         message: _wsRef.lastCommandError!,
@@ -92,12 +100,32 @@ class _RemoteScreenState extends State<RemoteScreen> {
       );
     } else if (!_wasConnected && _wsRef.isConnected) {
       _wasConnected = true;
+      _persistentError = null; // Clear stale errors on reconnect
       AppSnackbar.show(
         context,
         message: 'Yeniden bağlanıldı!',
         type: SnackbarType.success,
         duration: const Duration(seconds: 2),
       );
+    }
+  }
+
+  Future<void> _performExit({bool skipDialog = false}) async {
+    if (!skipDialog) {
+      final shouldPop = await RemoteDialogs.showExitDialog(context);
+      if (!shouldPop) return;
+    }
+
+    if (_wsRefReady) {
+      _wsRef.removeListener(_onConnectionChanged);
+    }
+    _wsRef.disconnect();
+    
+    if (mounted) {
+      setState(() => _canPop = true);
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -116,7 +144,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
     final ws = context.watch<WebSocketService>();
 
     Widget body;
-    if (ws.connectionState == AppConnectionState.failed) {
+    if (ws.connectionState == AppConnectionState.failed || _canPop) {
       body = _buildFailedView(ws);
     } else if (_currentTab == 1) {
       body = TouchpadView(
@@ -133,20 +161,19 @@ class _RemoteScreenState extends State<RemoteScreen> {
     }
 
     return PopScope(
-      canPop: false,
+      canPop: _canPop,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        
+        // Tab 0'da değilsek, sadece sekmeyi değiştirip çıkışı iptal ediyoruz (Sistem geri tuşu davranışı).
         if (_currentTab != 0) {
           if (_currentTab == 1 && ws.isConnected) ws.sendCommand('MODE_ARROW');
           setState(() => _currentTab = 0);
           return;
         }
-        final shouldPop = await RemoteDialogs.showExitDialog(context);
-        if (shouldPop) {
-          if (_wsRefReady) ws.removeListener(_onConnectionChanged);
-          ws.disconnect();
-          if (context.mounted) Navigator.of(context).pop();
-        }
+        
+        // Tab 0'daysak gerçek çıkış işlemini başlatıyoruz.
+        await _performExit(skipDialog: false);
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF0F172A),
@@ -221,16 +248,19 @@ class _RemoteScreenState extends State<RemoteScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Sunucuya ulaşılamıyor. Lütfen PC uygulamasının açık olduğundan emin olun.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white54, fontSize: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              _persistentError ?? 'Sunucuya ulaşılamıyor. Lütfen PC uygulamasının açık olduğundan emin olun.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
+            ),
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
-            onPressed: () => ws.manualReconnect(),
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Yeniden Bağlan'),
+            onPressed: () => _performExit(skipDialog: true),
+            icon: const Icon(Icons.home_rounded),
+            label: const Text('Ana Ekrana Dön'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
@@ -238,18 +268,6 @@ class _RemoteScreenState extends State<RemoteScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () {
-              ws.removeListener(_onConnectionChanged);
-              ws.disconnect();
-              if (context.mounted) Navigator.of(context).pop();
-            },
-            child: const Text(
-              'Çıkış Yap',
-              style: TextStyle(color: Colors.white54),
             ),
           ),
         ],
@@ -402,14 +420,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
             size: 22,
           ),
           tooltip: 'Kapat',
-          onPressed: () async {
-            final shouldPop = await RemoteDialogs.showExitDialog(context);
-            if (shouldPop) {
-              ws.removeListener(_onConnectionChanged);
-              ws.disconnect();
-              if (context.mounted) Navigator.of(context).pop();
-            }
-          },
+          onPressed: () => _performExit(skipDialog: false),
         ),
       ],
     );

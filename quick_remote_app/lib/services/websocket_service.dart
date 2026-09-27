@@ -92,6 +92,8 @@ class WebSocketService extends ChangeNotifier {
   int get totalSlides => _state.totalSlides;
   String get slideNotes => _state.slideNotes;
   bool get isPptRunning => _state.isPptRunning;
+  bool get pptHasMedia => _state.pptHasMedia;
+  bool get pptIsMediaPlaying => _state.pptIsMediaPlaying;
   
   bool get hasMedia => _state.hasMedia;
   String? get mediaTitle => _state.mediaTitle;
@@ -189,6 +191,24 @@ class WebSocketService extends ChangeNotifier {
 
   /// Send a command to the PC.
   void sendCommand(String command) {
+    bool stateChanged = false;
+    
+    // Optimistic UI updates
+    if (command == 'MEDIA_PLAY_PAUSE') {
+      _state.pptIsMediaPlaying = !_state.pptIsMediaPlaying;
+      stateChanged = true;
+    } else if (command == 'SYSTEM_MEDIA_PLAY_PAUSE') {
+      _state.isPlaying = !_state.isPlaying;
+      stateChanged = true;
+    } else if (command == 'MEDIA_REWIND') {
+      _state.pptIsMediaPlaying = false; 
+      stateChanged = true;
+    }
+    
+    if (stateChanged) {
+      notifyListeners();
+    }
+    
     _client.sendCommand(command);
   }
 
@@ -197,8 +217,8 @@ class WebSocketService extends ChangeNotifier {
     _client.sendTouchOrLaser(type, dx, dy);
   }
 
-  /// Disconnect from the server.
   Future<void> disconnect() async {
+    _lastCommandError = null;
     await _client.disconnect();
     _state.reset();
     notifyListeners();
