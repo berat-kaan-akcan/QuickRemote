@@ -11,6 +11,7 @@ import '../websocket_service.dart' show AppConnectionState, ConnectionError, Con
 
 class WebSocketClient {
   WebSocketChannel? _channel;
+  StreamSubscription? _streamSubscription;
   AppConnectionState _connectionState = AppConnectionState.disconnected;
   String _serverAddress = '';
   Timer? _reconnectTimer;
@@ -56,6 +57,10 @@ class WebSocketClient {
 
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
+    await _streamSubscription?.cancel();
+    _streamSubscription = null;
+    await _channel?.sink.close();
+    _channel = null;
 
     _setState(_reconnectAttempts > 0
         ? AppConnectionState.reconnecting
@@ -123,7 +128,7 @@ class WebSocketClient {
 
       _channel!.sink.add(jsonEncode({'auth': pin}));
 
-      _channel!.stream.listen(
+      _streamSubscription = _channel!.stream.listen(
         (data) {
           try {
             final message = jsonDecode(data as String);
@@ -268,6 +273,11 @@ class WebSocketClient {
       debugPrint('Attempting reconnect...');
       final result = await connect(_lastHost!, _lastPort!, pin: _lastPin);
       if (!result.success && !isConnected) {
+        if (result.error == ConnectionError.wrongPin || result.error == ConnectionError.certMismatch) {
+          debugPrint('Fatal error (${result.error}), stopping reconnect loop');
+          _setState(AppConnectionState.failed);
+          return;
+        }
         _scheduleReconnect();
       }
     });
@@ -302,6 +312,11 @@ class WebSocketClient {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     _reconnectAttempts = _maxReconnectAttempts;
+    _lastHost = null;
+    _lastPort = null;
+    _lastPin = null;
+    await _streamSubscription?.cancel();
+    _streamSubscription = null;
     await _channel?.sink.close();
     _channel = null;
     _setState(AppConnectionState.disconnected);

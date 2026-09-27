@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../utils/ui/app_bottom_sheet.dart';
+
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
 
@@ -23,19 +23,40 @@ class ManualConnectDialog extends StatelessWidget {
     final portController = TextEditingController(text: defaultPort ?? '8090');
     final pinController = TextEditingController();
 
-    return AppBottomSheet.show<ManualConnectData>(
+    return showDialog<ManualConnectData>(
       context: context,
       builder: (ctx) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: AppBottomSheet.buildTitle('Manuel Bağlantı', icon: Icons.link_rounded),
-            ),
-            const SizedBox(height: 24),
+        return Dialog(
+          backgroundColor: AppPopupTheme.dialogBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppPopupTheme.dialogRadius),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.link_rounded, color: Colors.white, size: 24),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Manuel Bağlantı',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
             TextField(
               controller: hostController,
+              autofocus: defaultIp == null || defaultIp.isEmpty,
               style: const TextStyle(color: Colors.white),
               decoration: AppPopupTheme.inputDecoration(
                 context: ctx,
@@ -57,6 +78,7 @@ class ManualConnectDialog extends StatelessWidget {
             const SizedBox(height: 12),
             TextField(
               controller: pinController,
+              autofocus: defaultIp != null && defaultIp.isNotEmpty,
               onChanged: (_) => HapticFeedback.lightImpact(),
               style: const TextStyle(color: Colors.white),
               decoration: AppPopupTheme.inputDecoration(
@@ -70,44 +92,74 @@ class ManualConnectDialog extends StatelessWidget {
                 ),
               ),
               keyboardType: TextInputType.number,
+              maxLength: 4,
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton(
-                onPressed: () {
-                  final host = hostController.text.trim();
-                  final port = int.tryParse(portController.text.trim()) ?? 0;
-                  final pin = pinController.text.trim();
+            AnimatedBuilder(
+              animation: Listenable.merge([hostController, pinController]),
+              builder: (context, child) {
+                final host = hostController.text.trim();
+                final pin = pinController.text.trim();
+                final isValid = host.isNotEmpty && pin.length == 4;
 
-                  if (host.isEmpty) return;
+                String buttonText = 'Bağlan';
+                if (host.isEmpty) {
+                  buttonText = 'IP Bekleniyor...';
+                } else if (pin.length < 4) {
+                  buttonText = 'PIN Bekleniyor...';
+                }
 
-                  if (port < 1 || port > 65535) {
-                    AppSnackbar.show(
-                      ctx,
-                      message: 'Port 1-65535 arası olmalı',
-                      type: SnackbarType.warning,
-                    );
-                    return;
-                  }
+                return SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: isValid
+                        ? () {
+                            final port = int.tryParse(portController.text.trim()) ?? 0;
 
-                  Navigator.of(ctx).pop(ManualConnectData(host: host, port: port, pin: pin));
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF005B96),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
+                            if (port < 1 || port > 65535) {
+                              AppSnackbar.show(
+                                ctx,
+                                message: 'Port 1-65535 arası olmalı',
+                                type: SnackbarType.warning,
+                              );
+                              return;
+                            }
+
+                            Navigator.of(ctx).pop(ManualConnectData(
+                                host: host, port: port, pin: pin));
+                          }
+                        : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppPopupTheme.successColor,
+                      disabledBackgroundColor: Colors.white.withValues(alpha: 0.1),
+                      foregroundColor: Colors.white,
+                      disabledForegroundColor: Colors.white.withValues(alpha: 0.4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          buttonText,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                        ),
+                        if (isValid) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded, size: 20),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Bağlan',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-              ),
+                );
+              },
             ),
             const SizedBox(height: 8),
-          ],
+              ],
+            ),
+          ),
         );
       },
     );

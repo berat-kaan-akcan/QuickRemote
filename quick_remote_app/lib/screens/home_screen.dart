@@ -116,10 +116,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showManualConnect(BuildContext context, {String? defaultIp, String? defaultPort}) async {
+    String? resolvedPort = defaultPort;
+    if (resolvedPort == null && _recentDevices.isNotEmpty) {
+      resolvedPort = _recentDevices.first['port']?.toString();
+    }
+
     final result = await ManualConnectDialog.show(
       context, 
       defaultIp: defaultIp, 
-      defaultPort: defaultPort
+      defaultPort: resolvedPort
     );
     
     if (result != null && mounted) {
@@ -165,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ColoredBox(
                   color: scaffoldBg,
                   child: Center(
-                    child: Padding(
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -358,11 +363,9 @@ class _HomeScreenState extends State<HomeScreen> {
             // Device lists section
             Expanded(
               flex: 3,
-              child: RepaintBoundary(
-                child: ClipRect(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Consumer<DiscoveryService>(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Consumer<DiscoveryService>(
                       builder: (context, discovery, child) {
                         return Column(
                           children: [
@@ -393,25 +396,54 @@ class _HomeScreenState extends State<HomeScreen> {
                             Expanded(
                               child: ListView(
                                 clipBehavior: Clip.hardEdge,
-                                padding: EdgeInsets.zero,
+                                padding: EdgeInsets.only(
+                                  bottom: MediaQuery.of(context).padding.bottom + 24,
+                                ),
                                 children: [
                                   // Discovered device items
                                   if (discovery.devices.isEmpty)
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: Text('Cihaz aranıyor...', style: TextStyle(color: Colors.white38, fontSize: 13)),
-                                    )
+                                    if (discovery.isDiscovering)
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 16),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF005B96))),
+                                            SizedBox(width: 12),
+                                            Text('Cihaz aranıyor...', style: TextStyle(color: Colors.white38, fontSize: 13)),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        child: Column(
+                                          children: [
+                                            const Text('Ağda cihaz bulunamadı', style: TextStyle(color: Colors.white38, fontSize: 13)),
+                                            const SizedBox(height: 8),
+                                            TextButton.icon(
+                                              onPressed: () => discovery.startScanning(),
+                                              icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF005B96)),
+                                              label: const Text('Yeniden Tara', style: TextStyle(color: Color(0xFF005B96), fontSize: 13)),
+                                            ),
+                                          ],
+                                        ),
+                                      )
                                   else
                                     ...discovery.devices.map((dev) => Padding(
+                                      key: ValueKey('${dev.ip}:${dev.port}'),
                                       padding: const EdgeInsets.only(bottom: 8),
-                                      child: ListTile(
-                                        onTap: () => _showManualConnect(context, defaultIp: dev.ip, defaultPort: dev.port.toString()),
-                                        tileColor: const Color(0xFF005B96).withValues(alpha: 0.1),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                        leading: const Icon(Icons.computer_rounded, color: Color(0xFF005B96)),
-                                        title: Text(dev.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-                                        subtitle: Text('${dev.ip}:${dev.port}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                                        trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+                                      child: Material(
+                                        color: const Color(0xFF005B96).withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        clipBehavior: Clip.hardEdge,
+                                        child: ListTile(
+                                          onTap: () => _showManualConnect(context, defaultIp: dev.ip, defaultPort: dev.port.toString()),
+                                          leading: const Icon(Icons.computer_rounded, color: Color(0xFF005B96)),
+                                          title: Text(dev.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                          subtitle: Text('${dev.ip}:${dev.port}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                                          trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+                                        ),
                                       ),
                                     )),
 
@@ -432,18 +464,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                       final index = entry.key;
                                       final dev = entry.value;
                                       return Padding(
+                                        key: ValueKey('recent_${dev['host']}:${dev['port']}'),
                                         padding: const EdgeInsets.only(bottom: 8),
-                                        child: ListTile(
-                                          onTap: () => _executeConnection(dev['host'], dev['port'], dev['pin']),
-                                          tileColor: Colors.white.withValues(alpha: 0.05),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                          leading: const Icon(Icons.history_rounded, color: Colors.white54),
-                                          title: Text(dev['name'] ?? dev['host'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-                                          subtitle: Text('${dev['host']}:${dev['port']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                                          trailing: IconButton(
-                                            icon: const Icon(Icons.close_rounded, color: Colors.white24, size: 20),
-                                            tooltip: 'Geçmişten Sil',
-                                            onPressed: () => _removeRecentDevice(index),
+                                        child: Material(
+                                          color: Colors.white.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(12),
+                                          clipBehavior: Clip.hardEdge,
+                                          child: ListTile(
+                                            onTap: () => _executeConnection(dev['host'], dev['port'], dev['pin']),
+                                            leading: const Icon(Icons.history_rounded, color: Colors.white54),
+                                            title: Text(dev['name'] ?? dev['host'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                            subtitle: Text('${dev['host']}:${dev['port']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                                            trailing: IconButton(
+                                              icon: const Icon(Icons.close_rounded, color: Colors.white24, size: 20),
+                                              tooltip: 'Geçmişten Sil',
+                                              onPressed: () => _removeRecentDevice(index),
+                                            ),
                                           ),
                                         ),
                                       );
@@ -457,8 +493,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-                ),
-              ),
             ),
           ],
         ),

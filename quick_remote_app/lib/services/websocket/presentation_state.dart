@@ -21,11 +21,23 @@ class PresentationState {
     isPptRunning = false;
   }
 
+  bool pptHasMedia = false;
+  bool pptIsMediaPlaying = false;
+
   void updateFromSlideState(Map<String, dynamic> message) {
     isPptRunning = true;
-    currentSlide = message['current'] as int? ?? 0;
+    final newSlide = message['current'] as int? ?? 0;
+    if (newSlide != currentSlide) {
+      pptIsMediaPlaying = false;
+    }
+    currentSlide = newSlide;
     totalSlides = message['total'] as int? ?? 0;
     slideNotes = message['notes'] as String? ?? '';
+    pptHasMedia = message['hasMedia'] as bool? ?? false;
+    
+    if (message['isMediaPlaying'] != null) {
+      pptIsMediaPlaying = message['isMediaPlaying'] as bool;
+    }
   }
 
   void updateFromSmtcState(Map<String, dynamic> message) {

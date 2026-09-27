@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../remote/widgets/glass_panel.dart';
+import '../../remote/widgets/premium_media_btn.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 2: Media View  (WiFi MediaControlView ile aynı tasarım)
@@ -129,7 +131,7 @@ class BtMediaView extends StatelessWidget {
 
   Widget _buildSystemMediaPanel(BuildContext context) {
     const accent = Color(0xFFF43F5E);
-    return _BtGlassPanel(
+    return GlassPanel(
       borderColor: accent.withValues(alpha: 0.3),
       gradientColors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
       child: Column(
@@ -187,7 +189,7 @@ class BtMediaView extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _BtMediaBtn(
+                PremiumMediaBtn(
                   icon: Icons.skip_previous_rounded,
                   label: '',
                   color: Colors.white,
@@ -195,7 +197,7 @@ class BtMediaView extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _BtMediaBtn(
+                  child: PremiumMediaBtn(
                     icon: Icons.play_arrow_rounded,
                     label: 'Oynat / Duraklat',
                     color: Colors.white,
@@ -205,7 +207,7 @@ class BtMediaView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _BtMediaBtn(
+                PremiumMediaBtn(
                   icon: Icons.skip_next_rounded,
                   label: '',
                   color: Colors.white,
@@ -221,7 +223,7 @@ class BtMediaView extends StatelessWidget {
 
   Widget _buildVolumePanel(BuildContext context) {
     const accent = Color(0xFF38BDF8);
-    return _BtGlassPanel(
+    return GlassPanel(
       borderColor: accent.withValues(alpha: 0.3),
       gradientColors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
       child: Padding(
@@ -261,132 +263,6 @@ class BtMediaView extends StatelessWidget {
                 onTap: isConnected ? () => send('VOLUME_UP') : null,
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Glassmorphism Panel (WiFi media_control_view ile aynı) ─────────────────
-class _BtGlassPanel extends StatelessWidget {
-  final Widget child;
-  final List<Color> gradientColors;
-  final Color borderColor;
-
-  const _BtGlassPanel({
-    required this.child,
-    this.gradientColors = const [Colors.white10, Colors.white12],
-    this.borderColor = Colors.white12,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradientColors,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor),
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
-// ─── Premium Media Button (WiFi media_control_view ile aynı) ─────────────────
-class _BtMediaBtn extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool large;
-  final bool glow;
-  final VoidCallback? onTap;
-
-  const _BtMediaBtn({
-    required this.icon,
-    required this.label,
-    required this.color,
-    this.large = false,
-    this.glow = false,
-    this.onTap,
-  });
-
-  @override
-  State<_BtMediaBtn> createState() => _BtMediaBtnState();
-}
-
-class _BtMediaBtnState extends State<_BtMediaBtn> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = widget.onTap != null;
-    return GestureDetector(
-      onTapDown: enabled ? (_) => setState(() => _isPressed = true) : null,
-      onTapUp: enabled
-          ? (_) {
-              setState(() => _isPressed = false);
-              HapticFeedback.lightImpact();
-              widget.onTap!();
-            }
-          : null,
-      onTapCancel: enabled ? () => setState(() => _isPressed = false) : null,
-      child: AnimatedScale(
-        scale: _isPressed ? 0.92 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: AnimatedOpacity(
-          opacity: enabled ? 1.0 : 0.45,
-          duration: const Duration(milliseconds: 200),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.large ? 16 : 14,
-              vertical: widget.large ? 12 : 10,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  widget.color.withValues(alpha: 0.2),
-                  widget.color.withValues(alpha: 0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: widget.color.withValues(alpha: 0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.color.withValues(alpha: widget.glow ? 0.4 : 0.1),
-                  blurRadius: widget.glow ? 16 : 8,
-                  spreadRadius: widget.glow ? 2 : 0,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(widget.icon, color: widget.color, size: widget.large ? 24 : 20),
-                if (widget.large && widget.label.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      color: widget.color,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
-            ),
           ),
         ),
       ),

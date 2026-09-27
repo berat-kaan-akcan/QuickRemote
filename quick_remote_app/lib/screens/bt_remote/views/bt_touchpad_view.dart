@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 
 import '../../../services/bluetooth/bt_hid_service.dart';
 import '../../remote/widgets/shared_buttons.dart';
+import '../../remote/widgets/draw_tool_bar.dart';
+import '../../../models/draw_tool.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 1: Touchpad View  (WiFi TouchpadView ile aynı tasarım)
@@ -13,8 +15,6 @@ import '../../remote/widgets/shared_buttons.dart';
 // Performans: Pointer move event'leri throttle edilir ve delta biriktirilir.
 // Bu sayede BT HID channel flood edilmez ve hareket akıcı olur.
 // ═════════════════════════════════════════════════════════════════════════════
-
-enum BtDrawTool { laser, pen, highlighter, eraser }
 
 class BtTouchpadView extends StatefulWidget {
   final BtHidService bt;
@@ -33,10 +33,10 @@ class BtTouchpadView extends StatefulWidget {
 }
 
 class _BtTouchpadViewState extends State<BtTouchpadView> {
-  BtDrawTool _drawTool = BtDrawTool.laser;
+  DrawTool _drawTool = DrawTool.laser;
 
   bool _isDrawActive = false;
-  BtDrawTool _activeTool = BtDrawTool.laser;
+  DrawTool _activeTool = DrawTool.laser;
   DateTime? _lastPointerUpTime;
   Offset? _lastPointerUpPosition;
 
@@ -184,16 +184,16 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     Color borderColor;
     double borderWidth = 2;
 
-    if (_isDrawActive && _activeTool == BtDrawTool.pen) {
+    if (_isDrawActive && _activeTool == DrawTool.pen) {
       borderColor = const Color(0xFF00E676);
       borderWidth = 2.5;
-    } else if (_isDrawActive && _activeTool == BtDrawTool.highlighter) {
+    } else if (_isDrawActive && _activeTool == DrawTool.highlighter) {
       borderColor = const Color(0xFFFFEA00);
       borderWidth = 2.5;
-    } else if (_isDrawActive && _activeTool == BtDrawTool.eraser) {
+    } else if (_isDrawActive && _activeTool == DrawTool.eraser) {
       borderColor = const Color(0xFFFF9800);
       borderWidth = 2.5;
-    } else if (_isDrawActive && _activeTool == BtDrawTool.laser) {
+    } else if (_isDrawActive && _activeTool == DrawTool.laser) {
       borderColor = const Color(0xFFFF1744);
       borderWidth = 2.5;
     } else {
@@ -224,7 +224,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_isDrawActive && _activeTool == BtDrawTool.pen) ...[
+              if (_isDrawActive && _activeTool == DrawTool.pen) ...[
                 Icon(Icons.edit_rounded,
                     color: const Color(0xFF00E676).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
@@ -232,7 +232,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                     style: TextStyle(
                         color: const Color(0xFF00E676).withValues(alpha: 0.4),
                         fontSize: 14, fontWeight: FontWeight.w600)),
-              ] else if (_isDrawActive && _activeTool == BtDrawTool.highlighter) ...[
+              ] else if (_isDrawActive && _activeTool == DrawTool.highlighter) ...[
                 Icon(Icons.border_color_rounded,
                     color: const Color(0xFFFFEA00).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
@@ -240,7 +240,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                     style: TextStyle(
                         color: const Color(0xFFFFEA00).withValues(alpha: 0.4),
                         fontSize: 14, fontWeight: FontWeight.w600)),
-              ] else if (_isDrawActive && _activeTool == BtDrawTool.eraser) ...[
+              ] else if (_isDrawActive && _activeTool == DrawTool.eraser) ...[
                 Icon(Icons.auto_fix_high_rounded,
                     color: const Color(0xFFFF9800).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
@@ -248,7 +248,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                     style: TextStyle(
                         color: const Color(0xFFFF9800).withValues(alpha: 0.4),
                         fontSize: 14, fontWeight: FontWeight.w600)),
-              ] else if (_isDrawActive && _activeTool == BtDrawTool.laser) ...[
+              ] else if (_isDrawActive && _activeTool == DrawTool.laser) ...[
                 Icon(Icons.highlight_rounded,
                     color: const Color(0xFFFF1744).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
@@ -278,145 +278,13 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   }
 
   Widget _buildToolBar() {
-    return Row(
-      children: [
-        _buildToolButton(
-          tool: BtDrawTool.laser,
-          icon: Icons.highlight_rounded,
-          label: 'Lazer',
-          activeColor: const Color(0xFFFF1744),
-        ),
-        const SizedBox(width: 4),
-        _buildToolButton(
-          tool: BtDrawTool.pen,
-          icon: Icons.edit_rounded,
-          label: 'Kalem',
-          activeColor: const Color(0xFF00E676),
-        ),
-        const SizedBox(width: 4),
-        _buildToolButton(
-          tool: BtDrawTool.highlighter,
-          icon: Icons.border_color_rounded,
-          label: 'Vurgula',
-          activeColor: const Color(0xFFFFEA00),
-        ),
-        const SizedBox(width: 4),
-        _buildToolButton(
-          tool: BtDrawTool.eraser,
-          icon: Icons.auto_fix_high_rounded,
-          label: 'Silgi',
-          activeColor: const Color(0xFFFF9800),
-        ),
-        const SizedBox(width: 4),
-        // Temizle (Tüm çizimleri sil) button
-        Expanded(
-          child: Semantics(
-            button: true,
-            label: 'Temizle',
-            child: Tooltip(
-              message: 'Tüm çizimleri temizle',
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.mediumImpact();
-                  widget.send('ERASE_ALL');
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Colors.transparent,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.cleaning_services_rounded,
-                        size: 14,
-                        color: Colors.white38,
-                      ),
-                      const SizedBox(width: 2),
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'Temizle',
-                            style: TextStyle(
-                              color: Colors.white38,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildToolButton({
-    required BtDrawTool tool,
-    required IconData icon,
-    required String label,
-    required Color activeColor,
-  }) {
-    final isActive = _drawTool == tool;
-    return Expanded(
-      child: Semantics(
-        button: true,
-        label: label,
-        child: Tooltip(
-          message: '$label aracını seç',
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() => _drawTool = tool);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? activeColor.withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isActive ? activeColor.withValues(alpha: 0.5) : Colors.transparent,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 14, color: isActive ? activeColor : Colors.white38),
-                  const SizedBox(width: 2),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          color: isActive ? activeColor : Colors.white38,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return DrawToolBar(
+      activeTool: _drawTool,
+      onToolSelected: (tool) => setState(() => _drawTool = tool),
+      onClear: () {
+        HapticFeedback.mediumImpact();
+        widget.send('ERASE_ALL');
+      },
     );
   }
 
@@ -435,7 +303,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
         (pos - _lastPointerUpPosition!).distance < 80;
 
     _isDrawActive = true;
-    _activeTool = isDoubleTap ? _drawTool : BtDrawTool.laser;
+    _activeTool = isDoubleTap ? _drawTool : DrawTool.laser;
 
     // Reset pending deltas
     _pendingDx = 0;
@@ -451,7 +319,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
 
     // For pen/highlighter/eraser: hold left mouse button down via HID
     // (WiFi'daki LEFT_DOWN davranışı — buton basılı kalır)
-    if (_activeTool != BtDrawTool.laser) {
+    if (_activeTool != DrawTool.laser) {
       Future.delayed(const Duration(milliseconds: 100), () {
         if (_isDrawActive && mounted) {
           _isLeftButtonHeld = true;
@@ -527,7 +395,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     }
 
     if (_isDrawActive) {
-      if (_activeTool == BtDrawTool.laser) {
+      if (_activeTool == DrawTool.laser) {
         widget.send('LASER_CURSOR');
       } else {
         // Release the held mouse button via HID
@@ -545,15 +413,15 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   }
 
   /// Returns the mode command string for a given tool.
-  static String _modeCommandFor(BtDrawTool tool) {
+  static String _modeCommandFor(DrawTool tool) {
     switch (tool) {
-      case BtDrawTool.pen:
+      case DrawTool.pen:
         return 'MODE_PEN';
-      case BtDrawTool.highlighter:
+      case DrawTool.highlighter:
         return 'MODE_HIGHLIGHTER';
-      case BtDrawTool.eraser:
+      case DrawTool.eraser:
         return 'MODE_ERASER';
-      case BtDrawTool.laser:
+      case DrawTool.laser:
         return 'MODE_LASER';
     }
   }
