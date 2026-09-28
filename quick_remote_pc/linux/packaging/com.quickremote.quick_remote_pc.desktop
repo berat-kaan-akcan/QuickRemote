@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=QuickRemote PC
+Comment=Telefonla sunum ve bilgisayar kontrolü
+Exec=quick_remote_pc
+Icon=com.quickremote.quick_remote_pc
+Terminal=false
+Categories=Office;Presentation;Utility;
+StartupWMClass=com.quickremote.quick_remote_pc

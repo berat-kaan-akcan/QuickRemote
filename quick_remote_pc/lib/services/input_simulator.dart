@@ -1,12 +1,11 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'powershell_runner.dart';
+import 'input/command_router.dart';
 import 'input/input_service.dart';
 import 'input/windows/windows_input_service.dart';
 import 'input/linux/linux_input_service.dart';
 
-/// Facade for backwards compatibility with existing InputSimulator references
+/// Static facade over the platform [InputService].
 class InputSimulator {
   static final InputService _instance = _init();
 
@@ -16,61 +15,26 @@ class InputSimulator {
     } else if (Platform.isLinux) {
       return LinuxInputService();
     }
-    // Fallback or handle other OSs
-    return WindowsInputService();
+    throw UnsupportedError('QuickRemote PC does not support ${Platform.operatingSystem}');
   }
 
   static set onCommandError(void Function(String detail)? callback) {
     _instance.onCommandError = callback;
   }
-  
+
   static void Function(String detail)? get onCommandError => _instance.onCommandError;
 
-  // Keyboard
-  static void pressKey(int vkCode) => _instance.pressKey(vkCode);
-  static void pressKeyCombo(List<int> vkCodes) => _instance.pressKeyCombo(vkCodes);
-  
-  // Mouse
-  static void leftClick() => _instance.leftClick();
-  static void rightClick() => _instance.rightClick();
-  static void leftDown() => _instance.leftDown();
-  static void leftUp() => _instance.leftUp();
+  static String get presenter => _instance.presenter;
 
-  // Volume
-  static String getAudioControlPSScript() => _instance.getAudioControlPSScript();
-  static void volumeUp() => _instance.volumeUp();
-  static void volumeDown() => _instance.volumeDown();
-  static void volumeMute() => _instance.volumeMute();
-  static Future<void> setVolume(int level) => _instance.setVolume(level);
+  // Dispatcher
+  static void executeCommand(String command) => CommandRouter.execute(_instance, command);
 
-  // PPT
-  static void slideNext() => _instance.slideNext();
-  static void slidePrev() => _instance.slidePrev();
-  static Future<void> slideStart() => _instance.slideStart();
-  static Future<void> slideStartAt(int slideNumber) => _instance.slideStartAt(slideNumber);
-  static Future<void> slideEnd() => _instance.slideEnd();
-  static void blackScreen() => _instance.blackScreen();
-  static void whiteScreen() => _instance.whiteScreen();
-  static void eraseAllInk() => _instance.eraseAllInk();
-  static void toggleLaserCursor() => _instance.toggleLaserCursor();
-  static Future<void> setPenColor(int bgrColor) => _instance.setPenColor(bgrColor);
-  static Future<void> pptMediaPlayPause() => _instance.pptMediaPlayPause();
-  static Future<void> pptMediaRewind() => _instance.pptMediaRewind();
+  // Laser
+  static bool get handlesLaserPointer => _instance.handlesLaserPointer;
+  static void laserPointerMoved(double relX, double relY) => _instance.laserPointerMoved(relX, relY);
 
-  // SMTC & State
+  // States
   static Future<Map<String, dynamic>?> getSmtcState() => _instance.getSmtcState();
   static Future<Map<String, dynamic>?> getSlideState() => _instance.getSlideState();
-  
-  // Dispatcher & PowerShell
-  static void executeCommand(String command) => _instance.executeCommand(command);
-  
-  // PowerShell is still windows specific but we keep it here for existing code
-  static Future<String> runPowerShellScript(String script, {bool isPolling = false}) => PowerShellRunner.execute(script, isPolling: isPolling);
-  
-  // Others
-  static void lockPC() => _instance.lockPC();
-  static void sysMediaPlayPause() => _instance.sysMediaPlayPause();
-  static void sysMediaNext() => _instance.sysMediaNext();
-  static void sysMediaPrev() => _instance.sysMediaPrev();
-  static void sysMediaStop() => _instance.sysMediaStop();
+  static Future<VolumeState?> getVolumeState() => _instance.getVolumeState();
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../services/websocket_server.dart';
@@ -27,10 +28,14 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Şu an ortak (Public) bir ağdasınız. Bu ağdaki diğer kişiler '
-            'QuickRemote sunucunuzu görebilir.\n\n'
-            'Güvenilir bir ağda olduğunuzdan emin olun.',
+          Text(
+            Platform.isLinux
+                ? 'Bu ağ güvenlik duvarında güvenilmeyen (public) bölgede. Bu ağdaki '
+                    'diğer kişiler QuickRemote sunucunuzu görebilir.\n\n'
+                    'Güvenilir bir ağda olduğunuzdan emin olun.'
+                : 'Şu an ortak (Public) bir ağdasınız. Bu ağdaki diğer kişiler '
+                    'QuickRemote sunucunuzu görebilir.\n\n'
+                    'Güvenilir bir ağda olduğunuzdan emin olun.',
             style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
           ),
           const SizedBox(height: 16),

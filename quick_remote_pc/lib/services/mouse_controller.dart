@@ -10,7 +10,7 @@ abstract class MouseController {
     } else if (Platform.isLinux) {
       return LinuxMouseController();
     }
-    return WindowsMouseController();
+    throw UnsupportedError('QuickRemote PC does not support ${Platform.operatingSystem}');
   }
 
   void init();
@@ -21,6 +21,10 @@ abstract class MouseController {
   double get currentY;
 
   void moveDelta(double dx, double dy);
+
+  /// Updates the tracked position without moving the OS cursor
+  /// (used when the presenter draws the laser pointer itself).
+  void trackDelta(double dx, double dy);
   void moveTo(double x, double y);
   void resetToCenter();
 }

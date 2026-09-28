@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import '../input_simulator.dart';
 
 class StateBroadcaster {
@@ -135,35 +133,17 @@ class StateBroadcaster {
 
   Future<void> broadcastVolumeState({bool force = false}) async {
     if (!hasClients()) return;
-    final script = '''
-try {
-\${InputSimulator.getAudioControlPSScript()}
-    \$lv = [AudioControl.Audio]::GetVolume()
-    \$mu = [AudioControl.Audio]::GetMute()
-    Write-Output "{`"volume`":\$([int](\$lv * 100)),`"muted`":\$(if(\$mu){`"true`"}else{`"false`"})}"
-} catch {
-    Write-Output "ERROR"
-}
-''';
-    try {
-      final output = await InputSimulator.runPowerShellScript(script, isPolling: true);
-      if (output.startsWith('{')) {
-        final data = jsonDecode(output) as Map<String, dynamic>;
-        final volume = (data['volume'] as num?)?.toInt() ?? -1;
-        final muted = data['muted'] as bool? ?? false;
-        if (force || volume != _lastBroadcastVolume || muted != _lastBroadcastMuted) {
-          _lastBroadcastVolume = volume;
-          _lastBroadcastMuted = muted;
-          onBroadcast({
-            'type': 'STATUS',
-            'state': 'VOLUME_CHANGED',
-            'volume': volume,
-            'muted': muted,
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('broadcastVolumeState error: \$e');
+    final state = await InputSimulator.getVolumeState();
+    if (state == null) return;
+    if (force || state.volume != _lastBroadcastVolume || state.muted != _lastBroadcastMuted) {
+      _lastBroadcastVolume = state.volume;
+      _lastBroadcastMuted = state.muted;
+      onBroadcast({
+        'type': 'STATUS',
+        'state': 'VOLUME_CHANGED',
+        'volume': state.volume,
+        'muted': state.muted,
+      });
     }
   }
 

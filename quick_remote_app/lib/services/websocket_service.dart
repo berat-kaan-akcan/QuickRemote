@@ -92,6 +92,7 @@ class WebSocketService extends ChangeNotifier {
   int get totalSlides => _state.totalSlides;
   String get slideNotes => _state.slideNotes;
   bool get isPptRunning => _state.isPptRunning;
+  String get presenterName => _state.presenterName;
   bool get pptHasMedia => _state.pptHasMedia;
   bool get pptIsMediaPlaying => _state.pptIsMediaPlaying;
   
@@ -140,6 +141,12 @@ class WebSocketService extends ChangeNotifier {
   }
 
   void _handleMessage(Map<String, dynamic> message) {
+    if (message['type'] == 'auth') {
+      _state.presenter = message['presenter'] as String? ?? 'powerpoint';
+      notifyListeners();
+      return;
+    }
+
     if (message['type'] == 'SMTC_STATE') {
       _state.updateFromSmtcState(message);
       notifyListeners();

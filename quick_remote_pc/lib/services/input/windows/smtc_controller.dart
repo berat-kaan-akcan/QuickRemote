@@ -106,7 +106,7 @@ try {
       }
       return null;
     } catch (e) {
-      debugPrint('Error getting SMTC state: \$e');
+      debugPrint('Error getting SMTC state: $e');
       return null;
     }
   }

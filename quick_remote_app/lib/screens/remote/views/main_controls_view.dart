@@ -139,14 +139,14 @@ class _MainControlsViewState extends State<MainControlsView> {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 20),
-                            SizedBox(width: 8),
+                            const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 20),
+                            const SizedBox(width: 8),
                             Text(
-                              'Sunum Açık Değil, PowerPoint\'i başlatın',
-                              style: TextStyle(
+                              'Sunum Açık Değil, ${ws.presenterName}\'i başlatın',
+                              style: const TextStyle(
                                 color: Colors.redAccent,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,

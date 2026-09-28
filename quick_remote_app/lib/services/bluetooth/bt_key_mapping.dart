@@ -1,5 +1,15 @@
 import 'bt_hid_service.dart';
 
+/// Presentation program the phone sends keyboard shortcuts to in BT HID mode.
+/// Over Bluetooth the phone cannot detect it, so the user picks it.
+enum BtTarget {
+  powerpoint,
+  impress;
+
+  static BtTarget fromName(String? name) =>
+      values.firstWhere((t) => t.name == name, orElse: () => powerpoint);
+}
+
 /// Maps QuickRemote string commands to Bluetooth Classic HID key/consumer reports.
 ///
 /// Usage:
@@ -43,9 +53,27 @@ abstract class BtKeyMapping {
 
   /// Returns the [BtAction] for a given QuickRemote command string, or null
   /// if the command is not supported in BT HID mode.
-  static BtAction? forCommand(String command) {
+  static BtAction? forCommand(String command, {BtTarget target = BtTarget.powerpoint}) {
+    if (target == BtTarget.impress && _impressOverrides.containsKey(command)) {
+      return _impressOverrides[command];
+    }
     return _map[command];
   }
+
+  /// LibreOffice Impress slideshow shortcuts, verified against Impress 26.8:
+  /// Ctrl+P toggles the pen, Ctrl+A turns it off, E erases all ink, and
+  /// F5/Esc/B/W/PageUp/PageDown behave like PowerPoint. Impress has no
+  /// keyboard shortcut for the laser, highlighter or eraser (Ctrl+L/I/E do
+  /// nothing in the slideshow and are text formatting in the editor), so those
+  /// are no-ops: the laser becomes the plain mouse cursor, and the toolbar
+  /// hides highlighter/eraser because a click without the pen advances the slide.
+  static final Map<String, BtAction> _impressOverrides = {
+    'MODE_LASER':       _NoopAction(),
+    'LASER_CURSOR':     _NoopAction(),
+    'LASER_OFF':        _NoopAction(),
+    'MODE_HIGHLIGHTER': _NoopAction(),
+    'MODE_ERASER':      _NoopAction(),
+  };
 
   static final Map<String, BtAction> _map = {
     // Slide navigation

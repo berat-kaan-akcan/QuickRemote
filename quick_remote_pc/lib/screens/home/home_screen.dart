@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/server_provider.dart';
@@ -5,6 +6,7 @@ import 'widgets/status_chip.dart';
 import 'widgets/settings_dialog.dart';
 import 'widgets/running_dashboard.dart';
 import 'widgets/stopped_dashboard.dart';
+import 'widgets/linux_setup_panel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -166,6 +168,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
 
                   const SizedBox(height: 16),
+
+                  if (Platform.isLinux) LinuxSetupPanel(provider: provider),
 
                   // Main Content
                   Expanded(
