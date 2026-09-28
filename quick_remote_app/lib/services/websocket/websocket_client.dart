@@ -151,6 +151,7 @@ class WebSocketClient {
                 return;
               }
               debugPrint('Auth successful');
+              onMessage(message); // carries the PC's presenter/platform info
               _reconnectAttempts = 0;
               _setState(AppConnectionState.connected);
               if (!authResolved) {

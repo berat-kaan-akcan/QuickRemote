@@ -8,6 +8,7 @@ import 'mouse_controller.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import 'server/auth_manager.dart';
+import 'server/network/avahi_publisher.dart';
 import 'server/network_manager.dart';
 import 'server/state_broadcaster.dart';
 
@@ -22,6 +23,10 @@ class WebSocketServer {
   final ValueNotifier<String> pin = ValueNotifier('');
   final ValueNotifier<String> localIP = ValueNotifier('');
   final ValueNotifier<bool> isPublicNetwork = ValueNotifier(false);
+  /// Why the last start() failed (null when it succeeded).
+  final ValueNotifier<String?> startError = ValueNotifier(null);
+  /// Whether the mDNS advertisement succeeded (auto-discovery on the phone).
+  final ValueNotifier<bool> mdnsAvailable = ValueNotifier(true);
 
   final MouseController mouseController = MouseController();
   final Set<WebSocket> _authenticatedClients = {};
@@ -31,6 +36,7 @@ class WebSocketServer {
   
   int _port = 8090;
   nsd.Registration? _nsdRegistration;
+  final AvahiPublisher _avahi = AvahiPublisher();
   
   final Map<WebSocket, Timer> _authTimers = {};
   final Map<WebSocket, int> _invalidMessageCount = {};
@@ -62,6 +68,7 @@ class WebSocketServer {
   Future<void> start({int port = 8090}) async {
     if (_server != null) return;
 
+    startError.value = null;
     pin.value = _authManager.generatePin();
 
     isPublicNetwork.value = await NetworkManager.checkNetworkProfile();
@@ -89,8 +96,14 @@ class WebSocketServer {
       isRunning.value = true;
       debugPrint('WebSocket server started on port $_port (PIN: ${pin.value})');
 
-      if (_nsdRegistration == null) {
-        final hostname = Platform.localHostname;
+      final hostname = Platform.localHostname;
+      if (Platform.isLinux) {
+        mdnsAvailable.value = await _avahi.register(
+          name: hostname,
+          type: '_quickremote._tcp',
+          port: _port,
+        );
+      } else if (_nsdRegistration == null) {
         try {
           _nsdRegistration = await nsd.register(nsd.Service(
             name: hostname,
@@ -139,6 +152,7 @@ class WebSocketServer {
       );
     } catch (e) {
       debugPrint('Failed to start server: $e');
+      startError.value = e.toString();
       isRunning.value = false;
     }
   }
@@ -208,7 +222,16 @@ class WebSocketServer {
                   final isPptRunning = _stateBroadcaster.lastSlideState != null && _stateBroadcaster.lastSlideState!['error'] == null;
                   if (!isPptRunning) return;
                 }
-                mouseController.moveDelta(dx.toDouble(), dy.toDouble());
+                if (typeId == 1 && InputSimulator.handlesLaserPointer) {
+                  // The presenter draws the laser itself (Impress): keep the OS cursor still.
+                  mouseController.trackDelta(dx.toDouble(), dy.toDouble());
+                  InputSimulator.laserPointerMoved(
+                    mouseController.currentX / mouseController.screenWidth,
+                    mouseController.currentY / mouseController.screenHeight,
+                  );
+                } else {
+                  mouseController.moveDelta(dx.toDouble(), dy.toDouble());
+                }
                 onMouseMove?.call(mouseController.currentX, mouseController.currentY);
               }
             }
@@ -231,7 +254,12 @@ class WebSocketServer {
               _authManager.recordSuccessfulAuth(remoteIP);
               
               clientCount.value = _authenticatedClients.length;
-              ws.add(jsonEncode({'type': 'auth', 'status': 'ok'}));
+              ws.add(jsonEncode({
+                'type': 'auth',
+                'status': 'ok',
+                'presenter': InputSimulator.presenter,
+                'platform': Platform.operatingSystem,
+              }));
 
               debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
               triggerSlideStateUpdate();
@@ -341,6 +369,7 @@ class WebSocketServer {
     laserActive.value = false;
     pin.value = '';
     NetworkManager.clearCachedIP();
+    await _avahi.unregister();
 
     try {
       await _server?.close(force: true);

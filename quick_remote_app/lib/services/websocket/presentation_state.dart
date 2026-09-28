@@ -4,6 +4,10 @@ class PresentationState {
   String slideNotes = '';
   bool isPptRunning = true;
 
+  /// Presentation program on the PC ('powerpoint' on Windows, 'impress' on Linux).
+  String presenter = 'powerpoint';
+  String get presenterName => presenter == 'impress' ? 'LibreOffice Impress' : 'PowerPoint';
+
   bool hasMedia = false;
   String? mediaTitle;
   String? mediaArtist;

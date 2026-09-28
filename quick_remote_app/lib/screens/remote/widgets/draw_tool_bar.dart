@@ -11,48 +11,64 @@ class DrawToolBar extends StatelessWidget {
   /// ve mevcut araç seçiliyken tekrar tıklanırsa veya uzun basılırsa bu callback çağrılır.
   final void Function(DrawTool)? onColorPickerRequested;
 
+  /// Tools to show (all by default).
+  final Set<DrawTool> tools;
+
+  /// Label of the laser tool (e.g. 'İmleç' when it only moves the mouse cursor).
+  final String laserLabel;
+
   const DrawToolBar({
     super.key,
     required this.activeTool,
     required this.onToolSelected,
     required this.onClear,
     this.onColorPickerRequested,
+    this.tools = const {DrawTool.laser, DrawTool.pen, DrawTool.highlighter, DrawTool.eraser},
+    this.laserLabel = 'Lazer',
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildToolButton(
-          tool: DrawTool.laser,
-          icon: Icons.highlight_rounded,
-          label: 'Lazer',
-          activeColor: const Color(0xFFFF1744),
-        ),
-        const SizedBox(width: 4),
-        _buildToolButton(
-          tool: DrawTool.pen,
-          icon: Icons.edit_rounded,
-          label: 'Kalem',
-          activeColor: const Color(0xFF00E676),
-          supportsColorPicker: true,
-        ),
-        const SizedBox(width: 4),
-        _buildToolButton(
-          tool: DrawTool.highlighter,
-          icon: Icons.border_color_rounded,
-          label: 'Vurgula',
-          activeColor: const Color(0xFFFFEA00),
-          supportsColorPicker: true,
-        ),
-        const SizedBox(width: 4),
-        _buildToolButton(
-          tool: DrawTool.eraser,
-          icon: Icons.auto_fix_high_rounded,
-          label: 'Silgi',
-          activeColor: const Color(0xFFFF9800),
-        ),
-        const SizedBox(width: 4),
+        if (tools.contains(DrawTool.laser)) ...[
+          _buildToolButton(
+            tool: DrawTool.laser,
+            icon: Icons.highlight_rounded,
+            label: laserLabel,
+            activeColor: const Color(0xFFFF1744),
+          ),
+          const SizedBox(width: 4),
+        ],
+        if (tools.contains(DrawTool.pen)) ...[
+          _buildToolButton(
+            tool: DrawTool.pen,
+            icon: Icons.edit_rounded,
+            label: 'Kalem',
+            activeColor: const Color(0xFF00E676),
+            supportsColorPicker: true,
+          ),
+          const SizedBox(width: 4),
+        ],
+        if (tools.contains(DrawTool.highlighter)) ...[
+          _buildToolButton(
+            tool: DrawTool.highlighter,
+            icon: Icons.border_color_rounded,
+            label: 'Vurgula',
+            activeColor: const Color(0xFFFFEA00),
+            supportsColorPicker: true,
+          ),
+          const SizedBox(width: 4),
+        ],
+        if (tools.contains(DrawTool.eraser)) ...[
+          _buildToolButton(
+            tool: DrawTool.eraser,
+            icon: Icons.auto_fix_high_rounded,
+            label: 'Silgi',
+            activeColor: const Color(0xFFFF9800),
+          ),
+          const SizedBox(width: 4),
+        ],
         _buildClearButton(),
       ],
     );

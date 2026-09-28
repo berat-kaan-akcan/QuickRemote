@@ -24,6 +24,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
   late AnimationController _pulseController;
 
   BtHidConnectionState _state = BtHidConnectionState.disconnected;
+  bool _linuxGuide = false;
   String? _errorMessage;
 
   @override
@@ -260,7 +261,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
         ),
         const SizedBox(height: 32),
 
-        // Step-by-step Windows guide card
+        // Step-by-step pairing guide card (Windows / Linux)
         _buildStepsCard(),
 
         const Spacer(),
@@ -313,12 +314,37 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(value: false, label: Text('Windows'), icon: Icon(Icons.window_rounded, size: 16)),
+                  ButtonSegment(value: true, label: Text('Linux'), icon: Icon(Icons.terminal_rounded, size: 16)),
+                ],
+                selected: {_linuxGuide},
+                showSelectedIcon: false,
+                onSelectionChanged: (s) => setState(() => _linuxGuide = s.first),
+                style: SegmentedButton.styleFrom(
+                  foregroundColor: Colors.white70,
+                  selectedForegroundColor: Colors.white,
+                  selectedBackgroundColor: const Color(0xFF1565C0).withValues(alpha: 0.5),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
               const SizedBox(height: 16),
-              _buildStep(1, 'Windows Ayarlar\'ı açın'),
-              _buildStep(2, 'Bluetooth ve diğer cihazlar\'a gidin'),
-              _buildStep(3, '"Cihaz ekle" butonuna basın'),
-              _buildStep(4, 'Listeden telefonunuzun adını seçin'),
-              _buildStep(5, 'Eşleştirmeyi onaylayın'),
+              if (_linuxGuide) ...[
+                _buildStep(1, 'Sistem Ayarları\'nı açın (KDE: Bluetooth, GNOME: Ayarlar → Bluetooth)'),
+                _buildStep(2, 'Bluetooth\'un açık olduğundan emin olun'),
+                _buildStep(3, '"Yeni cihaz ekle" / cihaz aramayı başlatın'),
+                _buildStep(4, 'Listeden telefonunuzun adını seçin'),
+                _buildStep(5, 'Eşleştirmeyi onaylayın'),
+              ] else ...[
+                _buildStep(1, 'Windows Ayarlar\'ı açın'),
+                _buildStep(2, 'Bluetooth ve diğer cihazlar\'a gidin'),
+                _buildStep(3, '"Cihaz ekle" butonuna basın'),
+                _buildStep(4, 'Listeden telefonunuzun adını seçin'),
+                _buildStep(5, 'Eşleştirmeyi onaylayın'),
+              ],
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),

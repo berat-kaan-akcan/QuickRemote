@@ -17,6 +17,31 @@ class VolumeController {
     }''';
   }
 
+  static Future<({int volume, bool muted})?> getVolumeState() async {
+    final script = '''
+try {
+${getAudioControlPSScript()}
+    \$lv = [AudioControl.Audio]::GetVolume()
+    \$mu = [AudioControl.Audio]::GetMute()
+    Write-Output "{`"volume`":\$([int](\$lv * 100)),`"muted`":\$(if(\$mu){`"true`"}else{`"false`"})}"
+} catch {
+    Write-Output "ERROR"
+}
+''';
+    try {
+      final output = await PowerShellRunner.execute(script, isPolling: true);
+      if (!output.startsWith('{')) return null;
+      final data = jsonDecode(output) as Map<String, dynamic>;
+      return (
+        volume: (data['volume'] as num?)?.toInt() ?? -1,
+        muted: data['muted'] as bool? ?? false,
+      );
+    } catch (e) {
+      debugPrint('getVolumeState error: $e');
+      return null;
+    }
+  }
+
   static void volumeUp() => KeyboardSimulator.pressKey(0xAF);
   static void volumeDown() => KeyboardSimulator.pressKey(0xAE);
   static void volumeMute() => KeyboardSimulator.pressKey(0xAD);

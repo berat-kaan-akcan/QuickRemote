@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../services/websocket_server.dart';
 import '../../../../widgets/hover_scale.dart';
@@ -16,7 +17,10 @@ class NetworkStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isPublic ? const Color(0xFFFF9800) : const Color(0xFF4CAF50);
     final icon = isPublic ? Icons.wifi_tethering_rounded : Icons.shield_rounded;
-    final text = isPublic ? 'Ortak Ağ (Public)' : 'Güvenli Ağ (Private)';
+    // Linux has no network profiles; "public" means an untrusted firewalld zone.
+    final text = Platform.isLinux
+        ? (isPublic ? 'Güvenilmeyen Ağ (firewalld)' : 'Yerel Ağ')
+        : (isPublic ? 'Ortak Ağ (Public)' : 'Güvenli Ağ (Private)');
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),

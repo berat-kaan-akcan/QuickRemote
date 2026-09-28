@@ -34,6 +34,23 @@ class StoppedDashboard extends StatelessWidget {
                 }
                 return;
               }
+              final startError = provider.startError;
+              if (startError != null) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Sunucu başlatılamadı: $startError',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.red.shade700,
+                      duration: const Duration(seconds: 6),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+                return;
+              }
               final actualPort = provider.server.port;
               if (actualPort != 8090 && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(

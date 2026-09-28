@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/presentation_analytics.dart';
+import '../services/bluetooth/bt_key_mapping.dart';
 
 class SettingsProvider extends ChangeNotifier {
   // Early Warning Haptic Feedback
@@ -14,6 +15,9 @@ class SettingsProvider extends ChangeNotifier {
   
   bool _timeOutVibrationEnabled = true;
   String _timeOutVibrationPattern = 'triple';
+
+  // Presentation program targeted in Bluetooth HID mode
+  BtTarget _btTarget = BtTarget.powerpoint;
 
   // Presentation History
   List<PresentationAnalytics> _presentationHistory = [];
@@ -29,6 +33,7 @@ class SettingsProvider extends ChangeNotifier {
   }
   bool get timeOutVibrationEnabled => _timeOutVibrationEnabled;
   String get timeOutVibrationPattern => _timeOutVibrationPattern;
+  BtTarget get btTarget => _btTarget;
   List<PresentationAnalytics> get presentationHistory =>
       List.unmodifiable(_presentationHistory);
 
@@ -41,6 +46,7 @@ class SettingsProvider extends ChangeNotifier {
     _earlyWarningHaptic = prefs.getBool('early_warning_haptic') ?? true;
     _timeOutVibrationEnabled = prefs.getBool('timeout_vibration_enabled') ?? true;
     _timeOutVibrationPattern = prefs.getString('timeout_vibration_pattern') ?? 'triple';
+    _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
     
     final timesStrList = prefs.getStringList('warning_times');
     final vibrationsStr = prefs.getString('warning_vibrations');
@@ -128,6 +134,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('timeout_vibration_pattern', pattern);
+  }
+
+  Future<void> setBtTarget(BtTarget target) async {
+    _btTarget = target;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bt_target', target.name);
   }
 
   // ─── Presentation History Management ───
