@@ -32,6 +32,15 @@ flutter run                      # mobile client
 
 The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' | python3 quick_remote_pc/assets/linux/impress_bridge.py 2002`.
 
+### Android build toolchain (`quick_remote_app/android`)
+
+- Gradle 9.3.1, AGP 9.1.0 and Kotlin 2.4.0 match the Flutter 3.47 template. Flutter's `DependencyVersionChecker` fails the build below Gradle 8.14, AGP 8.11.1 or KGP 2.2.20, and warns below Gradle 9.1, AGP 9.0.1 or KGP 2.3.20. Upgrade these three together, in `gradle/wrapper/gradle-wrapper.properties` and `settings.gradle.kts`.
+- Build with **JDK 21**, set via `flutter config --jdk-dir ~/.jdks/jdk-21.0.12.1+1`. Flutter's Java/Gradle table stops at Java 25, and the system default JDK 27 is not supported. Run `./gradlew` as `JAVA_HOME=~/.jdks/jdk-21.0.12.1+1 ./gradlew ...`.
+- Never put `org.gradle.java.home` in the repo's `gradle.properties`, because it is machine-specific. It belongs in `~/.gradle/gradle.properties`.
+- `compileSdk = 37` because `permission_handler_android` 14.x needs it. `targetSdk` still follows Flutter (36). The app's Kotlin target uses the `kotlin { compilerOptions { jvmTarget } }` DSL, not `kotlinOptions`.
+- `android.builtInKotlin=false` and `android.newDsl=false` in `gradle.properties` must stay. Removing them breaks plugins that still apply KGP (`flutter_background`, `nsd_android`). Remove them only after those plugins migrate to built-in Kotlin, and drop `kotlin-android` from the app at the same time.
+- `android.overridePathCheck=true` is required because the repo path contains non-ASCII characters.
+
 ## Architecture
 
 ### Wire protocol (mobile ↔ PC)
