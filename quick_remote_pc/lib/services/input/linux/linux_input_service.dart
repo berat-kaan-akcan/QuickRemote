@@ -1,234 +1,228 @@
 import 'dart:io';
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../input_service.dart';
+import 'evdev_keys.dart';
+import 'impress_bridge.dart';
+import 'mpris_controller.dart';
+import 'pactl_volume.dart';
+import 'uinput_device.dart';
 
+/// Linux implementation: LibreOffice Impress over UNO for presentation
+/// features, uinput for keyboard/mouse, pactl for volume, MPRIS for media.
+///
+/// Presentation commands fall back to plain key presses when no Impress
+/// slideshow is reachable, so PDF viewers and browser slides still work.
 class LinuxInputService implements InputService {
+  LinuxInputService() {
+    _device.ensureOpen();
+  }
+
+  final UinputDevice _device = UinputDevice.instance;
+  final ImpressBridge _impress = ImpressBridge.instance;
+  final MprisController _mpris = MprisController();
+  final PactlVolume _volume = PactlVolume();
+
+  bool _laserViaImpress = false;
+  int _lastPointerSendMs = 0;
+
   @override
   void Function(String detail)? onCommandError;
 
   @override
-  void executeCommand(String command) {
-    // Basic dispatcher (some handled by InputSimulator facade directly)
-    if (command == 'NEXT') slideNext();
-    else if (command == 'PREV') slidePrev();
-    else if (command == 'START') slideStart();
-    else if (command == 'END') slideEnd();
-    else if (command == 'BLACK_SCREEN') blackScreen();
-    else if (command == 'WHITE_SCREEN') whiteScreen();
-    else if (command == 'LEFT_CLICK') leftClick();
-    else if (command == 'RIGHT_CLICK') rightClick();
-    else if (command == 'LEFT_DOWN') leftDown();
-    else if (command == 'LEFT_UP') leftUp();
-    else if (command == 'VOLUME_UP') volumeUp();
-    else if (command == 'VOLUME_DOWN') volumeDown();
-    else if (command == 'VOLUME_MUTE') volumeMute();
-    else if (command == 'MEDIA_PLAY_PAUSE') pptMediaPlayPause();
-    else if (command == 'MEDIA_REWIND') pptMediaRewind();
-    else if (command == 'SYSTEM_MEDIA_PLAY_PAUSE') sysMediaPlayPause();
-    else if (command == 'SYSTEM_MEDIA_NEXT') sysMediaNext();
-    else if (command == 'SYSTEM_MEDIA_PREV') sysMediaPrev();
-    else if (command == 'SYSTEM_MEDIA_STOP') sysMediaStop();
-    else if (command == 'LOCK') lockPC();
+  String get presenter => 'impress';
+
+  /// Runs an Impress command; on failure presses [fallbackKeys] (if any).
+  Future<bool> _impressOr(String cmd, {Map<String, Object?> args = const {}, List<int>? fallbackKeys}) async {
+    final reply = await _impress.request(cmd, args);
+    if (reply['ok'] == true) return true;
+    debugPrint('Impress "$cmd" failed: ${reply['error']}');
+    if (fallbackKeys != null) _device.combo(fallbackKeys);
+    return false;
   }
 
+  /// For features that only exist through Impress: report failures to the phone.
+  Future<void> _impressOnly(String cmd, {Map<String, Object?> args = const {}}) async {
+    final reply = await _impress.request(cmd, args);
+    if (reply['ok'] == true) return;
+    final error = '${reply['error']}';
+    debugPrint('Impress "$cmd" failed: $error');
+    onCommandError?.call(_describeError(error));
+  }
+
+  static String _describeError(String error) {
+    if (error == 'NOT_RUNNING') return 'Slayt gösterisi aktif değil.';
+    if (error == 'NO_MEDIA') return 'Bu slaytta medya yok.';
+    if (error == 'NO_CONNECTION') return 'LibreOffice Impress\'e bağlanılamadı.';
+    if (error == 'NO_UNO' || error == 'NO_PYTHON') return 'LibreOffice Python (UNO) desteği bulunamadı.';
+    return 'Impress komutu başarısız: $error';
+  }
+
+  // ── States ──
   @override
-  Future<Map<String, dynamic>?> getSmtcState() async {
-    try {
-      final result = await Process.run('playerctl', ['metadata']);
-      if (result.exitCode != 0) return {'hasMedia': false};
-
-      final statusResult = await Process.run('playerctl', ['status']);
-      bool isPlaying = statusResult.stdout.toString().trim().toLowerCase() == 'playing';
-
-      String title = '';
-      String artist = '';
-      for (var line in result.stdout.toString().split('\n')) {
-        if (line.contains('xesam:title')) {
-          title = line.split('xesam:title').last.trim();
-        } else if (line.contains('xesam:artist')) {
-          artist = line.split('xesam:artist').last.trim();
-        }
-      }
-
-      return {
-        'hasMedia': true,
-        'title': title,
-        'artist': artist,
-        'isPlaying': isPlaying,
-        'positionMs': 0,
-        'durationMs': 0,
-        'thumbnail': '',
-      };
-    } catch (e) {
-      return {'hasMedia': false};
-    }
-  }
+  Future<Map<String, dynamic>?> getSmtcState() => _mpris.getState();
 
   @override
   Future<Map<String, dynamic>?> getSlideState() async {
-    return null; // Not easily available for Impress via CLI
-  }
-
-  @override
-  String getAudioControlPSScript() => '';
-
-  @override
-  void volumeUp() => _xdotoolKey('XF86AudioRaiseVolume');
-
-  @override
-  void volumeDown() => _xdotoolKey('XF86AudioLowerVolume');
-
-  @override
-  void volumeMute() => _xdotoolKey('XF86AudioMute');
-
-  @override
-  Future<void> setVolume(int level) async {
-    try {
-      // Try pactl first (PulseAudio/PipeWire)
-      await Process.run('pactl', ['set-sink-volume', '@DEFAULT_SINK@', '${level}%']);
-    } catch (e) {
-      // Fallback to amixer (ALSA)
-      try {
-        await Process.run('amixer', ['-D', 'pulse', 'sset', 'Master', '${level}%']);
-      } catch (e2) {}
+    final reply = await _impress.request('state');
+    if (reply['ok'] != true || reply['state'] != 'RUNNING') {
+      _laserViaImpress = false;
+      return {'error': 'POWERPOINT_NOT_RUNNING'};
     }
+    return {
+      'current': reply['current'],
+      'total': reply['total'],
+      'notes': reply['notes'] ?? '',
+      'hasMedia': reply['hasMedia'] ?? false,
+      'isMediaPlaying': reply['isMediaPlaying'],
+      'isBlackScreen': reply['isBlackScreen'] ?? false,
+    };
   }
 
   @override
-  void slideNext() => _xdotoolKey('Page_Down');
+  Future<VolumeState?> getVolumeState() => _volume.getState();
 
+  // ── Volume ──
   @override
-  void slidePrev() => _xdotoolKey('Page_Up');
+  void volumeUp() => _volume.change(PactlVolume.step);
+  @override
+  void volumeDown() => _volume.change(-PactlVolume.step);
+  @override
+  void volumeMute() => _volume.toggleMute();
+  @override
+  Future<void> setVolume(int level) => _volume.setLevel(level);
 
+  // ── Presentation ──
   @override
-  Future<void> slideStart() async => _xdotoolKey('F5');
+  void slideNext() => _impressOr('next', fallbackKeys: [Evdev.keyPageDown]);
+  @override
+  void slidePrev() => _impressOr('prev', fallbackKeys: [Evdev.keyPageUp]);
+  @override
+  Future<void> slideStart() => _impressOr('start', fallbackKeys: [Evdev.keyF5]);
 
   @override
   Future<void> slideStartAt(int slideNumber) async {
-    await slideStart();
-    final chars = slideNumber.toString().codeUnits;
-    for (final charCode in chars) {
-      _xdotoolKey(String.fromCharCode(charCode));
+    if (await _impressOr('startAt', args: {'slide': slideNumber})) return;
+    // Keyboard fallback: start, wait for full screen, type the number + Enter.
+    _device.tap(Evdev.keyF5);
+    await Future.delayed(const Duration(milliseconds: 1500));
+    for (final digit in slideNumber.toString().codeUnits) {
+      final key = Evdev.fromVk(digit);
+      if (key != null) _device.tap(key);
     }
-    _xdotoolKey('Return');
+    _device.tap(Evdev.keyEnter);
   }
 
   @override
-  Future<void> slideEnd() async => _xdotoolKey('Escape');
+  Future<void> slideEnd() async {
+    _laserViaImpress = false;
+    await _impressOr('end', fallbackKeys: [Evdev.keyEsc]);
+  }
 
   @override
-  void blackScreen() => _xdotoolKey('b');
+  void blackScreen() => _impressOr('blank', args: {'color': 0x000000}, fallbackKeys: [Evdev.keyB]);
+  @override
+  void whiteScreen() => _impressOr('blank', args: {'color': 0xFFFFFF}, fallbackKeys: [Evdev.keyW]);
+  @override
+  void eraseAllInk() => _impressOnly('eraseAll');
 
   @override
-  void whiteScreen() => _xdotoolKey('w');
+  Future<void> setPenColor(int bgrColor) {
+    // PowerPoint uses BGR, UNO uses RGB.
+    final rgb = ((bgrColor & 0xFF) << 16) | (bgrColor & 0xFF00) | ((bgrColor >> 16) & 0xFF);
+    return _impressOnly('penColor', args: {'rgb': rgb});
+  }
 
   @override
-  void eraseAllInk() => _xdotoolKey('e');
+  Future<void> pptMediaPlayPause() => _impressOnly('mediaToggle');
+  @override
+  Future<void> pptMediaRewind() => _impressOnly('mediaRewind');
+
+  // ── Modes ──
+  @override
+  void toggleLaserCursor() => _laserViaImpress ? laserOff() : modeLaser();
 
   @override
-  void toggleLaserCursor() {} // Not applicable for Impress
+  void modeArrow() => _setMode('arrow');
+  @override
+  void modePen() => _setMode('pen');
+  @override
+  void modeHighlighter() => _setMode('highlighter');
+  @override
+  void modeEraser() => _setMode('eraser');
+  @override
+  void laserOff() => _setMode('laserOff');
 
   @override
-  Future<void> setPenColor(int bgrColor) async {} // Not applicable for Impress
+  Future<void> modeLaser() async {
+    final reply = await _impress.request('laserOn');
+    _laserViaImpress = reply['ok'] == true;
+    if (!_laserViaImpress) onCommandError?.call(_describeError('${reply['error']}'));
+  }
+
+  void _setMode(String cmd) {
+    _laserViaImpress = false;
+    _impressOnly(cmd);
+  }
 
   @override
-  Future<void> pptMediaPlayPause() async => sysMediaPlayPause();
+  bool get handlesLaserPointer => _laserViaImpress;
 
   @override
-  Future<void> pptMediaRewind() async {}
+  void laserPointerMoved(double relX, double relY) {
+    // ~60 Hz is plenty for a pointer dot and keeps LibreOffice's main loop free.
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastPointerSendMs < 16) return;
+    _lastPointerSendMs = now;
+    _impress.send('pointer', {'x': relX, 'y': relY});
+  }
 
+  // ── Mouse & keyboard ──
   @override
-  void leftClick() => _runProcess('xdotool', ['click', '1']);
-
+  void leftClick() => _device.click(Evdev.btnLeft);
   @override
-  void rightClick() => _runProcess('xdotool', ['click', '3']);
-
+  void rightClick() => _device.click(Evdev.btnRight);
   @override
-  void leftDown() => _runProcess('xdotool', ['mousedown', '1']);
-
+  void leftDown() => _device.button(Evdev.btnLeft, down: true);
   @override
-  void leftUp() => _runProcess('xdotool', ['mouseup', '1']);
+  void leftUp() => _device.button(Evdev.btnLeft, down: false);
 
   @override
   void pressKey(int vkCode) {
-    final keyName = _vkToXdotoolKey(vkCode);
-    if (keyName != null) {
-      _xdotoolKey(keyName);
-    }
+    final key = Evdev.fromVk(vkCode);
+    if (key != null) _device.tap(key);
   }
 
   @override
   void pressKeyCombo(List<int> vkCodes) {
-    final keys = vkCodes.map((vk) => _vkToXdotoolKey(vk)).where((k) => k != null).toList();
-    if (keys.isNotEmpty) {
-      _runProcess('xdotool', ['key', keys.join('+')]);
+    final keys = vkCodes.map(Evdev.fromVk).whereType<int>().toList();
+    if (keys.isNotEmpty) _device.combo(keys);
+  }
+
+  // ── System ──
+  @override
+  Future<void> lockPC() async {
+    for (final (exe, args) in const [
+      ('loginctl', ['lock-session']),
+      ('xdg-screensaver', ['lock']),
+    ]) {
+      try {
+        final result = await Process.run(exe, args);
+        if (result.exitCode == 0) return;
+      } catch (_) {}
     }
+    onCommandError?.call('Bilgisayar kilitlenemedi.');
+  }
+
+  Future<void> _media(String method, int fallbackKey) async {
+    if (!await _mpris.call(method)) _device.tap(fallbackKey);
   }
 
   @override
-  void lockPC() {
-    _runProcess('xdg-screensaver', ['lock']);
-  }
-
+  void sysMediaPlayPause() => _media('PlayPause', Evdev.keyPlayPause);
   @override
-  void sysMediaPlayPause() => _xdotoolKey('XF86AudioPlay');
-
+  void sysMediaNext() => _media('Next', Evdev.keyNextSong);
   @override
-  void sysMediaNext() => _xdotoolKey('XF86AudioNext');
-
+  void sysMediaPrev() => _media('Previous', Evdev.keyPreviousSong);
   @override
-  void sysMediaPrev() => _xdotoolKey('XF86AudioPrev');
-
-  @override
-  void sysMediaStop() => _xdotoolKey('XF86AudioStop');
-
-  void _xdotoolKey(String keyName) {
-    _runProcess('xdotool', ['key', keyName]);
-  }
-
-  void _runProcess(String executable, List<String> args) {
-    try {
-      Process.run(executable, args);
-    } catch (e) {
-      print('Error running $executable: $e');
-    }
-  }
-
-  String? _vkToXdotoolKey(int vkCode) {
-    switch (vkCode) {
-      case 0x09: return 'Tab';
-      case 0x0D: return 'Return';
-      case 0x1B: return 'Escape';
-      case 0x20: return 'space';
-      case 0x21: return 'Page_Up';
-      case 0x22: return 'Page_Down';
-      case 0x23: return 'End';
-      case 0x24: return 'Home';
-      case 0x25: return 'Left';
-      case 0x26: return 'Up';
-      case 0x27: return 'Right';
-      case 0x28: return 'Down';
-      case 0x41: return 'a';
-      case 0x42: return 'b';
-      case 0x43: return 'c';
-      case 0x45: return 'e';
-      case 0x49: return 'i';
-      case 0x4C: return 'l';
-      case 0x50: return 'p';
-      case 0x57: return 'w';
-      case 0x74: return 'F5';
-      case 0x11: return 'ctrl';
-      case 0x12: return 'alt';
-      case 0x10: return 'shift';
-      case 0x5B: return 'super'; // Windows key
-      case 0xB3: return 'XF86AudioPlay';
-      case 0xB0: return 'XF86AudioNext';
-      case 0xB1: return 'XF86AudioPrev';
-      case 0xB2: return 'XF86AudioStop';
-      case 0xAF: return 'XF86AudioRaiseVolume';
-      case 0xAE: return 'XF86AudioLowerVolume';
-      case 0xAD: return 'XF86AudioMute';
-      default: return null;
-    }
-  }
+  void sysMediaStop() => _media('Stop', Evdev.keyStopCd);
 }

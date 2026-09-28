@@ -216,7 +216,7 @@ QuickRemote/
 ### Gereksinimler
 
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.11+)
-- Windows 10/11 işletim sistemi (PC uygulaması için)
+- PC uygulaması için Windows 10/11 **veya** Linux (X11 ya da Wayland; KDE, GNOME vb.)
 - Aynı Wi-Fi ağına bağlı cihazlar (PC ve Telefon)
 
 ---
@@ -241,6 +241,37 @@ flutter run -d windows
 ```
 
 > **Not:** Uygulama ilk çalıştırıldığında otomatik olarak bir TLS sertifikası oluşturur. Ekranda yerel IP adresiniz, port numaranız ve 4 haneli PIN kodunuz görünecektir. QR kodu taratarak veya bu bilgileri elle girerek bağlanabilirsiniz.
+
+#### 🐧 Linux
+
+Linux'ta sunum programı olarak **LibreOffice Impress** kontrol edilir.
+
+```bash
+cd quick_remote_pc
+flutter pub get
+flutter run -d linux        # veya: flutter build linux
+```
+
+**Çalışma zamanı bağımlılıkları:** `libreoffice` (Python-UNO dahil; Debian/Ubuntu'da `python3-uno`), `python3`, `openssl`, `pactl` (PipeWire-Pulse veya PulseAudio), `avahi-daemon` (otomatik keşif için, isteğe bağlı). Derleme için ayrıca `libayatana-appindicator3` ve `libnotify` geliştirme paketleri gerekir.
+
+**İlk kurulum:** uygulamanın üst kısmındaki Linux panelinden yapılır:
+- **Klavye/fare izni:** "İzin ver" butonu `/dev/uinput` için bir udev kuralı kurar (yönetici parolası sorar). Elle kurmak için: `sudo quick_remote_pc/linux/packaging/install-uinput-rule.sh`
+- **Impress bağlantısı:** "Etkinleştir" butonu LibreOffice profiline yerel UNO dinleyicisi ekler (`localhost:2002`). LibreOffice açıksa "Bağlan" butonu bunu anında etkinleştirir.
+- **Güvenlik duvarı:** firewalld/ufw 8090-8099 portlarını engelliyorsa "Portları aç" butonu görünür.
+
+| Özellik | Linux durumu |
+|---------|--------------|
+| Slayt kontrolü, notlar, n. slayttan başlatma, siyah/beyaz ekran | ✅ Impress (UNO) |
+| Kalem, renk, silgi, tümünü sil, lazer işaretçi | ✅ Impress (UNO) |
+| Vurgulayıcı | ⚠️ Kalın sarı kalem olarak taklit edilir (Impress'te yarı saydam vurgulayıcı yok) |
+| Sunuma gömülü video oynat/duraklat | ⚠️ Çalışır; "başa sar" videoyu durdurur |
+| Touchpad, tıklama, sürükleme | ✅ uinput (X11 + Wayland) |
+| Ses, şimdi çalan (kapak dahil), medya tuşları | ✅ pactl + MPRIS |
+| Bilgisayarı kilitle | ✅ `loginctl lock-session` |
+| Otomatik keşif (mDNS) | ✅ Avahi |
+| Bluetooth HID modu | ✅ Dokunmatik alanda "Hedef: LibreOffice Impress" seçilince: slayt, siyah/beyaz ekran, kalem, temizle çalışır. ⚠️ Lazer yerine fare imleci kullanılır; vurgulayıcı ve silgi gizlenir (Impress'te klavye kısayolları yok) |
+
+Impress açık değilse sunum komutları klavye kısayoluna (PageDown/PageUp/F5/Esc/B/W) düşer; böylece PDF görüntüleyiciler ve tarayıcıdaki sunumlar da ileri/geri kontrol edilebilir.
 
 ---
 

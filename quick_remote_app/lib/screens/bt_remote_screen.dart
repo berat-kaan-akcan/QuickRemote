@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../services/bluetooth/bt_hid_service.dart';
 import '../services/bluetooth/bt_key_mapping.dart';
+import '../providers/settings_provider.dart';
 import '../utils/ui/app_snackbar.dart';
 import 'settings/settings_screen.dart';
 import 'bt_remote/views/bt_main_controls_view.dart';
@@ -98,7 +100,8 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       setState(() => _activeScreen = null);
     }
 
-    final action = BtKeyMapping.forCommand(command);
+    final target = context.read<SettingsProvider>().btTarget;
+    final action = BtKeyMapping.forCommand(command, target: target);
     if (action != null) {
       await action.execute(_bt);
     }
@@ -112,7 +115,14 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
 
     Widget body;
     if (_currentTab == 1) {
-      body = BtTouchpadView(bt: _bt, send: _send, isConnected: isConnected);
+      final settings = context.watch<SettingsProvider>();
+      body = BtTouchpadView(
+        bt: _bt,
+        send: _send,
+        isConnected: isConnected,
+        target: settings.btTarget,
+        onTargetChanged: settings.setBtTarget,
+      );
     } else if (_currentTab == 2) {
       body = BtMediaView(send: _send, isConnected: isConnected);
     } else {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../services/bluetooth/bt_hid_service.dart';
+import '../../../services/bluetooth/bt_key_mapping.dart';
 import '../../remote/widgets/shared_buttons.dart';
 import '../../remote/widgets/draw_tool_bar.dart';
 import '../../../models/draw_tool.dart';
@@ -20,12 +21,16 @@ class BtTouchpadView extends StatefulWidget {
   final BtHidService bt;
   final Future<void> Function(String) send;
   final bool isConnected;
+  final BtTarget target;
+  final ValueChanged<BtTarget> onTargetChanged;
 
   const BtTouchpadView({
     super.key,
     required this.bt,
     required this.send,
     required this.isConnected,
+    required this.target,
+    required this.onTargetChanged,
   });
 
   @override
@@ -50,6 +55,18 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
 
   /// Son gönderilen mod — aynı modu tekrar göndermemek için.
   String? _lastSentMode;
+
+  bool get _impress => widget.target == BtTarget.impress;
+
+  /// Impress has no keyboard shortcuts for highlighter/eraser (see BtKeyMapping),
+  /// and without the pen a click advances the slide, so only laser and pen remain.
+  Set<DrawTool> get _availableTools =>
+      _impress ? const {DrawTool.laser, DrawTool.pen} : DrawTool.values.toSet();
+
+  DrawTool get _selectedTool => _availableTools.contains(_drawTool) ? _drawTool : DrawTool.pen;
+
+  /// In Impress the "laser" is just the mouse cursor.
+  String get _laserLabel => _impress ? 'İmleç' : 'Lazer';
 
   @override
   void dispose() {
@@ -252,7 +269,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 Icon(Icons.highlight_rounded,
                     color: const Color(0xFFFF1744).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
-                Text('Lazer',
+                Text(_laserLabel,
                     style: TextStyle(
                         color: const Color(0xFFFF1744).withValues(alpha: 0.4),
                         fontSize: 14, fontWeight: FontWeight.w600)),
@@ -260,7 +277,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 Icon(Icons.touch_app_rounded,
                     color: Colors.white.withValues(alpha: 0.08), size: 48),
                 const SizedBox(height: 12),
-                Text('Tek dokunuş → Lazer',
+                Text('Tek dokunuş → $_laserLabel',
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.15),
                         fontSize: 12, fontWeight: FontWeight.w500)),
@@ -278,13 +295,58 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   }
 
   Widget _buildToolBar() {
-    return DrawToolBar(
-      activeTool: _drawTool,
-      onToolSelected: (tool) => setState(() => _drawTool = tool),
-      onClear: () {
-        HapticFeedback.mediumImpact();
-        widget.send('ERASE_ALL');
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DrawToolBar(
+          activeTool: _selectedTool,
+          tools: _availableTools,
+          laserLabel: _laserLabel,
+          onToolSelected: (tool) => setState(() => _drawTool = tool),
+          onClear: () {
+            HapticFeedback.mediumImpact();
+            widget.send('ERASE_ALL');
+          },
+        ),
+        const SizedBox(height: 6),
+        _buildTargetSelector(),
+      ],
+    );
+  }
+
+  /// Over Bluetooth the phone only sends keyboard shortcuts, which differ per
+  /// presentation program, so the user picks the target.
+  Widget _buildTargetSelector() {
+    return Row(
+      children: [
+        Text(
+          'Hedef:',
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SegmentedButton<BtTarget>(
+            segments: const [
+              ButtonSegment(value: BtTarget.powerpoint, label: Text('PowerPoint')),
+              ButtonSegment(value: BtTarget.impress, label: Text('LibreOffice Impress')),
+            ],
+            selected: {widget.target},
+            showSelectedIcon: false,
+            onSelectionChanged: (s) {
+              HapticFeedback.selectionClick();
+              widget.onTargetChanged(s.first);
+            },
+            style: SegmentedButton.styleFrom(
+              foregroundColor: Colors.white54,
+              selectedForegroundColor: Colors.white,
+              selectedBackgroundColor: const Color(0xFF1565C0).withValues(alpha: 0.5),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+              visualDensity: VisualDensity.compact,
+              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -303,7 +365,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
         (pos - _lastPointerUpPosition!).distance < 80;
 
     _isDrawActive = true;
-    _activeTool = isDoubleTap ? _drawTool : DrawTool.laser;
+    _activeTool = isDoubleTap ? _selectedTool : DrawTool.laser;
 
     // Reset pending deltas
     _pendingDx = 0;

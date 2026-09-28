@@ -24,6 +24,8 @@ dependencies:
   quick_remote_shared:
     path: ../packages/quick_remote_shared
   shared_preferences: ^2.5.5
+  dbus: ^0.8.0
+  path: ^1.9.1
 
 dev_dependencies:
   integration_test:
@@ -37,6 +39,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/linux/
 
 flutter_launcher_icons:
   windows:

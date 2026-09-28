@@ -53,6 +53,13 @@ import '../../mouse_controller.dart'; class WindowsMouseController implements Mo
     calloc.free(inputs);
   }
 
+  @override
+  void trackDelta(double dx, double dy) {
+    if (!_initialized) init();
+    _currentX = (_currentX + dx).clamp(0, _screenWidth.toDouble() - 1);
+    _currentY = (_currentY + dy).clamp(0, _screenHeight.toDouble() - 1);
+  }
+
   /// Move cursor to absolute position.
   void moveTo(double x, double y) {
     if (!_initialized) init();

@@ -1,6 +1,5 @@
 import 'package:win32/win32.dart';
 import '../input_service.dart';
-import 'command_dispatcher.dart';
 import 'keyboard_simulator.dart';
 import 'mouse_simulator.dart';
 import 'ppt_controller.dart';
@@ -13,9 +12,7 @@ class WindowsInputService implements InputService {
   void Function(String detail)? onCommandError;
 
   @override
-  void executeCommand(String command) {
-    CommandDispatcher.executeCommand(command);
-  }
+  String get presenter => 'powerpoint';
 
   @override
   Future<Map<String, dynamic>?> getSmtcState() => SmtcController.getSmtcState();
@@ -24,7 +21,7 @@ class WindowsInputService implements InputService {
   Future<Map<String, dynamic>?> getSlideState() => SlideStateController.getSlideState();
 
   @override
-  String getAudioControlPSScript() => VolumeController.getAudioControlPSScript();
+  Future<VolumeState?> getVolumeState() => VolumeController.getVolumeState();
   @override
   void volumeUp() => VolumeController.volumeUp();
   @override
@@ -51,13 +48,37 @@ class WindowsInputService implements InputService {
   @override
   void eraseAllInk() => PptController.eraseAllInk();
   @override
-  void toggleLaserCursor() => PptController.toggleLaserCursor();
-  @override
   Future<void> setPenColor(int bgrColor) => PptController.setPenColor(bgrColor);
   @override
   Future<void> pptMediaPlayPause() => PptController.pptMediaPlayPause();
   @override
   Future<void> pptMediaRewind() => PptController.pptMediaRewind();
+
+  @override
+  void toggleLaserCursor() => PptController.toggleLaserCursor();
+  @override
+  void modeArrow() => _switchMode(0x41, laser: false); // Ctrl + A
+  @override
+  void modeLaser() => _switchMode(0x4C, laser: true); // Ctrl + L
+  @override
+  void modePen() => _switchMode(0x50, laser: false); // Ctrl + P
+  @override
+  void modeHighlighter() => _switchMode(0x49, laser: false); // Ctrl + I
+  @override
+  void modeEraser() => _switchMode(0x45, laser: false); // Ctrl + E
+  @override
+  void laserOff() => _switchMode(0x41, laser: false); // Ctrl + A
+
+  void _switchMode(int key, {required bool laser}) {
+    KeyboardSimulator.pressKeyCombo([VK_CONTROL, key]);
+    PptController.setLaserActive(laser);
+  }
+
+  // PowerPoint's own laser follows the OS cursor.
+  @override
+  bool get handlesLaserPointer => false;
+  @override
+  void laserPointerMoved(double relX, double relY) {}
 
   @override
   void leftClick() => MouseSimulator.leftClick();
@@ -75,7 +96,7 @@ class WindowsInputService implements InputService {
 
   @override
   void lockPC() => LockWorkStation();
-  
+
   @override
   void sysMediaPlayPause() => KeyboardSimulator.pressKey(0xB3);
   @override

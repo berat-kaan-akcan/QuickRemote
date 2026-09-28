@@ -16,6 +16,8 @@ class WebSocketServerProvider extends ChangeNotifier {
   double _laserY = 0;
   String _pin = '';
   bool _isPublicNetwork = false;
+  String? _startError;
+  bool _mdnsAvailable = true;
 
   /// Stream controller for laser position updates (used by LaserOverlay).
   final StreamController<ui.Offset> _laserPositionController =
@@ -32,6 +34,8 @@ class WebSocketServerProvider extends ChangeNotifier {
   double get laserY => _laserY;
   String get pin => _pin;
   bool get publicNetwork => _isPublicNetwork;
+  String? get startError => _startError;
+  bool get mdnsAvailable => _mdnsAvailable;
   Stream<ui.Offset> get laserPositionStream => _laserPositionController.stream;
 
   WebSocketServerProvider() {
@@ -42,6 +46,8 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.pin.addListener(_onPinChanged);
     server.isPublicNetwork.addListener(_onPublicNetworkChanged);
     server.localIP.addListener(_onLocalIPChanged);
+    server.startError.addListener(_onStartErrorChanged);
+    server.mdnsAvailable.addListener(_onMdnsChanged);
     server.onMouseMove = _onMouseMove;
     _init();
   }
@@ -86,6 +92,16 @@ class WebSocketServerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _onStartErrorChanged() {
+    _startError = server.startError.value;
+    notifyListeners();
+  }
+
+  void _onMdnsChanged() {
+    _mdnsAvailable = server.mdnsAvailable.value;
+    notifyListeners();
+  }
+
   void _onMouseMove(double x, double y) {
     _laserX = x;
     _laserY = y;
@@ -126,6 +142,8 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.pin.removeListener(_onPinChanged);
     server.isPublicNetwork.removeListener(_onPublicNetworkChanged);
     server.localIP.removeListener(_onLocalIPChanged);
+    server.startError.removeListener(_onStartErrorChanged);
+    server.mdnsAvailable.removeListener(_onMdnsChanged);
     server.onMouseMove = null;
     _laserPositionController.close();
     server.stop();
