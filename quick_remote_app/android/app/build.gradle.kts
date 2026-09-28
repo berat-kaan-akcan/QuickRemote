@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "com.quickremote.quick_remote_app"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android 14.x compiles against SDK 37.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
