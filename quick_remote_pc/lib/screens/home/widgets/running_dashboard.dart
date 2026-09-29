@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../providers/server_provider.dart';
 import '../../../../widgets/hover_scale.dart';
@@ -70,7 +71,12 @@ class _RunningDashboardState extends State<RunningDashboard> {
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
-    final qrData = 'quickremote://${provider.localIP}:${provider.port}:${provider.pin}';
+    final qrData = PairingPayload(
+      host: provider.localIP,
+      port: provider.port,
+      pin: provider.pin,
+      certFingerprint: provider.certFingerprint,
+    ).encode();
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -111,8 +117,8 @@ class _RunningDashboardState extends State<RunningDashboard> {
                               children: [
                                 if (provider.isStarting)
                                   SizedBox(
-                                    width: 160,
-                                    height: 160,
+                                    width: 184,
+                                    height: 184,
                                     child: Stack(
                                       alignment: Alignment.center,
                                       children: [
@@ -156,7 +162,7 @@ class _RunningDashboardState extends State<RunningDashboard> {
                                     data: qrData,
                                     version: QrVersions.auto,
                                     errorCorrectionLevel: QrErrorCorrectLevel.H,
-                                    size: 160,
+                                    size: 184,
                                     backgroundColor: Colors.white,
                                     eyeStyle: const QrEyeStyle(
                                       eyeShape: QrEyeShape.circle,

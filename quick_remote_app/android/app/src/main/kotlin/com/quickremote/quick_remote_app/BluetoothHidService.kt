@@ -2,6 +2,7 @@ package com.quickremote.quick_remote_app
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothHidDevice
 import android.bluetooth.BluetoothHidDeviceAppSdpSettings
@@ -234,14 +235,19 @@ class BluetoothHidService(private val context: Context) {
         isAdvertisingRequested = false
         cancelReconnect()
 
+        val hid = hidDevice
         connectedHost?.let { host ->
-            hidDevice?.disconnect(host)
+            hid?.disconnect(host)
         }
-        hidDevice?.unregisterApp()
+        hid?.unregisterApp()
+        // Close before dropping the reference: closeProfileProxy(…, null) is a
+        // no-op, which leaked one profile proxy per stop.
+        if (hid != null) {
+            bluetoothAdapter?.closeProfileProxy(BluetoothProfile.HID_DEVICE, hid)
+        }
         hidDevice = null
         connectedHost = null
         isRegistered = false
-        bluetoothAdapter?.closeProfileProxy(BluetoothProfile.HID_DEVICE, hidDevice)
     }
 
     /** Send a keyboard report: modifier byte + up-to-6 key codes. */
@@ -341,9 +347,12 @@ class BluetoothHidService(private val context: Context) {
             }
         }
 
-        // No last device or not bonded — try any bonded device
+        // No last device or not bonded — try bonded computers only. Headsets,
+        // cars and watches are never HID hosts, and connecting as a keyboard to
+        // an unrelated device would send it our key presses.
         val bonded = bluetoothAdapter?.bondedDevices ?: emptySet()
         for (device in bonded) {
+            if (device.bluetoothClass?.majorDeviceClass != BluetoothClass.Device.Major.COMPUTER) continue
             Log.d(TAG, "Trying bonded device: ${device.name ?: device.address}")
             val result = hid.connect(device)
             if (result) {

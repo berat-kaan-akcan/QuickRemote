@@ -13,9 +13,14 @@ class ImpressBridge {
   ImpressBridge._();
   static final ImpressBridge instance = ImpressBridge._();
 
-  /// UNO port LibreOffice is asked to listen on (localhost only).
-  static const port = 2002;
-  static const acceptString = 'socket,host=localhost,port=$port;urp;';
+  /// UNO pipe LibreOffice is asked to listen on: a Unix socket only the
+  /// current user can connect to.
+  static const pipeName = 'quickremote';
+  static const acceptString = 'pipe,name=$pipeName;urp;';
+
+  /// Written by older versions: an unauthenticated localhost TCP listener that
+  /// any local user or sandboxed app with network access could drive.
+  static const legacyAcceptString = 'socket,host=localhost,port=2002;urp;';
 
   /// Overridable in tests to run the bridge from the source tree.
   @visibleForTesting
@@ -44,7 +49,7 @@ class ImpressBridge {
 
   Future<Process?> _start() async {
     try {
-      final process = await Process.start('python3', ['-u', await _scriptPath(), '$port']);
+      final process = await Process.start('python3', ['-u', await _scriptPath(), pipeName]);
       process.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter())

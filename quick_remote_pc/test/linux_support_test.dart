@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/input/command_router.dart';
 import 'package:quick_remote_pc/services/input/linux/evdev_keys.dart';
+import 'package:quick_remote_pc/services/input/linux/impress_bridge.dart';
 import 'package:quick_remote_pc/services/input/linux/mpris_controller.dart';
 import 'package:quick_remote_pc/services/input/linux/pactl_volume.dart';
 import 'package:quick_remote_pc/services/linux/linux_setup.dart';
@@ -80,6 +81,48 @@ void main() {
       'positionMs': 42000,
       'durationMs': 180000,
       'isPlaying': true,
+    });
+  });
+
+  group('MprisController.looksLikeImage', () {
+    test('accepts common image formats', () {
+      expect(MprisController.looksLikeImage([0xFF, 0xD8, 0xFF, 0xE0, 0, 0]), isTrue); // JPEG
+      expect(MprisController.looksLikeImage([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0]), isTrue); // PNG
+      expect(MprisController.looksLikeImage('GIF89a'.codeUnits), isTrue);
+      expect(MprisController.looksLikeImage('RIFF\x00\x00\x00\x00WEBPVP8 '.codeUnits), isTrue);
+    });
+
+    test('rejects anything else', () {
+      expect(MprisController.looksLikeImage('-----BEGIN OPENSSH PRIVATE KEY-----'.codeUnits), isFalse);
+      expect(MprisController.looksLikeImage('RIFF\x00\x00\x00\x00WAVEfmt '.codeUnits), isFalse);
+      expect(MprisController.looksLikeImage([]), isFalse);
+    });
+  });
+
+  group('LinuxSetup.registryStatusOf', () {
+    String item(String url) => '<item oor:path="/org.openoffice.Setup/Office"><prop '
+        'oor:name="ooSetupConnectionURL" oor:op="fuse"><value>$url</value></prop></item>';
+    String profile(String url) => '<oor:items>\n${item(url)}\n</oor:items>';
+
+    test('recognizes the user-only pipe listener', () {
+      expect(LinuxSetup.registryStatusOf(profile(ImpressBridge.acceptString)), ImpressStatus.readyWhenOpened);
+    });
+
+    test('flags the legacy localhost TCP listener', () {
+      expect(LinuxSetup.registryStatusOf(profile(ImpressBridge.legacyAcceptString)), ImpressStatus.legacyListener);
+    });
+
+    test('reports a profile without the entry as not configured', () {
+      expect(LinuxSetup.registryStatusOf('<oor:items>\n</oor:items>'), ImpressStatus.notConfigured);
+    });
+
+    test('enabling migrates a legacy profile to the pipe', () {
+      final migrated = LinuxSetup.applyRegistryItem(
+        profile(ImpressBridge.legacyAcceptString),
+        item(ImpressBridge.acceptString),
+      );
+      expect(LinuxSetup.registryStatusOf(migrated), ImpressStatus.readyWhenOpened);
+      expect(migrated, isNot(contains('socket,')));
     });
   });
 

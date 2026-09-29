@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../input_simulator.dart';
 
 class StateBroadcaster {
   bool _isPolling = false;
+  /// Bumped on every start/stop so a loop still sleeping from a previous
+  /// run exits instead of running next to the new one.
+  int _generation = 0;
   Timer? _volumeStateTimer;
   Map<String, dynamic>? _lastSlideState;
   int _pptNotRunningSkipCount = 0;
@@ -18,27 +22,40 @@ class StateBroadcaster {
     if (_isPolling) return;
     _isPolling = true;
     _pptNotRunningSkipCount = 0;
-    _pollLoop();
+    _pollLoop(++_generation);
   }
 
-  Future<void> _pollLoop() async {
-    while (_isPolling) {
-      await fetchAndBroadcastSmtcState();
-      await broadcastVolumeState();
-      
-      if (_pptNotRunningSkipCount > 0) {
-        _pptNotRunningSkipCount--;
-      } else {
-        await fetchAndBroadcastSlideState();
-      }
+  Future<void> _pollLoop(int generation) async {
+    bool current() => _isPolling && generation == _generation;
+    while (current()) {
+      // One failed poll must not end state updates for the rest of the session.
+      await _guard('state poll', () async {
+        await fetchAndBroadcastSmtcState();
+        await broadcastVolumeState();
 
-      if (!_isPolling) break;
+        if (_pptNotRunningSkipCount > 0) {
+          _pptNotRunningSkipCount--;
+        } else {
+          await fetchAndBroadcastSlideState();
+        }
+      });
+
+      if (!current()) break;
       await Future.delayed(const Duration(seconds: 2));
+    }
+  }
+
+  static Future<void> _guard(String what, Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (e) {
+      debugPrint('StateBroadcaster: $what failed: $e');
     }
   }
 
   void stop() {
     _isPolling = false;
+    _generation++;
     _volumeStateTimer?.cancel();
     _volumeStateTimer = null;
     _lastSlideState = null;
@@ -48,7 +65,7 @@ class StateBroadcaster {
     _volumeStateTimer?.cancel();
     _volumeStateTimer = Timer(
       const Duration(milliseconds: 350),
-      broadcastVolumeState,
+      () => _guard('volume broadcast', broadcastVolumeState),
     );
   }
 
@@ -120,14 +137,15 @@ class StateBroadcaster {
   }
 
   void triggerSlideStateUpdate([Duration delay = Duration.zero]) {
+    void update() {
+      _guard('media state update', fetchAndBroadcastSmtcState);
+      _guard('slide state update', fetchAndBroadcastSlideState);
+    }
+
     if (delay == Duration.zero) {
-      fetchAndBroadcastSmtcState();
-      fetchAndBroadcastSlideState();
+      update();
     } else {
-      Future.delayed(delay, () {
-        fetchAndBroadcastSmtcState();
-        fetchAndBroadcastSlideState();
-      });
+      Future.delayed(delay, update);
     }
   }
 

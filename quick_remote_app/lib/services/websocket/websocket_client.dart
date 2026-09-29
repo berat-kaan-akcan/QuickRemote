@@ -46,7 +46,7 @@ class WebSocketClient {
     }
   }
 
-  Future<ConnectionResult> connect(String host, int port, {String? pin}) async {
+  Future<ConnectionResult> connect(String host, int port, {String? pin, String? expectedFingerprint}) async {
     if (pin == null || pin.isEmpty) {
       return const ConnectionResult(
         success: false,
@@ -79,25 +79,24 @@ class WebSocketClient {
       final uri = Uri.parse('wss://$formattedHost:$port');
       final prefs = await SharedPreferences.getInstance();
       final key = 'cert_fingerprint_$host';
-      final expectedFingerprint = prefs.getString(key);
+      // A fingerprint from the QR code comes straight from the PC screen, so it
+      // takes precedence over whatever was pinned for this address before.
+      final qrPinned = expectedFingerprint != null;
+      final pinnedFingerprint = expectedFingerprint ?? prefs.getString(key);
       bool isCertMismatch = false;
-      String? actualFingerprintCapture;
+      String? seenFingerprint;
 
-      final httpClient = HttpClient();
+      // No trusted roots: every certificate reaches the callback, so the pin is
+      // enforced even for a certificate that a public CA would vouch for.
+      final httpClient = HttpClient(context: SecurityContext(withTrustedRoots: false));
       httpClient.badCertificateCallback = (X509Certificate cert, String callbackHost, int callbackPort) {
-        final bytes = cert.der;
-        final actualFingerprint = sha256.convert(bytes).toString();
-
-        if (expectedFingerprint == null) {
-          prefs.setString(key, actualFingerprint);
+        final actualFingerprint = sha256.convert(cert.der).toString();
+        seenFingerprint = actualFingerprint;
+        if (pinnedFingerprint == null || pinnedFingerprint == actualFingerprint) {
           return true;
-        } else if (expectedFingerprint == actualFingerprint) {
-          return true;
-        } else {
-          isCertMismatch = true;
-          actualFingerprintCapture = actualFingerprint;
-          return false;
         }
+        isCertMismatch = true;
+        return false;
       };
 
       WebSocket ws;
@@ -110,12 +109,31 @@ class WebSocketClient {
       } on HandshakeException catch (_) {
         if (isCertMismatch) {
           _setState(AppConnectionState.certMismatch);
+          if (qrPinned) {
+            return ConnectionResult(
+              success: false,
+              error: ConnectionError.certRejected,
+              message: 'PC\'nin sertifikası QR kodundakiyle eşleşmiyor. Bağlantı güvenli değil, '
+                  'bağlanılmadı. QR kodunu yeniden tarayın.',
+              mismatchHost: host,
+            );
+          }
           return ConnectionResult(
             success: false,
             error: ConnectionError.certMismatch,
             message: 'Sertifika değişti! Olası MITM saldırısı veya cihaz formatlanmış olabilir.',
-            newFingerprint: actualFingerprintCapture,
+            newFingerprint: seenFingerprint,
             mismatchHost: host,
+          );
+        }
+        rethrow;
+      } on WebSocketException catch (e) {
+        if (e.httpStatusCode == HttpStatus.tooManyRequests) {
+          _setState(AppConnectionState.disconnected);
+          return const ConnectionResult(
+            success: false,
+            error: ConnectionError.rateLimited,
+            message: 'Çok fazla hatalı deneme. Bir dakika sonra tekrar deneyin.',
           );
         }
         rethrow;
@@ -134,23 +152,33 @@ class WebSocketClient {
             final message = jsonDecode(data as String);
             if (message['type'] == 'auth') {
               if (message['status'] == 'fail') {
-                debugPrint('Auth failed: wrong PIN');
+                final rateLimited = message['reason'] == 'rate_limited';
+                debugPrint(rateLimited ? 'Auth refused: rate limited' : 'Auth failed: wrong PIN');
                 _setState(AppConnectionState.disconnected);
                 _channel?.sink.close();
                 if (!authResolved) {
                   authResolved = true;
-                  onAuthResolved('PIN kodu yanlış.');
+                  final text = rateLimited
+                      ? 'Çok fazla hatalı deneme. Bir dakika sonra tekrar deneyin.'
+                      : 'PIN kodu yanlış.';
+                  onAuthResolved(text);
                   authCompleter.complete(
-                    const ConnectionResult(
+                    ConnectionResult(
                       success: false,
-                      error: ConnectionError.wrongPin,
-                      message: 'PIN kodu yanlış.',
+                      error: rateLimited ? ConnectionError.rateLimited : ConnectionError.wrongPin,
+                      message: text,
                     ),
                   );
                 }
                 return;
               }
               debugPrint('Auth successful');
+              // Trust on first use only after the PIN was accepted, so a failed
+              // attempt against an impostor never pins the impostor's certificate.
+              final fingerprint = seenFingerprint;
+              if (fingerprint != null && prefs.getString(key) != fingerprint) {
+                prefs.setString(key, fingerprint);
+              }
               onMessage(message); // carries the PC's presenter/platform info
               _reconnectAttempts = 0;
               _setState(AppConnectionState.connected);
@@ -274,7 +302,9 @@ class WebSocketClient {
       debugPrint('Attempting reconnect...');
       final result = await connect(_lastHost!, _lastPort!, pin: _lastPin);
       if (!result.success && !isConnected) {
-        if (result.error == ConnectionError.wrongPin || result.error == ConnectionError.certMismatch) {
+        if (result.error == ConnectionError.wrongPin ||
+            result.error == ConnectionError.certMismatch ||
+            result.error == ConnectionError.certRejected) {
           debugPrint('Fatal error (${result.error}), stopping reconnect loop');
           _setState(AppConnectionState.failed);
           return;

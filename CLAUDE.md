@@ -26,11 +26,9 @@ flutter run -d windows           # PC server (or -d linux)
 flutter run                      # mobile client
 ```
 
-`quick_remote_pc/test.dart` and `test_str.dart` are ad-hoc PowerShell scratch scripts, not a test suite.
-
 `flutter analyze` crashes (LSP `FormatException`) because the repo path contains non-ASCII characters (`Masaüstü`). Use `dart analyze` instead, or run from an ASCII symlink to the repo.
 
-The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' | python3 quick_remote_pc/assets/linux/impress_bridge.py 2002`.
+The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' | python3 quick_remote_pc/assets/linux/impress_bridge.py quickremote` (the argument is the UNO pipe name; a number selects a localhost TCP port, for manual tests only).
 
 ### Android build toolchain (`quick_remote_app/android`)
 
@@ -46,9 +44,10 @@ The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' |
 ### Wire protocol (mobile ↔ PC)
 
 - The PC runs a TLS WebSocket server (`dart:io HttpServer`, self-signed cert generated on first run) and advertises `_quickremote._tcp` over mDNS (`nsd` on Windows, Avahi on Linux). The mobile app finds it via mDNS, a QR code, or manual IP entry.
-- Auth: the server sends `AUTH_REQUIRED`, the client replies with SHA-256 of the 4-digit session PIN. The server enforces a 10 s auth timeout and blocks an IP for 60 s after 5 failures (`services/server/auth_manager.dart`). The client pins the cert fingerprint in SharedPreferences (`cert_fingerprint_<host>`) and asks the user if it changes.
-- **Text frames** are JSON commands. The server rejects anything not in `RemoteCommands.allowedCommands` or whose `PREFIX:` part is not in `allowedPrefixes` (`SET_PEN_COLOR`, `START_AT`, `VOLUME_SET`). **To add a command, update `remote_commands.dart` first**, then the PC dispatcher and `InputService`.
-- **Binary frames** (high-frequency mouse movement) are exactly 9 bytes: `uint8 type` (0 = TOUCH, 1 = LASER) + `float32 dx` + `float32 dy`, little-endian. The server throttles them to ~125 Hz and drops LASER frames unless a slideshow is active. Encoder: `quick_remote_app/lib/services/websocket/websocket_client.dart`; decoder: `quick_remote_pc/lib/services/websocket_server.dart`.
+- Auth: the client's first message is `{"auth": PIN}` (6-digit session PIN, plain inside TLS; the manual-entry dialog also accepts the 4 digits of older PCs). The server closes unauthenticated sockets after 5 s. `AuthManager` (`services/server/auth_manager.dart`) blocks an IP for 60 s after 5 failures and re-checks that on every attempt, allows at most 3 unauthenticated sockets per IP and 32 in total, and pauses all pairing for 60 s after more than 20 failures within a minute. Upgrade requests carrying an `Origin` header (browsers) are refused.
+- Pairing QR: `quickremote://HOST:PORT:PIN[:FINGERPRINT]`, built and parsed by `PairingPayload` in the shared package. FINGERPRINT is the base64url SHA-256 of the certificate DER; the server reads its own certificate through a loopback TLS handshake. The client pins a QR fingerprint for that connection (a mismatch is a hard failure, no override). Without one it trusts on first use and stores the pin in SharedPreferences (`cert_fingerprint_<host>`) only after auth succeeds; a later change asks the user. The client's `HttpClient` has no trusted roots, so the pin is checked even for CA-signed certificates.
+- **Text frames** are JSON commands. The server rejects anything not in `RemoteCommands.allowedCommands` or whose `PREFIX:` part is not in `allowedPrefixes` (`SET_PEN_COLOR`, `START_AT`, `VOLUME_SET`). **To add a command, update `remote_commands.dart` first**, then the PC dispatcher and `InputService`. Commands that only make sense in a running slideshow (drawing modes, ERASE_ALL) go in `_slideshowOnlyCommands` in `websocket_server.dart`, otherwise they type shortcuts into whatever window has focus. When a client disconnects while holding LEFT_DOWN, the server sends LEFT_UP.
+- **Binary frames** (high-frequency mouse movement) are exactly 9 bytes: `uint8 type` (0 = TOUCH, 1 = LASER) + `float32 dx` + `float32 dy`, little-endian. The server coalesces them to ~125 Hz (summed, never dropped: `services/server/move_coalescer.dart`) and ignores LASER frames unless a slideshow is active. The client splits large deltas into steps of at most ±500, the server's per-frame limit. Encoder: `quick_remote_app/lib/services/websocket/websocket_client.dart`; decoder: `quick_remote_pc/lib/services/websocket_server.dart`.
 - Server → client pushes: `STATUS`, `SLIDE_STATE`, `SMTC_STATE` (now-playing), volume state, `ack`, `auth`. These are produced by the polling loop in `services/server/state_broadcaster.dart`.
 
 ### PC server (`quick_remote_pc/lib`)
@@ -57,13 +56,13 @@ The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' |
 - Everything OS-specific goes through platform interfaces. Shared code must not call PowerShell or shell tools directly.
   - `services/input/input_service.dart` is the interface. `services/input_simulator.dart` is the static facade the rest of the code calls; it picks the implementation by `Platform`. `mouse_controller.dart` is abstracted the same way.
   - `services/input/command_router.dart` parses and validates every command (including `PREFIX:value`) and maps it to `InputService` methods, identically on both platforms. When adding a command, add an `InputService` method and implement it on **both** platforms.
-- **Windows** (`services/input/windows/`): win32 FFI (`SendInput`), plus PowerPoint COM, SMTC and volume via PowerShell scripts run by `PowerShellRunner`. That runner keeps two persistent `powershell` processes (command and polling), queues jobs, and uses a `___PS_DONE___` sentinel line. In Dart `'''` strings, escape PowerShell `$` as `\$` but never escape a Dart `${...}` interpolation.
+- **Windows** (`services/input/windows/`): win32 FFI (`SendInput`), plus PowerPoint COM, SMTC and volume via PowerShell scripts run by `PowerShellRunner`. That runner keeps two persistent `powershell.exe` processes (started from the absolute System32 path; command and polling), queues jobs, and uses a `___PS_DONE___` sentinel line. In Dart `'''` strings, escape PowerShell `$` as `\$` but never escape a Dart `${...}` interpolation.
 - **Linux** (`services/input/linux/`):
   - `uinput_device.dart`: a virtual keyboard/mouse through `/dev/uinput` (FFI `ioctl`). Works on X11 and Wayland. Windows VK codes are mapped in `evdev_keys.dart`.
-  - `impress_bridge.dart`: drives a persistent `python3 assets/linux/impress_bridge.py` process (LibreOffice UNO over `localhost:2002`) with JSON lines matched by `id`.
+  - `impress_bridge.dart`: drives a persistent `python3 assets/linux/impress_bridge.py` process (LibreOffice UNO over the pipe `quickremote`, a Unix socket only the user can open; the script refuses the socket if another user owns it) with JSON lines matched by `id`.
   - `pactl_volume.dart` for volume and `mpris_controller.dart` (D-Bus MPRIS) as the SMTC counterpart.
   - `server/network/avahi_publisher.dart` replaces `nsd` for mDNS, since `nsd` has no Linux implementation.
-  - `services/linux/linux_setup.dart` plus `linux_setup_panel.dart` implement the one-time setup: the udev rule via `pkexec`, the LibreOffice `ooSetupConnectionURL` profile entry, and firewalld/ufw ports.
+  - `services/linux/linux_setup.dart` plus `linux_setup_panel.dart` implement the one-time setup: the udev rule via `pkexec`, the LibreOffice `ooSetupConnectionURL` profile entry, and firewalld/ufw ports. Profiles still holding the old `socket,host=localhost,port=2002` entry show as `ImpressStatus.legacyListener` with an update button.
 - Impress bridge gotchas:
   - Every UNO call runs on LibreOffice's main thread through `com.sun.star.awt.AsyncCallback`. Calling slideshow APIs from the remote UNO thread deadlocks LibreOffice under the Qt/KDE VCL plugin.
   - The laser, eraser and pen modes use `XSlideShow.setProperty` (`PointerVisible`, `PointerPosition`, `SwitchEraserMode`, `SwitchPenMode`), not `XSlideShowController`.

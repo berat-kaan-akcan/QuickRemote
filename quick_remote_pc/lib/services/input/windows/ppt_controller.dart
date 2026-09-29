@@ -78,10 +78,34 @@ try {
     final className = classNamePtr.toDartString();
     free(classNamePtr);
 
-    if (className == '#32770' || className == 'NUIDialog') {
+    // PowerPoint's "keep ink annotations?" prompt. '#32770' is the class of
+    // every standard dialog, so check the owner too: never answer another
+    // application's dialog.
+    if ((className == '#32770' || className == 'NUIDialog') && _isPowerPointWindow(hwnd)) {
       KeyboardSimulator.pressKey(VK_TAB);
       await Future.delayed(const Duration(milliseconds: 50));
       KeyboardSimulator.pressKey(VK_RETURN);
+    }
+  }
+
+  static bool _isPowerPointWindow(HWND hwnd) {
+    final pid = calloc<Uint32>();
+    final size = calloc<Uint32>()..value = 1024;
+    final path = wsalloc(1024);
+    try {
+      GetWindowThreadProcessId(hwnd, pid);
+      final process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid.value).value;
+      if (process.address == 0) return false;
+      try {
+        if (!QueryFullProcessImageName(process, PROCESS_NAME_WIN32, path, size).value) return false;
+        return path.toDartString().toLowerCase().endsWith(r'\powerpnt.exe');
+      } finally {
+        CloseHandle(process);
+      }
+    } finally {
+      calloc.free(pid);
+      calloc.free(size);
+      free(path);
     }
   }
 

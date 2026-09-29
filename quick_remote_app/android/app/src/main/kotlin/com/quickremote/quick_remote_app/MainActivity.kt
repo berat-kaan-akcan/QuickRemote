@@ -140,7 +140,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
-        btHidService.stopAdvertising()
+        // lateinit: unset when the Activity dies before the engine was configured.
+        if (::btHidService.isInitialized) btHidService.stopAdvertising()
         super.onDestroy()
     }
 }

@@ -12,7 +12,13 @@ enum ConnectionError {
   wrongPin,
   timeout,
   serverNotFound,
+  /// The certificate differs from the one pinned earlier; the user may accept it.
   certMismatch,
+  /// The certificate differs from the fingerprint in the scanned QR code.
+  /// Never overridable: the QR code comes straight from the PC screen.
+  certRejected,
+  /// The PC refuses pairing for now after too many wrong PINs.
+  rateLimited,
   unknown,
 }
 
@@ -192,8 +198,10 @@ class WebSocketService extends ChangeNotifier {
 
   /// Connect to the PC companion app via WebSocket.
   /// Waits for auth response before reporting success.
-  Future<ConnectionResult> connect(String host, int port, {String? pin}) {
-    return _client.connect(host, port, pin: pin);
+  /// [certFingerprint] (hex SHA-256, from the QR code) pins the certificate
+  /// for this connection instead of trusting it on first use.
+  Future<ConnectionResult> connect(String host, int port, {String? pin, String? certFingerprint}) {
+    return _client.connect(host, port, pin: pin, expectedFingerprint: certFingerprint);
   }
 
   /// Send a command to the PC.

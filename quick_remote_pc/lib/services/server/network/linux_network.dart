@@ -109,23 +109,6 @@ class LinuxNetwork implements PlatformNetwork {
   }
 
   @override
-  Future<bool> setNetworkProfilePrivate() async {
-    final dev = (await _defaultRoute()).dev;
-    if (dev == null) return false;
-    final conn = await _run('nmcli', ['-g', 'GENERAL.CONNECTION', 'device', 'show', dev]);
-    final name = (conn?.stdout as String?)?.trim() ?? '';
-    if (conn == null || conn.exitCode != 0 || name.isEmpty) return false;
-
-    final modify = await _run('nmcli', ['connection', 'modify', name, 'connection.zone', 'home']);
-    if (modify == null || modify.exitCode != 0) {
-      debugPrint('Failed to set firewalld zone: ${modify?.stderr}');
-      return false;
-    }
-    await _run('nmcli', ['device', 'reapply', dev]);
-    return true;
-  }
-
-  @override
   Future<void> openNetworkSettings() async {
     final desktop = (Platform.environment['XDG_CURRENT_DESKTOP'] ?? '').toUpperCase();
     final candidates = <(String, List<String>)>[

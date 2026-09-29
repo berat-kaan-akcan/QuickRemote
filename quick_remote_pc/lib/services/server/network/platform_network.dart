@@ -18,8 +18,10 @@ abstract class PlatformNetwork {
 
   /// True when the active network is untrusted (Windows "Public" profile,
   /// firewalld public/external zone on Linux).
+  ///
+  /// The app only warns about it. It deliberately never marks the network as
+  /// trusted itself: that would relax the firewall for the whole machine.
   Future<bool> checkNetworkProfile();
-  Future<bool> setNetworkProfilePrivate();
   Future<void> openNetworkSettings();
 
   Future<FirewallStatus> checkFirewall(int port);
