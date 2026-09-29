@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../services/background_session.dart';
 import '../services/websocket_service.dart';
 import 'settings/settings_screen.dart';
 import 'analytics_report_screen.dart';
@@ -41,7 +42,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
   void initState() {
     super.initState();
     WakelockPlus.enable();
-    
+    BackgroundSession.acquire();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _wsRef = context.read<WebSocketService>();
       _wasConnected = _wsRef.isConnected;
@@ -136,6 +138,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
       _wsRef.removeListener(_onConnectionChanged);
     }
     WakelockPlus.disable();
+    BackgroundSession.release();
     super.dispose();
   }
 
