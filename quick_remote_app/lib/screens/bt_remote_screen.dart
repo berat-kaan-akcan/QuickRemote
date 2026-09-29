@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import '../services/background_session.dart';
 import '../services/bluetooth/bt_hid_service.dart';
 import '../services/bluetooth/bt_key_mapping.dart';
 import '../providers/settings_provider.dart';
@@ -43,6 +44,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
+    BackgroundSession.acquire();
     _sub = _bt.stateStream.listen(_onBtState);
   }
 
@@ -51,6 +53,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
     WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
     WakelockPlus.disable();
+    BackgroundSession.release();
     super.dispose();
   }
 
