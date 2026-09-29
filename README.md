@@ -73,12 +73,12 @@
 | Özellik | Açıklama |
 |---------|----------|
 | **TLS/WSS Şifreleme** | Tüm iletişim otomatik oluşturulan self-signed sertifika ile şifrelenir |
-| **4 Haneli PIN** | Her oturumda rastgele PIN oluşturulur; kimliksiz bağlantı engellenir |
-| **Brute-Force Koruması** | 5 başarısız denemeden sonra IP adresi 60 saniyeliğine engellenir |
-| **Sertifika Sabitleme** | İlk bağlantıda sertifika parmak izi kaydedilir; değişiklik tespit edilirse kullanıcıya sorulur |
-| **Kimlik Doğrulama Zaman Aşımı** | Bağlanan istemci 10 saniye içinde doğrulanmazsa bağlantı kapatılır |
+| **6 Haneli PIN** | Her oturumda rastgele PIN oluşturulur; kimliksiz bağlantı engellenir |
+| **Brute-Force Koruması** | 5 başarısız denemeden sonra IP adresi 60 saniyeliğine engellenir; engel her PIN denemesinde yeniden kontrol edilir. IP başına en fazla 3, toplamda 32 doğrulanmamış bağlantı. Bir dakikada 20'den fazla hatalı PIN (hangi IP'den olursa olsun) yeni eşleştirmeleri 60 saniye durdurur |
+| **Sertifika Sabitleme** | QR kodu sertifikanın SHA-256 parmak izini taşır; telefon ilk bağlantıda bile bu sertifikayı bekler, eşleşmezse bağlanmaz. QR'sız bağlantılarda ilk başarılı girişte parmak izi kaydedilir, değişirse kullanıcıya sorulur |
+| **Kimlik Doğrulama Zaman Aşımı** | Bağlanan istemci 5 saniye içinde doğrulanmazsa bağlantı kapatılır |
 | **Bilgisayar Kilitleme** | `Win + L` ile bilgisayarı uzaktan kilitleyin |
-| **Canlı Ağ İzleme** | Ağ profiliniz sürekli izlenir; herkese açık ağ tespit edilirse uyarılır ve tek tıkla güvenli (private) ağa geçebilirsiniz |
+| **Canlı Ağ İzleme** | Ağ profiliniz sürekli izlenir; herkese açık ağ tespit edilirse uyarılır ve ağ ayarlarını açabilirsiniz |
 
 ---
 
@@ -95,14 +95,14 @@
 │ • Touchpad Girişi       │      ◄── SlideState ►      │ • PowerShell COM Bridge │
 │ • Çizim Araçları        │      ◄── Mouse Data ►      │ • mDNS Advertisement    │
 │ • Sunum Zamanlayıcı     │                            │ • QR Kod Oluşturucu     │
-│ • Haptic Feedback       │                            │ • System Tray           │
+│ • Haptic Feedback       │                            │                         │
 └─────────────────────────┘                            └─────────────────────────┘
 ```
 
 **İletişim Akışı:**
 1. **PC Server App** → Windows üzerinde TLS destekli WebSocket sunucusu başlatır, mDNS ile kendini ağda duyurur ve ekranda QR kod gösterir.
 2. **Mobile Client** → mDNS ile otomatik keşif yapar veya QR kodu tarayarak sunucunun IP, port ve PIN bilgilerini alır.
-3. **Kimlik Doğrulama** → SHA-256 ile hashlenmiş PIN doğrulaması yapılır.
+3. **Kimlik Doğrulama** → PIN, TLS kanalı içinde doğrulanır. QR ile bağlanıldığında telefon, QR kodundaki sertifika parmak izini doğrular.
 4. **Kontrol** → Tüm komutlar (`NEXT`, `PREV`, `START`, `LOCK`, `MODE_LASER` vb.) ve fare verileri düşük gecikmeli WebSocket kanalı üzerinden iletilir.
 
 ---
@@ -176,15 +176,14 @@ QuickRemote/
 | **web_socket_channel** | WebSocket istemcisi |
 | **Bluetooth (HID)** | Wi-Fi olmadan PC'yi Bluetooth üzerinden kontrol etme |
 | **mobile_scanner** | QR kod tarama |
-| **sensors_plus** | Cihaz sensörleri (jiroskop) |
 | **nsd** | mDNS cihaz keşfi |
 | **vibration** | Haptik geri bildirim |
 | **wakelock_plus** | Ekran uyku engelleme |
 | **flutter_background** | Uygulamanın arka planda kesintisiz çalışması |
 | **permission_handler** | Gerekli sistem izinlerinin yönetimi |
-| **crypto** | SHA-256 PIN hashleme |
+| **crypto** | Sertifika parmak izi (SHA-256) |
 | **provider** | Durum yönetimi |
-| **google_fonts & glassmorphism** | Modern UI tasarımı |
+| **google_fonts** | Modern UI tasarımı |
 
 ### Masaüstü Uygulama (Server)
 | Teknoloji | Kullanım |
@@ -196,8 +195,6 @@ QuickRemote/
 | **nsd** | mDNS servis kaydı |
 | **qr_flutter** | QR kod oluşturma |
 | **window_manager** | Pencere yönetimi |
-| **system_tray** | Sistem tepsisi entegrasyonu |
-| **local_notifier** | Windows bildirimleri |
 | **screen_retriever** | Ekran bilgileri |
 
 ### İletişim
@@ -240,7 +237,7 @@ flutter pub get
 flutter run -d windows
 ```
 
-> **Not:** Uygulama ilk çalıştırıldığında otomatik olarak bir TLS sertifikası oluşturur. Ekranda yerel IP adresiniz, port numaranız ve 4 haneli PIN kodunuz görünecektir. QR kodu taratarak veya bu bilgileri elle girerek bağlanabilirsiniz.
+> **Not:** Uygulama ilk çalıştırıldığında otomatik olarak bir TLS sertifikası oluşturur. Ekranda yerel IP adresiniz, port numaranız ve 6 haneli PIN kodunuz görünecektir. QR kodu taratarak veya bu bilgileri elle girerek bağlanabilirsiniz.
 
 #### 🐧 Linux
 
@@ -256,7 +253,7 @@ flutter run -d linux        # veya: flutter build linux
 
 **İlk kurulum:** uygulamanın üst kısmındaki Linux panelinden yapılır:
 - **Klavye/fare izni:** "İzin ver" butonu `/dev/uinput` için bir udev kuralı kurar (yönetici parolası sorar). Elle kurmak için: `sudo quick_remote_pc/linux/packaging/install-uinput-rule.sh`
-- **Impress bağlantısı:** "Etkinleştir" butonu LibreOffice profiline yerel UNO dinleyicisi ekler (`localhost:2002`). LibreOffice açıksa "Bağlan" butonu bunu anında etkinleştirir.
+- **Impress bağlantısı:** "Etkinleştir" butonu LibreOffice profiline yalnızca sizin kullanıcınızın bağlanabildiği bir UNO soketi (`pipe,name=quickremote`) ekler. LibreOffice açıksa "Bağlan" butonu bunu anında etkinleştirir. Eski sürümlerin eklediği `localhost:2002` TCP dinleyicisi bu makinedeki her kullanıcıya ve uygulamaya açıktı; panelde "Güncelle" çıkarsa ona basın.
 - **Güvenlik duvarı:** firewalld/ufw 8090-8099 portlarını engelliyorsa "Portları aç" butonu görünür.
 
 | Özellik | Linux durumu |
@@ -326,9 +323,7 @@ Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
     │◄─── Self-Signed Cert ─────────────────────│
     │                                            │
     │──── WebSocket Upgrade ───────────────────►│
-    │◄─── AUTH_REQUIRED ────────────────────────│
-    │                                            │
-    │──── SHA-256(PIN) ────────────────────────►│
+    │──── {"auth": PIN} (TLS içinde) ─────────►│
     │◄─── AUTH_OK / AUTH_FAIL ──────────────────│
     │                                            │
     │──── Komutlar (şifreli kanal) ────────────►│
@@ -336,10 +331,12 @@ Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
 ```
 
 - Tüm trafik **TLS ile şifrelenir**
-- PIN doğrulaması **SHA-256 hash** ile yapılır
-- **5 başarısız deneme** → IP 60 saniyeliğine engellenir
-- **10 saniye** içinde kimlik doğrulanmazsa bağlantı kesilir
-- Sertifika parmak izi istemci tarafında saklanır (**certificate pinning**)
+- PIN, **TLS kanalı içinde** gönderilir ve sunucuda sabit zamanlı karşılaştırılır
+- **5 başarısız deneme** → IP 60 saniyeliğine engellenir (engel her denemede yeniden kontrol edilir)
+- IP başına en fazla **3**, toplamda **32** doğrulanmamış bağlantı; dakikada **20'den fazla** hatalı PIN → eşleştirme 60 sn durur
+- **5 saniye** içinde kimlik doğrulanmazsa bağlantı kesilir
+- QR kodu sertifika parmak izini taşır; telefon ilk bağlantıda bile sertifikayı doğrular (**certificate pinning**). QR'sız bağlantıda parmak izi ilk başarılı girişte kaydedilir
+- Tarayıcılardan gelen (Origin başlıklı) WebSocket bağlantıları reddedilir
 - Herkese açık ağ tespit edildiğinde sunucu tarafında **uyarı gösterilir**
 
 

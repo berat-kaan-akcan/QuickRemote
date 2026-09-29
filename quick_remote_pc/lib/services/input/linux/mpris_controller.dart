@@ -91,33 +91,72 @@ class MprisController {
 
     List<int>? bytes;
     try {
-      final uri = Uri.parse(url);
-      if (uri.scheme == 'file') {
-        final file = File(uri.toFilePath());
-        if (await file.length() <= _maxThumbnailBytes) bytes = await file.readAsBytes();
-      } else if (uri.scheme == 'http' || uri.scheme == 'https') {
-        final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
-        try {
-          final response = await (await client.getUrl(uri)).close().timeout(const Duration(seconds: 3));
-          final builder = BytesBuilder(copy: false);
-          await for (final chunk in response) {
-            builder.add(chunk);
-            if (builder.length > _maxThumbnailBytes) break;
-          }
-          if (builder.length <= _maxThumbnailBytes) bytes = builder.takeBytes();
-        } finally {
-          client.close(force: true);
-        }
-      } else if (uri.scheme == 'data') {
-        bytes = uri.data?.contentAsBytes();
-      }
+      // Any app on the session bus can set artUrl, so the whole fetch is
+      // bounded in time and size; a stalled download must not freeze the
+      // state poll loop that also drives slide updates.
+      bytes = await _loadArt(Uri.parse(url)).timeout(const Duration(seconds: 5));
     } catch (e) {
       debugPrint('MPRIS thumbnail error: $e');
     }
+    // Only images go to the phone, never arbitrary file contents.
+    if (bytes != null && !looksLikeImage(bytes)) bytes = null;
 
     _thumbUrl = url;
     _thumbBase64 = bytes == null ? '' : base64Encode(bytes);
     return _thumbBase64;
+  }
+
+  Future<List<int>?> _loadArt(Uri uri) async {
+    if (uri.scheme == 'file') {
+      final path = uri.toFilePath();
+      // Regular files only: devices (/dev/zero) never end, FIFOs never return.
+      if (FileSystemEntity.typeSync(path) != FileSystemEntityType.file) return null;
+      return _readCapped(File(path).openRead(0, _maxThumbnailBytes + 1));
+    }
+    if (uri.scheme == 'http' || uri.scheme == 'https') {
+      final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
+      try {
+        final response = await (await client.getUrl(uri)).close();
+        if (response.statusCode != HttpStatus.ok) return null;
+        // Idle timeout ends a stalled transfer (and closes the client below).
+        return await _readCapped(response.timeout(const Duration(seconds: 3)));
+      } finally {
+        client.close(force: true);
+      }
+    }
+    if (uri.scheme == 'data') {
+      final bytes = uri.data?.contentAsBytes();
+      return bytes != null && bytes.length <= _maxThumbnailBytes ? bytes : null;
+    }
+    return null;
+  }
+
+  /// Collects [stream] unless it exceeds [_maxThumbnailBytes].
+  static Future<List<int>?> _readCapped(Stream<List<int>> stream) async {
+    final builder = BytesBuilder(copy: false);
+    await for (final chunk in stream) {
+      builder.add(chunk);
+      if (builder.length > _maxThumbnailBytes) return null;
+    }
+    return builder.takeBytes();
+  }
+
+  /// JPEG, PNG, GIF, WebP or BMP by magic number.
+  @visibleForTesting
+  static bool looksLikeImage(List<int> b) {
+    bool startsWith(List<int> sig, [int offset = 0]) {
+      if (b.length < offset + sig.length) return false;
+      for (var i = 0; i < sig.length; i++) {
+        if (b[offset + i] != sig[i]) return false;
+      }
+      return true;
+    }
+
+    return startsWith(const [0xFF, 0xD8, 0xFF]) ||
+        startsWith(const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) ||
+        startsWith(const [0x47, 0x49, 0x46, 0x38]) ||
+        (startsWith(const [0x52, 0x49, 0x46, 0x46]) && startsWith(const [0x57, 0x45, 0x42, 0x50], 8)) ||
+        startsWith(const [0x42, 0x4D]);
   }
 
   /// Calls a Player method (PlayPause/Next/Previous/Stop).

@@ -79,17 +79,24 @@ class _HomeScreenState extends State<HomeScreen> {
     final host = result['host'] as String;
     final port = result['port'] as int;
     final pin = result['pin'] as String? ?? '';
+    final fingerprint = result['fingerprint'] as String?;
 
-    await _executeConnection(host, port, pin);
+    await _executeConnection(host, port, pin, certFingerprint: fingerprint);
   }
 
-  Future<void> _executeConnection(String host, int port, String pin) async {
+  Future<void> _executeConnection(String host, int port, String pin, {String? certFingerprint}) async {
     setState(() {
       _connecting = true;
       _error = null;
     });
 
-    final connResult = await ConnectionHandler.connect(context, host, port, pin: pin);
+    final connResult = await ConnectionHandler.connect(
+      context,
+      host,
+      port,
+      pin: pin,
+      certFingerprint: certFingerprint,
+    );
     
     if (!mounted) return;
 

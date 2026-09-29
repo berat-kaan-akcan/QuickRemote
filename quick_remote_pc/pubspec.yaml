@@ -7,19 +7,17 @@ environment:
   sdk: ^3.11.0
 
 dependencies:
+  crypto: ^3.0.7
   ffi: ^2.2.0
   flutter:
     sdk: flutter
   provider: ^6.1.5+1
   qr_flutter: ^4.1.0
   screen_retriever: ^0.2.0
-  system_tray: ^2.0.3
   win32: ^6.0.0
   window_manager: ^0.5.1
-  nsd: any
-  local_notifier: ^0.1.6
+  nsd: ^2.3.1
   google_fonts: ^8.2.1
-  glassmorphism: ^3.0.0
   path_provider: ^2.1.6
   quick_remote_shared:
     path: ../packages/quick_remote_shared

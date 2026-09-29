@@ -84,7 +84,7 @@ class ManualConnectDialog extends StatelessWidget {
               decoration: AppPopupTheme.inputDecoration(
                 context: ctx,
                 labelText: 'PIN',
-                hintText: 'PC ekranındaki 4 haneli PIN',
+                hintText: 'PC ekranındaki PIN',
                 prefixIcon: Icon(
                   Icons.lock_rounded,
                   color: Colors.white.withValues(alpha: 0.4),
@@ -92,7 +92,8 @@ class ManualConnectDialog extends StatelessWidget {
                 ),
               ),
               keyboardType: TextInputType.number,
-              maxLength: 4,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              maxLength: 6,
             ),
             const SizedBox(height: 20),
             AnimatedBuilder(
@@ -100,12 +101,13 @@ class ManualConnectDialog extends StatelessWidget {
               builder: (context, child) {
                 final host = hostController.text.trim();
                 final pin = pinController.text.trim();
-                final isValid = host.isNotEmpty && pin.length == 4;
+                // 6 digits; PCs running an older version show 4.
+                final isValid = host.isNotEmpty && (pin.length == 6 || pin.length == 4);
 
                 String buttonText = 'Bağlan';
                 if (host.isEmpty) {
                   buttonText = 'IP Bekleniyor...';
-                } else if (pin.length < 4) {
+                } else if (!isValid) {
                   buttonText = 'PIN Bekleniyor...';
                 }
 

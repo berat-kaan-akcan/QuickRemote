@@ -14,6 +14,10 @@ enum ImpressStatus {
   /// LibreOffice is closed and not configured to accept connections.
   notConfigured,
 
+  /// LibreOffice is closed and its profile still has the unauthenticated
+  /// localhost TCP listener written by older versions.
+  legacyListener,
+
   /// LibreOffice is running without the UNO listener.
   runningNotListening,
 
@@ -83,15 +87,25 @@ udevadm settle
     dotAll: true,
   );
 
-  static bool _registryConfigured() {
+  static ImpressStatus _registryStatus() {
     final file = _registryFile;
-    if (!file.existsSync()) return false;
-    final match = _existingItem.firstMatch(file.readAsStringSync());
-    return match != null && match.group(0)!.contains(ImpressBridge.acceptString);
+    if (!file.existsSync()) return ImpressStatus.notConfigured;
+    return registryStatusOf(file.readAsStringSync());
+  }
+
+  /// Which connection URL a LibreOffice profile (registrymodifications.xcu) sets.
+  @visibleForTesting
+  static ImpressStatus registryStatusOf(String xcu) {
+    final item = _existingItem.firstMatch(xcu)?.group(0);
+    if (item == null) return ImpressStatus.notConfigured;
+    if (item.contains(ImpressBridge.acceptString)) return ImpressStatus.readyWhenOpened;
+    if (item.contains('socket,')) return ImpressStatus.legacyListener;
+    return ImpressStatus.notConfigured;
   }
 
   /// Adds (or replaces) the ooSetupConnectionURL entry in LibreOffice's user
-  /// profile, so every LibreOffice start listens on localhost for UNO.
+  /// profile, so every LibreOffice start listens on the user-only UNO pipe.
+  /// Replacing also removes the legacy TCP listener of older versions.
   /// Must only run while LibreOffice is closed — it rewrites the file on exit.
   @visibleForTesting
   static String applyRegistryItem(String? xcu, String item) {
@@ -114,7 +128,7 @@ udevadm settle
     }
     if (await _libreOfficeRunning()) return ImpressStatus.runningNotListening;
     if (!await _libreOfficeInstalled()) return ImpressStatus.notInstalled;
-    return _registryConfigured() ? ImpressStatus.readyWhenOpened : ImpressStatus.notConfigured;
+    return _registryStatus();
   }
 
   /// Makes LibreOffice accept the bridge: permanently through the profile when

@@ -19,14 +19,15 @@ class ConnectAttemptResult {
 
 class ConnectionHandler {
   /// Connects to the PC, handling TOFU certificate mismatches via dialog automatically.
+  /// With a [certFingerprint] from the QR code a mismatch is final (no dialog).
   static Future<ConnectAttemptResult> connect(
-    BuildContext context, 
-    String host, 
-    int port, 
-    {String pin = ''}
+    BuildContext context,
+    String host,
+    int port,
+    {String pin = '', String? certFingerprint}
   ) async {
     final ws = context.read<WebSocketService>();
-    var connResult = await ws.connect(host, port, pin: pin);
+    var connResult = await ws.connect(host, port, pin: pin, certFingerprint: certFingerprint);
 
     if (!context.mounted) return ConnectAttemptResult(success: false);
 

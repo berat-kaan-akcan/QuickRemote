@@ -134,6 +134,13 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
           action: 'Etkinleştir',
           onTap: () => _run(enable, 'Impress bağlantısı etkinleştirildi.', 'LibreOffice ayarı yazılamadı.'),
         ),
+      ImpressStatus.legacyListener => _row(
+          Icons.gpp_maybe_rounded,
+          _orange,
+          'Impress bağlantısı eski yöntemi kullanıyor: bu bilgisayardaki her kullanıcıya ve uygulamaya açık bir port. Güncelleyin.',
+          action: 'Güncelle',
+          onTap: () => _run(enable, 'Impress bağlantısı güvenli yönteme geçirildi.', 'LibreOffice ayarı yazılamadı.'),
+        ),
       ImpressStatus.runningNotListening => _row(
           Icons.slideshow_rounded,
           _orange,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:text_scroll/text_scroll.dart';
 import 'glass_panel.dart';
@@ -43,6 +44,28 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
   late int _localPositionMs;
   Timer? _ticker;
   DateTime? _lastTickTime;
+
+  String? _thumbnailSource;
+  Uint8List? _thumbnailBytes;
+
+  /// Decodes the base64 thumbnail only when it changes. The card rebuilds every
+  /// 250 ms while playing, and fresh bytes on each build made Image.memory
+  /// decode the picture again every time. Returns null for invalid data.
+  Uint8List? get _thumbnail {
+    final source = widget.thumbnailBase64;
+    if (source != _thumbnailSource) {
+      _thumbnailSource = source;
+      _thumbnailBytes = null;
+      if (source != null && source.isNotEmpty) {
+        try {
+          _thumbnailBytes = base64Decode(source);
+        } on FormatException {
+          _thumbnailBytes = null;
+        }
+      }
+    }
+    return _thumbnailBytes;
+  }
 
   @override
   void initState() {
@@ -101,6 +124,12 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
   Widget build(BuildContext context) {
     const accent = Color(0xFFF43F5E); // Rose
     
+    final thumbnail = _thumbnail;
+    final placeholderIcon = Icon(
+      widget.hasMedia ? Icons.music_note_rounded : Icons.music_off_rounded,
+      color: Colors.white,
+      size: 20,
+    );
     final displayTitle = widget.hasMedia ? (widget.title?.isNotEmpty == true ? widget.title! : 'Bilinmeyen Medya') : 'Medya Yok';
     final displayArtist = widget.hasMedia ? (widget.artist?.isNotEmpty == true ? widget.artist! : 'Bilinmeyen Sanatçı') : 'Şu an bir şey çalmıyor';
 
@@ -137,20 +166,17 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
                     ),
                   ] : null,
                 ),
-                child: (widget.thumbnailBase64 != null && widget.thumbnailBase64!.isNotEmpty)
+                child: thumbnail != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.memory(
-                          base64Decode(widget.thumbnailBase64!),
+                          thumbnail,
                           fit: BoxFit.cover,
                           gaplessPlayback: true,
+                          errorBuilder: (_, _, _) => placeholderIcon,
                         ),
                       )
-                    : Icon(
-                        widget.hasMedia ? Icons.music_note_rounded : Icons.music_off_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                    : placeholderIcon,
               ),
               const SizedBox(width: 20),
               // Şarkı Bilgileri
