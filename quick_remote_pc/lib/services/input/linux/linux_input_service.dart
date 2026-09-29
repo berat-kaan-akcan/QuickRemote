@@ -54,6 +54,7 @@ class LinuxInputService implements InputService {
     if (error == 'NO_MEDIA') return 'Bu slaytta medya yok.';
     if (error == 'NO_CONNECTION') return 'LibreOffice Impress\'e bağlanılamadı.';
     if (error == 'NO_UNO' || error == 'NO_PYTHON') return 'LibreOffice Python (UNO) desteği bulunamadı.';
+    if (error == 'UNTRUSTED_PIPE') return 'LibreOffice bağlantı soketi başka bir kullanıcıya ait; bağlanılmadı.';
     return 'Impress komutu başarısız: $error';
   }
 

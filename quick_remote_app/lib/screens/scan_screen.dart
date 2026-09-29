@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../utils/ui/app_snackbar.dart';
 
 /// QR Code scanner screen to connect to PC companion app.
@@ -29,39 +30,27 @@ class _ScanScreenState extends State<ScanScreen> {
     final barcode = capture.barcodes.firstOrNull;
     if (barcode == null || barcode.rawValue == null) return;
 
-    final value = barcode.rawValue!;
-    debugPrint('QR Scanned: $value');
-
-    // Expected format: quickremote://192.168.1.x:8090:1234
-    if (!value.startsWith('quickremote://')) {
-      _showQrError('Geçersiz QR kodu. "quickremote://" formatı bekleniyor.');
+    // The value carries the PIN, so it is not logged.
+    final (payload, error) = PairingPayload.parse(barcode.rawValue!);
+    if (payload == null) {
+      _showQrError(switch (error) {
+        PairingError.notQuickRemote => 'Geçersiz QR kodu. "quickremote://" formatı bekleniyor.',
+        PairingError.missingHost => 'QR kodunda IP adresi eksik.',
+        PairingError.invalidPort => 'QR kodunda geçersiz port numarası.',
+        PairingError.invalidFingerprint => 'QR kodundaki sertifika bilgisi bozuk. Kodu yeniden tarayın.',
+        _ => 'QR kodu beklenen formatta değil.\nFormat: quickremote://IP:PORT:PIN',
+      });
       return;
     }
 
-    final address = value.replaceFirst('quickremote://', '');
-    final parts = address.split(':');
-
-    if (parts.length < 2) {
-      _showQrError('QR kodu beklenen formatta değil.\nFormat: quickremote://IP:PORT:PIN');
-      return;
-    }
-
-    final host = parts[0].trim();
-    if (host.isEmpty) {
-      _showQrError('QR kodunda IP adresi eksik.');
-      return;
-    }
-
-    final port = int.tryParse(parts[1]);
-    if (port == null || port < 1 || port > 65535) {
-      _showQrError('QR kodunda geçersiz port numarası: ${parts[1]}');
-      return;
-    }
-
-    final pin = parts.length >= 3 ? parts[2] : '';
-
+    final fingerprint = payload.certFingerprint;
     _scanned = true;
-    Navigator.of(context).pop({'host': host, 'port': port, 'pin': pin});
+    Navigator.of(context).pop({
+      'host': payload.host,
+      'port': payload.port,
+      'pin': payload.pin,
+      if (fingerprint != null) 'fingerprint': PairingPayload.fingerprintToHex(fingerprint),
+    });
   }
 
   void _showQrError(String message) {

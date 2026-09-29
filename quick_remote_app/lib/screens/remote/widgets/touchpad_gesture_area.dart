@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../models/draw_tool.dart';
-import '../../../../utils/throttler.dart';
+import '../../../../utils/delta_accumulator.dart';
 
 class TouchpadGestureArea extends StatefulWidget {
   final double sensitivity;
@@ -27,13 +28,21 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
   bool _isDrawActive = false;
   DrawTool _activeTool = DrawTool.laser;
 
-  final _throttler = EventThrottler(delay: const Duration(milliseconds: 16));
-  double _pendingDx = 0;
-  double _pendingDy = 0;
+  static const _sendInterval = Duration(milliseconds: 16);
+  // The PC rejects a single step above 500 on either axis.
+  final _pending = DeltaAccumulator(maxStep: 500);
+  Timer? _sendTimer;
+
+  /// Identifies the current touch, so a delayed LEFT_DOWN from an earlier,
+  /// already finished touch is never sent.
+  int _gesture = 0;
+  bool _leftDownSent = false;
+
+  String get _moveType => _activeTool == DrawTool.laser ? 'LASER' : 'TOUCH';
 
   @override
   void dispose() {
-    _throttler.cancel();
+    _sendTimer?.cancel();
     super.dispose();
   }
 
@@ -49,6 +58,11 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
 
     _isDrawActive = true;
     _activeTool = isDoubleTap ? widget.drawTool : DrawTool.laser;
+    final gesture = ++_gesture;
+    _pending.clear();
+    _sendTimer?.cancel();
+    _sendTimer = null;
+    _leftDownSent = false;
 
     if (_activeTool == DrawTool.pen) {
       widget.onSendCommand('MODE_PEN');
@@ -61,10 +75,9 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
     }
 
     Future.delayed(const Duration(milliseconds: 150), () {
-      if (_isDrawActive && mounted) {
-        if (_activeTool != DrawTool.laser) {
-          widget.onSendCommand('LEFT_DOWN');
-        }
+      if (_isDrawActive && gesture == _gesture && mounted && _activeTool != DrawTool.laser) {
+        _leftDownSent = true;
+        widget.onSendCommand('LEFT_DOWN');
       }
     });
     HapticFeedback.mediumImpact();
@@ -75,41 +88,51 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
   void _onPointerMove(PointerMoveEvent event) {
     if (!_isDrawActive) return;
 
-    _pendingDx += event.delta.dx * widget.sensitivity;
-    _pendingDy += event.delta.dy * widget.sensitivity;
-
-    _throttler.throttle(() {
-      if (!mounted) return;
-      if (_pendingDx == 0 && _pendingDy == 0) return;
-
-      widget.onSendTouchOrLaser(
-        (_activeTool == DrawTool.laser) ? 'LASER' : 'TOUCH',
-        _pendingDx,
-        _pendingDy,
-      );
-
-      _pendingDx = 0;
-      _pendingDy = 0;
-    });
+    _pending.add(event.delta.dx * widget.sensitivity, event.delta.dy * widget.sensitivity);
+    // Send at once when idle, then at most every 16 ms until drained.
+    if (_sendTimer == null) _sendNext();
   }
 
-  void _onPointerUp(PointerUpEvent event) {
-    final now = DateTime.now();
-    _lastPointerUpTime = now;
-    _lastPointerUpPosition = event.localPosition;
+  void _sendNext() {
+    final step = mounted ? _pending.take() : null;
+    if (step == null) {
+      _sendTimer = null;
+      return;
+    }
+    widget.onSendTouchOrLaser(_moveType, step.$1, step.$2);
+    _sendTimer = Timer(_sendInterval, _sendNext);
+  }
+
+  void _endGesture(Offset position) {
+    _lastPointerUpTime = DateTime.now();
+    _lastPointerUpPosition = position;
 
     if (_isDrawActive) {
+      // Deliver the rest of the motion before the button goes up.
+      _sendTimer?.cancel();
+      _sendTimer = null;
+      for (var step = _pending.take(); step != null; step = _pending.take()) {
+        widget.onSendTouchOrLaser(_moveType, step.$1, step.$2);
+      }
+
       if (_activeTool == DrawTool.laser) {
         widget.onSendCommand('LASER_OFF');
-      } else {
+      } else if (_leftDownSent) {
         widget.onSendCommand('LEFT_UP');
       }
       widget.onSendCommand('MODE_ARROW');
     }
 
     _isDrawActive = false;
+    _leftDownSent = false;
     setState(() {});
   }
+
+  void _onPointerUp(PointerUpEvent event) => _endGesture(event.localPosition);
+
+  // A touch taken over by the system (notification shade, incoming call) ends
+  // with a cancel instead of an up; without this the PC keeps the button down.
+  void _onPointerCancel(PointerCancelEvent event) => _endGesture(event.localPosition);
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +160,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
       onPointerDown: _onPointerDown,
       onPointerMove: _onPointerMove,
       onPointerUp: _onPointerUp,
+      onPointerCancel: _onPointerCancel,
       child: Stack(
         fit: StackFit.expand,
         children: [

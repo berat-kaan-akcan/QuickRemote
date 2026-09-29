@@ -19,7 +19,6 @@ class NetworkManager {
 
   static Future<SecurityContext> loadOrGenerateCert() => _impl.loadOrGenerateCert();
   static Future<bool> checkNetworkProfile() => _impl.checkNetworkProfile();
-  static Future<bool> setNetworkProfilePrivate() => _impl.setNetworkProfilePrivate();
   static Future<void> openNetworkSettings() => _impl.openNetworkSettings();
   static Future<FirewallStatus> checkFirewall(int port) => _impl.checkFirewall(port);
   static Future<bool> openFirewallPorts() => _impl.openFirewallPorts();

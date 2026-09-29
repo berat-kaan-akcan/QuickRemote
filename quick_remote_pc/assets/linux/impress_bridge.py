@@ -4,16 +4,41 @@
 Reads one JSON request per line from stdin and writes one JSON reply per line
 to stdout:  {"id": 1, "cmd": "next"}  ->  {"id": 1, "ok": true}
 Requests with "noreply": true get no answer (used for high-frequency pointer
-updates). LibreOffice must accept UNO connections on the given port
-(ooSetupConnectionURL or `soffice --accept=socket,host=localhost,port=N;urp;`).
+updates).
+
+The argument is the name of the UNO pipe LibreOffice accepts connections on
+(ooSetupConnectionURL or `soffice --accept=pipe,name=NAME;urp;`). A pipe is a
+Unix socket only its owner can connect to; a TCP listener would let every
+local user and sandboxed app run code through LibreOffice. A numeric argument
+selects a localhost TCP port instead, for manual testing only.
 """
 import json
 import os
+import stat
 import sys
 import threading
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 2002
-URL = "uno:socket,host=localhost,port=%d;urp;StarOffice.ComponentContext" % PORT
+TARGET = sys.argv[1] if len(sys.argv) > 1 else "quickremote"
+if TARGET.isdigit():
+    PIPE_NAME = None
+    URL = "uno:socket,host=localhost,port=%s;urp;StarOffice.ComponentContext" % TARGET
+else:
+    PIPE_NAME = TARGET
+    URL = "uno:pipe,name=%s;urp;StarOffice.ComponentContext" % TARGET
+
+
+def pipe_is_trusted():
+    """LibreOffice creates the pipe as /tmp/OSL_PIPE_<uid>_<name> (or under
+    /var/tmp). Refuse a socket at that path that another user created first:
+    it would impersonate LibreOffice."""
+    uid = os.getuid()
+    for base in ("/tmp", "/var/tmp"):
+        try:
+            st = os.lstat("%s/OSL_PIPE_%d_%s" % (base, uid, PIPE_NAME))
+        except FileNotFoundError:
+            continue
+        return stat.S_ISSOCK(st.st_mode) and st.st_uid == uid
+    return True  # not there yet: resolve() fails with NO_CONNECTION
 
 try:
     import uno
@@ -77,6 +102,8 @@ class Impress:
     def connect(self):
         if self.desktop is not None:
             return
+        if PIPE_NAME is not None and not pipe_is_trusted():
+            raise BridgeError("UNTRUSTED_PIPE")
         local = uno.getComponentContext()
         resolver = local.ServiceManager.createInstanceWithContext(
             "com.sun.star.bridge.UnoUrlResolver", local)

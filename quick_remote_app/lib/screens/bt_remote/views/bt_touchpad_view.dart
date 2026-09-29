@@ -221,6 +221,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
       onPointerDown: _onPointerDown,
       onPointerMove: _onPointerMove,
       onPointerUp: _onPointerUp,
+      onPointerCancel: _onPointerCancel,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
@@ -355,6 +356,10 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   /// Whether the HID left mouse button is currently held down (for drawing).
   bool _isLeftButtonHeld = false;
 
+  /// Identifies the current touch, so a delayed button press from an earlier,
+  /// already finished touch is never sent.
+  int _gesture = 0;
+
   void _onPointerDown(PointerDownEvent event) {
     final now = DateTime.now();
     final pos = event.localPosition;
@@ -366,6 +371,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
 
     _isDrawActive = true;
     _activeTool = isDoubleTap ? _selectedTool : DrawTool.laser;
+    final gesture = ++_gesture;
 
     // Reset pending deltas
     _pendingDx = 0;
@@ -383,7 +389,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     // (WiFi'daki LEFT_DOWN davranışı — buton basılı kalır)
     if (_activeTool != DrawTool.laser) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        if (_isDrawActive && mounted) {
+        if (_isDrawActive && gesture == _gesture && mounted) {
           _isLeftButtonHeld = true;
           widget.bt.sendMouseDown(button: 1);
         }
@@ -438,9 +444,15 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     }
   }
 
-  void _onPointerUp(PointerUpEvent event) {
+  void _onPointerUp(PointerUpEvent event) => _endGesture(event.localPosition);
+
+  // A touch taken over by the system (notification shade, incoming call) ends
+  // with a cancel instead of an up; without this the PC keeps the button down.
+  void _onPointerCancel(PointerCancelEvent event) => _endGesture(event.localPosition);
+
+  void _endGesture(Offset position) {
     _lastPointerUpTime = DateTime.now();
-    _lastPointerUpPosition = event.localPosition;
+    _lastPointerUpPosition = position;
 
     // Flush any remaining deltas immediately
     _throttleTimer?.cancel();

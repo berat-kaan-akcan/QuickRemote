@@ -3,13 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dart:math';
+import '../../powershell_runner.dart';
 import 'platform_network.dart';
 
 class WindowsNetwork implements PlatformNetwork {
   @override
   Future<String> getLocalIP() async {
     try {
-      final result = await Process.run('powershell', [
+      final result = await Process.run(PowerShellRunner.executable, [
         '-NoProfile',
         '-NonInteractive',
         '-Command',
@@ -67,7 +68,7 @@ Export-PfxCertificate -Cert \$cert -FilePath "$certPath" -Password \$pwd -ErrorA
 Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction Stop
 ''';
 
-      final res = await Process.run('powershell', ['-NoProfile', '-NonInteractive', '-Command', script]);
+      final res = await Process.run(PowerShellRunner.executable, ['-NoProfile', '-NonInteractive', '-Command', script]);
       if (res.exitCode != 0 || !file.existsSync()) {
         throw Exception('Failed to generate TLS certificate via PowerShell: ${res.stderr}');
       }
@@ -86,7 +87,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
   @override
   Future<bool> checkNetworkProfile() async {
     try {
-      final result = await Process.run('powershell', [
+      final result = await Process.run(PowerShellRunner.executable, [
         '-NoProfile',
         '-NonInteractive',
         '-Command',
@@ -97,48 +98,6 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
       return output.toLowerCase() == 'public';
     } catch (e) {
       debugPrint('Failed to check network profile: $e');
-      return false;
-    }
-  }
-
-  Future<String?> getActiveInterfaceAlias() async {
-    try {
-      final result = await Process.run('powershell', [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        r'(Get-NetConnectionProfile | Where-Object {$_.IPv4Connectivity -ne "Disconnected"} | Select-Object -First 1).InterfaceAlias',
-      ]);
-      final output = (result.stdout as String).trim();
-      return output.isNotEmpty ? output : null;
-    } catch (e) {
-      debugPrint('Failed to get interface alias: $e');
-      return null;
-    }
-  }
-
-  @override
-  Future<bool> setNetworkProfilePrivate() async {
-    try {
-      final alias = await getActiveInterfaceAlias();
-      if (alias == null) return false;
-
-      final result = await Process.run('powershell', [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        'Set-NetConnectionProfile -InterfaceAlias "$alias" -NetworkCategory Private',
-      ]);
-
-      if (result.exitCode == 0) {
-        debugPrint('Network profile set to Private for $alias');
-        return true;
-      } else {
-        debugPrint('Failed to set network profile: ${result.stderr}');
-        return false;
-      }
-    } catch (e) {
-      debugPrint('Error setting network profile: $e');
       return false;
     }
   }

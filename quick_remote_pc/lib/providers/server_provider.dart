@@ -1,6 +1,4 @@
-import 'dart:async';
-import 'dart:ui' as ui;
-import 'package:flutter/material.dart' hide Size;
+import 'package:flutter/material.dart';
 import '../services/websocket_server.dart';
 
 /// Provider wrapper for WebSocketServer so it can notify listeners.
@@ -12,16 +10,11 @@ class WebSocketServerProvider extends ChangeNotifier {
   int _clientCount = 0;
   String _lastCommand = '';
   bool _laserActive = false;
-  double _laserX = 0;
-  double _laserY = 0;
   String _pin = '';
   bool _isPublicNetwork = false;
   String? _startError;
   bool _mdnsAvailable = true;
-
-  /// Stream controller for laser position updates (used by LaserOverlay).
-  final StreamController<ui.Offset> _laserPositionController =
-      StreamController<ui.Offset>.broadcast();
+  String? _certFingerprint;
 
   String get localIP => _localIP;
   bool get isRunning => _isRunning;
@@ -30,13 +23,11 @@ class WebSocketServerProvider extends ChangeNotifier {
   String get lastCommand => _lastCommand;
   int get port => server.port;
   bool get laserActive => _laserActive;
-  double get laserX => _laserX;
-  double get laserY => _laserY;
   String get pin => _pin;
   bool get publicNetwork => _isPublicNetwork;
   String? get startError => _startError;
   bool get mdnsAvailable => _mdnsAvailable;
-  Stream<ui.Offset> get laserPositionStream => _laserPositionController.stream;
+  String? get certFingerprint => _certFingerprint;
 
   WebSocketServerProvider() {
     server.isRunning.addListener(_onRunningChanged);
@@ -48,7 +39,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.localIP.addListener(_onLocalIPChanged);
     server.startError.addListener(_onStartErrorChanged);
     server.mdnsAvailable.addListener(_onMdnsChanged);
-    server.onMouseMove = _onMouseMove;
+    server.certFingerprint.addListener(_onCertFingerprintChanged);
     _init();
   }
 
@@ -102,13 +93,8 @@ class WebSocketServerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _onMouseMove(double x, double y) {
-    _laserX = x;
-    _laserY = y;
-    // Feed laser position stream for the overlay trail
-    if (_laserActive) {
-      _laserPositionController.add(ui.Offset(x, y));
-    }
+  void _onCertFingerprintChanged() {
+    _certFingerprint = server.certFingerprint.value;
     notifyListeners();
   }
 
@@ -144,8 +130,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.localIP.removeListener(_onLocalIPChanged);
     server.startError.removeListener(_onStartErrorChanged);
     server.mdnsAvailable.removeListener(_onMdnsChanged);
-    server.onMouseMove = null;
-    _laserPositionController.close();
+    server.certFingerprint.removeListener(_onCertFingerprintChanged);
     server.stop();
     super.dispose();
   }

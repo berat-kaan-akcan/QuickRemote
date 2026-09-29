@@ -24,6 +24,13 @@ class PowerShellRunner {
   static final PowerShellRunner _commandRunner = PowerShellRunner('Command');
   static final PowerShellRunner _pollingRunner = PowerShellRunner('Polling');
 
+  /// Absolute path, so a `powershell.exe` placed in the app or working
+  /// directory is never picked up through the executable search order.
+  static String get executable {
+    final root = Platform.environment['SystemRoot'] ?? r'C:\Windows';
+    return '$root\\System32\\WindowsPowerShell\\v1.0\\powershell.exe';
+  }
+
   static Future<String> execute(String script, {bool isPolling = false}) {
     if (isPolling) {
       return _pollingRunner._executeInternal(script);
@@ -45,29 +52,39 @@ class PowerShellRunner {
 
     _isStarting = true;
     try {
-      _process = await Process.start('powershell', [
+      final process = await Process.start(executable, [
         '-NoProfile',
         '-NonInteractive',
         '-Command',
         '-',
       ]);
+      _process = process;
 
-      _process!.stdin.writeln('[Console]::OutputEncoding = [System.Text.Encoding]::UTF8');
+      process.stdin.writeln('[Console]::OutputEncoding = [System.Text.Encoding]::UTF8');
 
-      _process!.exitCode.then((code) {
+      process.exitCode.then((code) {
         debugPrint('PowerShell process [$name] exited with code $code');
+        // A process killed after a timeout exits after its replacement has
+        // started; it must not touch the new process or the job it runs.
+        if (!identical(_process, process)) return;
         _process = null;
-        if (_currentCompleter != null && !_currentCompleter!.isCompleted) {
-          _currentCompleter!.complete('');
-          _currentCompleter = null;
-        }
+        // No job in flight: the next _processNext starts a new process.
+        final current = _currentCompleter;
+        if (current == null) return;
+        // The process died mid-job: fail that job and keep the queue moving.
+        _executionTimeout?.cancel();
+        if (!current.isCompleted) current.complete('');
+        _currentCompleter = null;
         _currentOutput.clear();
+        _isProcessing = false;
+        _processNext();
       });
 
-      _process!.stdout
+      process.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen((line) {
+            if (!identical(_process, process)) return;
             if (line.trim() == '___PS_DONE___') {
               _executionTimeout?.cancel();
               if (_currentCompleter != null &&
@@ -82,7 +99,7 @@ class PowerShellRunner {
             }
           });
 
-      _process!.stderr
+      process.stderr
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen((line) {
@@ -106,17 +123,16 @@ class PowerShellRunner {
 
   void _killProcessAndReset() {
     _executionTimeout?.cancel();
-    if (_process != null) {
-      _process!.kill(ProcessSignal.sigkill);
-      _process = null;
-    }
+    final process = _process;
+    _process = null;
+    process?.kill(ProcessSignal.sigkill);
     if (_currentCompleter != null && !_currentCompleter!.isCompleted) {
       debugPrint('PowerShell runner [$name] completing with timeout empty string');
       _currentCompleter!.complete('');
-      _currentCompleter = null;
     }
+    _currentCompleter = null;
     _currentOutput.clear();
-    
+
     _isProcessing = false;
     _processNext();
   }
@@ -129,7 +145,8 @@ class PowerShellRunner {
     _isProcessing = true;
     await _ensureProcess();
 
-    if (_process == null) {
+    final process = _process;
+    if (process == null) {
       final job = _jobQueue.removeAt(0);
       job.completer.complete('');
       _processNext();
@@ -146,17 +163,16 @@ class PowerShellRunner {
         _killProcessAndReset();
       });
 
-      _process!.stdin.writeln(job.script);
-      _process!.stdin.writeln('Write-Output "___PS_DONE___"');
+      process.stdin.writeln(job.script);
+      process.stdin.writeln('Write-Output "___PS_DONE___"');
     } catch (e) {
       debugPrint('PowerShell stdin error in [$name]: $e');
       _executionTimeout?.cancel();
       _process = null;
-      if (_currentCompleter != null && !_currentCompleter!.isCompleted) {
-        _currentCompleter = null;
-      }
+      process.kill(ProcessSignal.sigkill);
+      _currentCompleter = null;
       _currentOutput.clear();
-      // Retry the job
+      // Retry the job on a fresh process
       _jobQueue.insert(0, job);
       _isProcessing = false;
       _processNext();
