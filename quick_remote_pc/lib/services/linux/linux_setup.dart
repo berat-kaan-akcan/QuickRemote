@@ -148,7 +148,11 @@ udevadm settle
       final file = _registryFile;
       final current = file.existsSync() ? file.readAsStringSync() : null;
       if (current != null) {
-        await File('${file.path}.quickremote.bak').writeAsString(current);
+        // copy() keeps the profile's owner-only mode; writeAsString would
+        // create the backup world-readable. It only applies to a new file.
+        final backup = File('${file.path}.quickremote.bak');
+        if (backup.existsSync()) await backup.delete();
+        await file.copy(backup.path);
       } else {
         await file.parent.create(recursive: true);
       }

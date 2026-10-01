@@ -82,7 +82,7 @@ class _RunningDashboardState extends State<RunningDashboard> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         NetworkStatusBanner(
-          isPublic: provider.publicNetwork,
+          trust: provider.networkTrust,
           server: provider.server,
         ),
         const SizedBox(height: 8),
