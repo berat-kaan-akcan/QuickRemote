@@ -1,26 +1,38 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../../../services/server/network_manager.dart';
 import '../../../../services/websocket_server.dart';
 import '../../../../widgets/hover_scale.dart';
 
 class NetworkStatusBanner extends StatelessWidget {
-  final bool isPublic;
+  final NetworkTrust trust;
   final WebSocketServer server;
 
   const NetworkStatusBanner({
     super.key,
-    required this.isPublic,
+    required this.trust,
     required this.server,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = isPublic ? const Color(0xFFFF9800) : const Color(0xFF4CAF50);
-    final icon = isPublic ? Icons.wifi_tethering_rounded : Icons.shield_rounded;
-    // Linux has no network profiles; "public" means an untrusted firewalld zone.
+    final (color, icon) = switch (trust) {
+      NetworkTrust.trusted => (const Color(0xFF4CAF50), Icons.shield_rounded),
+      NetworkTrust.untrusted => (const Color(0xFFFF9800), Icons.wifi_tethering_rounded),
+      NetworkTrust.unknown => (const Color(0xFF90A4AE), Icons.help_outline_rounded),
+    };
+    // Linux has no network profiles; the trust level is the firewalld zone.
     final text = Platform.isLinux
-        ? (isPublic ? 'Güvenilmeyen Ağ (firewalld)' : 'Yerel Ağ')
-        : (isPublic ? 'Ortak Ağ (Public)' : 'Güvenli Ağ (Private)');
+        ? switch (trust) {
+            NetworkTrust.trusted => 'Yerel Ağ',
+            NetworkTrust.untrusted => 'Güvenilmeyen Ağ (firewalld)',
+            NetworkTrust.unknown => 'Ağ türü bilinmiyor (firewalld yok)',
+          }
+        : switch (trust) {
+            NetworkTrust.trusted => 'Güvenli Ağ (Private)',
+            NetworkTrust.untrusted => 'Ortak Ağ (Public)',
+            NetworkTrust.unknown => 'Ağ türü okunamadı',
+          };
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -35,7 +47,7 @@ class NetworkStatusBanner extends StatelessWidget {
         children: [
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
-            child: Icon(icon, key: ValueKey(isPublic), color: color, size: 20),
+            child: Icon(icon, key: ValueKey(trust), color: color, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -52,7 +64,7 @@ class NetworkStatusBanner extends StatelessWidget {
               ),
             ),
           ),
-          if (isPublic) ...[
+          if (trust == NetworkTrust.untrusted) ...[
             HoverScale(
               scale: 1.1,
               onTap: () => server.openNetworkSettings(),

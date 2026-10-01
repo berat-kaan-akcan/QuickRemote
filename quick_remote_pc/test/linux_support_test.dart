@@ -6,6 +6,7 @@ import 'package:quick_remote_pc/services/input/linux/mpris_controller.dart';
 import 'package:quick_remote_pc/services/input/linux/pactl_volume.dart';
 import 'package:quick_remote_pc/services/linux/linux_setup.dart';
 import 'package:quick_remote_pc/services/server/network/linux_network.dart';
+import 'package:quick_remote_pc/services/server/network/platform_network.dart';
 
 void main() {
   group('CommandRouter.parseIntArg', () {
@@ -131,6 +132,24 @@ void main() {
     expect(route.dev, 'wlan0');
     expect(route.src, '192.168.1.177');
     expect(LinuxNetwork.parseRoute('').src, isNull);
+  });
+
+  test('LinuxNetwork.zoneAllowsPort reads firewalld zone files', () {
+    const open = '<zone>\n  <service name="ssh"/>\n  <port port="8090-8099" protocol="tcp"/>\n</zone>';
+    expect(LinuxNetwork.zoneAllowsPort(open, 8090), isTrue);
+    expect(LinuxNetwork.zoneAllowsPort(open, 8099), isTrue);
+    expect(LinuxNetwork.zoneAllowsPort(open, 8100), isFalse);
+    expect(LinuxNetwork.zoneAllowsPort('<zone><port protocol="tcp" port="8091"/></zone>', 8091), isTrue);
+    expect(LinuxNetwork.zoneAllowsPort('<zone><port port="8090" protocol="udp"/></zone>', 8090), isFalse);
+    expect(LinuxNetwork.zoneAllowsPort('<zone target="ACCEPT"></zone>', 8090), isTrue);
+    expect(LinuxNetwork.zoneAllowsPort('<zone><service name="ssh"/></zone>', 8090), isFalse);
+  });
+
+  test('LinuxNetwork.trustOfZone maps firewalld zones', () {
+    expect(LinuxNetwork.trustOfZone('public'), NetworkTrust.untrusted);
+    expect(LinuxNetwork.trustOfZone('drop'), NetworkTrust.untrusted);
+    expect(LinuxNetwork.trustOfZone('home'), NetworkTrust.trusted);
+    expect(LinuxNetwork.trustOfZone(null), NetworkTrust.unknown);
   });
 
   group('LinuxSetup.applyRegistryItem', () {

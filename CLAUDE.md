@@ -66,6 +66,9 @@ The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' |
 - Impress bridge gotchas:
   - Every UNO call runs on LibreOffice's main thread through `com.sun.star.awt.AsyncCallback`. Calling slideshow APIs from the remote UNO thread deadlocks LibreOffice under the Qt/KDE VCL plugin.
   - The laser, eraser and pen modes use `XSlideShow.setProperty` (`PointerVisible`, `PointerPosition`, `SwitchEraserMode`, `SwitchPenMode`), not `XSlideShowController`.
+  - Only the newest waiting `pointer` update is applied, and the running show is cached (looking it up walks every open component, ~20 ms). A queue of pointer updates used to delay the laser and the next mode switch (pen) by seconds.
+  - `XPresentation.start()` begins at the slide selected in the editor. START passes `FirstPage` (a custom show uses `start()`), as LibreOffice's F5 does.
+  - `XSlideShow.startShapeActivity` is not implemented in LibreOffice. For media control the bridge adds animation triggers to media shapes (click: TOGGLEPAUSE, double click: PLAY then pause), marked with the `quickremote-media` UserData and removed when the show ends, and clicks the shape through `XToolkitRobot` in the `FullScreenPresentation` frame. The slideshow reads a slide's animations when it loads or prefetches the slide, so triggers go to the next few slides ahead of the show; a slide loaded without them is shown again on the first media command (`MEDIA_RELOADED`).
   - Presentation commands fall back to key presses when no Impress slideshow is reachable.
 - The Linux server still reports "not running" as `STATUS: POWERPOINT_NOT_RUNNING` for protocol compatibility. The `auth` ok reply carries `presenter` (`powerpoint`/`impress`), which the mobile app uses for its texts.
 

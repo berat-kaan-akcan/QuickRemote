@@ -24,7 +24,7 @@ class WebSocketServer {
   final ValueNotifier<bool> laserActive = ValueNotifier(false);
   final ValueNotifier<String> pin = ValueNotifier('');
   final ValueNotifier<String> localIP = ValueNotifier('');
-  final ValueNotifier<bool> isPublicNetwork = ValueNotifier(false);
+  final ValueNotifier<NetworkTrust> networkTrust = ValueNotifier(NetworkTrust.unknown);
   /// Why the last start() failed (null when it succeeded).
   final ValueNotifier<String?> startError = ValueNotifier(null);
   /// Whether the mDNS advertisement succeeded (auto-discovery on the phone).
@@ -98,7 +98,7 @@ class WebSocketServer {
     startError.value = null;
     pin.value = _authManager.generatePin();
 
-    isPublicNetwork.value = await NetworkManager.checkNetworkProfile();
+    networkTrust.value = await NetworkManager.checkNetworkProfile();
     _startNetworkMonitor();
 
     try {
@@ -541,10 +541,10 @@ class WebSocketServer {
         _networkProfileTick++;
         if (_networkProfileTick >= 6) {
           _networkProfileTick = 0;
-          final isPublic = await NetworkManager.checkNetworkProfile();
-          if (isPublic != isPublicNetwork.value) {
-            debugPrint('Network profile changed: ${isPublicNetwork.value ? "Public" : "Private"} → ${isPublic ? "Public" : "Private"}');
-            isPublicNetwork.value = isPublic;
+          final trust = await NetworkManager.checkNetworkProfile();
+          if (trust != networkTrust.value) {
+            debugPrint('Network profile changed: ${networkTrust.value.name} → ${trust.name}');
+            networkTrust.value = trust;
           }
         }
       },

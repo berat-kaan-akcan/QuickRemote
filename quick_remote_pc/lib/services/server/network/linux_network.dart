@@ -78,8 +78,10 @@ class LinuxNetwork implements PlatformNetwork {
 
   // ── firewalld / ufw ──
 
+  // Not `firewall-cmd --state`: that asks polkit for admin auth on some
+  // distros (Arch), which would pop a password dialog on every poll.
   Future<bool> _firewalldActive() async {
-    final result = await _run('firewall-cmd', ['--state']);
+    final result = await _run('systemctl', ['is-active', '--quiet', 'firewalld']);
     return result != null && result.exitCode == 0;
   }
 
@@ -102,10 +104,17 @@ class LinuxNetwork implements PlatformNetwork {
   }
 
   @override
-  Future<bool> checkNetworkProfile() async {
-    if (!await _firewalldActive()) return false;
-    final zone = await _activeZone();
-    return zone != null && _untrustedZones.contains(zone);
+  Future<NetworkTrust> checkNetworkProfile() async {
+    if (!await _firewalldActive()) return NetworkTrust.unknown;
+    return trustOfZone(await _activeZone());
+  }
+
+  /// Without firewalld (or a readable zone) Linux has no notion of a trusted
+  /// network, so that is reported as unknown rather than as safe.
+  @visibleForTesting
+  static NetworkTrust trustOfZone(String? zone) {
+    if (zone == null) return NetworkTrust.unknown;
+    return _untrustedZones.contains(zone) ? NetworkTrust.untrusted : NetworkTrust.trusted;
   }
 
   @override
@@ -132,19 +141,46 @@ class LinuxNetwork implements PlatformNetwork {
     if (await _firewalldActive()) {
       final zone = await _activeZone();
       if (zone == null) return FirewallStatus.unknown;
-      final target = await _run('firewall-cmd', ['--permanent', '--zone=$zone', '--get-target']);
-      if ((target?.stdout as String?)?.trim() == 'ACCEPT') return FirewallStatus.open;
-      final range = await _run('firewall-cmd', [
-        '--zone=$zone',
-        '--query-port=${PlatformNetwork.serverPortFirst}-${PlatformNetwork.serverPortLast}/tcp',
-      ]);
-      if (range?.exitCode == 0) return FirewallStatus.open;
-      final single = await _run('firewall-cmd', ['--zone=$zone', '--query-port=$port/tcp']);
-      return single?.exitCode == 0 ? FirewallStatus.open : FirewallStatus.blocked;
+      // firewall-cmd --query-port and --permanent need polkit admin auth on
+      // most distros, which would pop a password dialog on every poll. The
+      // zone files are world-readable; the user's copy in /etc overrides the
+      // default in /usr/lib.
+      for (final dir in ['/etc/firewalld/zones', '/usr/lib/firewalld/zones']) {
+        final file = File('$dir/$zone.xml');
+        try {
+          if (!file.existsSync()) continue;
+          return zoneAllowsPort(file.readAsStringSync(), port)
+              ? FirewallStatus.open
+              : FirewallStatus.blocked;
+        } on FileSystemException {
+          return FirewallStatus.unknown;
+        }
+      }
+      return FirewallStatus.unknown;
     }
     // ufw rules can only be read as root.
     if (await _ufwActive()) return FirewallStatus.unknown;
     return FirewallStatus.open;
+  }
+
+  /// Whether a firewalld zone definition accepts TCP [port]: an ACCEPT target
+  /// or a `<port>` entry (single port or range) covering it.
+  @visibleForTesting
+  static bool zoneAllowsPort(String xml, int port) {
+    String? attr(String tag, String name) =>
+        RegExp('\\b$name\\s*=\\s*["\']([^"\']*)["\']').firstMatch(tag)?.group(1);
+
+    final zoneTag = RegExp(r'<zone\b[^>]*>').firstMatch(xml)?.group(0);
+    if (zoneTag != null && attr(zoneTag, 'target') == 'ACCEPT') return true;
+    for (final m in RegExp(r'<port\b[^>]*>').allMatches(xml)) {
+      final tag = m.group(0)!;
+      if (attr(tag, 'protocol') != 'tcp') continue;
+      final range = (attr(tag, 'port') ?? '').split('-');
+      final first = int.tryParse(range.first);
+      final last = range.length == 2 ? int.tryParse(range[1]) : first;
+      if (first != null && last != null && first <= port && port <= last) return true;
+    }
+    return false;
   }
 
   @override

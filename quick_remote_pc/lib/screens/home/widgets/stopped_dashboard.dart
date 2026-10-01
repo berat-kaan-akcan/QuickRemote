@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/server_provider.dart';
 import '../../../../widgets/hover_scale.dart';
+import '../../../../widgets/status_snack_bar.dart';
 
 class StoppedDashboard extends StatelessWidget {
   const StoppedDashboard({super.key});
@@ -20,16 +21,11 @@ class StoppedDashboard extends StatelessWidget {
                 await provider.startServer();
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text(
-                        'Sunucu başlatılamadı: Port kullanımda. Lütfen 8090-8099 portlarını kullanan uygulamaları kapatıp tekrar deneyin.',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: Colors.red.shade700,
-                      duration: const Duration(seconds: 5),
-                      behavior: SnackBarBehavior.floating,
-                    ),
+                  showStatusSnackBar(
+                    context,
+                    'Sunucu başlatılamadı: Port kullanımda. Lütfen 8090-8099 portlarını kullanan uygulamaları kapatıp tekrar deneyin.',
+                    kind: StatusKind.error,
+                    duration: const Duration(seconds: 5),
                   );
                 }
                 return;
@@ -37,32 +33,21 @@ class StoppedDashboard extends StatelessWidget {
               final startError = provider.startError;
               if (startError != null) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Sunucu başlatılamadı: $startError',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: Colors.red.shade700,
-                      duration: const Duration(seconds: 6),
-                      behavior: SnackBarBehavior.floating,
-                    ),
+                  showStatusSnackBar(
+                    context,
+                    'Sunucu başlatılamadı: $startError',
+                    kind: StatusKind.error,
+                    duration: const Duration(seconds: 6),
                   );
                 }
                 return;
               }
               final actualPort = provider.server.port;
               if (actualPort != 8090 && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Port 8090 kullanımda olduğu için sunucu $actualPort portunda başlatıldı.',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    backgroundColor: Colors.orange.shade700,
-                    duration: const Duration(seconds: 4),
-                    behavior: SnackBarBehavior.floating,
-                  ),
+                showStatusSnackBar(
+                  context,
+                  'Port 8090 kullanımda olduğu için sunucu $actualPort portunda başlatıldı.',
+                  kind: StatusKind.warning,
                 );
               }
             },
