@@ -4,6 +4,7 @@ import '../../../../providers/server_provider.dart';
 import '../../../../services/linux/linux_setup.dart';
 import '../../../../services/server/network_manager.dart';
 import '../../../../widgets/hover_scale.dart';
+import '../../../../widgets/status_snack_bar.dart';
 
 /// Linux-only status rows: input permission, Impress connection, mDNS and
 /// firewall. Each problem comes with a one-click fix where possible.
@@ -28,6 +29,8 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
   ImpressStatus? _impress;
   FirewallStatus _firewall = FirewallStatus.open;
   bool _busy = false;
+  /// The blocked-ports dialog is shown once per server run.
+  bool _firewallWarned = false;
 
   @override
   void initState() {
@@ -54,6 +57,58 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
       _impress = impress;
       _firewall = firewall;
     });
+    if (!widget.provider.isRunning) {
+      _firewallWarned = false;
+    } else if (firewall == FirewallStatus.blocked && !_firewallWarned) {
+      _firewallWarned = true;
+      _showFirewallDialog();
+    }
+  }
+
+  Future<void> _openPorts() => _run(
+        NetworkManager.openFirewallPorts,
+        'Güvenlik duvarında portlar açıldı.',
+        'Portlar açılamadı.',
+      );
+
+  Future<void> _showFirewallDialog() async {
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: const Icon(Icons.security_rounded, color: _orange, size: 48),
+        title: const Text(
+          'Portları Açmanız Gerekiyor',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Güvenlik duvarı (firewalld) telefonun bu bilgisayara bağlanmasını '
+          'engelliyor. Uygulamayı kullanmak için 8090-8099 portlarını açmalısınız.\n\n'
+          'Portlar bu ağ bölgesinde kalıcı olarak açılır. Yönetici parolanız '
+          'bir kez sorulacak.',
+          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Daha Sonra', style: TextStyle(color: Colors.white54)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: _orange,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text(
+              'Portları Aç',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (open == true && mounted) await _openPorts();
   }
 
   Future<void> _run(Future<bool> Function() action, String success, String failure) async {
@@ -62,13 +117,10 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
     final ok = await action();
     if (!mounted) return;
     setState(() => _busy = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(ok ? success : failure, style: const TextStyle(color: Colors.white)),
-        backgroundColor: ok ? Colors.green.shade700 : Colors.red.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 4),
-      ),
+    showStatusSnackBar(
+      context,
+      ok ? success : failure,
+      kind: ok ? StatusKind.success : StatusKind.error,
     );
     _refresh();
   }
@@ -100,14 +152,10 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
           Icons.security_rounded,
           _orange,
           _firewall == FirewallStatus.blocked
-              ? 'Güvenlik duvarı bağlantıları engelliyor'
-              : 'ufw etkin: 8090-8099 portları açık olmalı',
+              ? 'Güvenlik duvarı telefonun bağlanmasını engelliyor. Kullanmak için portları açın.'
+              : 'Güvenlik duvarı kuralları okunamadı: 8090-8099 portları açık olmalı',
           action: 'Portları aç',
-          onTap: () => _run(
-            NetworkManager.openFirewallPorts,
-            'Güvenlik duvarında portlar açıldı.',
-            'Portlar açılamadı.',
-          ),
+          onTap: _openPorts,
         ),
     ];
     if (rows.isEmpty) return const SizedBox.shrink();

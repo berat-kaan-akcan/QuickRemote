@@ -85,7 +85,7 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
   }
 
   @override
-  Future<bool> checkNetworkProfile() async {
+  Future<NetworkTrust> checkNetworkProfile() async {
     try {
       final result = await Process.run(PowerShellRunner.executable, [
         '-NoProfile',
@@ -95,10 +95,14 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
       ]);
       final output = (result.stdout as String).trim();
       debugPrint('Network profile: $output');
-      return output.toLowerCase() == 'public';
+      return switch (output.toLowerCase()) {
+        'public' => NetworkTrust.untrusted,
+        'private' || 'domainauthenticated' => NetworkTrust.trusted,
+        _ => NetworkTrust.unknown,
+      };
     } catch (e) {
       debugPrint('Failed to check network profile: $e');
-      return false;
+      return NetworkTrust.unknown;
     }
   }
 

@@ -23,7 +23,6 @@ class LinuxInputService implements InputService {
   final PactlVolume _volume = PactlVolume();
 
   bool _laserViaImpress = false;
-  int _lastPointerSendMs = 0;
 
   @override
   void Function(String detail)? onCommandError;
@@ -55,6 +54,10 @@ class LinuxInputService implements InputService {
     if (error == 'NO_CONNECTION') return 'LibreOffice Impress\'e bağlanılamadı.';
     if (error == 'NO_UNO' || error == 'NO_PYTHON') return 'LibreOffice Python (UNO) desteği bulunamadı.';
     if (error == 'UNTRUSTED_PIPE') return 'LibreOffice bağlantı soketi başka bir kullanıcıya ait; bağlanılmadı.';
+    if (error == 'MEDIA_RELOADED') return 'Slayt yeniden yüklendi, video baştan başladı. Kontrol için tekrar deneyin.';
+    if (error == 'NO_MEDIA_TRIGGER') return 'Bu slayttaki medya kumandadan kontrol edilemiyor.';
+    if (error == 'MEDIA_NEEDS_FULLSCREEN') return 'Slayt medyası yalnızca tam ekran slayt gösterisinde kontrol edilebilir.';
+    if (error == 'SCREEN_BLANKED') return 'Ekran karartılmışken slayt medyası kontrol edilemez.';
     return 'Impress komutu başarısız: $error';
   }
 
@@ -155,9 +158,14 @@ class LinuxInputService implements InputService {
 
   @override
   Future<void> modeLaser() async {
+    // Route the motion to Impress at once: the bridge handles laserOn before
+    // any pointer update sent after it. Waiting for the reply would move the
+    // real cursor meanwhile.
+    _laserViaImpress = true;
     final reply = await _impress.request('laserOn');
-    _laserViaImpress = reply['ok'] == true;
-    if (!_laserViaImpress) onCommandError?.call(_describeError('${reply['error']}'));
+    if (reply['ok'] == true) return;
+    _laserViaImpress = false;
+    onCommandError?.call(_describeError('${reply['error']}'));
   }
 
   void _setMode(String cmd) {
@@ -170,10 +178,8 @@ class LinuxInputService implements InputService {
 
   @override
   void laserPointerMoved(double relX, double relY) {
-    // ~60 Hz is plenty for a pointer dot and keeps LibreOffice's main loop free.
-    final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - _lastPointerSendMs < 16) return;
-    _lastPointerSendMs = now;
+    // No throttling here: the bridge applies only the newest waiting
+    // position, and dropping updates would lose the final one.
     _impress.send('pointer', {'x': relX, 'y': relY});
   }
 

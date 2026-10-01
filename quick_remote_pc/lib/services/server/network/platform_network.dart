@@ -11,17 +11,30 @@ enum FirewallStatus {
   unknown,
 }
 
+/// How far the active network can be trusted, as the OS classifies it.
+enum NetworkTrust {
+  /// Windows "Private"/"Domain" profile, or a trusted firewalld zone.
+  trusted,
+
+  /// Windows "Public" profile, or an untrusted firewalld zone.
+  untrusted,
+
+  /// The OS has no classification: no firewalld on Linux, or the query failed.
+  unknown,
+}
+
 /// OS-specific networking: local IP, TLS certificate, network profile and firewall.
 abstract class PlatformNetwork {
   Future<String> getLocalIP();
   Future<SecurityContext> loadOrGenerateCert();
 
-  /// True when the active network is untrusted (Windows "Public" profile,
-  /// firewalld public/external zone on Linux).
+  /// How the OS classifies the active network (Windows network profile,
+  /// firewalld zone on Linux).
   ///
-  /// The app only warns about it. It deliberately never marks the network as
-  /// trusted itself: that would relax the firewall for the whole machine.
-  Future<bool> checkNetworkProfile();
+  /// The app only warns about untrusted networks. It deliberately never marks
+  /// the network as trusted itself: that would relax the firewall for the
+  /// whole machine.
+  Future<NetworkTrust> checkNetworkProfile();
   Future<void> openNetworkSettings();
 
   Future<FirewallStatus> checkFirewall(int port);

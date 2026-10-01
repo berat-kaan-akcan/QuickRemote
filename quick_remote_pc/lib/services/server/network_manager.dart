@@ -3,7 +3,7 @@ import 'network/linux_network.dart';
 import 'network/platform_network.dart';
 import 'network/windows_network.dart';
 
-export 'network/platform_network.dart' show FirewallStatus;
+export 'network/platform_network.dart' show FirewallStatus, NetworkTrust;
 
 /// Static facade over the platform [PlatformNetwork] implementation.
 class NetworkManager {
@@ -18,7 +18,7 @@ class NetworkManager {
   static void clearCachedIP() => _cachedIP = null;
 
   static Future<SecurityContext> loadOrGenerateCert() => _impl.loadOrGenerateCert();
-  static Future<bool> checkNetworkProfile() => _impl.checkNetworkProfile();
+  static Future<NetworkTrust> checkNetworkProfile() => _impl.checkNetworkProfile();
   static Future<void> openNetworkSettings() => _impl.openNetworkSettings();
   static Future<FirewallStatus> checkFirewall(int port) => _impl.checkFirewall(port);
   static Future<bool> openFirewallPorts() => _impl.openFirewallPorts();

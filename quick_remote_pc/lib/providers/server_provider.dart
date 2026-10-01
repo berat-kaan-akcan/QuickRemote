@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/server/network_manager.dart';
 import '../services/websocket_server.dart';
 
 /// Provider wrapper for WebSocketServer so it can notify listeners.
@@ -11,7 +12,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   String _lastCommand = '';
   bool _laserActive = false;
   String _pin = '';
-  bool _isPublicNetwork = false;
+  NetworkTrust _networkTrust = NetworkTrust.unknown;
   String? _startError;
   bool _mdnsAvailable = true;
   String? _certFingerprint;
@@ -24,7 +25,8 @@ class WebSocketServerProvider extends ChangeNotifier {
   int get port => server.port;
   bool get laserActive => _laserActive;
   String get pin => _pin;
-  bool get publicNetwork => _isPublicNetwork;
+  NetworkTrust get networkTrust => _networkTrust;
+  bool get publicNetwork => _networkTrust == NetworkTrust.untrusted;
   String? get startError => _startError;
   bool get mdnsAvailable => _mdnsAvailable;
   String? get certFingerprint => _certFingerprint;
@@ -35,7 +37,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.lastCommand.addListener(_onLastCommandChanged);
     server.laserActive.addListener(_onLaserChanged);
     server.pin.addListener(_onPinChanged);
-    server.isPublicNetwork.addListener(_onPublicNetworkChanged);
+    server.networkTrust.addListener(_onNetworkTrustChanged);
     server.localIP.addListener(_onLocalIPChanged);
     server.startError.addListener(_onStartErrorChanged);
     server.mdnsAvailable.addListener(_onMdnsChanged);
@@ -78,8 +80,8 @@ class WebSocketServerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _onPublicNetworkChanged() {
-    _isPublicNetwork = server.isPublicNetwork.value;
+  void _onNetworkTrustChanged() {
+    _networkTrust = server.networkTrust.value;
     notifyListeners();
   }
 
@@ -126,7 +128,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.lastCommand.removeListener(_onLastCommandChanged);
     server.laserActive.removeListener(_onLaserChanged);
     server.pin.removeListener(_onPinChanged);
-    server.isPublicNetwork.removeListener(_onPublicNetworkChanged);
+    server.networkTrust.removeListener(_onNetworkTrustChanged);
     server.localIP.removeListener(_onLocalIPChanged);
     server.startError.removeListener(_onStartErrorChanged);
     server.mdnsAvailable.removeListener(_onMdnsChanged);

@@ -88,12 +88,14 @@ class _MainControlsViewState extends State<MainControlsView> {
                             size: 20,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'Slayt: ${ws.currentSlide} / ${ws.totalSlides > 0 ? ws.totalSlides.toString() : '?'}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          Flexible(
+                            child: Text(
+                              'Slayt: ${ws.currentSlide} / ${ws.totalSlides > 0 ? ws.totalSlides.toString() : '?'}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           if (ws.isPptRunning && ws.slideNotes.isNotEmpty) ...[
@@ -144,12 +146,14 @@ class _MainControlsViewState extends State<MainControlsView> {
                           children: [
                             const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 20),
                             const SizedBox(width: 8),
-                            Text(
-                              'Sunum Açık Değil, ${ws.presenterName}\'i başlatın',
-                              style: const TextStyle(
-                                color: Colors.redAccent,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                            Flexible(
+                              child: Text(
+                                'Sunum Açık Değil, ${ws.presenterName}\'i başlatın',
+                                style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
