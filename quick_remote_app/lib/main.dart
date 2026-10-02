@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'services/websocket_service.dart';
@@ -8,6 +9,7 @@ import 'services/discovery_service.dart';
 
 // Background execution starts with a remote screen (services/background_session.dart).
 void main() {
+  _registerFontLicense();
   runApp(const QuickRemoteApp());
 }
 
@@ -31,10 +33,17 @@ class QuickRemoteApp extends StatelessWidget {
           scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
           colorSchemeSeed: const Color(0xFF005B96),
           useMaterial3: true,
-          textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+          fontFamily: 'Inter',
         ),
         home: const HomeScreen(),
       ),
     );
   }
+}
+
+/// Inter is bundled under the SIL Open Font License, which travels with it.
+void _registerFontLicense() {
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(['Inter'], await rootBundle.loadString('assets/fonts/OFL.txt'));
+  });
 }

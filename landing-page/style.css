@@ -1483,3 +1483,10 @@ img {
     transform: none;
   }
 }
+
+/* Keyboard focus: links, buttons and FAQ questions show where focus is. */
+:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+  border-radius: 6px;
+}

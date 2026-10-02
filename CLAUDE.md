@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 QuickRemote is a presentation/PC remote built as three Dart projects (no workspace tooling; each is built separately):
 
-- `quick_remote_app/`: Flutter mobile client (Android primary; iOS has no Bluetooth HID).
+- `quick_remote_app/`: Flutter mobile client, Android only (there is no `ios/` project).
 - `quick_remote_pc/`: Flutter desktop server for Windows (controls PowerPoint) and Linux (controls LibreOffice Impress).
 - `packages/quick_remote_shared/`: pure-Dart package with `RemoteCommands` (command strings, allowlists), referenced by both apps via a `path:` dependency.
 

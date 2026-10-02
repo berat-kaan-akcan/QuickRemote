@@ -9,21 +9,21 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Bluetooth Classic HID (phone-as-keyboard/mouse, API 28+) -->
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <!-- Android 12+ runtime permissions -->
+    <!-- Bluetooth Classic HID (phone-as-keyboard/mouse, API 28+). The PC
+         finds and pairs the phone; the app never scans or advertises, so
+         Android 12+ needs only BLUETOOTH_CONNECT (HID profile, bonded devices). -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
     <uses-feature
         android:name="android.hardware.bluetooth"
         android:required="false" />
 
     <application
-        android:label="quick_remote_app"
+        android:label="QuickRemote"
         android:name="${applicationName}"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
