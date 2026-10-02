@@ -6,6 +6,7 @@ import 'package:quick_remote_pc/services/mouse_controller.dart';
 class FakeInputService implements InputService {
   final List<String> calls = [];
   Map<String, dynamic>? slideState = {'error': 'POWERPOINT_NOT_RUNNING'};
+  Map<String, dynamic>? smtcState;
 
   @override
   void Function(String detail)? onCommandError;
@@ -19,7 +20,7 @@ class FakeInputService implements InputService {
   @override
   Future<Map<String, dynamic>?> getSlideState() async => slideState;
   @override
-  Future<Map<String, dynamic>?> getSmtcState() async => null;
+  Future<Map<String, dynamic>?> getSmtcState() async => smtcState;
   @override
   Future<VolumeState?> getVolumeState() async => null;
 

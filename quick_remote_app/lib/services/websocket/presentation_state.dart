@@ -60,7 +60,10 @@ class PresentationState {
     hasMedia = message['hasMedia'] as bool? ?? false;
     mediaTitle = message['title'] as String?;
     mediaArtist = message['artist'] as String?;
-    mediaThumbnailBase64 = message['thumbnail'] as String?;
+    // The PC sends the cover only when it changed; no key means "keep it".
+    if (message.containsKey('thumbnail')) {
+      mediaThumbnailBase64 = message['thumbnail'] as String?;
+    }
     positionMs = (message['positionMs'] as num?)?.toInt() ?? 0;
     durationMs = (message['durationMs'] as num?)?.toInt() ?? 0;
     isPlaying = message['isPlaying'] as bool? ?? false;
