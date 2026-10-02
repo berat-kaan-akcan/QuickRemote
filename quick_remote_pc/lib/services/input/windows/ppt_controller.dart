@@ -8,7 +8,6 @@ import '../../input_simulator.dart'; // For InputSimulator.onCommandError
 
 class PptController {
   static bool _isLaserActive = false;
-  static int _lastMediaSlideNumber = -1;
 
   static void slideNext() => KeyboardSimulator.pressKey(VK_NEXT);
   static void slidePrev() => KeyboardSimulator.pressKey(VK_PRIOR);
@@ -243,7 +242,7 @@ try {
 
   /// Runs [playerAction] on the first media player of the current slide
   /// through COM. When COM can't reach one, focuses the slideshow, selects
-  /// the media with Tab (once per slide) and presses [fallbackKeys].
+  /// the media with Tab and presses [fallbackKeys].
   static Future<void> _pptMedia({
     required String name,
     required String playerAction,
@@ -266,6 +265,12 @@ try {
         for ($i = 1; $i -le $slide.Shapes.Count; $i++) {
             try {
                 $shape = $slide.Shapes.Item($i)
+                # Media (16), or a placeholder holding media (14 + ContainedType 16).
+                $isMedia = $shape.Type -eq 16
+                if (-not $isMedia -and $shape.Type -eq 14) {
+                    try { $isMedia = $shape.PlaceholderFormat.ContainedType -eq 16 } catch {}
+                }
+                if (-not $isMedia) { continue }
                 $player = $view.Player($shape.Name)
                 if ($player -ne $null) {
 __PLAYER_ACTION__
@@ -289,26 +294,17 @@ __PLAYER_ACTION__
 '''.replaceFirst('__PLAYER_ACTION__', playerAction);
     try {
       final result = (await PowerShellRunner.execute(comScript)).trim();
-      if (result == 'NO_SLIDESHOW') return;
-
-      // ERROR or anything unexpected: COM failed and the slide is unknown (-1).
-      int currentSlide = -1;
-      if (result.startsWith('COM_OK_')) return;
-      if (result.startsWith('COM_FAIL_')) {
-        currentSlide = int.tryParse(result.substring(9)) ?? -1;
-      }
+      if (result == 'NO_SLIDESHOW' || result.startsWith('COM_OK_')) return;
 
       final focused = await _focusPptSlideShow();
       if (!focused) return;
 
-      // Tab selects the media shape. Press it on every new slide, and always
-      // when the slide is unknown since it may have changed.
-      if (currentSlide == -1 || currentSlide != _lastMediaSlideNumber) {
-        KeyboardSimulator.pressKey(VK_TAB);
-        await Future.delayed(const Duration(milliseconds: 200));
-        _lastMediaSlideNumber = currentSlide;
-      }
-
+      // Alt+P / Alt+Home act only on a selected media shape, and the
+      // selection does not survive (a click, the pen, the last Alt+P), so
+      // select it with Tab every time. Skipping Tab after the first press on
+      // a slide left the video playing.
+      KeyboardSimulator.pressKey(VK_TAB);
+      await Future.delayed(const Duration(milliseconds: 200));
       KeyboardSimulator.pressKeyCombo(fallbackKeys);
     } catch (e) {
       debugPrint('$name error: $e');
