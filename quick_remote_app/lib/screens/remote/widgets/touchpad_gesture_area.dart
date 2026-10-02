@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../../models/draw_tool.dart';
 import '../../../../utils/delta_accumulator.dart';
 
@@ -65,19 +66,19 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
     _leftDownSent = false;
 
     if (_activeTool == DrawTool.pen) {
-      widget.onSendCommand('MODE_PEN');
+      widget.onSendCommand(RemoteCommands.modePen);
     } else if (_activeTool == DrawTool.highlighter) {
-      widget.onSendCommand('MODE_HIGHLIGHTER');
+      widget.onSendCommand(RemoteCommands.modeHighlighter);
     } else if (_activeTool == DrawTool.eraser) {
-      widget.onSendCommand('MODE_ERASER');
+      widget.onSendCommand(RemoteCommands.modeEraser);
     } else if (_activeTool == DrawTool.laser) {
-      widget.onSendCommand('MODE_LASER');
+      widget.onSendCommand(RemoteCommands.modeLaser);
     }
 
     Future.delayed(const Duration(milliseconds: 150), () {
       if (_isDrawActive && gesture == _gesture && mounted && _activeTool != DrawTool.laser) {
         _leftDownSent = true;
-        widget.onSendCommand('LEFT_DOWN');
+        widget.onSendCommand(RemoteCommands.leftDown);
       }
     });
     HapticFeedback.mediumImpact();
@@ -116,11 +117,11 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
       }
 
       if (_activeTool == DrawTool.laser) {
-        widget.onSendCommand('LASER_OFF');
+        widget.onSendCommand(RemoteCommands.laserOff);
       } else if (_leftDownSent) {
-        widget.onSendCommand('LEFT_UP');
+        widget.onSendCommand(RemoteCommands.leftUp);
       }
-      widget.onSendCommand('MODE_ARROW');
+      widget.onSendCommand(RemoteCommands.modeArrow);
     }
 
     _isDrawActive = false;

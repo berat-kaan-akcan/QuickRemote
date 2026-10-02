@@ -2,9 +2,20 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'avahi_publisher.dart';
 import 'platform_network.dart';
 
 class LinuxNetwork implements PlatformNetwork {
+  // nsd has no Linux implementation; Avahi does the same over D-Bus.
+  final AvahiPublisher _avahi = AvahiPublisher();
+
+  @override
+  Future<bool> advertise({required String name, required int port}) =>
+      _avahi.register(name: name, type: PlatformNetwork.serviceType, port: port);
+
+  @override
+  Future<void> unadvertise() => _avahi.unregister();
+
   static const _virtualPrefixes = [
     'lo', 'docker', 'veth', 'virbr', 'br-', 'vmnet', 'vboxnet',
     'tailscale', 'zt', 'wg', 'tun', 'tap', 'waydroid',

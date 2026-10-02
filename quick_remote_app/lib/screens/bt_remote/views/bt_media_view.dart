@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../remote/widgets/glass_panel.dart';
 import '../../remote/widgets/premium_media_btn.dart';
 
@@ -193,7 +194,7 @@ class BtMediaView extends StatelessWidget {
                   icon: Icons.skip_previous_rounded,
                   label: '',
                   color: Colors.white,
-                  onTap: isConnected ? () => send('SYSTEM_MEDIA_PREV') : null,
+                  onTap: isConnected ? () => send(RemoteCommands.sysMediaPrev) : null,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -203,7 +204,7 @@ class BtMediaView extends StatelessWidget {
                     color: Colors.white,
                     large: true,
                     glow: true,
-                    onTap: isConnected ? () => send('SYSTEM_MEDIA_PLAY_PAUSE') : null,
+                    onTap: isConnected ? () => send(RemoteCommands.sysMediaPlayPause) : null,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -211,7 +212,7 @@ class BtMediaView extends StatelessWidget {
                   icon: Icons.skip_next_rounded,
                   label: '',
                   color: Colors.white,
-                  onTap: isConnected ? () => send('SYSTEM_MEDIA_NEXT') : null,
+                  onTap: isConnected ? () => send(RemoteCommands.sysMediaNext) : null,
                 ),
               ],
             ),
@@ -247,20 +248,20 @@ class BtMediaView extends StatelessWidget {
                 icon: Icons.remove_rounded,
                 color: accent,
                 isLeft: true,
-                onTap: isConnected ? () => send('VOLUME_DOWN') : null,
+                onTap: isConnected ? () => send(RemoteCommands.volumeDown) : null,
               ),
               Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
               _PillBtn(
                 icon: Icons.volume_off_rounded,
                 color: accent,
-                onTap: isConnected ? () => send('VOLUME_MUTE') : null,
+                onTap: isConnected ? () => send(RemoteCommands.volumeMute) : null,
               ),
               Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
               _PillBtn(
                 icon: Icons.add_rounded,
                 color: accent,
                 isRight: true,
-                onTap: isConnected ? () => send('VOLUME_UP') : null,
+                onTap: isConnected ? () => send(RemoteCommands.volumeUp) : null,
               ),
             ],
           ),

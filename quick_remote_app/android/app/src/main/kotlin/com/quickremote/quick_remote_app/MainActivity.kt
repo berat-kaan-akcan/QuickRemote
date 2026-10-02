@@ -128,11 +128,14 @@ class MainActivity : FlutterActivity() {
     // ── Volume key handling (unchanged) ────────────────────────────────────
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (isIntercepting) {
+            // Holding the key repeats the event; one press is one slide.
+            // Repeats are still consumed so the system volume doesn't change.
+            val firstPress = (event?.repeatCount ?: 0) == 0
             if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-                volumeMethodChannel?.invokeMethod("onVolumeUp", null)
+                if (firstPress) volumeMethodChannel?.invokeMethod("onVolumeUp", null)
                 return true
             } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                volumeMethodChannel?.invokeMethod("onVolumeDown", null)
+                if (firstPress) volumeMethodChannel?.invokeMethod("onVolumeDown", null)
                 return true
             }
         }

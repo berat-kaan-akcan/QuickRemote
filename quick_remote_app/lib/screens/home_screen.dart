@@ -37,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadRecentDevices() async {
     final data = await _repository.getRecentDevices();
+    if (!mounted) return;
     setState(() {
       _recentDevices = data;
     });

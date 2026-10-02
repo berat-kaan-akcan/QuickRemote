@@ -25,6 +25,4 @@ abstract class MouseController {
   /// Updates the tracked position without moving the OS cursor
   /// (used when the presenter draws the laser pointer itself).
   void trackDelta(double dx, double dy);
-  void moveTo(double x, double y);
-  void resetToCenter();
 }

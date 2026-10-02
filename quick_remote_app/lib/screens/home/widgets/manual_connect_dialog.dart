@@ -12,54 +12,65 @@ class ManualConnectData {
   ManualConnectData({required this.host, required this.port, required this.pin});
 }
 
-class ManualConnectDialog extends StatelessWidget {
+class ManualConnectDialog extends StatefulWidget {
   final String? defaultIp;
   final String? defaultPort;
 
   const ManualConnectDialog({super.key, this.defaultIp, this.defaultPort});
 
   static Future<ManualConnectData?> show(BuildContext context, {String? defaultIp, String? defaultPort}) {
-    final hostController = TextEditingController(text: defaultIp);
-    final portController = TextEditingController(text: defaultPort ?? '8090');
-    final pinController = TextEditingController();
-
     return showDialog<ManualConnectData>(
       context: context,
-      builder: (ctx) {
-        return Dialog(
-          backgroundColor: AppPopupTheme.dialogBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppPopupTheme.dialogRadius),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (_) => ManualConnectDialog(defaultIp: defaultIp, defaultPort: defaultPort),
+    );
+  }
+
+  @override
+  State<ManualConnectDialog> createState() => _ManualConnectDialogState();
+}
+
+class _ManualConnectDialogState extends State<ManualConnectDialog> {
+  late final hostController = TextEditingController(text: widget.defaultIp);
+  late final portController = TextEditingController(text: widget.defaultPort ?? '8090');
+  final pinController = TextEditingController();
+
+  @override
+  void dispose() {
+    hostController.dispose();
+    portController.dispose();
+    pinController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppPopupTheme.dialogBg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.dialogRadius)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.link_rounded, color: Colors.white, size: 24),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Manuel Bağlantı',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ],
+                const Icon(Icons.link_rounded, color: Colors.white, size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Manuel Bağlantı',
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.5),
                 ),
-                const SizedBox(height: 24),
+              ],
+            ),
+            const SizedBox(height: 24),
             TextField(
               controller: hostController,
-              autofocus: defaultIp == null || defaultIp.isEmpty,
+              autofocus: widget.defaultIp?.isEmpty ?? true,
               style: const TextStyle(color: Colors.white),
               decoration: AppPopupTheme.inputDecoration(
-                context: ctx,
+                context: context,
                 labelText: 'IP Adresi',
                 hintText: '192.168.1.x',
               ),
@@ -69,27 +80,20 @@ class ManualConnectDialog extends StatelessWidget {
             TextField(
               controller: portController,
               style: const TextStyle(color: Colors.white),
-              decoration: AppPopupTheme.inputDecoration(
-                context: ctx,
-                labelText: 'Port',
-              ),
+              decoration: AppPopupTheme.inputDecoration(context: context, labelText: 'Port'),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: pinController,
-              autofocus: defaultIp != null && defaultIp.isNotEmpty,
+              autofocus: widget.defaultIp?.isNotEmpty ?? false,
               onChanged: (_) => HapticFeedback.lightImpact(),
               style: const TextStyle(color: Colors.white),
               decoration: AppPopupTheme.inputDecoration(
-                context: ctx,
+                context: context,
                 labelText: 'PIN',
                 hintText: 'PC ekranındaki PIN',
-                prefixIcon: Icon(
-                  Icons.lock_rounded,
-                  color: Colors.white.withValues(alpha: 0.4),
-                  size: 20,
-                ),
+                prefixIcon: Icon(Icons.lock_rounded, color: Colors.white.withValues(alpha: 0.4), size: 20),
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -121,15 +125,14 @@ class ManualConnectDialog extends StatelessWidget {
 
                             if (port < 1 || port > 65535) {
                               AppSnackbar.show(
-                                ctx,
+                                context,
                                 message: 'Port 1-65535 arası olmalı',
                                 type: SnackbarType.warning,
                               );
                               return;
                             }
 
-                            Navigator.of(ctx).pop(ManualConnectData(
-                                host: host, port: port, pin: pin));
+                            Navigator.of(context).pop(ManualConnectData(host: host, port: port, pin: pin));
                           }
                         : null,
                     style: FilledButton.styleFrom(
@@ -137,21 +140,13 @@ class ManualConnectDialog extends StatelessWidget {
                       disabledBackgroundColor: Colors.white.withValues(alpha: 0.1),
                       foregroundColor: Colors.white,
                       disabledForegroundColor: Colors.white.withValues(alpha: 0.4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          buttonText,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
-                        if (isValid) ...[
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded, size: 20),
-                        ],
+                        Text(buttonText, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                        if (isValid) ...[const SizedBox(width: 8), const Icon(Icons.arrow_forward_rounded, size: 20)],
                       ],
                     ),
                   ),
@@ -159,18 +154,9 @@ class ManualConnectDialog extends StatelessWidget {
               },
             ),
             const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Bu widget artık doğrudan kullanılmıyor.
-    // ManualConnectDialog.show() static metodu ile bottom sheet açılır.
-    return const SizedBox.shrink();
   }
 }

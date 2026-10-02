@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
@@ -26,16 +27,16 @@ class _MainControlsViewState extends State<MainControlsView> {
   void _send(String command) {
     HapticFeedback.mediumImpact();
     
-    if (command == 'BLACK_SCREEN') {
+    if (command == RemoteCommands.blackScreen) {
       setState(() {
         _activeScreen = _activeScreen == 'BLACK' ? null : 'BLACK';
       });
-    } else if (command == 'WHITE_SCREEN') {
+    } else if (command == RemoteCommands.whiteScreen) {
       setState(() {
         _activeScreen = _activeScreen == 'WHITE' ? null : 'WHITE';
       });
     } else {
-      if (['NEXT', 'PREV', 'START', 'END'].contains(command) || command.startsWith('START_AT')) {
+      if ([RemoteCommands.next, RemoteCommands.prev, RemoteCommands.start, RemoteCommands.end].contains(command) || command.startsWith('START_AT')) {
          setState(() { _activeScreen = null; });
       }
     }
@@ -173,7 +174,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                   label: 'Başlat',
                                   color: const Color(0xFF4CAF50),
                                   onTap: !ws.isConnected ? null : () {
-                                    _send('START');
+                                    _send(RemoteCommands.start);
                                   },
                                   onLongPress: !ws.isConnected ? null : () {
                                     HapticFeedback.heavyImpact();
@@ -187,7 +188,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                   icon: Icons.stop_rounded,
                                   label: 'Bitir',
                                   color: const Color(0xFFFF5252),
-                                  onTap: !ws.isConnected ? null : () => _send('END'),
+                                  onTap: !ws.isConnected ? null : () => _send(RemoteCommands.end),
                                 ),
                               ),
                             ],
@@ -201,7 +202,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                   label: 'Siyah Ekran',
                                   color: Colors.grey,
                                   isActive: _activeScreen == 'BLACK',
-                                  onTap: !ws.isConnected ? null : () => _send('BLACK_SCREEN'),
+                                  onTap: !ws.isConnected ? null : () => _send(RemoteCommands.blackScreen),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -211,7 +212,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                   label: 'Beyaz Ekran',
                                   color: Colors.white,
                                   isActive: _activeScreen == 'WHITE',
-                                  onTap: !ws.isConnected ? null : () => _send('WHITE_SCREEN'),
+                                  onTap: !ws.isConnected ? null : () => _send(RemoteCommands.whiteScreen),
                                 ),
                               ),
                             ],
@@ -223,7 +224,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                 child: SlideButton(
                                   icon: Icons.arrow_back_rounded,
                                   label: 'Geri',
-                                  onTap: !ws.isConnected ? null : () => _send('PREV'),
+                                  onTap: !ws.isConnected ? null : () => _send(RemoteCommands.prev),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -232,7 +233,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                   icon: Icons.arrow_forward_rounded,
                                   label: 'İleri',
                                   isPrimary: true,
-                                  onTap: !ws.isConnected ? null : () => _send('NEXT'),
+                                  onTap: !ws.isConnected ? null : () => _send(RemoteCommands.next),
                                 ),
                               ),
                             ],

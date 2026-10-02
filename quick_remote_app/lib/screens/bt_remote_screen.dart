@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../services/background_session.dart';
 import '../services/bluetooth/bt_hid_service.dart';
 import '../services/bluetooth/bt_key_mapping.dart';
@@ -95,11 +96,11 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
     HapticFeedback.mediumImpact();
 
     // Update local screen toggle state
-    if (command == 'BLACK_SCREEN') {
+    if (command == RemoteCommands.blackScreen) {
       setState(() => _activeScreen = _activeScreen == 'BLACK' ? null : 'BLACK');
-    } else if (command == 'WHITE_SCREEN') {
+    } else if (command == RemoteCommands.whiteScreen) {
       setState(() => _activeScreen = _activeScreen == 'WHITE' ? null : 'WHITE');
-    } else if (['NEXT', 'PREV', 'START', 'END'].contains(command)) {
+    } else if ([RemoteCommands.next, RemoteCommands.prev, RemoteCommands.start, RemoteCommands.end].contains(command)) {
       setState(() => _activeScreen = null);
     }
 

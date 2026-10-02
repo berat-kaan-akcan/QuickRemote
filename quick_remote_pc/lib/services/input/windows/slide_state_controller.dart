@@ -22,7 +22,6 @@ try {
         $notes = ""
         $hasMedia = $false
         $isMediaPlaying = $null
-        $shapeTypes = ""
 
         if (-not $isBlackScreen) {
             $slide = $ppt.ActivePresentation.Slides.Item($current)
@@ -56,7 +55,6 @@ try {
                     }
                 } catch {}
             }
-            $shapeTypes = ($slide.Shapes | ForEach-Object { "$($_.Name):$($_.Type)" }) -join ", "
         }
 
         $data = @{
@@ -65,7 +63,6 @@ try {
             notes = $notes.Trim()
             hasMedia = $hasMedia
             isMediaPlaying = $isMediaPlaying
-            shapeTypes = $shapeTypes
             isBlackScreen = $isBlackScreen
         }
         $data | ConvertTo-Json -Compress

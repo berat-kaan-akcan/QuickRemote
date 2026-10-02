@@ -22,4 +22,7 @@ class NetworkManager {
   static Future<void> openNetworkSettings() => _impl.openNetworkSettings();
   static Future<FirewallStatus> checkFirewall(int port) => _impl.checkFirewall(port);
   static Future<bool> openFirewallPorts() => _impl.openFirewallPorts();
+  static Future<bool> advertise({required String name, required int port}) =>
+      _impl.advertise(name: name, port: port);
+  static Future<void> unadvertise() => _impl.unadvertise();
 }
