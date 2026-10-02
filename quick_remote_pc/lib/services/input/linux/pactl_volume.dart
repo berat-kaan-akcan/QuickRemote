@@ -30,11 +30,15 @@ class PactlVolume {
     return (volume: volume, muted: muted);
   }
 
-  Future<void> change(int delta) async {
-    final current = await getState();
-    if (current == null) return;
-    await setLevel(current.volume + delta);
-  }
+  Future<void> _changes = Future.value();
+
+  /// Changes run one after another: two quick presses read the level in turn
+  /// instead of both reading the old one and counting as a single step.
+  Future<void> change(int delta) => _changes = _changes.then((_) async {
+        final current = await getState();
+        if (current == null) return;
+        await setLevel(current.volume + delta);
+      });
 
   Future<void> setLevel(int level) async {
     await _pactl(['set-sink-volume', _sink, '${level.clamp(0, 100)}%']);

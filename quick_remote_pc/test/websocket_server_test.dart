@@ -212,6 +212,15 @@ void main() {
       expect(input.calls, contains('modePen'));
     });
 
+    test('rechecks the slide state before dropping a slideshow-only command', () async {
+      final client = await authed();
+      await client.next('STATUS'); // not running; the poller would now wait
+      input.slideState = {'current': 1, 'total': 3, 'notes': ''}; // started on the PC
+      client.command('MODE_PEN');
+      await client.next('ack');
+      expect(input.calls, contains('modePen'));
+    });
+
     test('releases a held mouse button when the client disconnects', () async {
       final client = await authed();
       client.command('LEFT_DOWN');

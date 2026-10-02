@@ -108,6 +108,23 @@ class HandleTest(unittest.TestCase):
         self.assertEqual(impress.resets, 1)
 
 
+@unittest.skipIf(bridge.uno is None, "needs LibreOffice's Python-UNO")
+class MainThreadCallTest(unittest.TestCase):
+    def test_runs_the_function(self):
+        call = bridge.MainThreadCall(lambda: 42)
+        call.notify(None)
+        self.assertTrue(call.done.is_set())
+        self.assertEqual(call.result, 42)
+
+    def test_a_cancelled_call_does_not_run(self):
+        ran = []
+        call = bridge.MainThreadCall(lambda: ran.append(1))
+        call.cancelled = True
+        call.notify(None)
+        self.assertTrue(call.done.is_set())
+        self.assertEqual(ran, [])
+
+
 class PipeIsTrustedTest(unittest.TestCase):
     def setUp(self):
         self.path = "/tmp/OSL_PIPE_%d_%s" % (os.getuid(), bridge.PIPE_NAME)

@@ -42,6 +42,9 @@ class WebSocketServer {
   late final StateBroadcaster _stateBroadcaster;
 
   int _port = 8090;
+  /// A slide state check that commands needing a slideshow wait for.
+  Future<void>? _slideCheck;
+
   /// The running start(), so a second call waits for it instead of binding twice.
   Future<void>? _starting;
 
@@ -452,7 +455,10 @@ class WebSocketServer {
 
   void _applyMove(int typeId, double dx, double dy) {
     if (typeId == 1) {
-      if (!_isSlideshowRunning) return;
+      if (!_isSlideshowRunning) {
+        _checkSlideshow();
+        return;
+      }
       if (InputSimulator.handlesLaserPointer) {
         // The presenter draws the laser itself (Impress): keep the OS cursor still.
         mouseController.trackDelta(dx, dy);
@@ -466,6 +472,10 @@ class WebSocketServer {
     mouseController.moveDelta(dx, dy);
   }
 
+  /// Concurrent callers share one check.
+  Future<void> _checkSlideshow() =>
+      _slideCheck ??= _stateBroadcaster.fetchAndBroadcastSlideState().whenComplete(() => _slideCheck = null);
+
   void _handleCommand(WebSocket ws, String command) {
     final baseCommand = command.contains(':') ? command.split(':')[0] : command;
     if (!RemoteCommands.allowedCommands.contains(command) &&
@@ -475,7 +485,15 @@ class WebSocketServer {
     }
 
     if (!_isSlideshowRunning && _slideshowOnlyCommands.contains(command)) {
-      debugPrint('Ignored command $command because no slideshow is running');
+      // After "not running" the poller skips a few rounds, so a show just
+      // started on the PC may not be known yet: check once, then decide.
+      _checkSlideshow().then((_) {
+        if (!_isSlideshowRunning) {
+          debugPrint('Ignored command $command because no slideshow is running');
+        } else if (_authenticatedClients.contains(ws)) {
+          _handleCommand(ws, command);
+        }
+      });
       return;
     }
 

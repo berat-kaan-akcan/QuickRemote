@@ -72,8 +72,14 @@ if uno is not None:
             self.done = threading.Event()
             self.result = None
             self.error = None
+            # Set when the caller gave up: a busy LibreOffice may get to the
+            # call seconds later, and a late "next" must not move the show.
+            self.cancelled = False
 
         def notify(self, _data):
+            if self.cancelled:
+                self.done.set()
+                return
             try:
                 self.result = self.fn()
             except Exception as e:  # noqa: BLE001 - re-raised in the caller
@@ -176,6 +182,7 @@ class Impress:
         call = MainThreadCall(fn)
         self.async_callback.addCallback(call, None)
         if not call.done.wait(timeout):
+            call.cancelled = True
             raise BridgeError("TIMEOUT")
         if call.error is not None:
             raise call.error
