@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:io';
 import 'dart:math';
 
 /// PIN generation and rate limiting for the pairing handshake.
@@ -34,6 +35,21 @@ class AuthManager {
   int _pendingTotal = 0;
   final Queue<DateTime> _recentFailures = Queue();
   DateTime? _globalPauseUntil;
+
+  /// The key that rate limits are counted under for [address].
+  ///
+  /// The server listens dual-stack, so IPv4 clients arrive as `::ffff:a.b.c.d`;
+  /// those count as the plain IPv4 address. An IPv6 host can pick any address
+  /// in its /64 (privacy extensions), so all of a /64 shares one key.
+  static String clientKey(InternetAddress? address) {
+    if (address == null) return '';
+    if (address.type != InternetAddressType.IPv6) return address.address;
+    final raw = address.rawAddress;
+    final v4Mapped = raw.take(10).every((b) => b == 0) && raw[10] == 0xff && raw[11] == 0xff;
+    if (v4Mapped) return raw.sublist(12).join('.');
+    final groups = [for (var i = 0; i < 8; i += 2) ((raw[i] << 8) | raw[i + 1]).toRadixString(16)];
+    return '${groups.join(':')}::/64';
+  }
 
   String generatePin() {
     const min = 100000; // 10^(pinLength - 1): no leading zeros
@@ -103,7 +119,10 @@ class AuthManager {
     return diff == 0;
   }
 
-  void recordFailedAttempt(String ip) {
+  /// Records a wrong PIN from [ip]. Returns true when this failure started a
+  /// global pause; the caller should then replace the PIN, since someone is
+  /// guessing it.
+  bool recordFailedAttempt(String ip) {
     final now = _now();
     final failures = (_failedAttempts[ip] ?? 0) + 1;
     _failedAttempts[ip] = failures;
@@ -119,7 +138,9 @@ class AuthManager {
     if (_recentFailures.length > maxGlobalFailures) {
       _globalPauseUntil = now.add(globalPauseDuration);
       _recentFailures.clear();
+      return true;
     }
+    return false;
   }
 
   void recordSuccessfulAuth(String ip) {

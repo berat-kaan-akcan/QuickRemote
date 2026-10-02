@@ -30,6 +30,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   String? get startError => _startError;
   bool get mdnsAvailable => _mdnsAvailable;
   String? get certFingerprint => _certFingerprint;
+  bool get pairingPaused => server.pairingPaused.value;
 
   WebSocketServerProvider() {
     server.isRunning.addListener(_onRunningChanged);
@@ -42,6 +43,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.startError.addListener(_onStartErrorChanged);
     server.mdnsAvailable.addListener(_onMdnsChanged);
     server.certFingerprint.addListener(_onCertFingerprintChanged);
+    server.pairingPaused.addListener(notifyListeners);
     _init();
   }
 
@@ -133,6 +135,7 @@ class WebSocketServerProvider extends ChangeNotifier {
     server.startError.removeListener(_onStartErrorChanged);
     server.mdnsAvailable.removeListener(_onMdnsChanged);
     server.certFingerprint.removeListener(_onCertFingerprintChanged);
+    server.pairingPaused.removeListener(notifyListeners);
     server.stop();
     super.dispose();
   }

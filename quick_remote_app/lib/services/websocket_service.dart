@@ -246,7 +246,8 @@ class WebSocketService extends ChangeNotifier {
 
   /// Accept a new certificate fingerprint for a host and reconnect.
   /// Called when the user explicitly approves a cert mismatch via the dialog.
-  /// This preserves TOFU: the update only happens with user consent.
+  /// This preserves TOFU: the update only happens with user consent, and is
+  /// stored only after the PC accepts the PIN.
   Future<ConnectionResult> acceptCertificateAndReconnect(
     String host,
     String newFingerprint, {
