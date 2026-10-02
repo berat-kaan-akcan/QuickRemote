@@ -95,12 +95,15 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
     if (_wasConnected && !_wsRef.isConnected) {
       _wasConnected = false;
-      AppSnackbar.show(
-        context,
-        message: 'Bağlantı koptu, otomatik bağlanılıyor...',
-        type: SnackbarType.warning,
-        duration: const Duration(seconds: 3),
-      );
+      // A failed connection is not retried, so don't promise that.
+      if (_wsRef.connectionState != AppConnectionState.failed) {
+        AppSnackbar.show(
+          context,
+          message: 'Bağlantı koptu, otomatik bağlanılıyor...',
+          type: SnackbarType.warning,
+          duration: const Duration(seconds: 3),
+        );
+      }
     } else if (!_wasConnected && _wsRef.isConnected) {
       _wasConnected = true;
       _persistentError = null; // Clear stale errors on reconnect

@@ -18,6 +18,9 @@ enum ConnectionError {
   /// The certificate differs from the fingerprint in the scanned QR code.
   /// Never overridable: the QR code comes straight from the PC screen.
   certRejected,
+  /// First connection to this address without the QR code: the user has to
+  /// compare the security code with the PC before the PIN is sent.
+  unverified,
   /// The PC refuses pairing for now after too many wrong PINs.
   rateLimited,
   unknown,
@@ -38,7 +41,7 @@ class ConnectionResult {
   final bool success;
   final ConnectionError error;
   final String? message;
-  /// Non-null only when error == certMismatch.
+  /// Non-null only when error == certMismatch or unverified.
   final String? newFingerprint;
   /// The host whose certificate mismatched.
   final String? mismatchHost;

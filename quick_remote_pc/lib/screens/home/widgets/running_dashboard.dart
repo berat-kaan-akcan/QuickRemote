@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../providers/server_provider.dart';
+import '../../../../services/websocket_server.dart';
 import '../../../../widgets/hover_scale.dart';
 import '../../../../widgets/hover_glow_container.dart';
 import 'network_status_banner.dart';
@@ -22,6 +23,8 @@ class RunningDashboard extends StatefulWidget {
 class _RunningDashboardState extends State<RunningDashboard> {
   bool _hasShownDialogForCurrentRun = false;
   bool _isShowingNetworkDialog = false;
+  /// The user asked to see the QR code and PIN after a phone paired.
+  bool _revealed = false;
 
   @override
   void initState() {
@@ -71,6 +74,13 @@ class _RunningDashboardState extends State<RunningDashboard> {
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
+    // Once a phone has paired, the code stays hidden until asked for: the
+    // screen is often projected, and anyone who scans it can pair.
+    if (!provider.pairedOnce) _revealed = false;
+    final hidden = provider.pairedOnce && !_revealed;
+    // Phones connecting without the QR code ask the user to compare this.
+    final fingerprintHex =
+        provider.certFingerprint == null ? null : PairingPayload.fingerprintToHex(provider.certFingerprint!);
     final qrData = PairingPayload(
       host: provider.localIP,
       port: provider.port,
@@ -161,6 +171,8 @@ class _RunningDashboardState extends State<RunningDashboard> {
                                       ],
                                     ),
                                   )
+                                else if (hidden)
+                                  _HiddenCode(onReveal: () => setState(() => _revealed = true))
                                 else ...[
                                   QrImageView(
                                     data: qrData,
@@ -206,9 +218,20 @@ class _RunningDashboardState extends State<RunningDashboard> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          provider.isStarting ? 'Ağ bilgileri alınıyor...' : 'Bağlanmak için QR kodu tarayın',
+                          provider.isStarting
+                              ? 'Ağ bilgileri alınıyor...'
+                              : hidden
+                                  ? 'Başka bir cihaz eşleştirmek için kodu gösterin'
+                                  : 'Bağlanmak için QR kodu tarayın',
                           style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                         ),
+                        if (provider.pairedOnce && _revealed)
+                          TextButton.icon(
+                            onPressed: () => setState(() => _revealed = false),
+                            icon: const Icon(Icons.visibility_off_rounded, size: 16),
+                            label: const Text('Kodu gizle'),
+                            style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                          ),
                         const SizedBox(height: 12),
                         Text(
                           Platform.localHostname,
@@ -259,6 +282,13 @@ class _RunningDashboardState extends State<RunningDashboard> {
                             ),
                           ],
                         ),
+                        if (fingerprintHex != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Güvenlik kodu: ${PairingPayload.verificationCode(fingerprintHex)}',
+                            style: const TextStyle(color: Colors.white54, fontFamily: 'Consolas', fontSize: 12),
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -273,7 +303,11 @@ class _RunningDashboardState extends State<RunningDashboard> {
                               const Icon(Icons.lock_rounded, color: Color(0xFFFF9800), size: 16),
                               const SizedBox(width: 8),
                               Text(
-                                provider.isStarting ? 'PIN: ...' : 'PIN: ${provider.pin}',
+                                provider.isStarting
+                                    ? 'PIN: ...'
+                                    : hidden
+                                        ? 'PIN: ••••••'
+                                        : 'PIN: ${provider.pin}',
                                 style: const TextStyle(
                                   color: Color(0xFFFF9800),
                                   fontSize: 15,
@@ -293,6 +327,13 @@ class _RunningDashboardState extends State<RunningDashboard> {
             ),
           ),
         ),
+        if (provider.connectedClients.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _ConnectedClients(
+            clients: provider.connectedClients,
+            onKick: provider.server.kickClient,
+          ),
+        ],
         const SizedBox(height: 16),
         HoverScale(
           scale: 1.05,
@@ -347,6 +388,92 @@ class _PairingPausedBanner extends StatelessWidget {
               style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Stands in for the QR code once a phone has paired.
+class _HiddenCode extends StatelessWidget {
+  const _HiddenCode({required this.onReveal});
+
+  final VoidCallback onReveal;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 184,
+      height: 184,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.qr_code_2_rounded, size: 72, color: Color(0x330F172A)),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: onReveal,
+            icon: const Icon(Icons.visibility_rounded, size: 18),
+            label: const Text('Kodu göster'),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Paired phones, each with a button that disconnects it.
+class _ConnectedClients extends StatelessWidget {
+  const _ConnectedClients({required this.clients, required this.onKick});
+
+  final List<ConnectedClient> clients;
+  final void Function(int id) onKick;
+
+  static String _time(DateTime t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Bağlı cihazlar (${clients.length})',
+            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+          for (final client in clients)
+            Row(
+              children: [
+                const Icon(Icons.smartphone_rounded, color: Colors.white70, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${client.address}  ·  ${_time(client.since)}',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white, fontFamily: 'Consolas', fontSize: 13),
+                  ),
+                ),
+                Tooltip(
+                  message: 'Bağlantıyı keser ve PIN\'i yeniler. Diğer cihazlar bağlı kalır.',
+                  child: TextButton(
+                    onPressed: () => onKick(client.id),
+                    style: TextButton.styleFrom(foregroundColor: const Color(0xFFFF5252)),
+                    child: const Text('Çıkar'),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
