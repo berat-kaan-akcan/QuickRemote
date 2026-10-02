@@ -12,6 +12,7 @@ import 'server/auth_manager.dart';
 import 'server/move_coalescer.dart';
 import 'server/network/avahi_publisher.dart';
 import 'server/network_manager.dart';
+import 'server/pre_auth_byte_limit.dart';
 import 'server/state_broadcaster.dart';
 
 /// WebSocket server that listens for commands from mobile clients.
@@ -23,6 +24,9 @@ class WebSocketServer {
   final ValueNotifier<String> lastCommand = ValueNotifier('');
   final ValueNotifier<bool> laserActive = ValueNotifier(false);
   final ValueNotifier<String> pin = ValueNotifier('');
+  /// True while too many wrong PINs have paused all new pairing.
+  final ValueNotifier<bool> pairingPaused = ValueNotifier(false);
+  Timer? _pairingPauseTimer;
   final ValueNotifier<String> localIP = ValueNotifier('');
   final ValueNotifier<NetworkTrust> networkTrust = ValueNotifier(NetworkTrust.unknown);
   /// Why the last start() failed (null when it succeeded).
@@ -48,6 +52,7 @@ class WebSocketServer {
   final Map<WebSocket, String> _pendingAuth = {};
   final Map<WebSocket, int> _invalidMessageCount = {};
   final Map<WebSocket, MoveCoalescer> _moves = {};
+  final Map<WebSocket, PreAuthByteLimit> _byteLimits = {};
   /// Clients that sent LEFT_DOWN without a LEFT_UP yet.
   final Set<WebSocket> _leftButtonHeld = {};
 
@@ -57,6 +62,11 @@ class WebSocketServer {
   static const _authTimeout = Duration(seconds: 5);
   /// Commands and the auth message are a few dozen bytes; anything larger is abuse.
   static const _maxTextMessageLength = 1024;
+  /// Bytes a client may send before it authenticates: the auth message plus
+  /// framing is a few dozen bytes.
+  static const _preAuthByteBudget = 4096;
+  /// Per-frame limit for every client. UTF-8 needs at most 4 bytes per char.
+  static const _maxFramePayload = _maxTextMessageLength * 4;
   static const _moveInterval = Duration(milliseconds: 8); // ~125 Hz
 
   /// Only meaningful inside a running slideshow. Outside one they would type
@@ -175,7 +185,7 @@ class WebSocketServer {
       return;
     }
 
-    final remoteIP = request.connectionInfo?.remoteAddress.address ?? '';
+    final remoteIP = AuthManager.clientKey(request.connectionInfo?.remoteAddress);
     if (!_authManager.tryReservePending(remoteIP)) {
       debugPrint('Refused connection from $remoteIP (rate limit)');
       _reject(request, HttpStatus.tooManyRequests);
@@ -183,14 +193,20 @@ class WebSocketServer {
     }
 
     final WebSocket ws;
+    final PreAuthByteLimit limited;
     try {
-      ws = await WebSocketTransformer.upgrade(request);
+      (ws, limited) = await PreAuthByteLimit.upgrade(
+        request,
+        budget: _preAuthByteBudget,
+        maxFramePayload: _maxFramePayload,
+      );
     } catch (e) {
       _authManager.releasePending(remoteIP);
       debugPrint('WebSocket upgrade failed: $e');
       return;
     }
     ws.pingInterval = const Duration(seconds: 30);
+    _byteLimits[ws] = limited;
     _handleClient(ws, remoteIP);
   }
 
@@ -240,6 +256,7 @@ class WebSocketServer {
     _releasePending(ws);
     _invalidMessageCount.remove(ws);
     _moves.remove(ws)?.dispose();
+    _byteLimits.remove(ws);
     if (_leftButtonHeld.remove(ws)) {
       // The phone went away mid-drag: don't leave the button pressed on the PC.
       InputSimulator.executeCommand(RemoteCommands.leftUp);
@@ -348,7 +365,7 @@ class WebSocketServer {
     }
 
     if (!AuthManager.verifyPin(candidate, pin.value)) {
-      _authManager.recordFailedAttempt(remoteIP);
+      if (_authManager.recordFailedAttempt(remoteIP)) _onPairingPaused();
       _send(ws, {'type': 'auth', 'status': 'fail'});
       debugPrint('Client auth failed (wrong PIN) from $remoteIP');
       _closeConnection(ws, 4003, 'Invalid PIN');
@@ -357,6 +374,7 @@ class WebSocketServer {
 
     _authTimers.remove(ws)?.cancel();
     _releasePending(ws);
+    _byteLimits.remove(ws)?.lift();
     _authenticatedClients.add(ws);
     _authManager.recordSuccessfulAuth(remoteIP);
 
@@ -375,6 +393,16 @@ class WebSocketServer {
       const Duration(milliseconds: 350),
       () => _stateBroadcaster.broadcastVolumeState(force: true),
     );
+  }
+
+  /// Someone is guessing the PIN from several addresses: the old PIN may be
+  /// partly searched, so replace it. Connected clients stay connected.
+  void _onPairingPaused() {
+    debugPrint('Too many wrong PINs — pairing paused, PIN replaced');
+    pin.value = _authManager.generatePin();
+    pairingPaused.value = true;
+    _pairingPauseTimer?.cancel();
+    _pairingPauseTimer = Timer(AuthManager.globalPauseDuration, () => pairingPaused.value = false);
   }
 
   void _handleMoveFrame(WebSocket ws, List<int> data) {
@@ -492,6 +520,8 @@ class WebSocketServer {
       } catch (_) {}
     })).timeout(const Duration(seconds: 2), onTimeout: () => const []);
     _authManager.reset();
+    _pairingPauseTimer?.cancel();
+    pairingPaused.value = false;
 
     clientCount.value = 0;
     laserActive.value = false;

@@ -105,15 +105,10 @@ class LinuxInputService implements InputService {
 
   @override
   Future<void> slideStartAt(int slideNumber) async {
-    if (await _impressOr('startAt', args: {'slide': slideNumber})) return;
-    // Keyboard fallback: start, wait for full screen, type the number + Enter.
-    _device.tap(Evdev.keyF5);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    for (final digit in slideNumber.toString().codeUnits) {
-      final key = Evdev.fromVk(digit);
-      if (key != null) _device.tap(key);
-    }
-    _device.tap(Evdev.keyEnter);
+    // Without the bridge there is no way to tell whether F5 opened a show, and
+    // typing the number + Enter into any other window could send a chat
+    // message. So the fallback only starts the show from its first slide.
+    await _impressOr('startAt', args: {'slide': slideNumber}, fallbackKeys: [Evdev.keyF5]);
   }
 
   @override

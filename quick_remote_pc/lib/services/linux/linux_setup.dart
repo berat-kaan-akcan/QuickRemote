@@ -18,6 +18,10 @@ enum ImpressStatus {
   /// localhost TCP listener written by older versions.
   legacyListener,
 
+  /// Like [legacyListener], but LibreOffice is running, and it rewrites the
+  /// profile on exit: the user has to close it before the entry can be fixed.
+  legacyListenerWhileRunning,
+
   /// LibreOffice is running without the UNO listener.
   runningNotListening,
 
@@ -122,11 +126,17 @@ udevadm settle
 
   static Future<ImpressStatus> impressStatus() async {
     final ping = await ImpressBridge.instance.request('ping');
-    if (ping['ok'] == true && ping['connected'] == true) return ImpressStatus.connected;
+    // The old TCP listener stays open while LibreOffice runs, connected or not.
+    final legacy = _registryStatus() == ImpressStatus.legacyListener;
+    if (ping['ok'] == true && ping['connected'] == true) {
+      return legacy ? ImpressStatus.legacyListenerWhileRunning : ImpressStatus.connected;
+    }
     if (ping['error'] == 'NO_UNO' || ping['error'] == 'NO_PYTHON') {
       return await _libreOfficeInstalled() ? ImpressStatus.noUno : ImpressStatus.notInstalled;
     }
-    if (await _libreOfficeRunning()) return ImpressStatus.runningNotListening;
+    if (await _libreOfficeRunning()) {
+      return legacy ? ImpressStatus.legacyListenerWhileRunning : ImpressStatus.runningNotListening;
+    }
     if (!await _libreOfficeInstalled()) return ImpressStatus.notInstalled;
     return _registryStatus();
   }
