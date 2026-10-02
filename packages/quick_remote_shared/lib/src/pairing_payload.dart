@@ -83,6 +83,16 @@ class PairingPayload {
   static String encodeFingerprint(List<int> sha256Digest) =>
       base64Url.encode(sha256Digest).replaceAll('=', '');
 
+  /// Security code the PC shows and the phone asks the user to compare on a
+  /// first connection without the QR code: the first 64 bits of the
+  /// certificate's SHA-256 (lower-case hex, as the phone stores it), as
+  /// `XXXX-XXXX-XXXX-XXXX`. Shorter codes are no protection: a fake PC can
+  /// try certificates until a 6-digit code matches in well under a second.
+  static String verificationCode(String hexFingerprint) {
+    final head = hexFingerprint.substring(0, 16).toUpperCase();
+    return [for (var i = 0; i < 16; i += 4) head.substring(i, i + 4)].join('-');
+  }
+
   /// Converts a QR fingerprint to lower-case hex, the form the phone stores.
   /// Returns null unless it decodes to exactly 32 bytes.
   static String? fingerprintToHex(String encoded) {

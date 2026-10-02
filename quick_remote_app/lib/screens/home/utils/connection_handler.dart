@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../../../services/websocket_service.dart';
 import '../../../utils/ui/app_dialog.dart';
@@ -31,8 +32,13 @@ class ConnectionHandler {
 
     if (!context.mounted) return ConnectAttemptResult(success: false);
 
-    if (!connResult.success && connResult.error == ConnectionError.certMismatch) {
-      final accepted = await _showCertMismatchDialog(context);
+    final needsApproval = connResult.error == ConnectionError.certMismatch ||
+        connResult.error == ConnectionError.unverified;
+    if (!connResult.success && needsApproval && connResult.newFingerprint != null) {
+      final code = PairingPayload.verificationCode(connResult.newFingerprint!);
+      final accepted = connResult.error == ConnectionError.unverified
+          ? await _showVerifyDialog(context, code)
+          : await _showCertMismatchDialog(context, code);
       if (!context.mounted) return ConnectAttemptResult(success: false);
 
       if (accepted && connResult.newFingerprint != null) {
@@ -58,14 +64,33 @@ class ConnectionHandler {
     }
   }
 
-  static Future<bool> _showCertMismatchDialog(BuildContext context) async {
+  /// First connection without the QR code: nothing vouches for the PC yet.
+  static Future<bool> _showVerifyDialog(BuildContext context, String code) async {
+    return await AppDialog.showConfirm(
+      context: context,
+      barrierDismissible: false,
+      title: 'Güvenlik Kodunu Karşılaştırın',
+      content: 'Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:\n\n'
+          '$code\n\n'
+          'Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. '
+          'QR kodu okutarak bu adımı atlayabilirsiniz.',
+      confirmText: 'Kodlar Aynı, Bağlan',
+      confirmColor: AppPopupTheme.successColor,
+      cancelText: 'İptal Et',
+      icon: Icons.verified_user_rounded,
+    );
+  }
+
+  static Future<bool> _showCertMismatchDialog(BuildContext context, String code) async {
     return await AppDialog.showConfirm(
       context: context,
       barrierDismissible: false,
       title: 'Güvenlik Uyarısı',
       content: 'Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı.\n\n'
-          'PC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir.\n\n'
-          'Emin değilseniz bağlanmayın.',
+          'PC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. '
+          'PC ekranındaki güvenlik kodu şu olmalı:\n\n'
+          '$code\n\n'
+          'Kodlar aynı değilse bağlanmayın.',
       confirmText: 'Yine de Bağlan ve Güncelle',
       confirmColor: AppPopupTheme.warningColor,
       cancelText: 'İptal Et',

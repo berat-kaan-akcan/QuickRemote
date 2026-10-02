@@ -35,6 +35,9 @@ class WebSocketClient {
     required this.onAuthResolved,
   });
 
+  /// Close code of a phone removed on the PC (`WebSocketServer.closedByPc`).
+  static const closedByPc = 4005;
+
   bool get isConnected => _connectionState == AppConnectionState.connected;
   AppConnectionState get connectionState => _connectionState;
   String get serverAddress => _serverAddress;
@@ -84,6 +87,7 @@ class WebSocketClient {
       final qrPinned = expectedFingerprint != null;
       final pinnedFingerprint = expectedFingerprint ?? prefs.getString(key);
       bool isCertMismatch = false;
+      bool isUnverified = false;
       String? seenFingerprint;
 
       // No trusted roots: every certificate reaches the callback, so the pin is
@@ -92,10 +96,14 @@ class WebSocketClient {
       httpClient.badCertificateCallback = (X509Certificate cert, String callbackHost, int callbackPort) {
         final actualFingerprint = sha256.convert(cert.der).toString();
         seenFingerprint = actualFingerprint;
-        if (pinnedFingerprint == null || pinnedFingerprint == actualFingerprint) {
-          return true;
+        if (pinnedFingerprint == actualFingerprint) return true;
+        // Nothing to check against: stop before the PIN goes out, so a fake
+        // PC answering the mDNS query or the typed address never sees it.
+        if (pinnedFingerprint == null) {
+          isUnverified = true;
+        } else {
+          isCertMismatch = true;
         }
-        isCertMismatch = true;
         return false;
       };
 
@@ -107,6 +115,16 @@ class WebSocketClient {
         );
         ws.pingInterval = const Duration(seconds: 30);
       } on HandshakeException catch (_) {
+        if (isUnverified) {
+          _setState(AppConnectionState.disconnected);
+          return ConnectionResult(
+            success: false,
+            error: ConnectionError.unverified,
+            message: 'Bu PC ile ilk bağlantı: güvenlik kodunu karşılaştırın.',
+            newFingerprint: seenFingerprint,
+            mismatchHost: host,
+          );
+        }
         if (isCertMismatch) {
           _setState(AppConnectionState.certMismatch);
           if (qrPinned) {
@@ -198,6 +216,13 @@ class WebSocketClient {
         onDone: () {
           final wasConnected = isConnected;
           debugPrint('WebSocket disconnected');
+          if (ws.closeCode == closedByPc) {
+            // The user removed this phone on the PC; the PIN changed too.
+            _reconnectTimer?.cancel();
+            onAuthResolved('PC bu cihazın bağlantısını kesti. Yeniden bağlanmak için QR kodu tekrar okutun.');
+            _setState(AppConnectionState.failed);
+            return;
+          }
           if (!authResolved) {
             authResolved = true;
             onAuthResolved('Bağlantı beklenmedik şekilde kapandı.');
@@ -304,6 +329,7 @@ class WebSocketClient {
       if (!result.success && !isConnected) {
         if (result.error == ConnectionError.wrongPin ||
             result.error == ConnectionError.certMismatch ||
+            result.error == ConnectionError.unverified ||
             result.error == ConnectionError.certRejected) {
           debugPrint('Fatal error (${result.error}), stopping reconnect loop');
           _setState(AppConnectionState.failed);
