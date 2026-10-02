@@ -81,6 +81,8 @@ class WebSocketServer {
     RemoteCommands.modeHighlighter,
     RemoteCommands.modeEraser,
     RemoteCommands.eraseAll,
+    RemoteCommands.blackScreen,
+    RemoteCommands.whiteScreen,
   };
 
   static const _volumeCommands = {
@@ -421,6 +423,7 @@ class WebSocketServer {
     });
 
     debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
+    _stateBroadcaster.resendSmtcInFull();
     triggerSlideStateUpdate();
 
     Future.delayed(

@@ -69,9 +69,10 @@ class WindowsInputService implements InputService {
   @override
   void laserOff() => _switchMode(0x41, laser: false); // Ctrl + A
 
-  void _switchMode(int key, {required bool laser}) {
-    KeyboardSimulator.pressKeyCombo([VK_CONTROL, key]);
-    PptController.setLaserActive(laser);
+  Future<void> _switchMode(int key, {required bool laser}) async {
+    if (await PptController.pressInSlideShow([VK_CONTROL, key])) {
+      PptController.setLaserActive(laser);
+    }
   }
 
   // PowerPoint's own laser follows the OS cursor.

@@ -39,23 +39,43 @@ class WindowsNetwork implements PlatformNetwork {
     }
   }
 
+  /// The interface addresses [_lastIP] was looked up for.
+  String? _lastAddresses;
+  String? _lastIP;
+
   @override
   Future<String> getLocalIP() async {
+    // Polled every 5 s. Asking PowerShell for the default route is slow, so
+    // only do it when the machine's addresses changed.
+    final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4);
+    final addresses = [
+      for (final interface in interfaces)
+        for (final address in interface.addresses) '${interface.name}=${address.address}',
+    ].join(',');
+    final cached = _lastIP;
+    if (cached != null && addresses == _lastAddresses) return cached;
+
+    final ip = await _defaultRouteIP() ?? await _firstPhysicalIPv4();
+    _lastAddresses = addresses;
+    _lastIP = ip;
+    return ip;
+  }
+
+  Future<String?> _defaultRouteIP() async {
     try {
-      final result = await Process.run(PowerShellRunner.executable, [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        r'(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway -ne $null} | Select-Object -First 1).IPv4Address.IPAddress'
-      ]);
-      final output = (result.stdout as String).trim();
-      if (output.isNotEmpty && output.contains('.')) {
-        return output;
-      }
+      final output = (await PowerShellRunner.execute(
+        r'(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway -ne $null} | Select-Object -First 1).IPv4Address.IPAddress',
+        isPolling: true,
+      ))
+          .trim();
+      if (output.isNotEmpty && output.contains('.')) return output;
     } catch (e) {
       debugPrint('Failed to get IP via PowerShell: $e');
     }
+    return null;
+  }
 
+  Future<String> _firstPhysicalIPv4() {
     const virtualKeywords = [
       'vmware', 'virtualbox', 'vbox', 'hyper-v',
       'docker', 'wsl', 'vmnet', 'vethernet',
@@ -93,14 +113,20 @@ class WindowsNetwork implements PlatformNetwork {
       if (file.existsSync()) file.deleteSync();
       pwdFile.writeAsStringSync(certPassword);
 
-      final script = '''
-\$cert = New-SelfSignedCertificate -DnsName "QuickRemote" -CertStoreLocation "cert:\\CurrentUser\\My" -ErrorAction Stop
-\$pwd = ConvertTo-SecureString -String "$certPassword" -Force -AsPlainText -ErrorAction Stop
-Export-PfxCertificate -Cert \$cert -FilePath "$certPath" -Password \$pwd -ErrorAction Stop
-Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction Stop
+      // Path and password go in through the environment: a user name with
+      // `$` or a backtick would break them inside a PowerShell string.
+      const script = r'''
+$cert = New-SelfSignedCertificate -DnsName "QuickRemote" -CertStoreLocation "cert:\CurrentUser\My" -ErrorAction Stop
+$pwd = ConvertTo-SecureString -String $env:QR_CERT_PASSWORD -Force -AsPlainText -ErrorAction Stop
+Export-PfxCertificate -Cert $cert -FilePath $env:QR_CERT_PATH -Password $pwd -ErrorAction Stop
+Remove-Item -Path "cert:\CurrentUser\My\$($cert.Thumbprint)" -ErrorAction Stop
 ''';
 
-      final res = await Process.run(PowerShellRunner.executable, ['-NoProfile', '-NonInteractive', '-Command', script]);
+      final res = await Process.run(
+        PowerShellRunner.executable,
+        ['-NoProfile', '-NonInteractive', '-Command', script],
+        environment: {'QR_CERT_PATH': certPath, 'QR_CERT_PASSWORD': certPassword},
+      );
       if (res.exitCode != 0 || !file.existsSync()) {
         throw Exception('Failed to generate TLS certificate via PowerShell: ${res.stderr}');
       }
@@ -119,13 +145,11 @@ Remove-Item -Path "cert:\\CurrentUser\\My\\\$(\$cert.Thumbprint)" -ErrorAction S
   @override
   Future<NetworkTrust> checkNetworkProfile() async {
     try {
-      final result = await Process.run(PowerShellRunner.executable, [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
+      final output = (await PowerShellRunner.execute(
         r'(Get-NetConnectionProfile | Where-Object {$_.IPv4Connectivity -ne "Disconnected"} | Select-Object -First 1).NetworkCategory',
-      ]);
-      final output = (result.stdout as String).trim();
+        isPolling: true,
+      ))
+          .trim();
       debugPrint('Network profile: $output');
       return switch (output.toLowerCase()) {
         'public' => NetworkTrust.untrusted,

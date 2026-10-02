@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../input_simulator.dart';
 
@@ -10,6 +11,11 @@ class StateBroadcaster {
   Timer? _volumeStateTimer;
   Map<String, dynamic>? _lastSlideState;
   int _pptNotRunningSkipCount = 0;
+  /// The last SMTC_STATE sent, without its cover, and the cover sent last
+  /// ([_noThumbnail] until one was sent).
+  String? _lastSmtcKey;
+  Object? _lastThumbnail = _noThumbnail;
+  static const _noThumbnail = Object();
   int _lastBroadcastVolume = -1;
   bool _lastBroadcastMuted = false;
 
@@ -59,6 +65,7 @@ class StateBroadcaster {
     _volumeStateTimer?.cancel();
     _volumeStateTimer = null;
     _lastSlideState = null;
+    resendSmtcInFull();
   }
 
   void scheduleVolumeStateBroadcast() {
@@ -73,18 +80,35 @@ class StateBroadcaster {
     if (!hasClients()) return;
     
     final smtcState = await InputSimulator.getSmtcState();
-    if (smtcState != null) {
-      onBroadcast({
-        'type': 'SMTC_STATE',
-        'hasMedia': smtcState['hasMedia'] ?? false,
-        'title': smtcState['title'],
-        'artist': smtcState['artist'],
-        'positionMs': smtcState['positionMs'] ?? 0,
-        'durationMs': smtcState['durationMs'] ?? 0,
-        'isPlaying': smtcState['isPlaying'] ?? false,
-        'thumbnail': smtcState['thumbnail'],
-      });
+    if (smtcState == null) return;
+    final message = <String, dynamic>{
+      'type': 'SMTC_STATE',
+      'hasMedia': smtcState['hasMedia'] ?? false,
+      'title': smtcState['title'],
+      'artist': smtcState['artist'],
+      'positionMs': smtcState['positionMs'] ?? 0,
+      'durationMs': smtcState['durationMs'] ?? 0,
+      'isPlaying': smtcState['isPlaying'] ?? false,
+    };
+    // The cover is a base64 image of up to hundreds of KB, polled every 2 s:
+    // send it only when it changed, and skip a state that did not change.
+    final thumbnail = smtcState['thumbnail'] as String?;
+    final key = jsonEncode(message);
+    final thumbnailChanged = thumbnail != _lastThumbnail;
+    if (!thumbnailChanged && key == _lastSmtcKey) return;
+    _lastSmtcKey = key;
+    if (thumbnailChanged) {
+      _lastThumbnail = thumbnail;
+      message['thumbnail'] = thumbnail;
     }
+    onBroadcast(message);
+  }
+
+  /// The next SMTC_STATE goes out in full, cover included: a client that just
+  /// connected has none of it.
+  void resendSmtcInFull() {
+    _lastSmtcKey = null;
+    _lastThumbnail = _noThumbnail;
   }
 
   Future<void> fetchAndBroadcastSlideState() async {

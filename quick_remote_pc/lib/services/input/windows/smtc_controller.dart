@@ -17,7 +17,9 @@ try {
 
     \$asTask = \$asTaskGeneric.MakeGenericMethod(\$managerType)
     \$netTask = \$asTask.Invoke(\$null, @(\$asyncOp))
-    if (-not \$netTask.Wait(2000)) { throw "Timeout" }
+    # The three waits stay under the runner's 5 s timeout (1.5 + 1 + 1 s);
+    # a runner killed by the timeout has to start PowerShell again.
+    if (-not \$netTask.Wait(1500)) { throw "Timeout" }
     \$manager = \$netTask.Result
 
     \$session = \$manager.GetCurrentSession()
@@ -27,7 +29,7 @@ try {
         \$propsType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties, Windows.Media, ContentType=WindowsRuntime]
         \$asTask2 = \$asTaskGeneric.MakeGenericMethod(\$propsType)
         \$netTask2 = \$asTask2.Invoke(\$null, @(\$propsAsync))
-        if (-not \$netTask2.Wait(2000)) { throw "Timeout" }
+        if (-not \$netTask2.Wait(1000)) { throw "Timeout" }
         \$props = \$netTask2.Result
         
         [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -53,13 +55,19 @@ try {
             }
         } catch {}
         
+        # The polling PowerShell process persists: reuse the cover while the
+        # same track plays instead of reading it on every poll. Players may
+        # update the title before the cover, so a cached cover lives 10 s.
+        \$trackKey = "\$(\$props.Title)|\$(\$props.Artist)|\$(\$props.AlbumTitle)"
         \$thumbBase64 = ""
-        if (\$props.Thumbnail -ne \$null) {
+        if (\$global:qrThumbKey -eq \$trackKey -and ((Get-Date) - \$global:qrThumbAt).TotalSeconds -lt 10) {
+            \$thumbBase64 = \$global:qrThumb
+        } elseif (\$props.Thumbnail -ne \$null) {
             try {
                 \$thumbAsync = \$props.Thumbnail.OpenReadAsync()
                 \$asTaskStream = \$asTaskGeneric.MakeGenericMethod([Windows.Storage.Streams.IRandomAccessStreamWithContentType])
                 \$netTaskStream = \$asTaskStream.Invoke(\$null, @(\$thumbAsync))
-                if (-not \$netTaskStream.Wait(2000)) { throw "Timeout" }
+                if (-not \$netTaskStream.Wait(1000)) { throw "Timeout" }
                 \$stream = \$netTaskStream.Result
 
                 \$asStreamMethod = ([System.IO.WindowsRuntimeStreamExtensions].GetMethods() | Where-Object { \$_.Name -eq 'AsStreamForRead' -and \$_.GetParameters().Count -eq 1 })[0]
@@ -71,6 +79,9 @@ try {
 
                 \$dotNetStream.Close()
                 \$memoryStream.Close()
+                \$global:qrThumbKey = \$trackKey
+                \$global:qrThumb = \$thumbBase64
+                \$global:qrThumbAt = Get-Date
             } catch {}
         }
         
