@@ -16,7 +16,7 @@ dependencies:
   screen_retriever: ^0.2.0
   win32: ^6.0.0
   window_manager: ^0.5.1
-  nsd: ^2.3.1
+  nsd: ^5.0.1
   google_fonts: ^8.2.1
   path_provider: ^2.1.6
   quick_remote_shared:

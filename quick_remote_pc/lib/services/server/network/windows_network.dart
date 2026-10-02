@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:nsd/nsd.dart' as nsd;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dart:math';
@@ -7,6 +8,37 @@ import '../../powershell_runner.dart';
 import 'platform_network.dart';
 
 class WindowsNetwork implements PlatformNetwork {
+  nsd.Registration? _registration;
+
+  @override
+  Future<bool> advertise({required String name, required int port}) async {
+    await unadvertise();
+    try {
+      _registration = await nsd.register(nsd.Service(
+        name: name,
+        type: PlatformNetwork.serviceType,
+        port: port,
+      ));
+      debugPrint('mDNS service registered as $name');
+      return true;
+    } catch (e) {
+      debugPrint('Failed to register mDNS service: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<void> unadvertise() async {
+    final registration = _registration;
+    _registration = null;
+    if (registration == null) return;
+    try {
+      await nsd.unregister(registration);
+    } catch (e) {
+      debugPrint('Failed to unregister mDNS service: $e');
+    }
+  }
+
   @override
   Future<String> getLocalIP() async {
     try {

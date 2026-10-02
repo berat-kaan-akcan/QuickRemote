@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../models/draw_tool.dart';
 
 class ColorPickerSheet {
@@ -14,32 +15,32 @@ class ColorPickerSheet {
           {
             'name': 'Kırmızı',
             'color': const Color(0xFFFF1744),
-            'cmd': 'SET_PEN_COLOR:255',
+            'cmd': RemoteCommands.penColor(255),
           },
           {
             'name': 'Mavi',
             'color': const Color(0xFF2979FF),
-            'cmd': 'SET_PEN_COLOR:16711680',
+            'cmd': RemoteCommands.penColor(16711680),
           },
           {
             'name': 'Yeşil',
             'color': const Color(0xFF00E676),
-            'cmd': 'SET_PEN_COLOR:65280',
+            'cmd': RemoteCommands.penColor(65280),
           },
           {
             'name': 'Sarı',
             'color': const Color(0xFFFFEA00),
-            'cmd': 'SET_PEN_COLOR:65535',
+            'cmd': RemoteCommands.penColor(65535),
           },
           {
             'name': 'Beyaz',
             'color': const Color(0xFFFFFFFF),
-            'cmd': 'SET_PEN_COLOR:16777215',
+            'cmd': RemoteCommands.penColor(16777215),
           },
           {
             'name': 'Mor',
             'color': const Color(0xFFD500F9),
-            'cmd': 'SET_PEN_COLOR:8388736',
+            'cmd': RemoteCommands.penColor(8388736),
           },
         ];
 

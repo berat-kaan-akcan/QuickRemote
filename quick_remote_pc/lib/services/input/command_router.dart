@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'input_service.dart';
 
 /// Parses a validated remote command string and routes it to the platform
@@ -35,71 +36,71 @@ class CommandRouter {
     }
 
     switch (command) {
-      case 'NEXT':
+      case RemoteCommands.next:
         service.slideNext();
-      case 'PREV':
+      case RemoteCommands.prev:
         service.slidePrev();
-      case 'START':
+      case RemoteCommands.start:
         service.slideStart();
-      case 'END':
+      case RemoteCommands.end:
         service.slideEnd();
-      case 'BLACK_SCREEN':
+      case RemoteCommands.blackScreen:
         service.blackScreen();
-      case 'WHITE_SCREEN':
+      case RemoteCommands.whiteScreen:
         service.whiteScreen();
-      case 'ERASE_ALL':
+      case RemoteCommands.eraseAll:
         service.eraseAllInk();
-      case 'LOCK':
+      case RemoteCommands.lock:
         service.lockPC();
 
       // ── Çizim / imleç modları ──
-      case 'LASER_CURSOR':
+      case RemoteCommands.laserCursor:
         service.toggleLaserCursor();
-      case 'MODE_ARROW':
+      case RemoteCommands.modeArrow:
         service.modeArrow();
-      case 'MODE_LASER':
+      case RemoteCommands.modeLaser:
         service.modeLaser();
-      case 'MODE_PEN':
+      case RemoteCommands.modePen:
         service.modePen();
-      case 'MODE_HIGHLIGHTER':
+      case RemoteCommands.modeHighlighter:
         service.modeHighlighter();
-      case 'MODE_ERASER':
+      case RemoteCommands.modeEraser:
         service.modeEraser();
-      case 'LASER_OFF':
+      case RemoteCommands.laserOff:
         service.laserOff();
 
       // ── Fare ──
-      case 'LEFT_CLICK':
+      case RemoteCommands.leftClick:
         service.leftClick();
-      case 'RIGHT_CLICK':
+      case RemoteCommands.rightClick:
         service.rightClick();
-      case 'LEFT_DOWN':
+      case RemoteCommands.leftDown:
         service.leftDown();
-      case 'LEFT_UP':
+      case RemoteCommands.leftUp:
         service.leftUp();
 
       // ── Ses kontrolü ──
-      case 'VOLUME_UP':
+      case RemoteCommands.volumeUp:
         service.volumeUp();
-      case 'VOLUME_DOWN':
+      case RemoteCommands.volumeDown:
         service.volumeDown();
-      case 'VOLUME_MUTE':
+      case RemoteCommands.volumeMute:
         service.volumeMute();
 
       // ── Sunum gömülü video ──
-      case 'MEDIA_PLAY_PAUSE':
+      case RemoteCommands.mediaPlayPause:
         service.pptMediaPlayPause();
-      case 'MEDIA_REWIND':
+      case RemoteCommands.mediaRewind:
         service.pptMediaRewind();
 
       // ── Sistem medya transport ──
-      case 'SYSTEM_MEDIA_PLAY_PAUSE':
+      case RemoteCommands.sysMediaPlayPause:
         service.sysMediaPlayPause();
-      case 'SYSTEM_MEDIA_NEXT':
+      case RemoteCommands.sysMediaNext:
         service.sysMediaNext();
-      case 'SYSTEM_MEDIA_PREV':
+      case RemoteCommands.sysMediaPrev:
         service.sysMediaPrev();
-      case 'SYSTEM_MEDIA_STOP':
+      case RemoteCommands.sysMediaStop:
         service.sysMediaStop();
 
       default:

@@ -339,6 +339,10 @@ class WebSocketClient {
     }
   }
 
+  /// A connection the user starts gets the full set of reconnect attempts
+  /// again; [disconnect] used them up so the closing socket does not retry.
+  void resetReconnectAttempts() => _reconnectAttempts = 0;
+
   Future<void> disconnect() async {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;

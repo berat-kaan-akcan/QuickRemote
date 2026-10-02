@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
@@ -117,9 +118,9 @@ class SlidePickerSheet {
         );
         return;
       }
-      onSend('START_AT:$parsed');
+      onSend(RemoteCommands.startAt(parsed));
     } else {
-      onSend('START');
+      onSend(RemoteCommands.start);
     }
     Navigator.pop(context);
   }

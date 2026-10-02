@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
 import '../widgets/now_playing_card.dart';
 import '../widgets/volume_panel.dart';
@@ -19,7 +20,7 @@ class _MediaControlViewState extends State<MediaControlView> {
   void initState() {
     super.initState();
     if (widget.ws.isConnected) {
-      widget.ws.sendCommand('REFRESH_STATE');
+      widget.ws.sendCommand(RemoteCommands.refreshState);
     }
   }
 
@@ -81,10 +82,10 @@ class _MediaControlViewState extends State<MediaControlView> {
                         durationMs: ws.durationMs,
                         isPlaying: ws.isPlaying,
                         isConnected: ws.isConnected,
-                        onPlayPause: () => _send('SYSTEM_MEDIA_PLAY_PAUSE'),
-                        onNext: () => _send('SYSTEM_MEDIA_NEXT'),
-                        onPrev: () => _send('SYSTEM_MEDIA_PREV'),
-                        onStop: () => _send('SYSTEM_MEDIA_STOP'),
+                        onPlayPause: () => _send(RemoteCommands.sysMediaPlayPause),
+                        onNext: () => _send(RemoteCommands.sysMediaNext),
+                        onPrev: () => _send(RemoteCommands.sysMediaPrev),
+                        onStop: () => _send(RemoteCommands.sysMediaStop),
                       ),
                       const SizedBox(height: 24),
 
@@ -100,10 +101,10 @@ class _MediaControlViewState extends State<MediaControlView> {
                         isConnected: ws.isConnected,
                         volume: ws.systemVolume,
                         muted: ws.systemMuted,
-                        onVolumeUp: () => _send('VOLUME_UP'),
-                        onVolumeDown: () => _send('VOLUME_DOWN'),
-                        onMute: () => _send('VOLUME_MUTE'),
-                        onSetVolume: (v) => _send('VOLUME_SET:$v'),
+                        onVolumeUp: () => _send(RemoteCommands.volumeUp),
+                        onVolumeDown: () => _send(RemoteCommands.volumeDown),
+                        onMute: () => _send(RemoteCommands.volumeMute),
+                        onSetVolume: (v) => _send(RemoteCommands.volumeSet(v)),
                       ),
                       const SizedBox(height: 20),
 
@@ -117,8 +118,8 @@ class _MediaControlViewState extends State<MediaControlView> {
                       PptMediaControls(
                         isConnected: ws.isConnected,
                         isPlaying: ws.pptIsMediaPlaying,
-                        onPlayPause: () => _send('MEDIA_PLAY_PAUSE'),
-                        onRewind: () => _send('MEDIA_REWIND'),
+                        onPlayPause: () => _send(RemoteCommands.mediaPlayPause),
+                        onRewind: () => _send(RemoteCommands.mediaRewind),
                       ),
                       const SizedBox(height: 24),
                     ],

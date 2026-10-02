@@ -43,6 +43,16 @@ abstract class PlatformNetwork {
   /// the admin password where needed.
   Future<bool> openFirewallPorts();
 
+  /// Advertises the server as `_quickremote._tcp` over mDNS, replacing an
+  /// earlier advertisement. Returns false when that failed; the phone then
+  /// needs the QR code or the manual address.
+  Future<bool> advertise({required String name, required int port});
+
+  /// Withdraws the advertisement, so phones stop listing a stopped server.
+  Future<void> unadvertise();
+
+  static const serviceType = '_quickremote._tcp';
+
   static const serverPortFirst = 8090;
   static const serverPortLast = 8099;
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../models/presentation_analytics.dart';
 import 'websocket/websocket_client.dart';
@@ -201,6 +202,7 @@ class WebSocketService extends ChangeNotifier {
   /// [certFingerprint] (hex SHA-256, from the QR code) pins the certificate
   /// for this connection instead of trusting it on first use.
   Future<ConnectionResult> connect(String host, int port, {String? pin, String? certFingerprint}) {
+    _client.resetReconnectAttempts();
     return _client.connect(host, port, pin: pin, expectedFingerprint: certFingerprint);
   }
 
@@ -209,13 +211,13 @@ class WebSocketService extends ChangeNotifier {
     bool stateChanged = false;
     
     // Optimistic UI updates
-    if (command == 'MEDIA_PLAY_PAUSE') {
+    if (command == RemoteCommands.mediaPlayPause) {
       _state.pptIsMediaPlaying = !_state.pptIsMediaPlaying;
       stateChanged = true;
-    } else if (command == 'SYSTEM_MEDIA_PLAY_PAUSE') {
+    } else if (command == RemoteCommands.sysMediaPlayPause) {
       _state.isPlaying = !_state.isPlaying;
       stateChanged = true;
-    } else if (command == 'MEDIA_REWIND') {
+    } else if (command == RemoteCommands.mediaRewind) {
       _state.pptIsMediaPlaying = false; 
       stateChanged = true;
     }

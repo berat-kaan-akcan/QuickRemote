@@ -129,6 +129,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -323,50 +331,50 @@ packages:
     dependency: "direct main"
     description:
       name: nsd
-      sha256: "88a3ba4e6dc38363f1256b4b482abdeec396d99df31a064d545e559cb4cb6ba9"
+      sha256: "2551fec29f6032459815a577f385f89e18099a3ca1c545b5dfb1e1a64b5705ec"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.1"
+    version: "5.0.1"
   nsd_android:
     dependency: transitive
     description:
       name: nsd_android
-      sha256: "7a38d0b2d21f1e578cd3020940b95b22d5260413dc0c8cf30a987a4e410b166d"
+      sha256: "96d2d451c5db0319c37b1b2a38f2d55eb56ae54c0b0d3144c03c19c97436de4a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.2"
+    version: "2.2.0"
   nsd_ios:
     dependency: transitive
     description:
       name: nsd_ios
-      sha256: "7034134dd89595362d5e464030081b0d542120a558ab7fe6227df44365df3e8a"
+      sha256: "57a4b8b218860346eba7e2d629c6fce1fa89a97645350130a15c45babb4b1324"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.3"
+    version: "3.0.1"
   nsd_macos:
     dependency: transitive
     description:
       name: nsd_macos
-      sha256: "2403b8d599f50fc9179db1420a0ffc25bfa8bbeb814aa31ca0a71f804fc938da"
+      sha256: cca373ee5f28ea22140d595b5cd06e83ebc2d6e4ee3e17d7fa1fd6564e4cb352
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.3"
+    version: "3.0.1"
   nsd_platform_interface:
     dependency: transitive
     description:
       name: nsd_platform_interface
-      sha256: "2f4033fa13cc45375253bf348abdb9712004e656462205543ec9506b43c67bb2"
+      sha256: b1a5ace6f01ea2ce37f373e52c3b7af4fd7c11de2582ddcc89f4fc00615d9dff
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.0"
+    version: "2.2.0"
   nsd_windows:
     dependency: transitive
     description:
       name: nsd_windows
-      sha256: "06601efdd3268cbce4b90f8e23ae1dab445c97c661fba417821ce118add722e7"
+      sha256: "68b4a256b0be258dbbad0ae789f2e8838d0935a353dac86b17c14c1a05df4ecd"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.1"
+    version: "3.0.1"
   objective_c:
     dependency: transitive
     description:
@@ -695,10 +703,10 @@ packages:
     dependency: transitive
     description:
       name: uuid
-      sha256: "648e103079f7c64a36dc7d39369cabb358d377078a051d6ae2ad3aa539519313"
+      sha256: "9b129329f58692f6e6578329498a8fe9fbe98f090beb764ffbb8ee2eadd01dcd"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.7"
+    version: "4.6.0"
   vector_math:
     dependency: transitive
     description:

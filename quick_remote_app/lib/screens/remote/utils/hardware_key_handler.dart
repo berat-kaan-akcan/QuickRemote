@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
 
 class HardwareKeyHandler {
@@ -15,10 +16,10 @@ class HardwareKeyHandler {
       if (!_isAttached || !wsRef.isConnected) return;
       
       if (call.method == 'onVolumeUp') {
-        onCommand('NEXT');
+        onCommand(RemoteCommands.next);
         HapticFeedback.selectionClick();
       } else if (call.method == 'onVolumeDown') {
-        onCommand('PREV');
+        onCommand(RemoteCommands.prev);
         HapticFeedback.selectionClick();
       }
     });
