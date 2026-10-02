@@ -257,6 +257,8 @@ flutter run -d linux        # veya: flutter build linux
 - **Impress bağlantısı:** "Etkinleştir" butonu LibreOffice profiline yalnızca sizin kullanıcınızın bağlanabildiği bir UNO soketi (`pipe,name=quickremote`) ekler. LibreOffice açıksa "Bağlan" butonu bunu anında etkinleştirir. Eski sürümlerin eklediği `localhost:2002` TCP dinleyicisi bu makinedeki her kullanıcıya ve uygulamaya açıktı; panelde "Güncelle" çıkarsa ona basın.
 - **Güvenlik duvarı:** firewalld/ufw 8090-8099 portlarını engelliyorsa "Portları aç" butonu görünür.
 
+> **Bilmeniz gerekenler:** udev kuralı (`uaccess`) `/dev/uinput`'u oturumunuzdaki **her** uygulamaya açar; bu, Wayland'ın uygulamalar arası giriş yalıtımını sizin kullanıcınız için kaldırır. İzni geri almak için `sudo rm /etc/udev/rules.d/70-quickremote-uinput.rules` çalıştırın. Klavye yedekleri tuşların fiziksel konumunu gönderir; Türkçe F gibi QWERTY olmayan düzenlerde Impress köprüsü yokken B/W kısayolları farklı harf üretebilir.
+
 | Özellik | Linux durumu |
 |---------|--------------|
 | Slayt kontrolü, notlar, n. slayttan başlatma, siyah/beyaz ekran | ✅ Impress (UNO) |
