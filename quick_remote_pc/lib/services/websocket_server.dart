@@ -37,7 +37,7 @@ class WebSocketServer {
   /// null when it could not be read, and the QR code then omits it.
   final ValueNotifier<String?> certFingerprint = ValueNotifier(null);
 
-  final MouseController mouseController = MouseController();
+  final MouseController mouseController;
   final Set<WebSocket> _authenticatedClients = {};
 
   final AuthManager _authManager = AuthManager();
@@ -59,7 +59,7 @@ class WebSocketServer {
   Timer? _networkCheckTimer;
   int _networkProfileTick = 0;
 
-  static const _authTimeout = Duration(seconds: 5);
+  final Duration _authTimeout;
   /// Commands and the auth message are a few dozen bytes; anything larger is abuse.
   static const _maxTextMessageLength = 1024;
   /// Bytes a client may send before it authenticates: the auth message plus
@@ -84,7 +84,11 @@ class WebSocketServer {
 
   int get port => _port;
 
-  WebSocketServer() {
+  WebSocketServer({
+    MouseController? mouseController,
+    Duration authTimeout = const Duration(seconds: 5),
+  })  : mouseController = mouseController ?? MouseController(),
+        _authTimeout = authTimeout {
     _stateBroadcaster = StateBroadcaster(
       onBroadcast: broadcast,
       hasClients: () => _authenticatedClients.isNotEmpty,
@@ -130,18 +134,7 @@ class WebSocketServer {
         }
       }
 
-      isRunning.value = true;
-      debugPrint('WebSocket server started on port $_port');
-
-      InputSimulator.onCommandError = (detail) {
-        broadcast({
-          'type': 'STATUS',
-          'state': 'COMMAND_FAILED',
-          'detail': detail,
-        });
-      };
-
-      _server!.listen(_handleRequest, onError: (error) => debugPrint('Server error: $error'));
+      _serve();
 
       certFingerprint.value = await _ownCertFingerprint(_port);
 
@@ -171,6 +164,31 @@ class WebSocketServer {
       startError.value = e.toString();
       isRunning.value = false;
     }
+  }
+
+  void _serve() {
+    isRunning.value = true;
+    debugPrint('WebSocket server started on port $_port');
+
+    InputSimulator.onCommandError = (detail) {
+      broadcast({
+        'type': 'STATUS',
+        'state': 'COMMAND_FAILED',
+        'detail': detail,
+      });
+    };
+
+    _server!.listen(_handleRequest, onError: (error) => debugPrint('Server error: $error'));
+  }
+
+  /// Serves on an already bound [server] without TLS, mDNS, the network
+  /// monitor or the state poller, so tests can talk to it over plain ws://.
+  @visibleForTesting
+  void serveForTesting(HttpServer server) {
+    _server = server;
+    _port = server.port;
+    pin.value = _authManager.generatePin();
+    _serve();
   }
 
   Future<void> _handleRequest(HttpRequest request) async {
