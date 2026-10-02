@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import 'input/command_router.dart';
 import 'input/input_service.dart';
 import 'input/windows/windows_input_service.dart';
@@ -7,7 +9,12 @@ import 'input/linux/linux_input_service.dart';
 
 /// Static facade over the platform [InputService].
 class InputSimulator {
-  static final InputService _instance = _init();
+  static InputService _instance = _init();
+
+  /// Replaces the platform service; set it before anything else touches
+  /// [InputSimulator] so the real one is never created.
+  @visibleForTesting
+  static set instance(InputService service) => _instance = service;
 
   static InputService _init() {
     if (Platform.isWindows) {

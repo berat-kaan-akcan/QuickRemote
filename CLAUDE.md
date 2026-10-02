@@ -26,6 +26,15 @@ flutter run -d windows           # PC server (or -d linux)
 flutter run                      # mobile client
 ```
 
+The shared package and the Impress bridge have their own tests:
+
+```bash
+cd packages/quick_remote_shared && dart test
+python3 -m unittest discover -s quick_remote_pc/test/python   # from the repo root; no LibreOffice needed
+```
+
+`WebSocketServer` tests (`quick_remote_pc/test/websocket_server_test.dart`) run the real server over plain `ws://` through `serveForTesting`, with `InputSimulator.instance` and the `MouseController` replaced by the fakes in `test/fakes.dart`.
+
 `flutter analyze` crashes (LSP `FormatException`) because the repo path contains non-ASCII characters (`Masaüstü`). Use `dart analyze` instead, or run from an ASCII symlink to the repo.
 
 The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' | python3 quick_remote_pc/assets/linux/impress_bridge.py quickremote` (the argument is the UNO pipe name; a number selects a localhost TCP port, for manual tests only).
