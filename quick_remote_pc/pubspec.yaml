@@ -1,5 +1,5 @@
 name: quick_remote_pc
-description: "A new Flutter project."
+description: "QuickRemote PC server: receives remote commands and controls PowerPoint (Windows) or LibreOffice Impress (Linux)."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -17,7 +17,6 @@ dependencies:
   win32: ^6.0.0
   window_manager: ^0.5.1
   nsd: ^5.0.1
-  google_fonts: ^8.2.1
   path_provider: ^2.1.6
   quick_remote_shared:
     path: ../packages/quick_remote_shared
@@ -38,6 +37,21 @@ flutter:
   assets:
     - assets/images/
     - assets/linux/
+    - assets/fonts/OFL.txt
+  fonts:
+    # Inter (SIL OFL 1.1, assets/fonts/OFL.txt), bundled so the app never
+    # downloads fonts at runtime.
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-400.ttf
+        - asset: assets/fonts/Inter-500.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-700.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-800.ttf
+          weight: 800
 
 flutter_launcher_icons:
   windows:

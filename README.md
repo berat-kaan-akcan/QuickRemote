@@ -8,7 +8,7 @@
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.11+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.11+-0175C2?logo=dart&logoColor=white)](https://dart.dev)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android%20%7C%20iOS-brightgreen)](#)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20Android-brightgreen)](#)
 [![License](https://img.shields.io/badge/License-Personal_Use-blue)](#-lisans)
 
 </div>
@@ -31,9 +31,6 @@
 | Özellik | Açıklama |
 |---------|----------|
 | **Touchpad Modu** | Telefonunuzun ekranını trackpad gibi kullanarak fareyi kontrol edin |
-| **Hassasiyet Ayarı** | Fare hassasiyetini ihtiyacınıza göre özelleştirin |
-| **Sol / Sağ Tık** | Tam fare tıklama desteği |
-| **Sürükle & Bırak** | Uzun basarak sürükleme işlemi yapın |
 
 ### 🎨 Çizim Araçları
 | Araç | Açıklama |
@@ -56,7 +53,6 @@
 |---------|----------|
 | **Sunum Geçmişi** | Geçmişte yaptığınız tüm sunumların listesini ve detaylarını görüntüleyin |
 | **Slayt Süreleri** | Hangi slaytta ne kadar süre harcadığınızı analiz edin |
-| **Ağ Uyarıları Raporu** | Herkese açık veya güvensiz ağlarda yapılan bağlantıların güvenlik analiz raporunu alın |
 
 ### 🔗 Bağlantı & Keşif
 | Özellik | Açıklama |
@@ -75,9 +71,11 @@
 | **TLS/WSS Şifreleme** | Tüm iletişim otomatik oluşturulan self-signed sertifika ile şifrelenir |
 | **6 Haneli PIN** | Her oturumda rastgele PIN oluşturulur; kimliksiz bağlantı engellenir |
 | **Brute-Force Koruması** | 5 başarısız denemeden sonra IP adresi 60 saniyeliğine engellenir; engel her PIN denemesinde yeniden kontrol edilir. IP başına en fazla 3, toplamda 32 doğrulanmamış bağlantı. Bir dakikada 20'den fazla hatalı PIN (hangi IP'den olursa olsun) yeni eşleştirmeleri 60 saniye durdurur |
-| **Sertifika Sabitleme** | QR kodu sertifikanın SHA-256 parmak izini taşır; telefon ilk bağlantıda bile bu sertifikayı bekler, eşleşmezse bağlanmaz. QR'sız bağlantılarda ilk başarılı girişte parmak izi kaydedilir, değişirse kullanıcıya sorulur |
+| **Sertifika Sabitleme** | QR kodu sertifikanın SHA-256 parmak izini taşır; telefon ilk bağlantıda bile bu sertifikayı bekler, eşleşmezse bağlanmaz. QR'sız ilk bağlantıda PIN gönderilmeden önce PC ekranındaki 16 haneli güvenlik kodunu karşılaştırmanız istenir; sertifika sonradan değişirse yine sorulur |
+| **Gizlenen Eşleştirme Kodu** | İlk telefon bağlandıktan sonra QR kodu ve PIN gizlenir ("Kodu göster" ile açılır); yansıtılan ekranda görünmez |
+| **Bağlı Cihazlar** | PC bağlı telefonları listeler; "Çıkar" o telefonun bağlantısını keser ve PIN'i yeniler |
 | **Kimlik Doğrulama Zaman Aşımı** | Bağlanan istemci 5 saniye içinde doğrulanmazsa bağlantı kapatılır |
-| **Bilgisayar Kilitleme** | `Win + L` ile bilgisayarı uzaktan kilitleyin |
+| **Odak Kontrolü** | Windows'ta çizim/siyah ekran kısayolları yalnızca PowerPoint öndeyken gönderilir; başka bir pencereye yazılmaz |
 | **Canlı Ağ İzleme** | Ağ profiliniz sürekli izlenir; herkese açık ağ tespit edilirse uyarılır ve ağ ayarlarını açabilirsiniz |
 
 ---
@@ -87,8 +85,8 @@
 ```text
 ┌─────────────────────────┐                            ┌─────────────────────────┐
 │     📱 Mobile Client    │      Wi-Fi (WSS/TLS)       │    🖥️ PC Server App     │
-│     (Flutter App)       │◄──────────────────────────►│    (Flutter Windows)     │
-│  Android / iOS          │       Local Network         │                         │
+│     (Flutter App)       │◄──────────────────────────►│  (Flutter Windows/Linux) │
+│  Android                │       Local Network         │                         │
 ├─────────────────────────┤                            ├─────────────────────────┤
 │ • QR Tarama             │      ◄── PIN Auth ──►      │ • WebSocket Server      │
 │ • mDNS Keşfi            │      ◄── Commands ──►      │ • Win32 Input Simulator │
@@ -100,7 +98,7 @@
 ```
 
 **İletişim Akışı:**
-1. **PC Server App** → Windows üzerinde TLS destekli WebSocket sunucusu başlatır, mDNS ile kendini ağda duyurur ve ekranda QR kod gösterir.
+1. **PC Server App** → Windows veya Linux üzerinde TLS destekli WebSocket sunucusu başlatır, mDNS ile kendini ağda duyurur ve ekranda QR kod gösterir.
 2. **Mobile Client** → mDNS ile otomatik keşif yapar veya QR kodu tarayarak sunucunun IP, port ve PIN bilgilerini alır.
 3. **Kimlik Doğrulama** → PIN, TLS kanalı içinde doğrulanır. QR ile bağlanıldığında telefon, QR kodundaki sertifika parmak izini doğrular.
 4. **Kontrol** → Tüm komutlar (`NEXT`, `PREV`, `START`, `LOCK`, `MODE_LASER` vb.) ve fare verileri düşük gecikmeli WebSocket kanalı üzerinden iletilir.
@@ -111,10 +109,9 @@
 
 ```text
 QuickRemote/
-├── quick_remote_app/              # 📱 Flutter Mobil Uygulaması (Android / iOS)
+├── quick_remote_app/              # 📱 Flutter Mobil Uygulaması (Android)
 │   ├── lib/
 │   │   ├── main.dart              # Uygulama giriş noktası & tema yapılandırması
-│   │   ├── constants/             # Sabitler (renkler, ikonlar, API yolları vb.)
 │   │   ├── models/                # Veri modelleri (presentation_analytics, draw_tool vb.)
 │   │   ├── providers/             # Ayar durumu ve state yönetimi
 │   │   ├── repositories/          # Veri tabanı ve geçmiş kayıt işlemleri
@@ -130,31 +127,35 @@ QuickRemote/
 │   │   │   └── discovery_service.dart
 │   │   ├── utils/                 # Yardımcı fonksiyonlar, UI bileşenleri (app_dialog vb.)
 │   │   └── widgets/               # Ortak kullanılan widgetlar (presentation_timer vb.)
-│   └── test/                      # 🧪 Birim ve Widget Testleri
-│       ├── settings_provider_test.dart
-│       └── widget_test.dart
+│   └── test/                      # 🧪 Birim ve widget testleri (ayarlar, BT tuş eşlemesi, hareket biriktirici)
 │
-├── quick_remote_pc/               # 🖥️ Flutter Masaüstü Uygulaması (Windows)
+├── quick_remote_pc/               # 🖥️ Flutter Masaüstü Uygulaması (Windows / Linux)
+│   ├── assets/linux/              # LibreOffice Impress köprüsü (impress_bridge.py)
+│   ├── test/                      # 🧪 Sunucu entegrasyon, komut yönlendirici, auth, Linux testleri
+│   │   └── python/                # Impress köprüsü testleri (unittest)
 │   └── lib/
 │       ├── main.dart              # Uygulama giriş noktası & Provider yapılandırması
 │       ├── providers/             # State yönetimi (server_provider vb.)
 │       ├── screens/
 │       │   └── home/              # Ana ekran – ağ durumu, public network uyarıları, ayarlar
 │       ├── services/              # Arka plan servisleri
-│       │   ├── input/             # Girdi simülatörleri (Klavye, Fare, PPT, SMTC)
+│       │   ├── input/             # Girdi: windows/ (SendInput, PowerPoint COM, SMTC), linux/ (uinput, Impress, pactl, MPRIS)
 │       │   └── server/            # Sunucu yönetimi (Auth, Network, State)
 │       └── widgets/               # Ortak kullanılan widgetlar (hover efektleri vb.)
 │
 ├── packages/
 │   └── quick_remote_shared/       # 📦 Paylaşılan Dart Paketi
-│       └── lib/src/
-│           └── remote_commands.dart   # Ortak komut sabitleri (NEXT, PREV, MODE_LASER vb.)
+│       ├── lib/src/
+│       │   ├── remote_commands.dart   # Ortak komut sabitleri ve üreticileri (NEXT, startAt(n) vb.)
+│       │   └── pairing_payload.dart   # QR içeriği, parmak izi ve güvenlik kodu
+│       └── test/
 │
 ├── landing-page/                  # 🌐 Tanıtım Web Sitesi
 │   ├── index.html
 │   ├── style.css
 │   └── assets/
-│       └── hero-mockup.jpg
+│       ├── hero-mockup.jpg
+│       └── logo.png
 │
 ├── logo/                          # 🎨 Logo ve Konsept Görselleri
 │   ├── quick_remote_icon.jpg
@@ -172,7 +173,7 @@ QuickRemote/
 ### Mobil Uygulama (Client)
 | Teknoloji | Kullanım |
 |-----------|----------|
-| **Flutter & Dart** | Çapraz platform UI (Android & iOS) |
+| **Flutter & Dart** | Android uygulaması |
 | **web_socket_channel** | WebSocket istemcisi |
 | **Bluetooth (HID)** | Wi-Fi olmadan PC'yi Bluetooth üzerinden kontrol etme |
 | **mobile_scanner** | QR kod tarama |
@@ -188,11 +189,11 @@ QuickRemote/
 ### Masaüstü Uygulama (Server)
 | Teknoloji | Kullanım |
 |-----------|----------|
-| **Flutter & Dart** | Windows masaüstü uygulaması |
+| **Flutter & Dart** | Windows ve Linux masaüstü uygulaması |
 | **dart:io HttpServer** | TLS destekli WebSocket sunucusu |
 | **win32 & ffi** | Windows SendInput API ile tuş/fare simülasyonu |
 | **PowerShell COM & Scripts** | PowerPoint COM otomasyonu, Sistem Ses Seviyesi ve Medya (SMTC) kontrolü |
-| **nsd** | mDNS servis kaydı |
+| **nsd / Avahi** | mDNS servis kaydı (Windows / Linux) |
 | **qr_flutter** | QR kod oluşturma |
 | **window_manager** | Pencere yönetimi |
 | **screen_retriever** | Ekran bilgileri |
@@ -268,7 +269,7 @@ flutter run -d linux        # veya: flutter build linux
 | Otomatik keşif (mDNS) | ✅ Avahi |
 | Bluetooth HID modu | ✅ Dokunmatik alanda "Hedef: LibreOffice Impress" seçilince: slayt, siyah/beyaz ekran, kalem, temizle çalışır. ⚠️ Lazer yerine fare imleci kullanılır; vurgulayıcı ve silgi gizlenir (Impress'te klavye kısayolları yok) |
 
-Impress açık değilse sunum komutları klavye kısayoluna (PageDown/PageUp/F5/Esc/B/W) düşer; böylece PDF görüntüleyiciler ve tarayıcıdaki sunumlar da ileri/geri kontrol edilebilir.
+Impress'e ulaşılamazsa ileri/geri, başlat ve bitir komutları klavye kısayoluna (PageDown/PageUp/F5/Esc) düşer; böylece PDF görüntüleyiciler ve tarayıcıdaki sunumlar da kontrol edilebilir. Çizim modları ve siyah/beyaz ekran yalnızca bir slayt gösterisi açıkken çalışır, başka bir pencereye tuş yazmaz.
 
 ---
 
@@ -335,7 +336,9 @@ Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
 - **5 başarısız deneme** → IP 60 saniyeliğine engellenir (engel her denemede yeniden kontrol edilir)
 - IP başına en fazla **3**, toplamda **32** doğrulanmamış bağlantı; dakikada **20'den fazla** hatalı PIN → eşleştirme 60 sn durur
 - **5 saniye** içinde kimlik doğrulanmazsa bağlantı kesilir
-- QR kodu sertifika parmak izini taşır; telefon ilk bağlantıda bile sertifikayı doğrular (**certificate pinning**). QR'sız bağlantıda parmak izi ilk başarılı girişte kaydedilir
+- QR kodu sertifika parmak izini taşır; telefon ilk bağlantıda bile sertifikayı doğrular (**certificate pinning**). QR'sız ilk bağlantıda PIN gönderilmeden önce **güvenlik kodu** karşılaştırılır; parmak izi ancak PIN kabul edilince kaydedilir
+- Kimlik doğrulamadan önce gönderilebilecek veri 4 KB ile sınırlıdır; sıkıştırma (permessage-deflate) kapalıdır
+- İlk eşleşmeden sonra QR/PIN gizlenir; PC'den bir telefon çıkarıldığında PIN yenilenir
 - Tarayıcılardan gelen (Origin başlıklı) WebSocket bağlantıları reddedilir
 - Herkese açık ağ tespit edildiğinde sunucu tarafında **uyarı gösterilir**
 

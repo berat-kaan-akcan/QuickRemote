@@ -63,12 +63,9 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       return;
     }
 
-    final statuses = await [
-      Permission.bluetooth,
-      Permission.bluetoothConnect,
-      Permission.bluetoothAdvertise,
-      Permission.bluetoothScan,
-    ].request();
+    // Only CONNECT is needed: the PC finds and pairs the phone. Below
+    // Android 12 permission_handler reports it as granted.
+    final statuses = await [Permission.bluetoothConnect].request();
 
     final connectStatus = statuses[Permission.bluetoothConnect];
     if (connectStatus == PermissionStatus.denied || connectStatus == PermissionStatus.permanentlyDenied) {
