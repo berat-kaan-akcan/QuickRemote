@@ -45,7 +45,20 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
     super.dispose();
   }
 
+  bool _refreshing = false;
+
   Future<void> _refresh() async {
+    // A slow check (polkit, a busy LibreOffice) must not pile up runs every 5 s.
+    if (_refreshing) return;
+    _refreshing = true;
+    try {
+      await _refreshNow();
+    } finally {
+      _refreshing = false;
+    }
+  }
+
+  Future<void> _refreshNow() async {
     final uinputOk = LinuxSetup.uinputAccessible;
     final impress = await LinuxSetup.impressStatus();
     final firewall = widget.provider.isRunning
