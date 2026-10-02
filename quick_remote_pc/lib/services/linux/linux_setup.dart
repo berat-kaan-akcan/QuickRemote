@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import '../input/linux/impress_bridge.dart';
 import '../input/linux/uinput_device.dart';
+import 'system_executable.dart';
 
 enum ImpressStatus {
   /// Bridge is connected to a running LibreOffice.
@@ -73,7 +74,10 @@ udevadm settle
 
   static Future<bool> _libreOfficeRunning() => _succeeds('pgrep', ['-x', 'soffice.bin']);
 
-  static Future<bool> _libreOfficeInstalled() => _succeeds('sh', ['-c', 'command -v soffice']);
+  static Future<bool> _libreOfficeInstalled() async {
+    final soffice = sofficeExecutable;
+    return soffice != 'soffice' || await _succeeds('sh', ['-c', 'command -v soffice']);
+  }
 
   static File get _registryFile {
     final configHome = Platform.environment['XDG_CONFIG_HOME'] ??
@@ -146,7 +150,7 @@ udevadm settle
   static Future<bool> enableImpressConnection() async {
     if (await _libreOfficeRunning()) {
       try {
-        await Process.start('soffice', ['--accept=${ImpressBridge.acceptString}'],
+        await Process.start(sofficeExecutable, ['--accept=${ImpressBridge.acceptString}'],
             mode: ProcessStartMode.detached);
         return true;
       } catch (e) {

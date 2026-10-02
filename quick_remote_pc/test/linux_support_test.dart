@@ -177,4 +177,27 @@ void main() {
       expect('ooSetupConnectionURL'.allMatches(xcu).length, 1);
     });
   });
+
+  group('LinuxNetwork.parseSubnet', () {
+    test('clears the host bits', () {
+      expect(LinuxNetwork.parseSubnet('3: wlan0    inet 192.168.1.177/24 brd 192.168.1.255 scope global'), '192.168.1.0/24');
+      expect(LinuxNetwork.parseSubnet('inet 10.42.0.180/16 brd'), '10.42.0.0/16');
+      expect(LinuxNetwork.parseSubnet('inet 172.20.5.9/32'), '172.20.5.9/32');
+    });
+
+    test('rejects odd input', () {
+      expect(LinuxNetwork.parseSubnet(''), isNull);
+      expect(LinuxNetwork.parseSubnet('inet 300.1.1.1/24'), isNull);
+      expect(LinuxNetwork.parseSubnet('inet 10.0.0.1/0'), isNull);
+    });
+  });
+
+  test('a rich rule with the server ports counts as open', () {
+    const zone = '<zone><rule family="ipv4"><source address="192.168.1.0/24"/>'
+        '<port port="8090-8099" protocol="tcp"/><accept/></rule></zone>';
+    expect(LinuxNetwork.zoneAllowsPort(zone, 8091, subnet: '192.168.1.0/24'), isTrue);
+    // On another network that rule does not let the phone in.
+    expect(LinuxNetwork.zoneAllowsPort(zone, 8091, subnet: '10.0.0.0/24'), isFalse);
+    expect(LinuxNetwork.zoneAllowsPort(zone, 8100, subnet: '192.168.1.0/24'), isFalse);
+  });
 }

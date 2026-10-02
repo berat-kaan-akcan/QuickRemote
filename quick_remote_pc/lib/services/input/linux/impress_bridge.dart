@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import '../../linux/system_executable.dart';
 
 /// Talks to LibreOffice Impress through a persistent `python3` process running
 /// assets/linux/impress_bridge.py (UNO). One JSON request/reply per line,
@@ -49,7 +50,7 @@ class ImpressBridge {
 
   Future<Process?> _start() async {
     try {
-      final process = await Process.start('python3', ['-u', await _scriptPath(), pipeName]);
+      final process = await Process.start(systemExecutable('python3'), ['-u', await _scriptPath(), pipeName]);
       process.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter())
