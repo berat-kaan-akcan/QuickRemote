@@ -1,3 +1,5 @@
+import 'package:quick_remote_shared/quick_remote_shared.dart';
+
 import 'bt_hid_service.dart';
 
 /// Presentation program the phone sends keyboard shortcuts to in BT HID mode.
@@ -68,57 +70,57 @@ abstract class BtKeyMapping {
   /// are no-ops: the laser becomes the plain mouse cursor, and the toolbar
   /// hides highlighter/eraser because a click without the pen advances the slide.
   static final Map<String, BtAction> _impressOverrides = {
-    'MODE_LASER':       _NoopAction(),
-    'LASER_CURSOR':     _NoopAction(),
-    'LASER_OFF':        _NoopAction(),
-    'MODE_HIGHLIGHTER': _NoopAction(),
-    'MODE_ERASER':      _NoopAction(),
+    RemoteCommands.modeLaser:       _NoopAction(),
+    RemoteCommands.laserCursor:     _NoopAction(),
+    RemoteCommands.laserOff:        _NoopAction(),
+    RemoteCommands.modeHighlighter: _NoopAction(),
+    RemoteCommands.modeEraser:      _NoopAction(),
   };
 
   static final Map<String, BtAction> _map = {
     // Slide navigation
-    'NEXT': _KeyAction(0, [keyPageDown]),
-    'PREV': _KeyAction(0, [keyPageUp]),
+    RemoteCommands.next: _KeyAction(0, [keyPageDown]),
+    RemoteCommands.prev: _KeyAction(0, [keyPageUp]),
 
     // Presentation control
-    'START': _KeyAction(0, [keyF5]),
-    'END':   _KeyAction(0, [keyEscape]),
+    RemoteCommands.start: _KeyAction(0, [keyF5]),
+    RemoteCommands.end:   _KeyAction(0, [keyEscape]),
 
     // Screen blanking
-    'BLACK_SCREEN': _KeyAction(0, [keyB]),
-    'WHITE_SCREEN': _KeyAction(0, [keyW]),
-    'ERASE_ALL':    _KeyAction(0, [keyE]),
+    RemoteCommands.blackScreen: _KeyAction(0, [keyB]),
+    RemoteCommands.whiteScreen: _KeyAction(0, [keyW]),
+    RemoteCommands.eraseAll:    _KeyAction(0, [keyE]),
 
     // Drawing modes — PowerPoint shortcuts
-    'MODE_ARROW':       _KeyAction(modLCtrl, [keyA]),
-    'MODE_LASER':       _KeyAction(modLCtrl, [keyL]),
-    'MODE_PEN':         _KeyAction(modLCtrl, [keyP]),
-    'MODE_HIGHLIGHTER': _KeyAction(modLCtrl, [keyI]),
-    'MODE_ERASER':      _KeyAction(modLCtrl, [keyE]),
-    'LASER_OFF':        _KeyAction(modLCtrl, [keyA]),
-    'LASER_CURSOR':     _KeyAction(modLCtrl, [keyL]),
+    RemoteCommands.modeArrow:       _KeyAction(modLCtrl, [keyA]),
+    RemoteCommands.modeLaser:       _KeyAction(modLCtrl, [keyL]),
+    RemoteCommands.modePen:         _KeyAction(modLCtrl, [keyP]),
+    RemoteCommands.modeHighlighter: _KeyAction(modLCtrl, [keyI]),
+    RemoteCommands.modeEraser:      _KeyAction(modLCtrl, [keyE]),
+    RemoteCommands.laserOff:        _KeyAction(modLCtrl, [keyA]),
+    RemoteCommands.laserCursor:     _KeyAction(modLCtrl, [keyL]),
 
     // Lock PC — Win+L
-    'LOCK': _KeyAction(modLGui, [keyL]),
+    RemoteCommands.lock: _KeyAction(modLGui, [keyL]),
 
     // Volume
-    'VOLUME_UP':   _ConsumerAction(consumerVolumeUp),
-    'VOLUME_DOWN': _ConsumerAction(consumerVolumeDown),
-    'VOLUME_MUTE': _ConsumerAction(consumerMute),
+    RemoteCommands.volumeUp:   _ConsumerAction(consumerVolumeUp),
+    RemoteCommands.volumeDown: _ConsumerAction(consumerVolumeDown),
+    RemoteCommands.volumeMute: _ConsumerAction(consumerMute),
 
     // System media transport
-    'SYSTEM_MEDIA_PLAY_PAUSE': _ConsumerAction(consumerPlayPause),
-    'SYSTEM_MEDIA_NEXT':       _ConsumerAction(consumerNextTrack),
-    'SYSTEM_MEDIA_PREV':       _ConsumerAction(consumerPrevTrack),
-    'SYSTEM_MEDIA_STOP':       _ConsumerAction(consumerStop),
+    RemoteCommands.sysMediaPlayPause: _ConsumerAction(consumerPlayPause),
+    RemoteCommands.sysMediaNext:       _ConsumerAction(consumerNextTrack),
+    RemoteCommands.sysMediaPrev:       _ConsumerAction(consumerPrevTrack),
+    RemoteCommands.sysMediaStop:       _ConsumerAction(consumerStop),
 
     // Mouse clicks
-    'LEFT_CLICK':  _MouseClickAction(1),
-    'RIGHT_CLICK': _MouseClickAction(2),
+    RemoteCommands.leftClick:  _MouseClickAction(1),
+    RemoteCommands.rightClick: _MouseClickAction(2),
     // LEFT_DOWN / LEFT_UP not directly mappable in HID without state tracking;
     // map both to a left click for simplicity.
-    'LEFT_DOWN': _MouseClickAction(1),
-    'LEFT_UP':   _NoopAction(),
+    RemoteCommands.leftDown: _MouseClickAction(1),
+    RemoteCommands.leftUp:   _NoopAction(),
 
     // Commands not supported in BT HID mode (need WiFi + PC app):
     // SET_PEN_COLOR, START_AT, MEDIA_PLAY_PAUSE, MEDIA_REWIND,

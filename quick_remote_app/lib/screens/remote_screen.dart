@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../services/background_session.dart';
 import '../services/websocket_service.dart';
@@ -170,7 +171,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
         
         // Tab 0'da değilsek, sadece sekmeyi değiştirip çıkışı iptal ediyoruz (Sistem geri tuşu davranışı).
         if (_currentTab != 0) {
-          if (_currentTab == 1 && ws.isConnected) ws.sendCommand('MODE_ARROW');
+          if (_currentTab == 1 && ws.isConnected) ws.sendCommand(RemoteCommands.modeArrow);
           setState(() => _currentTab = 0);
           return;
         }
@@ -213,7 +214,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
         onTap: (index) {
           HapticFeedback.lightImpact();
           if (_currentTab == 1 && index != 1 && ws.isConnected) {
-            ws.sendCommand('MODE_ARROW');
+            ws.sendCommand(RemoteCommands.modeArrow);
           }
           setState(() => _currentTab = index);
         },

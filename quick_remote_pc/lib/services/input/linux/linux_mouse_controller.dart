@@ -67,15 +67,4 @@ class LinuxMouseController implements MouseController {
     _remY -= iy;
     if (ix != 0 || iy != 0) _device.moveRelative(ix, iy);
   }
-
-  // Absolute warping is impossible with a relative device on Wayland; move by
-  // the difference from the tracked position instead.
-  @override
-  void moveTo(double x, double y) {
-    if (!_initialized) init();
-    moveDelta(x - _currentX, y - _currentY);
-  }
-
-  @override
-  void resetToCenter() => moveTo(_screenWidth / 2, _screenHeight / 2);
 }

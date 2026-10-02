@@ -188,18 +188,6 @@ class LinuxInputService implements InputService {
   @override
   void leftUp() => _device.button(Evdev.btnLeft, down: false);
 
-  @override
-  void pressKey(int vkCode) {
-    final key = Evdev.fromVk(vkCode);
-    if (key != null) _device.tap(key);
-  }
-
-  @override
-  void pressKeyCombo(List<int> vkCodes) {
-    final keys = vkCodes.map(Evdev.fromVk).whereType<int>().toList();
-    if (keys.isNotEmpty) _device.combo(keys);
-  }
-
   // ── System ──
   @override
   Future<void> lockPC() async {

@@ -108,26 +108,4 @@ class WindowsMouseController implements MouseController {
     _currentY += dy;
     _clamp();
   }
-
-  /// Move cursor to absolute position (virtual desktop coordinates).
-  @override
-  void moveTo(double x, double y) {
-    if (!_initialized) init();
-
-    _currentX = x;
-    _currentY = y;
-    _clamp();
-
-    SetCursorPos(_currentX.toInt(), _currentY.toInt());
-  }
-
-  /// Reset cursor to the center of the primary monitor.
-  @override
-  void resetToCenter() {
-    if (!_initialized) init();
-
-    _currentX = GetSystemMetrics(SM_CXSCREEN) / 2;
-    _currentY = GetSystemMetrics(SM_CYSCREEN) / 2;
-    SetCursorPos(_currentX.toInt(), _currentY.toInt());
-  }
 }

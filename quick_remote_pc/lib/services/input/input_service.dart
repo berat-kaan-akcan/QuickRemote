@@ -52,8 +52,6 @@ abstract class InputService {
   void rightClick();
   void leftDown();
   void leftUp();
-  void pressKey(int vkCode);
-  void pressKeyCombo(List<int> vkCodes);
 
   // System
   void lockPC();

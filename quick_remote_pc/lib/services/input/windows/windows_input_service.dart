@@ -90,11 +90,6 @@ class WindowsInputService implements InputService {
   void leftUp() => MouseSimulator.leftUp();
 
   @override
-  void pressKey(int vkCode) => KeyboardSimulator.pressKey(vkCode);
-  @override
-  void pressKeyCombo(List<int> vkCodes) => KeyboardSimulator.pressKeyCombo(vkCodes);
-
-  @override
   void lockPC() => LockWorkStation();
 
   @override

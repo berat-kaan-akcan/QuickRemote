@@ -93,11 +93,15 @@ class DiscoveryService extends ChangeNotifier {
       }
     }
     
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
+
+  bool _disposed = false;
 
   @override
   void dispose() {
+    // stopScanning() finishes after an await, when this is already disposed.
+    _disposed = true;
     stopScanning();
     super.dispose();
   }

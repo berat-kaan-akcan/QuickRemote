@@ -8,10 +8,7 @@ import android.bluetooth.BluetoothHidDevice
 import android.bluetooth.BluetoothHidDeviceAppSdpSettings
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
 import java.util.concurrent.Executor
@@ -453,16 +450,10 @@ class BluetoothHidService(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     private fun registerHidApp() {
-        val executor: Executor = Executor { it.run() }
+        // Run the callbacks on the main thread, like every other access to
+        // connectedHost / isRegistered, instead of on a binder thread.
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        val executor = Executor { mainHandler.post(it) }
         hidDevice?.registerApp(SDP_SETTINGS, null, null, executor, hidCallback)
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun makeDiscoverable() {
-        val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(intent)
     }
 }

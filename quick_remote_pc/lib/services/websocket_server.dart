@@ -3,14 +3,12 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:nsd/nsd.dart' as nsd;
 import 'input_simulator.dart';
 import 'mouse_controller.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import 'server/auth_manager.dart';
 import 'server/move_coalescer.dart';
-import 'server/network/avahi_publisher.dart';
 import 'server/network_manager.dart';
 import 'server/pre_auth_byte_limit.dart';
 import 'server/state_broadcaster.dart';
@@ -44,8 +42,8 @@ class WebSocketServer {
   late final StateBroadcaster _stateBroadcaster;
 
   int _port = 8090;
-  nsd.Registration? _nsdRegistration;
-  final AvahiPublisher _avahi = AvahiPublisher();
+  /// The running start(), so a second call waits for it instead of binding twice.
+  Future<void>? _starting;
 
   final Map<WebSocket, Timer> _authTimers = {};
   /// Remote IP of every socket that still holds a pending-auth slot.
@@ -82,6 +80,33 @@ class WebSocketServer {
     RemoteCommands.eraseAll,
   };
 
+  static const _volumeCommands = {
+    RemoteCommands.volumeUp,
+    RemoteCommands.volumeDown,
+    RemoteCommands.volumeMute,
+  };
+  /// Modes that end the laser.
+  static const _otherModeCommands = {
+    RemoteCommands.modeArrow,
+    RemoteCommands.modePen,
+    RemoteCommands.modeHighlighter,
+    RemoteCommands.modeEraser,
+  };
+  /// Change the slide: the state is refreshed shortly after.
+  static const _slideCommands = {
+    RemoteCommands.next,
+    RemoteCommands.prev,
+    RemoteCommands.start,
+    RemoteCommands.end,
+  };
+  static const _mediaCommands = {
+    RemoteCommands.mediaPlayPause,
+    RemoteCommands.sysMediaPlayPause,
+    RemoteCommands.sysMediaNext,
+    RemoteCommands.sysMediaPrev,
+    RemoteCommands.sysMediaStop,
+  };
+
   int get port => _port;
 
   WebSocketServer({
@@ -106,9 +131,12 @@ class WebSocketServer {
     return ip;
   }
 
-  Future<void> start({int port = 8090}) async {
-    if (_server != null) return;
+  Future<void> start({int port = 8090}) {
+    if (_server != null) return Future.value();
+    return _starting ??= _start(port).whenComplete(() => _starting = null);
+  }
 
+  Future<void> _start(int port) async {
     startError.value = null;
     pin.value = _authManager.generatePin();
 
@@ -138,31 +166,16 @@ class WebSocketServer {
 
       certFingerprint.value = await _ownCertFingerprint(_port);
 
-      final hostname = Platform.localHostname;
-      if (Platform.isLinux) {
-        mdnsAvailable.value = await _avahi.register(
-          name: hostname,
-          type: '_quickremote._tcp',
-          port: _port,
-        );
-      } else if (_nsdRegistration == null) {
-        try {
-          _nsdRegistration = await nsd.register(nsd.Service(
-            name: hostname,
-            type: '_quickremote._tcp',
-            port: _port,
-          ));
-          debugPrint('mDNS Service registered as $hostname');
-        } catch (e) {
-          debugPrint('Failed to register mDNS service: $e');
-        }
-      }
+      mdnsAvailable.value = await NetworkManager.advertise(name: Platform.localHostname, port: _port);
 
       _stateBroadcaster.startSlideStatePoller();
     } catch (e) {
       debugPrint('Failed to start server: $e');
       startError.value = e.toString();
       isRunning.value = false;
+      _stopNetworkMonitor();
+      await _server?.close(force: true);
+      _server = null;
     }
   }
 
@@ -476,24 +489,23 @@ class WebSocketServer {
     InputSimulator.executeCommand(command);
     debugPrint('Executed: $command');
 
-    if (command == 'VOLUME_UP' || command == 'VOLUME_DOWN' ||
-        command == 'VOLUME_MUTE' || command.startsWith('VOLUME_SET:')) {
+    if (_volumeCommands.contains(command) || command.startsWith('VOLUME_SET:')) {
       _stateBroadcaster.scheduleVolumeStateBroadcast();
     }
 
-    if (command == 'MODE_LASER') {
+    if (command == RemoteCommands.modeLaser) {
       laserActive.value = true;
-    } else if (command == 'LASER_OFF') {
+    } else if (command == RemoteCommands.laserOff) {
       laserActive.value = false;
-    } else if (command == 'MODE_ARROW' || command == 'MODE_PEN' || command == 'MODE_HIGHLIGHTER' || command == 'MODE_ERASER') {
+    } else if (_otherModeCommands.contains(command)) {
       laserActive.value = false;
     }
 
-    if (command == 'NEXT' || command == 'PREV' || command == 'START' || command == 'END' || command.startsWith('START_AT:')) {
+    if (_slideCommands.contains(command) || command.startsWith('START_AT:')) {
       triggerSlideStateUpdate(const Duration(milliseconds: 500));
-    } else if (command == 'MEDIA_PLAY_PAUSE' || command == 'SYSTEM_MEDIA_PLAY_PAUSE' || command == 'SYSTEM_MEDIA_NEXT' || command == 'SYSTEM_MEDIA_PREV' || command == 'SYSTEM_MEDIA_STOP') {
+    } else if (_mediaCommands.contains(command)) {
       triggerSlideStateUpdate(const Duration(milliseconds: 350));
-    } else if (command == 'REFRESH_STATE') {
+    } else if (command == RemoteCommands.refreshState) {
       triggerSlideStateUpdate();
       if (_stateBroadcaster.lastBroadcastVolume >= 0) {
         _send(ws, {
@@ -546,7 +558,7 @@ class WebSocketServer {
     pin.value = '';
     certFingerprint.value = null;
     NetworkManager.clearCachedIP();
-    await _avahi.unregister();
+    await NetworkManager.unadvertise();
 
     try {
       await _server?.close(force: true);

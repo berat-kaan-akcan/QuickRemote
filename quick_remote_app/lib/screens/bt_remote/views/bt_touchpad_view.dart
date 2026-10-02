@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../../services/bluetooth/bt_hid_service.dart';
 import '../../../services/bluetooth/bt_key_mapping.dart';
@@ -85,7 +86,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: !widget.isConnected ? null : () => widget.send('START'),
+                  onTap: !widget.isConnected ? null : () => widget.send(RemoteCommands.start),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
@@ -134,7 +135,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
-                  onTap: !widget.isConnected ? null : () => widget.send('END'),
+                  onTap: !widget.isConnected ? null : () => widget.send(RemoteCommands.end),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
@@ -178,7 +179,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 child: SlideButton(
                   icon: Icons.arrow_back_rounded,
                   label: 'Geri',
-                  onTap: !widget.isConnected ? null : () => widget.send('PREV'),
+                  onTap: !widget.isConnected ? null : () => widget.send(RemoteCommands.prev),
                 ),
               ),
               const SizedBox(width: 12),
@@ -187,7 +188,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                   icon: Icons.arrow_forward_rounded,
                   label: 'İleri',
                   isPrimary: true,
-                  onTap: !widget.isConnected ? null : () => widget.send('NEXT'),
+                  onTap: !widget.isConnected ? null : () => widget.send(RemoteCommands.next),
                 ),
               ),
             ],
@@ -306,7 +307,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
           onToolSelected: (tool) => setState(() => _drawTool = tool),
           onClear: () {
             HapticFeedback.mediumImpact();
-            widget.send('ERASE_ALL');
+            widget.send(RemoteCommands.eraseAll);
           },
         ),
         const SizedBox(height: 6),
@@ -457,20 +458,24 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     // Flush any remaining deltas immediately
     _throttleTimer?.cancel();
     _throttleTimer = null;
-    if (_pendingDx != 0 || _pendingDy != 0) {
-      final dx = _pendingDx.round().clamp(-127, 127);
-      final dy = _pendingDy.round().clamp(-127, 127);
-      _pendingDx = 0;
-      _pendingDy = 0;
-      if (dx != 0 || dy != 0) {
-        final int buttons = _isLeftButtonHeld ? 1 : 0;
-        widget.bt.sendMouseMove(dx, dy, buttons: buttons);
-      }
+    // A HID report carries at most ±127 per axis: send the rest in steps
+    // instead of dropping it, or the stroke would end short of the finger.
+    var restX = _pendingDx.round();
+    var restY = _pendingDy.round();
+    _pendingDx = 0;
+    _pendingDy = 0;
+    final int buttons = _isLeftButtonHeld ? 1 : 0;
+    while (restX != 0 || restY != 0) {
+      final dx = restX.clamp(-127, 127);
+      final dy = restY.clamp(-127, 127);
+      widget.bt.sendMouseMove(dx, dy, buttons: buttons);
+      restX -= dx;
+      restY -= dy;
     }
 
     if (_isDrawActive) {
       if (_activeTool == DrawTool.laser) {
-        widget.send('LASER_CURSOR');
+        widget.send(RemoteCommands.laserOff);
       } else {
         // Release the held mouse button via HID
         if (_isLeftButtonHeld) {
@@ -478,8 +483,8 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
           _isLeftButtonHeld = false;
         }
       }
-      widget.send('MODE_ARROW');
-      _lastSentMode = 'MODE_ARROW';
+      widget.send(RemoteCommands.modeArrow);
+      _lastSentMode = RemoteCommands.modeArrow;
     }
 
     _isDrawActive = false;
@@ -490,13 +495,13 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   static String _modeCommandFor(DrawTool tool) {
     switch (tool) {
       case DrawTool.pen:
-        return 'MODE_PEN';
+        return RemoteCommands.modePen;
       case DrawTool.highlighter:
-        return 'MODE_HIGHLIGHTER';
+        return RemoteCommands.modeHighlighter;
       case DrawTool.eraser:
-        return 'MODE_ERASER';
+        return RemoteCommands.modeEraser;
       case DrawTool.laser:
-        return 'MODE_LASER';
+        return RemoteCommands.modeLaser;
     }
   }
 }

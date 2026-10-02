@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../remote/widgets/shared_buttons.dart';
 
@@ -73,7 +74,7 @@ class BtMainControlsView extends StatelessWidget {
                                   icon: Icons.play_arrow_rounded,
                                   label: 'Başlat',
                                   color: const Color(0xFF4CAF50),
-                                  onTap: !isConnected ? null : () => send('START'),
+                                  onTap: !isConnected ? null : () => send(RemoteCommands.start),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -82,7 +83,7 @@ class BtMainControlsView extends StatelessWidget {
                                   icon: Icons.stop_rounded,
                                   label: 'Bitir',
                                   color: const Color(0xFFFF5252),
-                                  onTap: !isConnected ? null : () => send('END'),
+                                  onTap: !isConnected ? null : () => send(RemoteCommands.end),
                                 ),
                               ),
                             ],
@@ -97,7 +98,7 @@ class BtMainControlsView extends StatelessWidget {
                                   label: 'Siyah Ekran',
                                   color: Colors.grey,
                                   isActive: activeScreen == 'BLACK',
-                                  onTap: !isConnected ? null : () => send('BLACK_SCREEN'),
+                                  onTap: !isConnected ? null : () => send(RemoteCommands.blackScreen),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -107,7 +108,7 @@ class BtMainControlsView extends StatelessWidget {
                                   label: 'Beyaz Ekran',
                                   color: Colors.white,
                                   isActive: activeScreen == 'WHITE',
-                                  onTap: !isConnected ? null : () => send('WHITE_SCREEN'),
+                                  onTap: !isConnected ? null : () => send(RemoteCommands.whiteScreen),
                                 ),
                               ),
                             ],
@@ -120,7 +121,7 @@ class BtMainControlsView extends StatelessWidget {
                                 child: SlideButton(
                                   icon: Icons.arrow_back_rounded,
                                   label: 'Geri',
-                                  onTap: !isConnected ? null : () => send('PREV'),
+                                  onTap: !isConnected ? null : () => send(RemoteCommands.prev),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -129,7 +130,7 @@ class BtMainControlsView extends StatelessWidget {
                                   icon: Icons.arrow_forward_rounded,
                                   label: 'İleri',
                                   isPrimary: true,
-                                  onTap: !isConnected ? null : () => send('NEXT'),
+                                  onTap: !isConnected ? null : () => send(RemoteCommands.next),
                                 ),
                               ),
                             ],

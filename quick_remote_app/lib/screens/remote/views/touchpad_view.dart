@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
@@ -53,7 +54,7 @@ class _TouchpadViewState extends State<TouchpadView> {
                       ? null
                       : () {
                           HapticFeedback.heavyImpact();
-                          _send('START');
+                          _send(RemoteCommands.start);
                         },
                   onLongPress: !widget.ws.isConnected
                       ? null
@@ -105,7 +106,7 @@ class _TouchpadViewState extends State<TouchpadView> {
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
-                  onTap: !widget.ws.isConnected ? null : () => _send('END'),
+                  onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.end),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
@@ -156,7 +157,7 @@ class _TouchpadViewState extends State<TouchpadView> {
             onToolSelected: (tool) => setState(() => _drawTool = tool),
             onClear: () {
               HapticFeedback.mediumImpact();
-              _send('ERASE_ALL');
+              _send(RemoteCommands.eraseAll);
             },
             onColorPickerRequested: (tool) {
               ColorPickerSheet.show(context, tool, _send);
@@ -170,7 +171,7 @@ class _TouchpadViewState extends State<TouchpadView> {
                 child: SlideButton(
                   icon: Icons.arrow_back_rounded,
                   label: 'Geri',
-                  onTap: !widget.ws.isConnected ? null : () => _send('PREV'),
+                  onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.prev),
                 ),
               ),
               const SizedBox(width: 12),
@@ -179,7 +180,7 @@ class _TouchpadViewState extends State<TouchpadView> {
                   icon: Icons.arrow_forward_rounded,
                   label: 'İleri',
                   isPrimary: true,
-                  onTap: !widget.ws.isConnected ? null : () => _send('NEXT'),
+                  onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.next),
                 ),
               ),
             ],

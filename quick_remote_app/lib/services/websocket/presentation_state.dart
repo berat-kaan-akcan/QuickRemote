@@ -23,6 +23,18 @@ class PresentationState {
     totalSlides = 0;
     slideNotes = '';
     isPptRunning = false;
+    pptHasMedia = false;
+    pptIsMediaPlaying = false;
+    // Without a connection there is no "now playing" to show.
+    hasMedia = false;
+    mediaTitle = null;
+    mediaArtist = null;
+    mediaThumbnailBase64 = null;
+    positionMs = 0;
+    durationMs = 0;
+    isPlaying = false;
+    systemVolume = -1;
+    systemMuted = false;
   }
 
   bool pptHasMedia = false;
