@@ -13,6 +13,15 @@ import 'server/network_manager.dart';
 import 'server/pre_auth_byte_limit.dart';
 import 'server/state_broadcaster.dart';
 
+/// An authenticated phone, as listed on the PC.
+class ConnectedClient {
+  ConnectedClient(this.id, this.address, this.since);
+
+  final int id;
+  final String address;
+  final DateTime since;
+}
+
 /// WebSocket server that listens for commands from mobile clients.
 class WebSocketServer {
   HttpServer? _server;
@@ -22,6 +31,14 @@ class WebSocketServer {
   final ValueNotifier<String> lastCommand = ValueNotifier('');
   final ValueNotifier<bool> laserActive = ValueNotifier(false);
   final ValueNotifier<String> pin = ValueNotifier('');
+  /// Authenticated phones, in the order they connected.
+  final ValueNotifier<List<ConnectedClient>> connectedClients = ValueNotifier(const []);
+  /// Whether a phone has paired since the server started. The PC hides the
+  /// QR code and PIN from then on, so a projected screen doesn't show them.
+  final ValueNotifier<bool> pairedOnce = ValueNotifier(false);
+  final Map<WebSocket, ConnectedClient> _clientInfo = {};
+  int _nextClientId = 1;
+
   /// True while too many wrong PINs have paused all new pairing.
   final ValueNotifier<bool> pairingPaused = ValueNotifier(false);
   Timer? _pairingPauseTimer;
@@ -243,7 +260,7 @@ class WebSocketServer {
     }
     ws.pingInterval = const Duration(seconds: 30);
     _byteLimits[ws] = limited;
-    _handleClient(ws, remoteIP);
+    _handleClient(ws, remoteIP, request.connectionInfo?.remoteAddress);
   }
 
   static void _reject(HttpRequest request, int status) {
@@ -297,6 +314,8 @@ class WebSocketServer {
       // The phone went away mid-drag: don't leave the button pressed on the PC.
       InputSimulator.executeCommand(RemoteCommands.leftUp);
     }
+    _pendingAddress.remove(ws);
+    if (_clientInfo.remove(ws) != null) _publishClients();
     if (_authenticatedClients.remove(ws)) {
       clientCount.value = _authenticatedClients.length;
       if (_authenticatedClients.isEmpty) {
@@ -324,7 +343,11 @@ class WebSocketServer {
     }
   }
 
-  void _handleClient(WebSocket ws, String remoteIP) {
+  /// Address of each socket still waiting to authenticate, for the client list.
+  final Map<WebSocket, InternetAddress?> _pendingAddress = {};
+
+  void _handleClient(WebSocket ws, String remoteIP, InternetAddress? address) {
+    _pendingAddress[ws] = address;
     _clients.add(ws);
     _pendingAuth[ws] = remoteIP;
     debugPrint('Client connected (awaiting auth). Total raw: ${_clients.length}');
@@ -412,6 +435,14 @@ class WebSocketServer {
     _releasePending(ws);
     _byteLimits.remove(ws)?.lift();
     _authenticatedClients.add(ws);
+    // The rate-limit key, except that IPv6 shows the full address, not its /64.
+    final address = _pendingAddress.remove(ws);
+    final shown = address?.type == InternetAddressType.IPv6 && !remoteIP.contains('.')
+        ? address!.address
+        : remoteIP;
+    _clientInfo[ws] = ConnectedClient(_nextClientId++, shown, DateTime.now());
+    _publishClients();
+    pairedOnce.value = true;
     _authManager.recordSuccessfulAuth(remoteIP);
 
     clientCount.value = _authenticatedClients.length;
@@ -431,6 +462,23 @@ class WebSocketServer {
       () => _stateBroadcaster.broadcastVolumeState(force: true),
     );
   }
+
+  void _publishClients() {
+    connectedClients.value = List.unmodifiable(_clientInfo.values);
+  }
+
+  /// Disconnects a phone the user does not want, and replaces the PIN so it
+  /// cannot pair again with the one it knows. Other phones stay connected.
+  void kickClient(int id) {
+    final ws = _clientInfo.entries.where((e) => e.value.id == id).firstOrNull?.key;
+    if (ws == null) return;
+    debugPrint('Client $id disconnected by the user — PIN replaced');
+    pin.value = _authManager.generatePin();
+    _closeConnection(ws, closedByPc, 'Disconnected by the PC');
+  }
+
+  /// Close code that tells the phone not to reconnect.
+  static const closedByPc = 4005;
 
   /// Someone is guessing the PIN from several addresses: the old PIN may be
   /// partly searched, so replace it. Connected clients stay connected.
@@ -571,6 +619,10 @@ class WebSocketServer {
       } catch (_) {}
     })).timeout(const Duration(seconds: 2), onTimeout: () => const []);
     _authManager.reset();
+    _clientInfo.clear();
+    _pendingAddress.clear();
+    _publishClients();
+    pairedOnce.value = false;
     _pairingPauseTimer?.cancel();
     pairingPaused.value = false;
 

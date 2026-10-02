@@ -71,6 +71,12 @@ void main() {
       expect(PairingPayload.fingerprintToHex(encoded), digestHex);
     });
 
+    test('verification code is the first 64 bits in four groups', () {
+      final code = PairingPayload.verificationCode(digestHex);
+      expect(code, matches(RegExp(r'^[0-9A-F]{4}(-[0-9A-F]{4}){3}$')));
+      expect(code.replaceAll('-', ''), digestHex.substring(0, 16).toUpperCase());
+    });
+
     test('rejects values that are not a SHA-256 digest', () {
       expect(PairingPayload.fingerprintToHex(''), isNull);
       expect(PairingPayload.fingerprintToHex(encoded.substring(1)), isNull);

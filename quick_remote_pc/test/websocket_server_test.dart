@@ -264,6 +264,38 @@ void main() {
     });
   });
 
+  group('connected clients', () {
+    test('lists authenticated phones and marks the server as paired', () async {
+      expect(server.pairedOnce.value, isFalse);
+      await connect(); // not authenticated: not listed
+      await authed();
+      expect(server.connectedClients.value, hasLength(1));
+      expect(server.connectedClients.value.single.address, '127.0.0.1');
+      expect(server.pairedOnce.value, isTrue);
+    });
+
+    test('kicking closes that phone with 4005 and replaces the PIN', () async {
+      final kicked = await authed();
+      final other = await authed();
+      final oldPin = server.pin.value;
+
+      server.kickClient(server.connectedClients.value.first.id);
+
+      expect(await kicked.closed.future, WebSocketServer.closedByPc);
+      expect(server.pin.value, isNot(oldPin));
+      expect(server.connectedClients.value, hasLength(1));
+      other.command('NEXT');
+      await other.next('ack'); // still connected
+    });
+
+    test('stop forgets the pairing', () async {
+      await authed();
+      await server.stop();
+      expect(server.pairedOnce.value, isFalse);
+      expect(server.connectedClients.value, isEmpty);
+    });
+  });
+
   test('stop releases a held button and disconnects clients', () async {
     final client = await authed();
     client.command('LEFT_DOWN');
