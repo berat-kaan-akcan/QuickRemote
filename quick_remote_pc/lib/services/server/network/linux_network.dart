@@ -166,7 +166,7 @@ class LinuxNetwork implements PlatformNetwork {
         final file = File('$dir/$zone.xml');
         try {
           if (!file.existsSync()) continue;
-          return zoneAllowsPort(file.readAsStringSync(), port)
+          return zoneAllowsPort(file.readAsStringSync(), port, subnet: await _localSubnet())
               ? FirewallStatus.open
               : FirewallStatus.blocked;
         } on FileSystemException {
@@ -180,39 +180,89 @@ class LinuxNetwork implements PlatformNetwork {
     return FirewallStatus.open;
   }
 
-  /// Whether a firewalld zone definition accepts TCP [port]: an ACCEPT target
-  /// or a `<port>` entry (single port or range) covering it.
+  /// Whether a firewalld zone definition accepts TCP [port]: an ACCEPT target,
+  /// a `<port>` entry (single port or range) covering it, or an accepting rich
+  /// rule for it whose source, if any, is [subnet] (the rule
+  /// [openFirewallPorts] writes, which does not help on another network).
   @visibleForTesting
-  static bool zoneAllowsPort(String xml, int port) {
+  static bool zoneAllowsPort(String xml, int port, {String? subnet}) {
     String? attr(String tag, String name) =>
         RegExp('\\b$name\\s*=\\s*["\']([^"\']*)["\']').firstMatch(tag)?.group(1);
 
+    bool coversPort(String xml) {
+      for (final m in RegExp(r'<port\b[^>]*>').allMatches(xml)) {
+        final tag = m.group(0)!;
+        if (attr(tag, 'protocol') != 'tcp') continue;
+        final range = (attr(tag, 'port') ?? '').split('-');
+        final first = int.tryParse(range.first);
+        final last = range.length == 2 ? int.tryParse(range[1]) : first;
+        if (first != null && last != null && first <= port && port <= last) return true;
+      }
+      return false;
+    }
+
     final zoneTag = RegExp(r'<zone\b[^>]*>').firstMatch(xml)?.group(0);
     if (zoneTag != null && attr(zoneTag, 'target') == 'ACCEPT') return true;
-    for (final m in RegExp(r'<port\b[^>]*>').allMatches(xml)) {
-      final tag = m.group(0)!;
-      if (attr(tag, 'protocol') != 'tcp') continue;
-      final range = (attr(tag, 'port') ?? '').split('-');
-      final first = int.tryParse(range.first);
-      final last = range.length == 2 ? int.tryParse(range[1]) : first;
-      if (first != null && last != null && first <= port && port <= last) return true;
+
+    final rules = RegExp(r'<rule\b[\s\S]*?</rule>');
+    for (final m in rules.allMatches(xml)) {
+      final rule = m.group(0)!;
+      if (!rule.contains('<accept') || !coversPort(rule)) continue;
+      final source = RegExp(r'<source\b[^>]*>').firstMatch(rule)?.group(0);
+      if (source == null || attr(source, 'address') == subnet) return true;
     }
-    return false;
+    return coversPort(xml.replaceAll(rules, ''));
+  }
+
+  /// Network of an `ip -o -f inet addr show dev X` line in CIDR form, with
+  /// the host bits cleared: "inet 192.168.1.177/24" → "192.168.1.0/24".
+  @visibleForTesting
+  static String? parseSubnet(String output) {
+    final m = RegExp(r'\binet\s+(\d+)\.(\d+)\.(\d+)\.(\d+)/(\d+)').firstMatch(output);
+    if (m == null) return null;
+    final octets = [for (var i = 1; i <= 4; i++) int.parse(m.group(i)!)];
+    final prefix = int.parse(m.group(5)!);
+    if (octets.any((o) => o > 255) || prefix < 8 || prefix > 32) return null;
+    final address = octets.fold(0, (a, o) => (a << 8) | o);
+    final mask = (0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF;
+    final net = address & mask;
+    return '${[24, 16, 8, 0].map((sh) => (net >> sh) & 0xFF).join('.')}/$prefix';
+  }
+
+  /// The local IPv4 network of the default route's interface.
+  Future<String?> _localSubnet() async {
+    final dev = (await _defaultRoute()).dev;
+    if (dev == null) return null;
+    final result = await _run('ip', ['-o', '-f', 'inet', 'addr', 'show', 'dev', dev]);
+    if (result == null || result.exitCode != 0) return null;
+    return parseSubnet(result.stdout as String);
   }
 
   @override
   Future<bool> openFirewallPorts() async {
     const first = PlatformNetwork.serverPortFirst;
     const last = PlatformNetwork.serverPortLast;
+    // Only the local network needs to reach the server: on a public network
+    // (a firewalld "public" zone, or ufw on every interface) an open port
+    // would otherwise also face whatever else the PC is connected to.
+    // The subnet is built from integers and the zone matched a strict regex,
+    // so nothing user-controlled reaches the shell.
+    final subnet = await _localSubnet();
     String? script;
     if (await _firewalldActive()) {
       final zone = await _activeZone();
       if (zone == null) return false;
-      script = 'firewall-cmd --permanent --zone=$zone --add-port=$first-$last/tcp && '
+      final ports = subnet == null
+          ? '--add-port=$first-$last/tcp'
+          : "--add-rich-rule='rule family=ipv4 source address=$subnet port port=$first-$last protocol=tcp accept'";
+      script = 'firewall-cmd --permanent --zone=$zone $ports && '
           'firewall-cmd --permanent --zone=$zone --add-service=mdns && '
           'firewall-cmd --reload';
     } else if (await _ufwActive()) {
-      script = 'ufw allow $first:$last/tcp && ufw allow 5353/udp';
+      script = subnet == null
+          ? 'ufw allow $first:$last/tcp && ufw allow 5353/udp'
+          : 'ufw allow from $subnet to any port $first:$last proto tcp && '
+              'ufw allow from $subnet to any port 5353 proto udp';
     }
     if (script == null) return true;
     final result = await _run('pkexec', ['sh', '-c', script]);

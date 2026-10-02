@@ -569,6 +569,14 @@ class Impress:
                 self.version = (0, 0)
         return self.version
 
+    def release_if_ended(self):
+        """Removes the media triggers once the show has ended. The server
+        stops polling state() when no phone is connected, so without this a
+        show ended later would leave them in the document, where saving
+        would keep them."""
+        if self.media is not None and self._running() is None:
+            self._release_media()
+
     def _release_media(self):
         media, self.media, self.media_state = self.media, None, None
         if media is None or not media["nodes"]:
@@ -785,10 +793,23 @@ def main():
                 work.put(request)
         work.put(None)
 
+    def release_media_if_ended():
+        if impress.media is None or impress.async_callback is None:
+            return
+        try:
+            impress.on_main_thread(impress.release_if_ended)
+        except Exception:  # noqa: BLE001 - LibreOffice gone or busy: try later
+            pass
+
     threading.Thread(target=read_requests, daemon=True).start()
     while True:
-        request = work.get()
+        try:
+            request = work.get(timeout=5)
+        except queue.Empty:
+            release_media_if_ended()
+            continue
         if request is None:
+            release_media_if_ended()  # the server quit
             break
         if request is _POINTER:
             with lock:
