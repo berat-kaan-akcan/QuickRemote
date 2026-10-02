@@ -48,10 +48,6 @@ abstract class RemoteCommands {
   static const sysMediaPrev      = 'SYSTEM_MEDIA_PREV';
   static const sysMediaStop      = 'SYSTEM_MEDIA_STOP';
 
-  // ── High‑frequency message types ──
-  static const typeLaser = 'LASER';
-  static const typeTouch = 'TOUCH';
-
   static const allowedCommands = <String>{
     next, prev, start, end, lock, refreshState,
     modeArrow, modeLaser, modePen, modeHighlighter, modeEraser,
@@ -70,9 +66,9 @@ abstract class RemoteCommands {
     'VOLUME_SET',
   };
 
-  /// All message‑type values the PC server will accept.
-  static const allowedTypes = <String>{
-    typeLaser, typeTouch,
-  };
+  // Parameterized commands; the PC validates the range of each value.
+  static String startAt(int slide) => 'START_AT:$slide';
+  static String penColor(int bgr) => 'SET_PEN_COLOR:$bgr';
+  static String volumeSet(int level) => 'VOLUME_SET:$level';
 }
 

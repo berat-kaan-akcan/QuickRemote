@@ -37,6 +37,7 @@ class _ScanScreenState extends State<ScanScreen> {
         PairingError.notQuickRemote => 'Geçersiz QR kodu. "quickremote://" formatı bekleniyor.',
         PairingError.missingHost => 'QR kodunda IP adresi eksik.',
         PairingError.invalidPort => 'QR kodunda geçersiz port numarası.',
+        PairingError.invalidPin => 'QR kodundaki PIN geçersiz. Kodu yeniden tarayın.',
         PairingError.invalidFingerprint => 'QR kodundaki sertifika bilgisi bozuk. Kodu yeniden tarayın.',
         _ => 'QR kodu beklenen formatta değil.\nFormat: quickremote://IP:PORT:PIN',
       });
