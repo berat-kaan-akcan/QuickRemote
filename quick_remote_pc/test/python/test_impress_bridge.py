@@ -125,6 +125,26 @@ class MainThreadCallTest(unittest.TestCase):
         self.assertEqual(ran, [])
 
 
+class ReleaseIfEndedTest(unittest.TestCase):
+    def make(self, running):
+        impress = bridge.Impress()
+        impress.media = {"doc": None, "nodes": []}
+        impress.released = 0
+        impress._running = lambda: running
+        impress._release_media = lambda: setattr(impress, "released", impress.released + 1)
+        return impress
+
+    def test_releases_after_the_show_ended(self):
+        impress = self.make(running=None)
+        impress.release_if_ended()
+        self.assertEqual(impress.released, 1)
+
+    def test_keeps_triggers_while_the_show_runs(self):
+        impress = self.make(running=("doc", "pres", "ctrl"))
+        impress.release_if_ended()
+        self.assertEqual(impress.released, 0)
+
+
 class PipeIsTrustedTest(unittest.TestCase):
     def setUp(self):
         self.path = "/tmp/OSL_PIPE_%d_%s" % (os.getuid(), bridge.PIPE_NAME)
