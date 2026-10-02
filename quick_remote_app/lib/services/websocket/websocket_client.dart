@@ -365,11 +365,10 @@ class WebSocketClient {
     String newFingerprint, {
     required int port,
     String? pin,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'cert_fingerprint_$host';
-    await prefs.setString(key, newFingerprint);
-    debugPrint('Certificate fingerprint updated for $host (user-approved)');
-    return connect(host, port, pin: pin);
+  }) {
+    // Pin the approved certificate for this attempt only. The success path in
+    // connect() stores it once the PIN is accepted, so a wrong PIN against an
+    // impostor never makes the impostor's certificate permanent.
+    return connect(host, port, pin: pin, expectedFingerprint: newFingerprint);
   }
 }

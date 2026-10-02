@@ -85,6 +85,10 @@ class _RunningDashboardState extends State<RunningDashboard> {
           trust: provider.networkTrust,
           server: provider.server,
         ),
+        if (provider.pairingPaused) ...[
+          const SizedBox(height: 8),
+          const _PairingPausedBanner(),
+        ],
         const SizedBox(height: 8),
         Flexible(
           child: ClipRRect(
@@ -316,6 +320,35 @@ class _RunningDashboardState extends State<RunningDashboard> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PairingPausedBanner extends StatelessWidget {
+  const _PairingPausedBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFFF44336);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.gpp_maybe_rounded, color: color, size: 20),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Çok fazla hatalı PIN denemesi. Eşleştirme 1 dakika duraklatıldı ve PIN yenilendi.',
+              style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

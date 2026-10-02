@@ -68,7 +68,13 @@ class LinuxNetwork implements PlatformNetwork {
       if (result.exitCode != 0 || !cert.existsSync()) {
         throw Exception('Failed to generate TLS certificate via openssl: ${result.stderr}');
       }
-      await _run('chmod', ['600', keyPath]);
+    }
+
+    // openssl already creates the key as 0600; this also fixes a key left
+    // readable by an older version, and refuses to serve with one that stays so.
+    await _run('chmod', ['600', keyPath]);
+    if (key.statSync().mode & 0x3F != 0) {
+      throw Exception('TLS anahtarı başka kullanıcılar tarafından okunabiliyor: $keyPath');
     }
 
     return SecurityContext()

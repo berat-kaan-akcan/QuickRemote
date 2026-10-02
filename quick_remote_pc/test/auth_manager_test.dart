@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/server/auth_manager.dart';
 
@@ -125,6 +127,33 @@ void main() {
       now = now.add(AuthManager.globalFailureWindow + const Duration(seconds: 1));
       auth.recordFailedAttempt('10.0.6.1');
       expect(auth.isGloballyPaused, isFalse);
+    });
+
+    test('reports only the failure that starts the pause', () {
+      final started = [
+        for (var i = 0; i <= AuthManager.maxGlobalFailures; i++) auth.recordFailedAttempt('10.0.7.$i'),
+      ];
+      expect(started.last, isTrue);
+      expect(started.take(AuthManager.maxGlobalFailures), everyElement(isFalse));
+    });
+  });
+
+  group('clientKey', () {
+    String key(String address) => AuthManager.clientKey(InternetAddress(address));
+
+    test('maps IPv4-mapped IPv6 to the plain IPv4 address', () {
+      expect(key('::ffff:192.168.1.20'), '192.168.1.20');
+      expect(key('192.168.1.20'), '192.168.1.20');
+    });
+
+    test('groups IPv6 addresses by /64', () {
+      expect(key('2001:db8:1:2:aaaa::1'), key('2001:db8:1:2:bbbb::9'));
+      expect(key('2001:db8:1:2::1'), '2001:db8:1:2::/64');
+      expect(key('2001:db8:1:3::1'), isNot(key('2001:db8:1:2::1')));
+    });
+
+    test('handles a missing address', () {
+      expect(AuthManager.clientKey(null), '');
     });
   });
 

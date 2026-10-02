@@ -17,7 +17,7 @@ class CommandRouter {
     }
 
     if (command.startsWith('START_AT:')) {
-      final slideNumber = parseIntArg(command, min: 1);
+      final slideNumber = parseIntArg(command, min: 1, max: 9999);
       if (slideNumber != null) {
         service.slideStartAt(slideNumber);
       }

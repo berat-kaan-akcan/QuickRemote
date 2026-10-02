@@ -189,6 +189,12 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
           action: 'Güncelle',
           onTap: () => _run(enable, 'Impress bağlantısı güvenli yönteme geçirildi.', 'LibreOffice ayarı yazılamadı.'),
         ),
+      ImpressStatus.legacyListenerWhileRunning => _row(
+          Icons.gpp_maybe_rounded,
+          _orange,
+          'Impress bağlantısı eski yöntemi kullanıyor: bu bilgisayardaki her kullanıcıya ve uygulamaya açık bir port. '
+          'Güncellemek için LibreOffice\'i kapatın.',
+        ),
       ImpressStatus.runningNotListening => _row(
           Icons.slideshow_rounded,
           _orange,

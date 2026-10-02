@@ -341,7 +341,7 @@ class Impress:
         number = int(args["slide"])
         running = self._running()
         if running is not None:
-            self._goto(running, max(0, number - 1))
+            self._goto(running, min(max(0, number - 1), running[2].getSlideCount() - 1))
             return
         doc = self._document()
         pages = doc.getDrawPages()
