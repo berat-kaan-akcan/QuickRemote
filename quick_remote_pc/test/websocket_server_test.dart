@@ -125,6 +125,7 @@ void main() {
       final reply = await client.next('auth');
       expect(reply, containsPair('status', 'ok'));
       expect(reply, containsPair('presenter', 'fake'));
+      expect(reply, containsPair('presenters', ['fake', 'other']));
       expect(server.clientCount.value, 1);
     });
 

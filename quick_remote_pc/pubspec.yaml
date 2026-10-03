@@ -1,5 +1,5 @@
 name: quick_remote_pc
-description: "QuickRemote PC server: receives remote commands and controls PowerPoint (Windows) or LibreOffice Impress (Linux)."
+description: "QuickRemote PC server: receives remote commands and controls PowerPoint or WPS (Windows) and LibreOffice Impress or WPS (Linux)."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -23,6 +23,7 @@ dependencies:
   shared_preferences: ^2.5.5
   dbus: ^0.8.0
   path: ^1.9.1
+  file_selector: ^1.1.0
 
 dev_dependencies:
   integration_test:

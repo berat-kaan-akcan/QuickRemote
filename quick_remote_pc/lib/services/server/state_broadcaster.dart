@@ -144,6 +144,7 @@ class StateBroadcaster {
           _lastSlideState!['notes'] != notes ||
           _lastSlideState!['hasMedia'] != state['hasMedia'] ||
           _lastSlideState!['isMediaPlaying'] != state['isMediaPlaying'] ||
+          _lastSlideState!['presenter'] != state['presenter'] ||
           _lastSlideState!['error'] != null) {
         
         _lastSlideState = state;
@@ -155,6 +156,7 @@ class StateBroadcaster {
           'notes': notes,
           'hasMedia': state['hasMedia'] ?? false,
           'isMediaPlaying': state['isMediaPlaying'] ?? false,
+          if (state['presenter'] != null) 'presenter': state['presenter'],
         });
       }
     }

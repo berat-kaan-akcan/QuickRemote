@@ -21,7 +21,7 @@
 | Özellik | Açıklama |
 |---------|----------|
 | **Slayt İleri / Geri** | Sunumu tek dokunuşla ilerletin veya geri alın |
-| **Sunumu Başlat / Bitir** | PowerPoint sunumunu uzaktan başlatın (F5) veya sonlandırın (ESC) |
+| **Sunumu Başlat / Bitir** | PowerPoint veya WPS sunumunu uzaktan başlatın (F5) veya sonlandırın (ESC) |
 | **Belirli Slayta Git** | İstediğiniz slayt numarasına doğrudan atlayın (`START_AT`) |
 | **Slayt Durumu Senkronizasyonu** | Mevcut slayt numarası, toplam slayt sayısı ve konuşmacı notları gerçek zamanlı olarak telefonunuza aktarılır |
 | **Sunum Zamanlayıcı** | Sunumunuzun ne kadar sürdüğünü takip edin |
@@ -75,7 +75,8 @@
 | **Gizlenen Eşleştirme Kodu** | İlk telefon bağlandıktan sonra QR kodu ve PIN gizlenir ("Kodu göster" ile açılır); yansıtılan ekranda görünmez |
 | **Bağlı Cihazlar** | PC bağlı telefonları listeler; "Çıkar" o telefonun bağlantısını keser ve PIN'i yeniler |
 | **Kimlik Doğrulama Zaman Aşımı** | Bağlanan istemci 5 saniye içinde doğrulanmazsa bağlantı kapatılır |
-| **Odak Kontrolü** | Windows'ta çizim/siyah ekran kısayolları yalnızca PowerPoint öndeyken gönderilir; başka bir pencereye yazılmaz |
+| **Odak Kontrolü** | Windows'ta çizim/siyah ekran kısayolları yalnızca PowerPoint veya WPS öndeyken gönderilir; başka bir pencereye yazılmaz |
+| **WPS Office** | Windows'ta WPS Presentation, PowerPoint ile aynı COM arayüzünden (`KWPP.Application`) kontrol edilir; Linux'ta RPC ve kısayollarla (aşağıya bakın). WPS'te lazer yoktur, yerine görünür fare imleci kullanılır. ⚠️ Windows'taki WPS desteği henüz gerçek bir WPS kurulumunda denenmedi |
 | **Canlı Ağ İzleme** | Ağ profiliniz sürekli izlenir; herkese açık ağ tespit edilirse uyarılır ve ağ ayarlarını açabilirsiniz |
 
 ---
@@ -130,16 +131,16 @@ QuickRemote/
 │   └── test/                      # 🧪 Birim ve widget testleri (ayarlar, BT tuş eşlemesi, hareket biriktirici)
 │
 ├── quick_remote_pc/               # 🖥️ Flutter Masaüstü Uygulaması (Windows / Linux)
-│   ├── assets/linux/              # LibreOffice Impress köprüsü (impress_bridge.py)
+│   ├── assets/linux/              # LibreOffice Impress ve WPS köprüleri (impress_bridge.py, wps_bridge.py)
 │   ├── test/                      # 🧪 Sunucu entegrasyon, komut yönlendirici, auth, Linux testleri
-│   │   └── python/                # Impress köprüsü testleri (unittest)
+│   │   └── python/                # Impress ve WPS köprüsü testleri (unittest)
 │   └── lib/
 │       ├── main.dart              # Uygulama giriş noktası & Provider yapılandırması
 │       ├── providers/             # State yönetimi (server_provider vb.)
 │       ├── screens/
 │       │   └── home/              # Ana ekran – ağ durumu, public network uyarıları, ayarlar
 │       ├── services/              # Arka plan servisleri
-│       │   ├── input/             # Girdi: windows/ (SendInput, PowerPoint COM, SMTC), linux/ (uinput, Impress, pactl, MPRIS)
+│       │   ├── input/             # Girdi: windows/ (SendInput, PowerPoint/WPS COM, SMTC), linux/ (uinput, Impress, WPS, pactl, MPRIS)
 │       │   └── server/            # Sunucu yönetimi (Auth, Network, State)
 │       └── widgets/               # Ortak kullanılan widgetlar (hover efektleri vb.)
 │
@@ -242,7 +243,7 @@ flutter run -d windows
 
 #### 🐧 Linux
 
-Linux'ta sunum programı olarak **LibreOffice Impress** kontrol edilir.
+Linux'ta sunum programı olarak **LibreOffice Impress** ve **WPS Office** (WPS Presentation) kontrol edilir.
 
 ```bash
 cd quick_remote_pc
@@ -255,6 +256,7 @@ flutter run -d linux        # veya: flutter build linux
 **İlk kurulum:** uygulamanın üst kısmındaki Linux panelinden yapılır:
 - **Klavye/fare izni:** "İzin ver" butonu `/dev/uinput` için bir udev kuralı kurar (yönetici parolası sorar). Elle kurmak için: `sudo quick_remote_pc/linux/packaging/install-uinput-rule.sh`
 - **Impress bağlantısı:** "Etkinleştir" butonu LibreOffice profiline yalnızca sizin kullanıcınızın bağlanabildiği bir UNO soketi (`pipe,name=quickremote`) ekler. LibreOffice açıksa "Bağlan" butonu bunu anında etkinleştirir. Eski sürümlerin eklediği `localhost:2002` TCP dinleyicisi bu makinedeki her kullanıcıya ve uygulamaya açıktı; panelde "Güncelle" çıkarsa ona basın.
+- **WPS desteği (isteğe bağlı):** WPS kuruluysa panelde bir WPS satırı çıkar. "Kur" butonu WPS'in RPC bağlayıcısı `pywpsrpc`'yi uygulamanın kendi Python sanal ortamına kurar (sistem Python'u değişmez, bir kez internet gerekir; Debian/Ubuntu'da `python3-venv` paketi gerekir).
 - **Güvenlik duvarı:** firewalld/ufw 8090-8099 portlarını engelliyorsa "Portları aç" butonu görünür.
 
 > **Bilmeniz gerekenler:** udev kuralı (`uaccess`) `/dev/uinput`'u oturumunuzdaki **her** uygulamaya açar; bu, Wayland'ın uygulamalar arası giriş yalıtımını sizin kullanıcınız için kaldırır. İzni geri almak için `sudo rm /etc/udev/rules.d/70-quickremote-uinput.rules` çalıştırın. Klavye yedekleri tuşların fiziksel konumunu gönderir; Türkçe F gibi QWERTY olmayan düzenlerde Impress köprüsü yokken B/W kısayolları farklı harf üretebilir.
@@ -269,9 +271,22 @@ flutter run -d linux        # veya: flutter build linux
 | Ses, şimdi çalan (kapak dahil), medya tuşları | ✅ pactl + MPRIS |
 | Bilgisayarı kilitle | ✅ `loginctl lock-session` |
 | Otomatik keşif (mDNS) | ✅ Avahi |
-| Bluetooth HID modu | ✅ Dokunmatik alanda "Hedef: LibreOffice Impress" seçilince: slayt, siyah/beyaz ekran, kalem, temizle çalışır. ⚠️ Lazer yerine fare imleci kullanılır; vurgulayıcı ve silgi gizlenir (Impress'te klavye kısayolları yok) |
+| Bluetooth HID modu | ✅ Dokunmatik alanda "Hedef: Impress" seçilince: slayt, siyah/beyaz ekran, kalem, temizle çalışır. ⚠️ Lazer yerine fare imleci kullanılır; vurgulayıcı ve silgi gizlenir (Impress'te klavye kısayolları yok). "Hedef: WPS" seçilince vurgulayıcı da çalışır, silgi gizlenir |
 
 Impress'e ulaşılamazsa ileri/geri, başlat ve bitir komutları klavye kısayoluna (PageDown/PageUp/F5/Esc) düşer; böylece PDF görüntüleyiciler ve tarayıcıdaki sunumlar da kontrol edilebilir. Çizim modları ve siyah/beyaz ekran yalnızca bir slayt gösterisi açıkken çalışır, başka bir pencereye tuş yazmaz.
+
+**WPS Office (Linux):** WPS'in RPC arayüzü yalnızca kendi başlattığı WPS'i yönetebilir, sizin açtığınız bir WPS'e bağlanamaz. Bu yüzden iki mod vardır:
+
+| | Paneldeki "Sunum aç" ile açılan sunum | WPS'i kendiniz açtığınızda |
+|---|---|---|
+| İleri/geri, başlat/bitir, siyah/beyaz ekran | ✅ RPC | ✅ WPS kısayolları |
+| Slayt numarası, notlar, n. slayttan başlatma | ✅ | ❌ Telefonda "Slayt gösterisi açık" görünür |
+| Kalem, vurgulayıcı, tümünü sil | ✅ (kalem rengi dahil) | ✅ Ctrl+P / Ctrl+I / E (renk seçilemez) |
+| Silgi | ✅ | ❌ |
+| Lazer | ⚠️ Görünür fare imleci telefonla hareket eder (WPS'te lazer yok) | ⚠️ Aynı |
+| Sunuma gömülü video | ✅ | ❌ |
+
+Kendi açtığınız WPS'e kısayollar yalnızca WPS penceresi odaktayken gönderilir. WPS kapalıyken "Sunum aç" ile açılan WPS, sonradan çift tıklayarak açtığınız sunumları da alır ve onlar da tam kontrol edilir.
 
 ---
 

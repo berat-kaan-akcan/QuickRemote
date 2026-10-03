@@ -1,13 +1,15 @@
 import 'dart:async';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import '../../../../providers/server_provider.dart';
+import '../../../../services/input/linux/wps_bridge.dart';
 import '../../../../services/linux/linux_setup.dart';
 import '../../../../services/server/network_manager.dart';
 import '../../../../widgets/hover_scale.dart';
 import '../../../../widgets/status_snack_bar.dart';
 
-/// Linux-only status rows: input permission, Impress connection, mDNS and
-/// firewall. Each problem comes with a one-click fix where possible.
+/// Linux-only status rows: input permission, Impress and WPS connections,
+/// mDNS and firewall. Each problem comes with a one-click fix where possible.
 class LinuxSetupPanel extends StatefulWidget {
   final WebSocketServerProvider provider;
 
@@ -27,6 +29,7 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
   Timer? _timer;
   bool _uinputOk = true;
   ImpressStatus? _impress;
+  WpsStatus? _wps;
   FirewallStatus _firewall = FirewallStatus.open;
   bool _busy = false;
   /// The blocked-ports dialog is shown once per server run.
@@ -61,6 +64,7 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
   Future<void> _refreshNow() async {
     final uinputOk = LinuxSetup.uinputAccessible;
     final impress = await LinuxSetup.impressStatus();
+    final wps = await LinuxSetup.wpsStatus();
     final firewall = widget.provider.isRunning
         ? await NetworkManager.checkFirewall(widget.provider.port)
         : FirewallStatus.open;
@@ -68,6 +72,7 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
     setState(() {
       _uinputOk = uinputOk;
       _impress = impress;
+      _wps = wps;
       _firewall = firewall;
     });
     if (!widget.provider.isRunning) {
@@ -153,7 +158,10 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
             'İzin verilemedi. Yönetici parolası gerekiyor.',
           ),
         ),
-      if (_impress != null) _impressRow(_impress!),
+      // Without LibreOffice but with WPS, the WPS row says it all.
+      if (_impress != null && !(_impress == ImpressStatus.notInstalled && _wpsInstalled))
+        _impressRow(_impress!),
+      if (_wpsInstalled) _wpsRow(_wps!),
       if (widget.provider.isRunning && !widget.provider.mdnsAvailable)
         _row(
           Icons.wifi_find_rounded,
@@ -220,6 +228,51 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
       ImpressStatus.noUno =>
         _row(Icons.error_outline_rounded, _red, 'python3 veya LibreOffice Python (UNO) desteği bulunamadı'),
     };
+  }
+
+  bool get _wpsInstalled => _wps != null && _wps != WpsStatus.notInstalled;
+
+  Widget _wpsRow(WpsStatus status) => switch (status) {
+        WpsStatus.connected => _row(
+            Icons.slideshow_rounded,
+            _green,
+            'WPS bağlı: buradan açılan sunum tam kontrol edilir',
+            action: 'Sunum aç',
+            onTap: _openInWps,
+          ),
+        WpsStatus.ready => _row(
+            Icons.slideshow_rounded,
+            _cyan,
+            'WPS: slayt numarası, notlar ve kalem rengi için sunumu buradan açın',
+            action: 'Sunum aç',
+            onTap: _openInWps,
+          ),
+        WpsStatus.noRpc => _row(
+            Icons.slideshow_rounded,
+            _orange,
+            'WPS yalnızca klavye ile kontrol ediliyor. Tam kontrol için WPS desteğini kurun (pywpsrpc, internet gerekir).',
+            action: 'Kur',
+            onTap: () => _run(
+              LinuxSetup.installWpsSupport,
+              'WPS desteği kuruldu.',
+              'WPS desteği kurulamadı (python3-venv ve internet gerekir).',
+            ),
+          ),
+        WpsStatus.notInstalled => const SizedBox.shrink(),
+      };
+
+  /// Opens a presentation in the WPS the bridge controls. A WPS the user
+  /// started is out of the bridge's reach, so this may open a second WPS.
+  Future<void> _openInWps() async {
+    final file = await openFile(acceptedTypeGroups: const [
+      XTypeGroup(label: 'Sunumlar', extensions: ['pptx', 'ppt', 'ppsx', 'pps', 'dps', 'dpt', 'odp']),
+    ]);
+    if (file == null || !mounted) return;
+    await _run(() async {
+      final reply = await WpsBridge.instance.open(file.path);
+      if (reply['ok'] != true) debugPrint('WPS open failed: ${reply['error']}');
+      return reply['ok'] == true;
+    }, 'Sunum WPS\'te açıldı. Gösteriyi telefondan başlatabilirsiniz.', 'Sunum WPS\'te açılamadı.');
   }
 
   Widget _row(IconData icon, Color color, String text, {String? action, VoidCallback? onTap}) {

@@ -13,6 +13,8 @@ class FakeInputService implements InputService {
   @override
   String get presenter => 'fake';
   @override
+  List<String> get presenters => const ['fake', 'other'];
+  @override
   bool get handlesLaserPointer => false;
   @override
   void laserPointerMoved(double relX, double relY) => calls.add('laserPointerMoved');

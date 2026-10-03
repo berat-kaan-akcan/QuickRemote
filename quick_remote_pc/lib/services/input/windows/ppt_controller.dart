@@ -6,41 +6,90 @@ import 'keyboard_simulator.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
 import '../../presenter_settings.dart';
+import 'presenter_com.dart';
 
+/// PowerPoint and WPS Presentation: the same COM object model and mostly the
+/// same slideshow keys. [PresenterCom.lookup] finds the running one.
 class PptController {
   static bool _isLaserActive = false;
 
-  static void slideNext() {
-    _clearInkBeforeMove();
+  // PpSlideShowPointerType, shared by PowerPoint and WPS.
+  static const pointerArrow = 1;
+  static const pointerPen = 2;
+  static const pointerAutoArrow = 4;
+  static const pointerEraser = 5;
+
+  static Future<void> slideNext() async {
+    await _clearInkBeforeMove();
     KeyboardSimulator.pressKey(VK_NEXT);
   }
 
-  static void slidePrev() {
-    _clearInkBeforeMove();
+  static Future<void> slidePrev() async {
+    await _clearInkBeforeMove();
     KeyboardSimulator.pressKey(VK_PRIOR);
   }
 
-  /// PowerPoint keeps a slide's ink and shows it again when the show comes
-  /// back. With the setting on, E erases it first, but only in the slideshow
-  /// window ('screenClass'): in the editor it would type an E.
-  static void _clearInkBeforeMove() {
+  /// PowerPoint and WPS keep a slide's ink and show it again when the show
+  /// comes back. With the setting on, the ink is erased first: in PowerPoint
+  /// with E, but only in the slideshow window ('screenClass') since in the
+  /// editor it would type an E; in WPS through COM.
+  static Future<void> _clearInkBeforeMove() async {
     if (!PresenterSettings.clearInkOnSlideChange) return;
     final hwnd = GetForegroundWindow();
+    final exe = _windowExecutable(hwnd);
+    if (exe.endsWith(r'\wpp.exe')) {
+      await _eraseDrawingCom();
+      return;
+    }
     final classNamePtr = wsalloc(256);
     GetClassName(hwnd, classNamePtr, 256);
     final className = classNamePtr.toDartString();
     free(classNamePtr);
-    if (className == 'screenClass' && _isPowerPointWindow(hwnd)) {
+    if (className == 'screenClass' && exe.endsWith(r'\powerpnt.exe')) {
       KeyboardSimulator.pressKey(0x45); // E
     }
   }
 
+  /// Runs [body] on the running show's view (`$view`) and returns its output:
+  /// "NO_SLIDESHOW" when no show runs, "ERROR: ..." when COM fails.
+  static Future<String> _onShow(String body) async {
+    final script = '${PresenterCom.lookup}'
+        r'''
+try {
+    if ($ppt -ne $null -and $ppt.SlideShowWindows.Count -gt 0) {
+        $view = $ppt.SlideShowWindows.Item(1).View
+'''
+        '$body\n'
+        r'''
+    } else {
+        Write-Output "NO_SLIDESHOW"
+    }
+} catch {
+    Write-Output "ERROR: $($_.Exception.Message)"
+}
+''';
+    try {
+      return (await PowerShellRunner.execute(script)).trim();
+    } catch (e) {
+      return 'ERROR: $e';
+    }
+  }
+
+  /// Erases the running show's ink through COM. Returns whether it did.
+  static Future<bool> _eraseDrawingCom() async {
+    final result = await _onShow(r'''
+        $view.EraseDrawing()
+        Write-Output "OK"''');
+    if (result != 'OK') debugPrint('EraseDrawing: $result');
+    return result == 'OK';
+  }
+
   static Future<void> slideStart() async {
     try {
-      final script = r'''
+      final script = '${PresenterCom.lookup}'
+          r'''
 try {
-    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
-    if ($ppt -ne $null -and $ppt.ActiveProtectedViewWindow -ne $null) {
+    if ($ppt -ne $null -and $qrPresenter -eq 'powerpoint' -and $ppt.ActiveProtectedViewWindow -ne $null) {
         $ppt.ActiveProtectedViewWindow.Edit()
         Start-Sleep -Milliseconds 150
     }
@@ -52,6 +101,7 @@ try {
     } catch (e) {
       debugPrint('Exception in slideStart: $e');
     }
+    // Both PowerPoint and WPS start the show from the first slide with F5.
     KeyboardSimulator.pressKey(VK_F5);
   }
 
@@ -60,21 +110,28 @@ try {
   /// has the focus when the show did not open.
   static Future<void> slideStartAt(int slideNumber) async {
     await slideStart();
+    // The lookup runs again on every try: with PowerPoint and WPS both open,
+    // the one whose show F5 opened is known only once the show is up.
     // $slideNumber is an int validated by CommandRouter (1..9999).
-    final script = '''
+    final script = r'''
 try {
-    \$ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
-    for (\$i = 0; \$i -lt 20 -and \$ppt.SlideShowWindows.Count -eq 0; \$i++) {
+    for ($qrTry = 0; $qrTry -lt 20; $qrTry++) {
+'''
+        '${PresenterCom.lookup}'
+        r'''
+        if ($ppt -ne $null -and $ppt.SlideShowWindows.Count -gt 0) { break }
         Start-Sleep -Milliseconds 100
     }
-    if (\$ppt.SlideShowWindows.Count -eq 0) {
+    if ($ppt -eq $null -or $ppt.SlideShowWindows.Count -eq 0) {
         Write-Output "NOT_READY"
-        return
+    } else {
+        $view = $ppt.SlideShowWindows.Item(1).View
+        $total = $ppt.SlideShowWindows.Item(1).Presentation.Slides.Count
+'''
+        '        \$view.GotoSlide([Math]::Min($slideNumber, \$total))\n'
+        r'''
+        Write-Output "OK"
     }
-    \$view = \$ppt.SlideShowWindows.Item(1).View
-    \$total = \$ppt.SlideShowWindows.Item(1).Presentation.Slides.Count
-    \$view.GotoSlide([Math]::Min($slideNumber, \$total))
-    Write-Output "OK"
 } catch {
     Write-Output "NOT_READY"
 }
@@ -101,24 +158,26 @@ try {
     // PowerPoint's "keep ink annotations?" prompt. '#32770' is the class of
     // every standard dialog, so check the owner too: never answer another
     // application's dialog.
-    if ((className == '#32770' || className == 'NUIDialog') && _isPowerPointWindow(hwnd)) {
+    if ((className == '#32770' || className == 'NUIDialog') &&
+        _windowExecutable(hwnd).endsWith(r'\powerpnt.exe')) {
       KeyboardSimulator.pressKey(VK_TAB);
       await Future.delayed(const Duration(milliseconds: 50));
       KeyboardSimulator.pressKey(VK_RETURN);
     }
   }
 
-  static bool _isPowerPointWindow(HWND hwnd) {
+  /// Lower-case path of the program owning [hwnd], or '' when unknown.
+  static String _windowExecutable(HWND hwnd) {
     final pid = calloc<Uint32>();
     final size = calloc<Uint32>()..value = 1024;
     final path = wsalloc(1024);
     try {
       GetWindowThreadProcessId(hwnd, pid);
       final process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid.value).value;
-      if (process.address == 0) return false;
+      if (process.address == 0) return '';
       try {
-        if (!QueryFullProcessImageName(process, PROCESS_NAME_WIN32, path, size).value) return false;
-        return path.toDartString().toLowerCase().endsWith(r'\powerpnt.exe');
+        if (!QueryFullProcessImageName(process, PROCESS_NAME_WIN32, path, size).value) return '';
+        return path.toDartString().toLowerCase();
       } finally {
         CloseHandle(process);
       }
@@ -129,22 +188,39 @@ try {
     }
   }
 
+  static bool _isPresenterWindow(HWND hwnd) {
+    final exe = _windowExecutable(hwnd);
+    return PresenterCom.executables.any(exe.endsWith);
+  }
+
   static Future<void> blackScreen() => pressInSlideShow([0x42]); // B
   static Future<void> whiteScreen() => pressInSlideShow([0x57]); // W
-  static Future<void> eraseAllInk() => pressInSlideShow([0x45]); // E
+
+  static Future<void> eraseAllInk() async {
+    if (PresenterCom.wpsActive) {
+      if (!await _eraseDrawingCom()) InputSimulator.onCommandError?.call('Mürekkep silinemedi.');
+      return;
+    }
+    await pressInSlideShow([0x45]); // E
+  }
 
   static Future<void> toggleLaserCursor() async {
     final laser = !_isLaserActive;
+    if (PresenterCom.wpsActive) {
+      // WPS has no laser: the visible arrow follows the phone instead.
+      if (await setPointerType(laser ? pointerArrow : pointerAutoArrow)) _isLaserActive = laser;
+      return;
+    }
     if (await pressInSlideShow([VK_CONTROL, laser ? 0x4C : 0x41])) _isLaserActive = laser;
   }
 
-  /// Presses a slideshow shortcut only while PowerPoint has the focus,
+  /// Presses a slideshow shortcut only while PowerPoint or WPS has the focus,
   /// bringing its slideshow window forward when another window has it.
   /// Ctrl+A, B, E, ... in a focused Word window would select all and
   /// replace the text. Returns whether the keys were sent.
   static Future<bool> pressInSlideShow(List<int> keys) async {
-    if (!_isPowerPointWindow(GetForegroundWindow()) && !await _focusPptSlideShow()) {
-      debugPrint('Slideshow shortcut skipped: PowerPoint does not have the focus');
+    if (!_isPresenterWindow(GetForegroundWindow()) && !await _focusPptSlideShow()) {
+      debugPrint('Slideshow shortcut skipped: no presentation program has the focus');
       return false;
     }
     KeyboardSimulator.pressKeyCombo(keys);
@@ -152,49 +228,46 @@ try {
   }
 
   static void setLaserActive(bool active) {
-      _isLaserActive = active;
+    _isLaserActive = active;
+  }
+
+  /// Sets the show's pointer (PpSlideShowPointerType) through COM, which
+  /// needs no focus. Returns whether it did.
+  static Future<bool> setPointerType(int type) async {
+    final result = await _onShow('''
+        \$view.PointerType = $type
+        Write-Output "OK"''');
+    if (result == 'OK') return true;
+    debugPrint('setPointerType($type): $result');
+    InputSimulator.onCommandError
+        ?.call(result == 'NO_SLIDESHOW' ? 'Slayt gösterisi aktif değil.' : 'Sunum programına ulaşılamadı.');
+    return false;
   }
 
   /// Sets the ink color of the running show's pen (or of the highlighter,
   /// while it is the active tool).
   static Future<void> setPointerColor(int bgrColor) async {
-    final script = '''
-try {
-    \$ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
-    if (\$ppt -ne \$null -and \$ppt.SlideShowWindows.Count -gt 0) {
-        \$ppt.SlideShowWindows.Item(1).View.PointerColor.RGB = $bgrColor
+    final output = await _onShow('''
+        \$view.PointerColor.RGB = $bgrColor
+        Write-Output "OK"''');
+    debugPrint('setPointerColor output: $output');
+    if (output == 'OK') return;
+    String errorMsg;
+    if (output == 'NO_SLIDESHOW') {
+      errorMsg = 'Slayt gösterisi aktif değil.';
+    } else if (output.contains('0x800706BA') || output.contains('RPC server is unavailable')) {
+      errorMsg = 'Sunum programı yanıt vermiyor.';
     } else {
-        Write-Output "ERROR: SLIDESHOW_NOT_ACTIVE"
+      errorMsg = 'Kalem rengi değiştirilemedi.';
     }
-} catch {
-    Write-Output "ERROR: \$(\$_.Exception.Message)"
-}
-''';
-    try {
-      final output = await PowerShellRunner.execute(script);
-      debugPrint('setPointerColor output: $output');
-      if (output.trim().startsWith('ERROR:')) {
-        String errorMsg = output.trim().substring(7).trim();
-        if (errorMsg.contains('SLIDESHOW_NOT_ACTIVE')) {
-          errorMsg = 'Slayt gösterisi aktif değil.';
-        } else if (errorMsg.contains('MK_E_UNAVAILABLE') || errorMsg.contains('GetActiveObject')) {
-          errorMsg = 'PowerPoint çalışmıyor veya erişilebilir değil.';
-        } else if (errorMsg.contains('0x800706BA') || errorMsg.contains('RPC server is unavailable')) {
-          errorMsg = 'PowerPoint yanıt vermiyor.';
-        }
-        debugPrint('setPointerColor failed: $errorMsg');
-        InputSimulator.onCommandError?.call(errorMsg);
-      }
-    } catch (e) {
-      debugPrint('Exception in setPointerColor: $e');
-      InputSimulator.onCommandError?.call('Beklenmeyen bir hata oluştu: $e');
-    }
+    debugPrint('setPointerColor failed: $output');
+    InputSimulator.onCommandError?.call(errorMsg);
   }
 
   static Future<bool> _focusPptSlideShow() async {
-    const hwndScript = r'''
+    final hwndScript = '${PresenterCom.lookup}'
+        r'''
 try {
-    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
     if ($ppt -ne $null -and $ppt.SlideShowWindows.Count -gt 0) {
         Write-Output $ppt.SlideShowWindows.Item(1).HWND
     } else {
@@ -266,16 +339,17 @@ try {
       );
 
   /// Runs [playerAction] on the first media player of the current slide
-  /// through COM. When COM can't reach one, focuses the slideshow, selects
-  /// the media with Tab and presses [fallbackKeys].
+  /// through COM. When COM can't reach one in PowerPoint, focuses the
+  /// slideshow, selects the media with Tab and presses [fallbackKeys]
+  /// (PowerPoint's media keys).
   static Future<void> _pptMedia({
     required String name,
     required String playerAction,
     required List<int> fallbackKeys,
   }) async {
-    final comScript = r'''
+    final comScript = '${PresenterCom.lookup}'
+        r'''
 try {
-    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
     if ($ppt -eq $null -or $ppt.SlideShowWindows.Count -eq 0) {
         Write-Output "NO_SLIDESHOW"
         return
@@ -296,7 +370,9 @@ try {
                     try { $isMedia = $shape.PlaceholderFormat.ContainedType -eq 16 } catch {}
                 }
                 if (-not $isMedia) { continue }
-                $player = $view.Player($shape.Name)
+                $player = $null
+                try { $player = $view.Player($shape.Name) } catch {}
+                if ($player -eq $null) { try { $player = $view.Player($shape.Id) } catch {} }
                 if ($player -ne $null) {
 __PLAYER_ACTION__
                     $mediaControlled = $true
@@ -311,7 +387,7 @@ __PLAYER_ACTION__
     if ($mediaControlled) {
         Write-Output "COM_OK_$slideNum"
     } else {
-        Write-Output "COM_FAIL_$slideNum"
+        Write-Output "COM_FAIL_$($qrPresenter)_$slideNum"
     }
 } catch {
     Write-Output "ERROR: $($_.Exception.Message)"
@@ -320,6 +396,10 @@ __PLAYER_ACTION__
     try {
       final result = (await PowerShellRunner.execute(comScript)).trim();
       if (result == 'NO_SLIDESHOW' || result.startsWith('COM_OK_')) return;
+      if (result.startsWith('COM_FAIL_wps_')) {
+        InputSimulator.onCommandError?.call('Bu slayttaki medya kumandadan kontrol edilemiyor.');
+        return;
+      }
 
       final focused = await _focusPptSlideShow();
       if (!focused) return;
