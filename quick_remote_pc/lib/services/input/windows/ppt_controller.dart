@@ -3,6 +3,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:win32/win32.dart';
 import 'keyboard_simulator.dart';
+import 'mouse_simulator.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
 import '../../presenter_settings.dart';
@@ -31,27 +32,82 @@ class PptController {
   }
 
   static ViewerKeys? _viewerInFront() =>
-      PdfViewers.forProgram(_windowExecutable(GetForegroundWindow()).split(r'').last);
+      PdfViewers.forProgram(_windowExecutable(GetForegroundWindow()).split(r'\').last);
 
   /// PowerPoint and WPS keep a slide's ink and show it again when the show
   /// comes back. With the setting on, the ink is erased first: in PowerPoint
-  /// with E, but only in the slideshow window ('screenClass') since in the
-  /// editor it would type an E; in WPS through COM.
+  /// with E, in WPS through COM. Only while the show window has the focus:
+  /// in the editor the E would be typed.
   static Future<void> _clearInkBeforeMove() async {
     if (!PresenterSettings.clearInkOnSlideChange) return;
-    final hwnd = GetForegroundWindow();
+    switch (_showWindowKind(GetForegroundWindow())) {
+      case 'wps':
+        await _eraseDrawingCom();
+      case 'powerpoint':
+        KeyboardSimulator.pressKey(0x45); // E
+    }
+  }
+
+  /// 'powerpoint' or 'wps' when [hwnd] is that program's slideshow window,
+  /// else null. Measured on PowerPoint 365 (16.0.20430) and WPS 12.2: the
+  /// PowerPoint show is a 'screenClass' window; WPS runs its editor in
+  /// wps.exe ('PP12FrameClass') and the show in a 'Qt5QWindowIcon' window of
+  /// wpp.exe. The editors must not count: B, E or Ctrl+A typed there edit the
+  /// slides.
+  static String? _showWindowKind(HWND hwnd) {
     final exe = _windowExecutable(hwnd);
-    if (exe.endsWith(r'\wpp.exe')) {
-      await _eraseDrawingCom();
-      return;
+    if (exe.endsWith(r'\powerpnt.exe')) return _className(hwnd) == 'screenClass' ? 'powerpoint' : null;
+    if (exe.endsWith(r'\wpp.exe')) return _className(hwnd) == 'Qt5QWindowIcon' ? 'wps' : null;
+    return null;
+  }
+
+  static String _className(HWND hwnd) {
+    final name = wsalloc(256);
+    try {
+      GetClassName(hwnd, name, 256);
+      return name.toDartString();
+    } finally {
+      free(name);
     }
-    final classNamePtr = wsalloc(256);
-    GetClassName(hwnd, classNamePtr, 256);
-    final className = classNamePtr.toDartString();
-    free(classNamePtr);
-    if (className == 'screenClass' && exe.endsWith(r'\powerpnt.exe')) {
-      KeyboardSimulator.pressKey(0x45); // E
+  }
+
+  /// The largest visible slideshow window of [kind] ('powerpoint', 'wps'),
+  /// or of either when null. COM gives no handle: SlideShowWindow.HWND is
+  /// missing in PowerPoint 365 (DISP_E_MEMBERNOTFOUND) and empty in WPS. The
+  /// largest, since WPS's show toolbar may be a window of the same class.
+  static HWND? _findShowWindow([String? kind]) {
+    final found = <HWND>[];
+    int visit(Pointer hwnd, int lParam) {
+      final window = HWND(hwnd);
+      if (IsWindowVisible(window)) {
+        final windowKind = _showWindowKind(window);
+        if (windowKind != null && (kind == null || windowKind == kind)) found.add(window);
+      }
+      return TRUE;
     }
+
+    final callback = NativeCallable<WNDENUMPROC>.isolateLocal(visit, exceptionalReturn: 0);
+    try {
+      EnumWindows(callback.nativeFunction, LPARAM(0));
+    } finally {
+      callback.close();
+    }
+    HWND? best;
+    var bestArea = 0;
+    final rect = calloc<RECT>();
+    try {
+      for (final window in found) {
+        if (!GetWindowRect(window, rect).value) continue;
+        final area = (rect.ref.right - rect.ref.left) * (rect.ref.bottom - rect.ref.top);
+        if (area > bestArea) {
+          bestArea = area;
+          best = window;
+        }
+      }
+    } finally {
+      calloc.free(rect);
+    }
+    return best;
   }
 
   /// Runs [body] on the running show's view (`$view`) and returns its output:
@@ -180,19 +236,30 @@ try {
       KeyboardSimulator.pressKeyCombo(toggled.$2);
       return;
     }
-    KeyboardSimulator.pressKey(VK_ESCAPE);
-    await Future.delayed(const Duration(milliseconds: 350));
+    // A show behind another window (its editor, a chat) is brought forward;
+    // without one, the Esc is for the program in front (a PDF viewer).
+    if (_showWindowKind(GetForegroundWindow()) == null) {
+      final show = _findShowWindow();
+      if (show != null) await _focusWindow(show);
+    }
+    // With the pen, highlighter, eraser or laser on, the first Esc only puts
+    // the tool away (PowerPoint 365 and WPS 12.2), and in WPS a video clicked
+    // to play it takes one more. Esc again while the show is still in front.
+    for (var i = 0; i < 3; i++) {
+      KeyboardSimulator.pressKey(VK_ESCAPE);
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (_showWindowKind(GetForegroundWindow()) == null) break;
+    }
     final hwnd = GetForegroundWindow();
-    final classNamePtr = wsalloc(256);
-    GetClassName(hwnd, classNamePtr, 256);
-    final className = classNamePtr.toDartString();
-    free(classNamePtr);
+    final className = _className(hwnd);
 
-    // PowerPoint's "keep ink annotations?" prompt. '#32770' is the class of
-    // every standard dialog, so check the owner too: never answer another
-    // application's dialog.
-    if ((className == '#32770' || className == 'NUIDialog') &&
-        _windowExecutable(hwnd).endsWith(r'\powerpnt.exe')) {
+    // The "keep ink annotations?" prompt, answered Discard (Tab, Enter) in
+    // both: PowerPoint's 'NUIDialog' and WPS's '#32770 (Dialog)' of wpp.exe.
+    // '#32770' is the class of every standard dialog, so check the owner too:
+    // never answer another application's dialog.
+    final exe = _windowExecutable(hwnd);
+    if (((className == '#32770' || className == 'NUIDialog') && exe.endsWith(r'\powerpnt.exe')) ||
+        (className.startsWith('#32770') && exe.endsWith(r'\wpp.exe'))) {
       KeyboardSimulator.pressKey(VK_TAB);
       await Future.delayed(const Duration(milliseconds: 50));
       KeyboardSimulator.pressKey(VK_RETURN);
@@ -221,11 +288,6 @@ try {
     }
   }
 
-  static bool _isPresenterWindow(HWND hwnd) {
-    final exe = _windowExecutable(hwnd);
-    return PresenterCom.executables.any(exe.endsWith);
-  }
-
   static Future<void> blackScreen() => pressInSlideShow([0x42]); // B
   static Future<void> whiteScreen() => pressInSlideShow([0x57]); // W
 
@@ -247,13 +309,13 @@ try {
     if (await pressInSlideShow([VK_CONTROL, laser ? 0x4C : 0x41])) _isLaserActive = laser;
   }
 
-  /// Presses a slideshow shortcut only while PowerPoint or WPS has the focus,
-  /// bringing its slideshow window forward when another window has it.
-  /// Ctrl+A, B, E, ... in a focused Word window would select all and
-  /// replace the text. Returns whether the keys were sent.
+  /// Presses a slideshow shortcut only while the slideshow window has the
+  /// focus, bringing it forward when another window has it. Ctrl+A, B, E,
+  /// ... in a focused Word window, or in the presentation's own editor, would
+  /// select all and replace the text. Returns whether the keys were sent.
   static Future<bool> pressInSlideShow(List<int> keys) async {
-    if (!_isPresenterWindow(GetForegroundWindow()) && !await _focusPptSlideShow()) {
-      debugPrint('Slideshow shortcut skipped: no presentation program has the focus');
+    if (!await _focusShow()) {
+      debugPrint('Slideshow shortcut skipped: no slideshow window could get the focus');
       return false;
     }
     KeyboardSimulator.pressKeyCombo(keys);
@@ -297,25 +359,19 @@ try {
     InputSimulator.onCommandError?.call(errorMsg);
   }
 
-  static Future<bool> _focusPptSlideShow() async {
-    final hwndScript = '${PresenterCom.lookup}'
-        r'''
-try {
-    if ($ppt -ne $null -and $ppt.SlideShowWindows.Count -gt 0) {
-        Write-Output $ppt.SlideShowWindows.Item(1).HWND
-    } else {
-        Write-Output "0"
-    }
-} catch {
-    Write-Output "0"
-}
-''';
-    try {
-      final hwndStr = (await PowerShellRunner.execute(hwndScript)).trim();
-      final hwndVal = int.tryParse(hwndStr) ?? 0;
-      if (hwndVal == 0) return false;
+  /// Whether a slideshow window has the focus, after bringing the one of the
+  /// program polled last ([PresenterCom.active]) forward when needed.
+  static Future<bool> _focusShow() async {
+    if (_showWindowKind(GetForegroundWindow()) != null) return true;
+    final show = _findShowWindow(PresenterCom.active);
+    return show != null && await _focusWindow(show);
+  }
 
-      final hwnd = HWND(Pointer.fromAddress(hwndVal));
+  /// Brings [hwnd] to the front from this background process: attached to
+  /// the input of the window in front, SetForegroundWindow is allowed
+  /// (measured with Notepad in front of a PowerPoint show).
+  static Future<bool> _focusWindow(HWND hwnd) async {
+    try {
       final foreHwnd = GetForegroundWindow();
       if (foreHwnd == hwnd) return true;
 
@@ -346,10 +402,11 @@ try {
       await Future.delayed(const Duration(milliseconds: 200));
       return GetForegroundWindow() == hwnd;
     } catch (e) {
-      debugPrint('_focusPptSlideShow error: $e');
+      debugPrint('_focusWindow error: $e');
       return false;
     }
   }
+
 
   static Future<void> pptMediaPlayPause() => _pptMedia(
         name: 'pptMediaPlayPause',
@@ -360,40 +417,46 @@ try {
                         $player.Play()
                     }''',
         fallbackKeys: [VK_MENU, 0x50], // Alt + P
+        wpsClick: true,
       );
 
+  // Alt+Q (stop) goes back to the start; Alt+Home, the previous bookmark,
+  // did nothing on a video without bookmarks (PowerPoint 365).
   static Future<void> pptMediaRewind() => _pptMedia(
         name: 'pptMediaRewind',
         playerAction: r'''
                     $player.Pause()
                     Start-Sleep -Milliseconds 50
                     $player.CurrentPosition = 0''',
-        fallbackKeys: [VK_MENU, VK_HOME], // Alt + Home
+        fallbackKeys: [VK_MENU, 0x51], // Alt + Q
+        wpsClick: false,
       );
+
+  /// The slide and the time of the slide visit in which Tab selected the
+  /// media for the key fallback.
+  static (int, DateTime)? _mediaSelected;
 
   /// Runs [playerAction] on the first media player of the current slide
   /// through COM. When COM can't reach one in PowerPoint, focuses the
   /// slideshow, selects the media with Tab and presses [fallbackKeys]
-  /// (PowerPoint's media keys).
+  /// (PowerPoint's media keys). In WPS, whose Player does nothing (Play()
+  /// leaves the video still and State always reads 0, WPS 12.2), a click on
+  /// the video toggles it when [wpsClick] is set.
   static Future<void> _pptMedia({
     required String name,
     required String playerAction,
     required List<int> fallbackKeys,
+    required bool wpsClick,
   }) async {
     final comScript = '${PresenterCom.lookup}'
         r'''
 try {
     if ($ppt -eq $null -or $ppt.SlideShowWindows.Count -eq 0) {
         Write-Output "NO_SLIDESHOW"
-        return
-    }
-
-    $view  = $ppt.SlideShowWindows.Item(1).View
-    $slide = $view.Slide
-    $slideNum = $slide.SlideNumber
-
-    $mediaControlled = $false
-    try {
+    } else {
+        $view  = $ppt.SlideShowWindows.Item(1).View
+        $slide = $view.Slide
+        $result = "NO_MEDIA"
         for ($i = 1; $i -le $slide.Shapes.Count; $i++) {
             try {
                 $shape = $slide.Shapes.Item($i)
@@ -403,24 +466,30 @@ try {
                     try { $isMedia = $shape.PlaceholderFormat.ContainedType -eq 16 } catch {}
                 }
                 if (-not $isMedia) { continue }
+                if ($qrPresenter -eq 'wps') {
+                    # The pen would draw where the click lands: the arrow clicks.
+                    $pointer = $view.PointerType
+                    if ($pointer -eq 2 -or $pointer -eq 5) { $view.PointerType = 1 }
+                    $setup = $ppt.SlideShowWindows.Item(1).Presentation.PageSetup
+                    $x = $shape.Left + $shape.Width / 2
+                    $y = $shape.Top + $shape.Height / 2
+                    # String expansion formats numbers with the invariant culture.
+                    $result = "WPS_CLICK $x $y $($setup.SlideWidth) $($setup.SlideHeight) $pointer"
+                    break
+                }
                 $player = $null
                 try { $player = $view.Player($shape.Name) } catch {}
                 if ($player -eq $null) { try { $player = $view.Player($shape.Id) } catch {} }
                 if ($player -ne $null) {
 __PLAYER_ACTION__
-                    $mediaControlled = $true
+                    $result = "COM_OK"
                     break
                 }
+                # SlideElapsedTime starts again at every visit of the slide.
+                $result = "COM_FAIL $($slide.SlideIndex) $($view.SlideElapsedTime)"
             } catch {}
         }
-    } catch {
-        $mediaControlled = $false
-    }
-
-    if ($mediaControlled) {
-        Write-Output "COM_OK_$slideNum"
-    } else {
-        Write-Output "COM_FAIL_$($qrPresenter)_$slideNum"
+        Write-Output $result
     }
 } catch {
     Write-Output "ERROR: $($_.Exception.Message)"
@@ -428,24 +497,73 @@ __PLAYER_ACTION__
 '''.replaceFirst('__PLAYER_ACTION__', playerAction);
     try {
       final result = (await PowerShellRunner.execute(comScript)).trim();
-      if (result == 'NO_SLIDESHOW' || result.startsWith('COM_OK_')) return;
-      if (result.startsWith('COM_FAIL_wps_')) {
-        InputSimulator.onCommandError?.call('Bu slayttaki medya kumandadan kontrol edilemiyor.');
-        return;
+      final parts = result.split(' ');
+      switch (parts.first) {
+        case 'NO_SLIDESHOW' || 'COM_OK':
+          return;
+        case 'NO_MEDIA':
+          InputSimulator.onCommandError?.call('Bu slaytta medya yok.');
+        case 'WPS_CLICK' when parts.length == 6:
+          if (!wpsClick) {
+            InputSimulator.onCommandError?.call('WPS\'te video başa sarılamıyor.');
+          } else {
+            await _clickWpsMedia([for (final p in parts.skip(1).take(4)) double.parse(p)]);
+          }
+          final pointer = int.parse(parts[5]);
+          if (pointer == pointerPen || pointer == pointerEraser) await setPointerType(pointer);
+        case 'COM_FAIL' when parts.length == 3:
+          await _pptMediaKeys(int.parse(parts[1]), double.parse(parts[2]), fallbackKeys);
+        default:
+          debugPrint('$name: $result');
       }
-
-      final focused = await _focusPptSlideShow();
-      if (!focused) return;
-
-      // Alt+P / Alt+Home act only on a selected media shape, and the
-      // selection does not survive (a click, the pen, the last Alt+P), so
-      // select it with Tab every time. Skipping Tab after the first press on
-      // a slide left the video playing.
-      KeyboardSimulator.pressKey(VK_TAB);
-      await Future.delayed(const Duration(milliseconds: 200));
-      KeyboardSimulator.pressKeyCombo(fallbackKeys);
     } catch (e) {
       debugPrint('$name error: $e');
+    }
+  }
+
+  /// PowerPoint's media keys act on the media shape Tab selected. Tab moves
+  /// the selection on, so a second Tab on the same visit of the slide
+  /// unselects the only video and the keys do nothing; moving the mouse,
+  /// clicking, the pen and the keys themselves keep the selection, a slide
+  /// change drops it (measured on PowerPoint 365).
+  static Future<void> _pptMediaKeys(int slide, double elapsedSeconds, List<int> keys) async {
+    if (!await _focusShow()) return;
+    final visit = DateTime.now().subtract(Duration(milliseconds: (elapsedSeconds * 1000).round()));
+    final selected = _mediaSelected;
+    final sameVisit =
+        selected != null && selected.$1 == slide && selected.$2.difference(visit).abs() < const Duration(seconds: 1);
+    if (!sameVisit) {
+      KeyboardSimulator.pressKey(VK_TAB);
+      await Future.delayed(const Duration(milliseconds: 200));
+      _mediaSelected = (slide, visit);
+    }
+    KeyboardSimulator.pressKeyCombo(keys);
+  }
+
+  /// Clicks the middle of the WPS media shape: [geometry] is its centre and
+  /// the slide size, in points. The slide fills the show window, letterboxed.
+  static Future<void> _clickWpsMedia(List<double> geometry) async {
+    final [x, y, slideWidth, slideHeight] = geometry;
+    final show = _findShowWindow('wps');
+    if (show == null || slideWidth <= 0 || slideHeight <= 0 || !await _focusWindow(show)) return;
+    final rect = calloc<RECT>();
+    final cursor = calloc<POINT>();
+    try {
+      if (!GetWindowRect(show, rect).value) return;
+      final width = rect.ref.right - rect.ref.left;
+      final height = rect.ref.bottom - rect.ref.top;
+      final scale = width / slideWidth < height / slideHeight ? width / slideWidth : height / slideHeight;
+      final left = rect.ref.left + (width - slideWidth * scale) / 2;
+      final top = rect.ref.top + (height - slideHeight * scale) / 2;
+      GetCursorPos(cursor);
+      SetCursorPos((left + x * scale).round(), (top + y * scale).round());
+      await Future.delayed(const Duration(milliseconds: 50));
+      MouseSimulator.leftClick();
+      await Future.delayed(const Duration(milliseconds: 50));
+      SetCursorPos(cursor.ref.x, cursor.ref.y);
+    } finally {
+      calloc.free(rect);
+      calloc.free(cursor);
     }
   }
 }

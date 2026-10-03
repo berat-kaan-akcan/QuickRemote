@@ -45,6 +45,8 @@ try {
                     $s = $slide.Shapes.Item($i)
                     if ($s.Type -eq 16) {
                         $hasMedia = $true
+                        # WPS's Player.State always reads 0 (playing): unknown.
+                        if ($qrPresenter -eq 'wps') { continue }
                         try {
                             $p = $null
                             try { $p = $view.Player($s.Name) } catch {}
