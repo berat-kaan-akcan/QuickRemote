@@ -7,6 +7,7 @@ import 'widgets/settings_dialog.dart';
 import 'widgets/running_dashboard.dart';
 import 'widgets/stopped_dashboard.dart';
 import 'widgets/linux_setup_panel.dart';
+import '../../l10n/app_language.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -138,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               ),
                             ),
                             Text(
-                              'Sunum Kontrol Merkezi',
+                              context.l10n.homeTagline,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -155,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           onPressed: () {
                             provider.triggerSlideStateUpdate();
                           },
-                          tooltip: 'Slayt Durumunu Yenile',
+                          tooltip: context.l10n.refreshSlideState,
                         ),
                       StatusChip(
                         isRunning: provider.isRunning,
@@ -170,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             builder: (ctx) => const SettingsDialog(),
                           );
                         },
-                        tooltip: 'Ayarlar',
+                        tooltip: context.l10n.settingsTitle,
                       ),
                     ],
                   ),

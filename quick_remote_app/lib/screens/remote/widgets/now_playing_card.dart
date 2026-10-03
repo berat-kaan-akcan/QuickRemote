@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:text_scroll/text_scroll.dart';
 import 'glass_panel.dart';
 import 'premium_media_btn.dart';
+import '../../../l10n/app_language.dart';
 
 class NowPlayingCard extends StatefulWidget {
   final bool hasMedia;
@@ -130,8 +131,8 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
       color: Colors.white,
       size: 20,
     );
-    final displayTitle = widget.hasMedia ? (widget.title?.isNotEmpty == true ? widget.title! : 'Bilinmeyen Medya') : 'Medya Yok';
-    final displayArtist = widget.hasMedia ? (widget.artist?.isNotEmpty == true ? widget.artist! : 'Bilinmeyen Sanatçı') : 'Şu an bir şey çalmıyor';
+    final displayTitle = widget.hasMedia ? (widget.title?.isNotEmpty == true ? widget.title! : context.l10n.unknownMedia) : context.l10n.noMedia;
+    final displayArtist = widget.hasMedia ? (widget.artist?.isNotEmpty == true ? widget.artist! : context.l10n.unknownArtist) : context.l10n.nothingPlaying;
 
     return GlassPanel(
       borderColor: accent.withValues(alpha: 0.3),
@@ -279,7 +280,7 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
                 Expanded(
                   child: PremiumMediaBtn(
                     icon: widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    label: widget.isPlaying ? 'Duraklat' : 'Oynat',
+                    label: widget.isPlaying ? context.l10n.mediaPause : context.l10n.mediaPlay,
                     color: Colors.white,
                     large: true,
                     glow: true,

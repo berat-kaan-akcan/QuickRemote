@@ -7,6 +7,7 @@ import '../../../../services/linux/linux_setup.dart';
 import '../../../../services/server/network_manager.dart';
 import '../../../../widgets/hover_scale.dart';
 import '../../../../widgets/status_snack_bar.dart';
+import '../../../l10n/app_language.dart';
 
 /// Linux-only status rows: input permission, Impress and WPS connections,
 /// mDNS and firewall. Each problem comes with a one-click fix where possible.
@@ -85,8 +86,8 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
 
   Future<void> _openPorts() => _run(
         NetworkManager.openFirewallPorts,
-        'Güvenlik duvarında portlar açıldı.',
-        'Portlar açılamadı.',
+        context.l10n.portsOpened,
+        context.l10n.portsOpenFailed,
       );
 
   Future<void> _showFirewallDialog() async {
@@ -96,21 +97,18 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
         backgroundColor: const Color(0xFF1E293B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         icon: const Icon(Icons.security_rounded, color: _orange, size: 48),
-        title: const Text(
-          'Portları Açmanız Gerekiyor',
+        title: Text(
+          context.l10n.firewallDialogTitle,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'Güvenlik duvarı telefonun bu bilgisayara bağlanmasını '
-          'engelliyor. Uygulamayı kullanmak için 8090-8099 portlarını açmalısınız.\n\n'
-          'Portlar bu ağ bölgesinde kalıcı olarak açılır. Yönetici parolanız '
-          'bir kez sorulacak.',
+        content: Text(
+          context.l10n.firewallDialogContent,
           style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Daha Sonra', style: TextStyle(color: Colors.white54)),
+            child: Text(context.l10n.later, style: TextStyle(color: Colors.white54)),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -118,8 +116,8 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
               backgroundColor: _orange,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text(
-              'Portları Aç',
+            child: Text(
+              context.l10n.openPortsButton,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
             ),
           ),
@@ -150,12 +148,12 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
         _row(
           Icons.keyboard_alt_outlined,
           _orange,
-          'Klavye/fare simülasyonu için izin gerekli',
-          action: 'İzin ver',
+          context.l10n.uinputNeeded,
+          action: context.l10n.grantPermission,
           onTap: () => _run(
             LinuxSetup.installUinputRule,
-            'Giriş izni verildi.',
-            'İzin verilemedi. Yönetici parolası gerekiyor.',
+            context.l10n.uinputGranted,
+            context.l10n.uinputFailed,
           ),
         ),
       // Without LibreOffice but with WPS, the WPS row says it all.
@@ -166,16 +164,16 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
         _row(
           Icons.wifi_find_rounded,
           _orange,
-          'Otomatik keşif kapalı (avahi-daemon). QR veya IP ile bağlanın.',
+          context.l10n.mdnsOff,
         ),
       if (widget.provider.isRunning && _firewall != FirewallStatus.open)
         _row(
           Icons.security_rounded,
           _orange,
           _firewall == FirewallStatus.blocked
-              ? 'Güvenlik duvarı telefonun bağlanmasını engelliyor. Kullanmak için portları açın.'
-              : 'Güvenlik duvarı kuralları okunamadı: 8090-8099 portları açık olmalı',
-          action: 'Portları aç',
+              ? context.l10n.firewallBlocked
+              : context.l10n.firewallUnknown,
+          action: context.l10n.openPortsAction,
           onTap: _openPorts,
         ),
     ];
@@ -193,40 +191,39 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
   Widget _impressRow(ImpressStatus status) {
     Future<bool> enable() => LinuxSetup.enableImpressConnection();
     return switch (status) {
-      ImpressStatus.connected => _row(Icons.slideshow_rounded, _green, 'LibreOffice Impress bağlı'),
+      ImpressStatus.connected => _row(Icons.slideshow_rounded, _green, context.l10n.impressConnected),
       ImpressStatus.readyWhenOpened =>
-        _row(Icons.slideshow_rounded, _cyan, 'Impress: LibreOffice açılınca bağlanır'),
+        _row(Icons.slideshow_rounded, _cyan, context.l10n.impressReadyWhenOpened),
       ImpressStatus.notConfigured => _row(
           Icons.slideshow_rounded,
           _orange,
-          'Impress bağlantısı kapalı',
-          action: 'Etkinleştir',
-          onTap: () => _run(enable, 'Impress bağlantısı etkinleştirildi.', 'LibreOffice ayarı yazılamadı.'),
+          context.l10n.impressOff,
+          action: context.l10n.enable,
+          onTap: () => _run(enable, context.l10n.impressEnabled, context.l10n.libreOfficeWriteFailed),
         ),
       ImpressStatus.legacyListener => _row(
           Icons.gpp_maybe_rounded,
           _orange,
-          'Impress bağlantısı eski yöntemi kullanıyor: bu bilgisayardaki her kullanıcıya ve uygulamaya açık bir port. Güncelleyin.',
-          action: 'Güncelle',
-          onTap: () => _run(enable, 'Impress bağlantısı güvenli yönteme geçirildi.', 'LibreOffice ayarı yazılamadı.'),
+          context.l10n.impressLegacy,
+          action: context.l10n.update,
+          onTap: () => _run(enable, context.l10n.impressUpdated, context.l10n.libreOfficeWriteFailed),
         ),
       ImpressStatus.legacyListenerWhileRunning => _row(
           Icons.gpp_maybe_rounded,
           _orange,
-          'Impress bağlantısı eski yöntemi kullanıyor: bu bilgisayardaki her kullanıcıya ve uygulamaya açık bir port. '
-          'Güncellemek için LibreOffice\'i kapatın.',
+          context.l10n.impressLegacyRunning,
         ),
       ImpressStatus.runningNotListening => _row(
           Icons.slideshow_rounded,
           _orange,
-          'LibreOffice açık ama bağlantı kabul etmiyor',
-          action: 'Bağlan',
-          onTap: () => _run(enable, 'LibreOffice bağlantıyı kabul ediyor.', 'LibreOffice\'e ulaşılamadı.'),
+          context.l10n.libreOfficeNotListening,
+          action: context.l10n.connect,
+          onTap: () => _run(enable, context.l10n.libreOfficeListening, context.l10n.libreOfficeUnreachable),
         ),
       ImpressStatus.notInstalled =>
-        _row(Icons.slideshow_rounded, _grey, 'LibreOffice yok: sunum yalnızca klavye ile kontrol edilir'),
+        _row(Icons.slideshow_rounded, _grey, context.l10n.libreOfficeMissing),
       ImpressStatus.noUno =>
-        _row(Icons.error_outline_rounded, _red, 'python3 veya LibreOffice Python (UNO) desteği bulunamadı'),
+        _row(Icons.error_outline_rounded, _red, context.l10n.unoMissing),
     };
   }
 
@@ -236,26 +233,26 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
         WpsStatus.connected => _row(
             Icons.slideshow_rounded,
             _green,
-            'WPS bağlı: buradan açılan sunum tam kontrol edilir',
-            action: 'Sunum aç',
+            context.l10n.wpsConnected,
+            action: context.l10n.openPresentation,
             onTap: _openInWps,
           ),
         WpsStatus.ready => _row(
             Icons.slideshow_rounded,
             _cyan,
-            'WPS: slayt numarası, notlar ve kalem rengi için sunumu buradan açın',
-            action: 'Sunum aç',
+            context.l10n.wpsReady,
+            action: context.l10n.openPresentation,
             onTap: _openInWps,
           ),
         WpsStatus.noRpc => _row(
             Icons.slideshow_rounded,
             _orange,
-            'WPS yalnızca klavye ile kontrol ediliyor. Tam kontrol için WPS desteğini kurun (pywpsrpc, internet gerekir).',
-            action: 'Kur',
+            context.l10n.wpsNoRpc,
+            action: context.l10n.install,
             onTap: () => _run(
               LinuxSetup.installWpsSupport,
-              'WPS desteği kuruldu.',
-              'WPS desteği kurulamadı (python3-venv ve internet gerekir).',
+              context.l10n.wpsInstalled,
+              context.l10n.wpsInstallFailed,
             ),
           ),
         WpsStatus.notInstalled => const SizedBox.shrink(),
@@ -264,15 +261,15 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
   /// Opens a presentation in the WPS the bridge controls. A WPS the user
   /// started is out of the bridge's reach, so this may open a second WPS.
   Future<void> _openInWps() async {
-    final file = await openFile(acceptedTypeGroups: const [
-      XTypeGroup(label: 'Sunumlar', extensions: ['pptx', 'ppt', 'ppsx', 'pps', 'dps', 'dpt', 'odp']),
+    final file = await openFile(acceptedTypeGroups: [
+      XTypeGroup(label: context.l10n.presentationsFileType, extensions: ['pptx', 'ppt', 'ppsx', 'pps', 'dps', 'dpt', 'odp']),
     ]);
     if (file == null || !mounted) return;
     await _run(() async {
       final reply = await WpsBridge.instance.open(file.path);
       if (reply['ok'] != true) debugPrint('WPS open failed: ${reply['error']}');
       return reply['ok'] == true;
-    }, 'Sunum WPS\'te açıldı. Gösteriyi telefondan başlatabilirsiniz.', 'Sunum WPS\'te açılamadı.');
+    }, context.l10n.wpsOpened, context.l10n.wpsOpenFailed);
   }
 
   Widget _row(IconData icon, Color color, String text, {String? action, VoidCallback? onTap}) {

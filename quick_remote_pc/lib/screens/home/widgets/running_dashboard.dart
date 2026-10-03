@@ -10,6 +10,7 @@ import '../../../../widgets/hover_scale.dart';
 import '../../../../widgets/hover_glow_container.dart';
 import 'network_status_banner.dart';
 import 'public_network_warning_dialog.dart';
+import '../../../l10n/app_language.dart';
 
 class RunningDashboard extends StatefulWidget {
   final WebSocketServerProvider provider;
@@ -219,17 +220,17 @@ class _RunningDashboardState extends State<RunningDashboard> {
                         const SizedBox(height: 12),
                         Text(
                           provider.isStarting
-                              ? 'Ağ bilgileri alınıyor...'
+                              ? context.l10n.loadingNetwork
                               : hidden
-                                  ? 'Başka bir cihaz eşleştirmek için kodu gösterin'
-                                  : 'Bağlanmak için QR kodu tarayın',
+                                  ? context.l10n.showCodeToPair
+                                  : context.l10n.scanToConnect,
                           style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                         ),
                         if (provider.pairedOnce && _revealed)
                           TextButton.icon(
                             onPressed: () => setState(() => _revealed = false),
                             icon: const Icon(Icons.visibility_off_rounded, size: 16),
-                            label: const Text('Kodu gizle'),
+                            label: Text(context.l10n.hideCode),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.white70,
                               visualDensity: VisualDensity.compact,
@@ -288,7 +289,7 @@ class _RunningDashboardState extends State<RunningDashboard> {
                         if (fingerprintHex != null) ...[
                           const SizedBox(height: 4),
                           Text(
-                            'Güvenlik kodu: ${PairingPayload.verificationCode(fingerprintHex)}',
+                            context.l10n.securityCode(PairingPayload.verificationCode(fingerprintHex)),
                             style: const TextStyle(color: Colors.white54, fontFamily: 'Consolas', fontSize: 12),
                           ),
                         ],
@@ -381,13 +382,13 @@ class _PairingPausedBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.gpp_maybe_rounded, color: color, size: 20),
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Çok fazla hatalı PIN denemesi. Eşleştirme 1 dakika duraklatıldı ve PIN yenilendi.',
+              context.l10n.pairingPaused,
               style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700),
             ),
           ),
@@ -416,7 +417,7 @@ class _HiddenCode extends StatelessWidget {
           FilledButton.icon(
             onPressed: onReveal,
             icon: const Icon(Icons.visibility_rounded, size: 18),
-            label: const Text('Kodu göster'),
+            label: Text(context.l10n.showCode),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF0F172A),
               foregroundColor: Colors.white,
@@ -452,7 +453,7 @@ class _ConnectedClients extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bağlı cihazlar (${clients.length})',
+            context.l10n.connectedDevices(clients.length),
             style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
           ),
           for (final client in clients)
@@ -485,7 +486,7 @@ class _ConnectedClients extends StatelessWidget {
                   ),
                 ),
                 Tooltip(
-                  message: 'Bağlantıyı keser ve PIN\'i yeniler. Diğer cihazlar bağlı kalır.',
+                  message: context.l10n.removeDeviceTooltip,
                   child: TextButton(
                     onPressed: () => onKick(client.id),
                     style: TextButton.styleFrom(
@@ -493,7 +494,7 @@ class _ConnectedClients extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text('Çıkar'),
+                    child: Text(context.l10n.removeDevice),
                   ),
                 ),
               ],

@@ -1,5 +1,20 @@
 import 'dart:io';
 
+/// Why the TLS certificate could not be set up; the UI words it.
+enum TlsSetupError { opensslMissing, keyReadable }
+
+class TlsSetupException implements Exception {
+  const TlsSetupException(this.error, [this.detail]);
+
+  final TlsSetupError error;
+
+  /// Untranslated detail (a path).
+  final String? detail;
+
+  @override
+  String toString() => 'TlsSetupException(${error.name}${detail == null ? '' : ': $detail'})';
+}
+
 enum FirewallStatus {
   /// No firewall, or the server ports are allowed.
   open,

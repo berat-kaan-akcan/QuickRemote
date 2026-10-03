@@ -13,9 +13,13 @@ import 'package:permission_handler/permission_handler.dart';
 class BackgroundSession {
   BackgroundSession._();
 
-  static const _config = FlutterBackgroundAndroidConfig(
+  /// The notification's text in the UI language, kept current by the app
+  /// (main.dart). The plugin reads it once, on the first remote screen.
+  static String notificationText = '';
+
+  static FlutterBackgroundAndroidConfig get _config => FlutterBackgroundAndroidConfig(
     notificationTitle: 'QuickRemote',
-    notificationText: 'Arka planda bağlantı devam ediyor...',
+    notificationText: notificationText,
     notificationImportance: AndroidNotificationImportance.normal,
     notificationIcon: AndroidResource(name: 'ic_launcher', defType: 'mipmap'),
   );

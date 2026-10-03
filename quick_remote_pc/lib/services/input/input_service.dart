@@ -1,7 +1,14 @@
+import 'package:quick_remote_shared/quick_remote_shared.dart';
+
+export 'package:quick_remote_shared/quick_remote_shared.dart' show RemoteError;
+
 typedef VolumeState = ({int volume, bool muted});
 
+/// Reports a failed command to the phones; [info] is untranslated detail.
+typedef CommandErrorHandler = void Function(RemoteError error, [String? info]);
+
 abstract class InputService {
-  void Function(String detail)? onCommandError;
+  CommandErrorHandler? onCommandError;
 
   /// Main presentation program of this platform ('powerpoint' / 'impress').
   /// Sent to the mobile client so it can adapt its texts and controls.

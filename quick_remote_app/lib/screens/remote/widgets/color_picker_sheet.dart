@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../models/draw_tool.dart';
+import '../../../l10n/app_language.dart';
 
 class ColorPickerSheet {
   static void show(BuildContext context, DrawTool tool, void Function(String) onSend) {
@@ -13,32 +14,32 @@ class ColorPickerSheet {
       builder: (context) {
         final colors = [
           {
-            'name': 'Kırmızı',
+            'name': context.l10n.colorRed,
             'color': const Color(0xFFFF1744),
             'bgr': 255,
           },
           {
-            'name': 'Mavi',
+            'name': context.l10n.colorBlue,
             'color': const Color(0xFF2979FF),
             'bgr': 16711680,
           },
           {
-            'name': 'Yeşil',
+            'name': context.l10n.colorGreen,
             'color': const Color(0xFF00E676),
             'bgr': 65280,
           },
           {
-            'name': 'Sarı',
+            'name': context.l10n.colorYellow,
             'color': const Color(0xFFFFEA00),
             'bgr': 65535,
           },
           {
-            'name': 'Beyaz',
+            'name': context.l10n.colorWhite,
             'color': const Color(0xFFFFFFFF),
             'bgr': 16777215,
           },
           {
-            'name': 'Mor',
+            'name': context.l10n.colorPurple,
             'color': const Color(0xFFD500F9),
             'bgr': 8388736,
           },
@@ -86,7 +87,7 @@ class ColorPickerSheet {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${tool == DrawTool.pen ? 'Kalem' : 'Vurgulayıcı'} Rengi',
+                        tool == DrawTool.pen ? context.l10n.penColorTitle : context.l10n.highlighterColorTitle,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -169,8 +170,8 @@ class ColorPickerSheet {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'İptal',
+                      child: Text(
+                        context.l10n.cancel,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

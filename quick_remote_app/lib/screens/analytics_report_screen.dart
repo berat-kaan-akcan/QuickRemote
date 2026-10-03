@@ -4,6 +4,7 @@ import '../utils/formatters.dart';
 import 'analytics/utils/report_exporter.dart';
 import 'analytics/widgets/stat_card.dart';
 import 'analytics/widgets/slide_duration_list.dart';
+import '../l10n/app_language.dart';
 
 /// A premium-looking analytics report screen that displays
 /// per-slide timing data and aggregate statistics.
@@ -89,8 +90,8 @@ class AnalyticsReportScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Sunum Raporu',
+                      Text(
+                        context.l10n.reportTitle,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -99,7 +100,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        Formatters.formatDate(analytics.startTime),
+                        Formatters.formatDate(analytics.startTime, context.l10n),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 13,
@@ -121,21 +122,21 @@ class AnalyticsReportScreen extends StatelessWidget {
               children: [
                 StatCard(
                   icon: Icons.timer_rounded,
-                  label: 'Toplam Süre',
-                  value: Formatters.formatDuration(analytics.totalDuration),
+                  label: context.l10n.totalTime,
+                  value: Formatters.formatDuration(analytics.totalDuration, context.l10n),
                   gradient: const [Color(0xFF6C63FF), Color(0xFF5A54E0)],
                 ),
                 const SizedBox(width: 10),
                 StatCard(
                   icon: Icons.layers_rounded,
-                  label: 'Slayt Sayısı',
+                  label: context.l10n.slideCountLabel,
                   value: '${analytics.distinctSlideCount}',
                   gradient: const [Color(0xFF4ECDC4), Color(0xFF3DBDB5)],
                 ),
                 const SizedBox(width: 10),
                 StatCard(
                   icon: Icons.speed_rounded,
-                  label: 'Ort/Slayt',
+                  label: context.l10n.avgPerSlideShort,
                   value: Formatters.formatDurationShort(analytics.averageTimePerSlide),
                   gradient: const [Color(0xFFFF6B6B), Color(0xFFE05555)],
                 ),
@@ -161,7 +162,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.6), size: 20),
                   const SizedBox(width: 10),
                   Text(
-                    'Toplam Geçiş: ${analytics.transitionCount}',
+                    context.l10n.totalTransitions(analytics.transitionCount),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 14,
@@ -207,7 +208,7 @@ class AnalyticsReportScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
             child: Text(
-              'Slayt Bazlı Süre',
+              context.l10n.timePerSlide,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
@@ -230,7 +231,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => ReportExporter.copyToClipboard(context, analytics),
                     icon: const Icon(Icons.copy_rounded, size: 18),
-                    label: const Text('Panoya Kopyala'),
+                    label: Text(context.l10n.copyToClipboard),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white70,
                       side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
@@ -246,7 +247,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.check_rounded, size: 18),
-                    label: const Text('Tamam'),
+                    label: Text(context.l10n.ok),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF6C63FF),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -273,8 +274,8 @@ class AnalyticsReportScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: const Text(
-            'Sunum Detayı',
+          title: Text(
+            context.l10n.presentationDetails,
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),

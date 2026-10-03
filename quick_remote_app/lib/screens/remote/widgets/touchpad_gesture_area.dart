@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../../models/draw_tool.dart';
 import '../../../../utils/delta_accumulator.dart';
+import '../../../l10n/app_language.dart';
 
 class TouchpadGestureArea extends StatefulWidget {
   final double sensitivity;
@@ -218,7 +219,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Kalem',
+                  context.l10n.toolPen,
                   style: TextStyle(
                     color: const Color(0xFF00E676).withValues(alpha: 0.4),
                     fontSize: 14,
@@ -234,7 +235,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Vurgulayıcı',
+                  context.l10n.toolHighlighter,
                   style: TextStyle(
                     color: const Color(0xFFFFEA00).withValues(alpha: 0.4),
                     fontSize: 14,
@@ -249,7 +250,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Silgi',
+                  context.l10n.toolEraser,
                   style: TextStyle(
                     color: const Color(0xFFFF9800).withValues(alpha: 0.4),
                     fontSize: 14,
@@ -264,7 +265,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Lazer',
+                  context.l10n.toolLaser,
                   style: TextStyle(
                     color: const Color(0xFFFF1744).withValues(alpha: 0.4),
                     fontSize: 14,
@@ -279,7 +280,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Tek dokunuş → Lazer',
+                  context.l10n.tapForTool(context.l10n.toolLaser),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.15),
                     fontSize: 12,
@@ -288,7 +289,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Çift dokunuş → Seçili Araç',
+                  context.l10n.doubleTapSelected,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.15),
                     fontSize: 12,

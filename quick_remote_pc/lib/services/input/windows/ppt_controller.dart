@@ -6,6 +6,7 @@ import 'keyboard_simulator.dart';
 import 'mouse_simulator.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
+import '../input_service.dart' show RemoteError;
 import '../../presenter_settings.dart';
 import '../pdf_viewers.dart';
 import 'presenter_com.dart';
@@ -222,7 +223,7 @@ try {
     try {
       final result = (await PowerShellRunner.execute(script)).trim();
       if (result != 'OK') {
-        InputSimulator.onCommandError?.call('Slayt gösterisi başlatılamadı.');
+        InputSimulator.onCommandError?.call(RemoteError.slideshowStartFailed);
       }
     } catch (e) {
       debugPrint('Exception in slideStartAt: $e');
@@ -293,7 +294,7 @@ try {
 
   static Future<void> eraseAllInk() async {
     if (PresenterCom.wpsActive) {
-      if (!await _eraseDrawingCom()) InputSimulator.onCommandError?.call('Mürekkep silinemedi.');
+      if (!await _eraseDrawingCom()) InputSimulator.onCommandError?.call(RemoteError.inkEraseFailed);
       return;
     }
     await pressInSlideShow([0x45]); // E
@@ -335,7 +336,7 @@ try {
     if (result == 'OK') return true;
     debugPrint('setPointerType($type): $result');
     InputSimulator.onCommandError
-        ?.call(result == 'NO_SLIDESHOW' ? 'Slayt gösterisi aktif değil.' : 'Sunum programına ulaşılamadı.');
+        ?.call(result == 'NO_SLIDESHOW' ? RemoteError.slideshowNotRunning : RemoteError.presenterUnreachable);
     return false;
   }
 
@@ -347,16 +348,16 @@ try {
         Write-Output "OK"''');
     debugPrint('setPointerColor output: $output');
     if (output == 'OK') return;
-    String errorMsg;
+    RemoteError error;
     if (output == 'NO_SLIDESHOW') {
-      errorMsg = 'Slayt gösterisi aktif değil.';
+      error = RemoteError.slideshowNotRunning;
     } else if (output.contains('0x800706BA') || output.contains('RPC server is unavailable')) {
-      errorMsg = 'Sunum programı yanıt vermiyor.';
+      error = RemoteError.presenterNotResponding;
     } else {
-      errorMsg = 'Kalem rengi değiştirilemedi.';
+      error = RemoteError.penColorFailed;
     }
     debugPrint('setPointerColor failed: $output');
-    InputSimulator.onCommandError?.call(errorMsg);
+    InputSimulator.onCommandError?.call(error);
   }
 
   /// Whether a slideshow window has the focus, after bringing the one of the
@@ -502,10 +503,10 @@ __PLAYER_ACTION__
         case 'NO_SLIDESHOW' || 'COM_OK':
           return;
         case 'NO_MEDIA':
-          InputSimulator.onCommandError?.call('Bu slaytta medya yok.');
+          InputSimulator.onCommandError?.call(RemoteError.noMedia);
         case 'WPS_CLICK' when parts.length == 6:
           if (!wpsClick) {
-            InputSimulator.onCommandError?.call('WPS\'te video başa sarılamıyor.');
+            InputSimulator.onCommandError?.call(RemoteError.wpsNoMediaRewind);
           } else {
             await _clickWpsMedia([for (final p in parts.skip(1).take(4)) double.parse(p)]);
           }

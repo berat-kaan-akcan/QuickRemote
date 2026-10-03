@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../remote/widgets/shared_buttons.dart';
+import '../../../l10n/app_language.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 0: Main Controls View  (WiFi MainControlsView ile aynı tasarım)
@@ -41,7 +42,7 @@ class BtMainControlsView extends StatelessWidget {
                           color: const Color(0xFF1565C0).withValues(alpha: 0.3),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
@@ -51,7 +52,7 @@ class BtMainControlsView extends StatelessWidget {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Bluetooth HID Modu',
+                            context.l10n.btModeTitle,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -72,7 +73,7 @@ class BtMainControlsView extends StatelessWidget {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.play_arrow_rounded,
-                                  label: 'Başlat',
+                                  label: context.l10n.actionStart,
                                   color: const Color(0xFF4CAF50),
                                   onTap: !isConnected ? null : () => send(RemoteCommands.start),
                                 ),
@@ -81,7 +82,7 @@ class BtMainControlsView extends StatelessWidget {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.stop_rounded,
-                                  label: 'Bitir',
+                                  label: context.l10n.actionEnd,
                                   color: const Color(0xFFFF5252),
                                   onTap: !isConnected ? null : () => send(RemoteCommands.end),
                                 ),
@@ -95,7 +96,7 @@ class BtMainControlsView extends StatelessWidget {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.visibility_off_rounded,
-                                  label: 'Siyah Ekran',
+                                  label: context.l10n.blackScreen,
                                   color: Colors.grey,
                                   isActive: activeScreen == 'BLACK',
                                   onTap: !isConnected ? null : () => send(RemoteCommands.blackScreen),
@@ -105,7 +106,7 @@ class BtMainControlsView extends StatelessWidget {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.visibility_rounded,
-                                  label: 'Beyaz Ekran',
+                                  label: context.l10n.whiteScreen,
                                   color: Colors.white,
                                   isActive: activeScreen == 'WHITE',
                                   onTap: !isConnected ? null : () => send(RemoteCommands.whiteScreen),
@@ -120,7 +121,7 @@ class BtMainControlsView extends StatelessWidget {
                               Expanded(
                                 child: SlideButton(
                                   icon: Icons.arrow_back_rounded,
-                                  label: 'Geri',
+                                  label: context.l10n.actionPrev,
                                   onTap: !isConnected ? null : () => send(RemoteCommands.prev),
                                 ),
                               ),
@@ -128,7 +129,7 @@ class BtMainControlsView extends StatelessWidget {
                               Expanded(
                                 child: SlideButton(
                                   icon: Icons.arrow_forward_rounded,
-                                  label: 'İleri',
+                                  label: context.l10n.actionNext,
                                   isPrimary: true,
                                   onTap: !isConnected ? null : () => send(RemoteCommands.next),
                                 ),

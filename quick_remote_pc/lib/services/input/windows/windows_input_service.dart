@@ -10,7 +10,7 @@ import 'volume_controller.dart';
 
 class WindowsInputService implements InputService {
   @override
-  void Function(String detail)? onCommandError;
+  CommandErrorHandler? onCommandError;
 
   @override
   String get presenter => 'powerpoint';

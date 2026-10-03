@@ -63,7 +63,7 @@ class DiscoveryService extends ChangeNotifier {
       // Sadece IP adresi ve portu olan geçerli servisleri al
       if (service.host != null && service.port != null) {
         uniqueDevices[service.host!] = DiscoveredDevice(
-          name: service.name ?? 'Bilinmeyen PC',
+          name: service.name ?? '', // the UI shows a placeholder
           ip: service.host!,
           port: service.port!,
         );

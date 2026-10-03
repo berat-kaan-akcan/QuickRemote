@@ -18,9 +18,9 @@ class PresentationState {
       };
 
   /// The program running the show, or while none does, every one the PC
-  /// controls ("PowerPoint veya WPS Office").
-  String get presenterName =>
-      isPptRunning ? nameOf(presenter) : presenters.map(nameOf).join(' veya ');
+  /// controls (the UI joins them: "PowerPoint or WPS Office").
+  List<String> get presenterNames =>
+      isPptRunning ? [nameOf(presenter)] : presenters.map(nameOf).toList();
 
   void updatePresenters(Map<String, dynamic> authReply) {
     presenter = authReply['presenter'] as String? ?? 'powerpoint';

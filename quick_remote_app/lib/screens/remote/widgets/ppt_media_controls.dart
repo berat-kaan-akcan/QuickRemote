@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'glass_panel.dart';
 import 'premium_media_btn.dart';
+import '../../../l10n/app_language.dart';
 
 class PptMediaControls extends StatelessWidget {
   final bool isConnected;
@@ -33,7 +34,7 @@ class PptMediaControls extends StatelessWidget {
             children: [
               PremiumMediaBtn(
                 icon: Icons.replay_rounded,
-                label: 'Başa Sar',
+                label: context.l10n.mediaRewind,
                 color: accent,
                 onTap: isConnected ? onRewind : null,
               ),
@@ -41,7 +42,7 @@ class PptMediaControls extends StatelessWidget {
               Expanded(
                 child: PremiumMediaBtn(
                   icon: isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_rounded,
-                  label: isPlaying ? 'Duraklat' : 'Oynat',
+                  label: isPlaying ? context.l10n.mediaPause : context.l10n.mediaPlay,
                   color: accent,
                   large: true,
                   glow: true,

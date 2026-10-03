@@ -11,6 +11,7 @@ import 'settings/settings_screen.dart';
 import 'home/utils/connection_handler.dart';
 import 'home/widgets/manual_connect_dialog.dart';
 import 'home/widgets/spinning_refresh_icon.dart';
+import '../l10n/app_language.dart';
 
 /// Home screen - connection hub to scan QR and connect to PC.
 class HomeScreen extends StatefulWidget {
@@ -49,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         final discovery = context.read<DiscoveryService>();
         final dev = discovery.devices.firstWhere((d) => d.ip == host);
-        name = dev.name;
+        if (dev.name.isNotEmpty) name = dev.name;
       } catch (_) {
         // Fallback to host
       }
@@ -159,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.settings_rounded, color: Colors.white54),
-                      tooltip: 'Ayarlar',
+                      tooltip: context.l10n.homeSettingsTooltip,
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -216,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Sunumlarınızı telefondan kontrol edin',
+                            context.l10n.homeTagline,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 14,
@@ -293,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               )
                             : const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 24),
                         label: Text(
-                          _connecting ? 'Bağlanıyor...' : 'QR Kod ile Bağlan',
+                          _connecting ? context.l10n.homeConnecting : context.l10n.homeConnectQr,
                           style: const TextStyle(
                             fontSize: 17, 
                             fontWeight: FontWeight.w700,
@@ -328,8 +329,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           },
                           icon: const Icon(Icons.bluetooth_rounded, color: Color(0xFF64B5F6), size: 24),
-                          label: const Text(
-                            'Bluetooth ile Bağlan',
+                          label: Text(
+                            context.l10n.homeConnectBluetooth,
                             style: TextStyle(
                               fontSize: 17, 
                               fontWeight: FontWeight.w700,
@@ -354,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     TextButton(
                       onPressed: () => _showManualConnect(context),
                       child: Text(
-                        'Manuel bağlantı',
+                        context.l10n.homeManualConnection,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.4),
                           fontSize: 13,
@@ -381,8 +382,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Ağdaki Cihazlar',
+                                Text(
+                                  context.l10n.homeNetworkDevices,
                                   style: TextStyle(
                                     color: Colors.white70,
                                     fontSize: 14,
@@ -411,14 +412,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   // Discovered device items
                                   if (discovery.devices.isEmpty)
                                     if (discovery.isDiscovering)
-                                      const Padding(
+                                      Padding(
                                         padding: EdgeInsets.symmetric(vertical: 16),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF005B96))),
                                             SizedBox(width: 12),
-                                            Text('Cihaz aranıyor...', style: TextStyle(color: Colors.white38, fontSize: 13)),
+                                            Text(context.l10n.homeSearching, style: TextStyle(color: Colors.white38, fontSize: 13)),
                                           ],
                                         ),
                                       )
@@ -427,12 +428,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                         child: Column(
                                           children: [
-                                            const Text('Ağda cihaz bulunamadı', style: TextStyle(color: Colors.white38, fontSize: 13)),
+                                            Text(context.l10n.homeNoDevices, style: TextStyle(color: Colors.white38, fontSize: 13)),
                                             const SizedBox(height: 8),
                                             TextButton.icon(
                                               onPressed: () => discovery.startScanning(),
                                               icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF005B96)),
-                                              label: const Text('Yeniden Tara', style: TextStyle(color: Color(0xFF005B96), fontSize: 13)),
+                                              label: Text(context.l10n.homeRescan, style: TextStyle(color: Color(0xFF005B96), fontSize: 13)),
                                             ),
                                           ],
                                         ),
@@ -448,7 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: ListTile(
                                           onTap: () => _showManualConnect(context, defaultIp: dev.ip, defaultPort: dev.port.toString()),
                                           leading: const Icon(Icons.computer_rounded, color: Color(0xFF005B96)),
-                                          title: Text(dev.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                          title: Text(dev.name.isEmpty ? context.l10n.unknownPc : dev.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
                                           subtitle: Text('${dev.ip}:${dev.port}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                                           trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white38),
                                         ),
@@ -459,8 +460,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                   // Recent devices
                                   if (_recentDevices.isNotEmpty) ...[
-                                    const Text(
-                                      'Son Bağlanılanlar',
+                                    Text(
+                                      context.l10n.homeRecent,
                                       style: TextStyle(
                                         color: Colors.white70,
                                         fontSize: 14,
@@ -485,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             subtitle: Text('${dev['host']}:${dev['port']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                                             trailing: IconButton(
                                               icon: const Icon(Icons.close_rounded, color: Colors.white24, size: 20),
-                                              tooltip: 'Geçmişten Sil',
+                                              tooltip: context.l10n.homeRemoveFromHistory,
                                               onPressed: () => _removeRecentDevice(index),
                                             ),
                                           ),

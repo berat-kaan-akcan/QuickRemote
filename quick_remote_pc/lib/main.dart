@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart' hide Size;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'l10n/app_language.dart';
 import 'screens/home/home_screen.dart';
+import 'providers/language_provider.dart';
 import 'providers/server_provider.dart';
 import 'services/linux/desktop_entry.dart';
 
@@ -39,20 +42,33 @@ class QuickRemotePC extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => WebSocketServerProvider(),
-      child: MaterialApp(
-        title: 'QuickRemote PC',
-        debugShowCheckedModeBanner: false,
-        themeMode: ThemeMode.dark,
-        darkTheme: ThemeData(
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
-          colorSchemeSeed: const Color(0xFF005B96),
-          useMaterial3: true,
-          fontFamily: 'Inter',
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => WebSocketServerProvider()),
+      ],
+      child: Consumer<LanguageProvider>(
+        builder: (context, language, _) => MaterialApp(
+          title: 'QuickRemote PC',
+          locale: language.language.locale,
+          supportedLocales: supportedAppLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          debugShowCheckedModeBanner: false,
+          themeMode: ThemeMode.dark,
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
+            colorSchemeSeed: const Color(0xFF005B96),
+            useMaterial3: true,
+            fontFamily: 'Inter',
+          ),
+          home: const HomeScreen(),
         ),
-        home: const HomeScreen(),
       ),
     );
   }

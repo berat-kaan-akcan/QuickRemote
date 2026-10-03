@@ -1,0 +1,457 @@
+{
+  "@@locale": "tr",
+  "settingsTitle": "Ayarlar",
+  "settingsTimerTitle": "Sunum Sayacı Ayarları",
+  "settingsTimerSubtitle": "Otomatik başlatma, titreşim ve erken uyarılar",
+  "settingsHistoryTitle": "Sunum Geçmişi",
+  "settingsHistorySubtitle": "Önceki sunum istatistikleri ve notları",
+  "settingsKeepInkTitle": "Slayt Değişince Çizimleri Koru",
+  "settingsKeepInkSubtitle": "Çizimler kendi slaytında kalır, o slayta dönünce yeniden görünür. Kapalıyken ileri veya geri gidince kalemle çizilenler silinir.",
+  "settingsLanguageTitle": "Dil",
+  "languageSystem": "Sistem dili",
+  "@languageSystem": {
+    "description": "Language option that follows the device language."
+  },
+  "errorSlideshowNotRunning": "Slayt gösterisi aktif değil.",
+  "errorSlideshowStartFailed": "Slayt gösterisi başlatılamadı.",
+  "errorSlideStateFailed": "Slayt durumu alınamadı: {info}",
+  "@errorSlideStateFailed": {
+    "placeholders": {
+      "info": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPresenterNotResponding": "Sunum programı yanıt vermiyor.",
+  "errorPresenterUnreachable": "Sunum programına ulaşılamadı.",
+  "errorPenColorFailed": "Kalem rengi değiştirilemedi.",
+  "errorInkEraseFailed": "Mürekkep silinemedi.",
+  "errorPointerBusy": "Başka bir cihaz şu an lazeri veya kalemi kullanıyor.",
+  "errorNoMedia": "Bu slaytta medya yok.",
+  "errorMediaReloaded": "Slayt yeniden yüklendi, video baştan başladı. Kontrol için tekrar deneyin.",
+  "errorMediaNoTrigger": "Bu slayttaki medya kumandadan kontrol edilemiyor.",
+  "errorMediaNeedsFullscreen": "Slayt medyası yalnızca tam ekran slayt gösterisinde kontrol edilebilir.",
+  "errorScreenBlanked": "Ekran karartılmışken slayt medyası kontrol edilemez.",
+  "errorImpressUnreachable": "LibreOffice Impress'e bağlanılamadı.",
+  "errorImpressNoUno": "LibreOffice Python (UNO) desteği bulunamadı.",
+  "errorImpressUntrustedPipe": "LibreOffice bağlantı soketi başka bir kullanıcıya ait; bağlanılmadı.",
+  "errorWpsNotInstalled": "WPS desteği kurulu değil.",
+  "errorWpsNoPresentation": "WPS'te açık sunum yok.",
+  "errorWpsStartFailed": "WPS başlatılamadı.",
+  "errorWpsOpenFromApp": "WPS'te bu özellik yalnızca QuickRemote'tan açılan sunumda çalışır (\"Sunumu WPS ile aç\").",
+  "errorWpsHighlighterNeedsFocus": "WPS'te fosforlu kalem yalnızca slayt gösterisi odaktayken seçilebilir.",
+  "errorWpsNoMediaRewind": "WPS'te video başa sarılamıyor.",
+  "errorLockFailed": "Bilgisayar kilitlenemedi.",
+  "errorCommandFailed": "Sunum komutu başarısız: {info}",
+  "@errorCommandFailed": {
+    "placeholders": {
+      "info": {
+        "type": "String"
+      }
+    }
+  },
+  "errorUnknown": "İşlem başarısız oldu.",
+  "connectionPinEmpty": "PIN kodu boş olamaz.",
+  "connectionWrongPin": "PIN kodu yanlış.",
+  "connectionRateLimited": "Çok fazla hatalı deneme. Bir dakika sonra tekrar deneyin.",
+  "connectionTimeout": "Bağlantı zaman aşımına uğradı.",
+  "connectionAuthTimeout": "Kimlik doğrulama zaman aşımına uğradı.",
+  "connectionServerNotFound": "Sunucuya ulaşılamadı: {detail}",
+  "@connectionServerNotFound": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionCertMismatch": "Sertifika değişti! Olası MITM saldırısı veya cihaz formatlanmış olabilir.",
+  "connectionCertRejected": "PC'nin sertifikası QR kodundakiyle eşleşmiyor. Bağlantı güvenli değil, bağlanılmadı. QR kodunu yeniden tarayın.",
+  "connectionUnverified": "Bu PC ile ilk bağlantı: güvenlik kodunu karşılaştırın.",
+  "connectionClosedByPc": "PC bu cihazın bağlantısını kesti. Yeniden bağlanmak için QR kodu tekrar okutun.",
+  "connectionClosed": "Bağlantı beklenmedik şekilde kapandı.",
+  "connectionUnknown": "Bağlantı hatası: {detail}",
+  "@connectionUnknown": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "İptal",
+  "close": "Kapat",
+  "homeSettingsTooltip": "Ayarlar",
+  "homeTagline": "Sunumlarınızı telefondan kontrol edin",
+  "homeConnecting": "Bağlanıyor...",
+  "homeConnectQr": "QR Kod ile Bağlan",
+  "homeConnectBluetooth": "Bluetooth ile Bağlan",
+  "homeManualConnection": "Manuel bağlantı",
+  "homeNetworkDevices": "Ağdaki Cihazlar",
+  "homeSearching": "Cihaz aranıyor...",
+  "homeNoDevices": "Ağda cihaz bulunamadı",
+  "homeRescan": "Yeniden Tara",
+  "homeRecent": "Son Bağlanılanlar",
+  "homeRemoveFromHistory": "Geçmişten Sil",
+  "unknownPc": "Bilinmeyen PC",
+  "verifyTitle": "Güvenlik Kodunu Karşılaştırın",
+  "verifyContent": "Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:\n\n{code}\n\nKodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.",
+  "@verifyContent": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyConfirm": "Kodlar Aynı, Bağlan",
+  "cancelAction": "İptal Et",
+  "certWarningTitle": "Güvenlik Uyarısı",
+  "certWarningContent": "Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı.\n\nPC'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:\n\n{code}\n\nKodlar aynı değilse bağlanmayın.",
+  "@certWarningContent": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "certWarningConfirm": "Yine de Bağlan ve Güncelle",
+  "manualTitle": "Manuel Bağlantı",
+  "manualIp": "IP Adresi",
+  "manualPinHint": "PC ekranındaki PIN",
+  "manualConnect": "Bağlan",
+  "manualWaitingIp": "IP Bekleniyor...",
+  "manualWaitingPin": "PIN Bekleniyor...",
+  "manualPortRange": "Port 1-65535 arası olmalı",
+  "qrNotQuickRemote": "Geçersiz QR kodu. \"quickremote://\" formatı bekleniyor.",
+  "qrMissingHost": "QR kodunda IP adresi eksik.",
+  "qrInvalidPort": "QR kodunda geçersiz port numarası.",
+  "qrInvalidPin": "QR kodundaki PIN geçersiz. Kodu yeniden tarayın.",
+  "qrInvalidFingerprint": "QR kodundaki sertifika bilgisi bozuk. Kodu yeniden tarayın.",
+  "qrBadFormat": "QR kodu beklenen formatta değil.\nFormat: quickremote://IP:PORT:PIN",
+  "scanTitle": "QR Kodu Tara",
+  "scanHint": "PC ekranındaki QR kodu tarayın",
+  "remoteConnectionLost": "Bağlantı koptu, otomatik bağlanılıyor...",
+  "remoteReconnected": "Yeniden bağlanıldı!",
+  "remoteTabControls": "Kontroller",
+  "remoteTabTouchpad": "Touchpad",
+  "remoteTabMedia": "Medya",
+  "remoteConnectFailedTitle": "Bağlantı Kurulamadı",
+  "remoteServerUnreachable": "Sunucuya ulaşılamıyor. Lütfen PC uygulamasının açık olduğundan emin olun.",
+  "remoteBackHome": "Ana Ekrana Dön",
+  "remoteReconnect": "Yeniden Bağlan",
+  "statusConnected": "Bağlı",
+  "statusDisconnected": "Kopuk",
+  "disconnectTitle": "Bağlantıyı Kes",
+  "disconnectContent": "Bağlantıyı kesmek ve ana ekrana dönmek istediğinize emin misiniz?",
+  "notesTitle": "Slayt Notları",
+  "notesEmpty": "Bu slayt için not bulunmuyor.",
+  "startPresentation": "Sunuma Başla",
+  "slidePickerRange": "Slayt (1-{total})",
+  "@slidePickerRange": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "slidePickerHint": "Slayt Numarası (Örn: 5)",
+  "slidePickerMax": "Maksimum {total} slayt girebilirsiniz.",
+  "@slidePickerMax": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "slidePickerEmpty": "Boş bırakırsanız baştan başlar.",
+  "actionStart": "Başlat",
+  "slidePickerInvalid": "Geçerli bir slayt numarası girin (1-{max})",
+  "@slidePickerInvalid": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "slideshowOpen": "Slayt gösterisi açık",
+  "slideCounter": "Slayt: {current} / {total}",
+  "@slideCounter": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "notes": "Notlar",
+  "presentationNotOpen": "Sunum Açık Değil, {programs}'i başlatın",
+  "@presentationNotOpen": {
+    "placeholders": {
+      "programs": {
+        "type": "String"
+      }
+    }
+  },
+  "actionEnd": "Bitir",
+  "blackScreen": "Siyah Ekran",
+  "whiteScreen": "Beyaz Ekran",
+  "actionPrev": "Geri",
+  "actionNext": "İleri",
+  "listOr": " veya ",
+  "@listOr": {
+    "description": "Joins program names: \"PowerPoint or WPS Office\". Keep the spaces."
+  },
+  "mediaControlTitle": "Medya Kontrolü",
+  "nowPlaying": "Şu An Çalan",
+  "systemVolume": "Sistem Sesi",
+  "slideMedia": "Slayt Medyası",
+  "colorRed": "Kırmızı",
+  "colorBlue": "Mavi",
+  "colorGreen": "Yeşil",
+  "colorYellow": "Sarı",
+  "colorWhite": "Beyaz",
+  "colorPurple": "Mor",
+  "penColorTitle": "Kalem Rengi",
+  "highlighterColorTitle": "Vurgulayıcı Rengi",
+  "toolPen": "Kalem",
+  "toolHighlight": "Vurgula",
+  "toolEraser": "Silgi",
+  "selectTool": "{tool} aracını seç",
+  "@selectTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "clearInk": "Temizle",
+  "clearInkTooltip": "Tüm çizimleri temizle",
+  "toolLaser": "Lazer",
+  "unknownMedia": "Bilinmeyen Medya",
+  "noMedia": "Medya Yok",
+  "unknownArtist": "Bilinmeyen Sanatçı",
+  "nothingPlaying": "Şu an bir şey çalmıyor",
+  "mediaPause": "Duraklat",
+  "mediaPlay": "Oynat",
+  "mediaRewind": "Başa Sar",
+  "toolHighlighter": "Vurgulayıcı",
+  "tapForTool": "Tek dokunuş → {tool}",
+  "@tapForTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "doubleTapSelected": "Çift dokunuş → Seçili Araç",
+  "volumeMuted": "Sessiz",
+  "volumeOn": "Açık",
+  "btUnsupportedLong": "Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.",
+  "btPermissionDenied": "Bluetooth izni reddedildi. Ayarlardan izin vermelisiniz.",
+  "btErrorRetry": "Bluetooth hatası. Tekrar deneyin.",
+  "btWaitingPairing": "Eşleştirme bekleniyor...",
+  "btWaitingConnection": "Bağlantı bekleniyor...",
+  "btPreparing": "Hazırlanıyor...",
+  "btNotConnectedRetrying": "Bağlanılmadı, tekrar deneniyor",
+  "btOnYourComputer": "Bilgisayarınızda şunları yapın:",
+  "btLinuxStep1": "Sistem Ayarları'nı açın (KDE: Bluetooth, GNOME: Ayarlar → Bluetooth)",
+  "btLinuxStep2": "Bluetooth'un açık olduğundan emin olun",
+  "btLinuxStep3": "\"Yeni cihaz ekle\" / cihaz aramayı başlatın",
+  "btStepPickPhone": "Listeden telefonunuzun adını seçin",
+  "btStepConfirm": "Eşleştirmeyi onaylayın",
+  "btWindowsStep1": "Windows Ayarlar'ı açın",
+  "btWindowsStep2": "Bluetooth ve diğer cihazlar'a gidin",
+  "btWindowsStep3": "\"Cihaz ekle\" butonuna basın",
+  "btPairOnce": "İlk bağlantıda yalnızca bir kez eşleştirme gerekir. Sonraki bağlantılarda otomatik bağlanır.",
+  "btConnected": "Bağlandı!",
+  "unknownDevice": "Bilinmeyen cihaz",
+  "btOpeningRemote": "Uzaktan kontrol açılıyor...",
+  "btUnsupported": "Desteklenmiyor",
+  "btUnsupportedShort": "Bu cihaz Bluetooth HID'i desteklemiyor.",
+  "btUseWifi": "WiFi Modunu Kullan",
+  "errorTitle": "Hata",
+  "btErrorOccurred": "Bluetooth hatası oluştu.",
+  "tryAgain": "Tekrar Dene",
+  "btConnectionLost": "Bluetooth bağlantısı koptu. Yeniden bağlanılıyor...",
+  "btConnectedTo": "Bluetooth bağlandı: {device}",
+  "@btConnectedTo": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "btDisconnectContent": "Bluetooth bağlantısı kesilecek ve ana ekrana dönülecek.",
+  "btModeTitle": "Bluetooth HID Modu",
+  "systemMedia": "Sistem Medyası",
+  "btMediaLimits": "Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için WiFi modunu kullanın.",
+  "btNoMediaInfo": "BT modunda medya bilgisi alınamaz",
+  "mediaPlayPause": "Oynat / Duraklat",
+  "toolCursor": "İmleç",
+  "btTarget": "Hedef:",
+  "durationHms": "{h}s {m}dk {s}sn",
+  "@durationHms": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      },
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMs": "{m}dk {s}sn",
+  "@durationMs": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      },
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "durationS": "{s}sn",
+  "@durationS": {
+    "placeholders": {
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{m} dk",
+  "@durationMinutes": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinSec": "{m} dk {s} sn",
+  "@durationMinSec": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      },
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "durationSeconds": "{s} sn",
+  "@durationSeconds": {
+    "placeholders": {
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSettingsTitle": "Sunum Sayacı",
+  "timerAutoStartTitle": "Süre Seçilince Hemen Başlat",
+  "timerAutoStartSubtitle": "Kapalıyken süre seçildikten sonra sayaca dokunarak başlatılır.",
+  "earlyWarningTitle": "Erken Uyarı Titreşimi",
+  "earlyWarningSubtitle": "Sürenin bitimine seçilen süreler kala uyarır.",
+  "warningTimes": "Uyarı Süreleri",
+  "noWarningTimes": "Henüz uyarı süresi yok.",
+  "timeLeft": "{time} kala",
+  "@timeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "addWarning": "Yeni Uyarı Ekle",
+  "whenTimeIsUp": "Süre Bittiğinde",
+  "endVibration": "Bitiş Titreşimi",
+  "vibrationPattern": "Titreşim Deseni",
+  "vibrationFor": "{time} İçin Titreşim",
+  "@vibrationFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tapToPreview": "Önizlemek için seçeneklere dokunun",
+  "vibrationShort": "Kısa Titreşim",
+  "vibrationDouble": "Çift Titreşim",
+  "vibrationLong": "Uzun Titreşim",
+  "vibrationTriple": "Üçlü Titreşim",
+  "newWarningTime": "Yeni Uyarı Süresi",
+  "enterTime": "Süre girin",
+  "unitSecondsLong": "Saniye",
+  "unitMinutesLong": "Dakika",
+  "enterValidNumber": "Lütfen geçerli bir sayı girin.",
+  "add": "Ekle",
+  "patternShort": "Kısa",
+  "patternLong": "Uzun",
+  "patternTriple": "Üçlü",
+  "patternDouble": "Çift",
+  "clearHistory": "Geçmişi Temizle",
+  "noHistory": "Henüz sunum verisi yok",
+  "noHistoryHint": "Bir sunum başlatıp bitirdikten sonra\nveriler burada görünecek.",
+  "historyDeleted": "Sunum kaydı silindi",
+  "slideCount": "{count, plural, other{{count} slayt}}",
+  "@slideCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearHistoryContent": "Tüm sunum geçmişi silinecek. Bu işlem geri alınamaz.",
+  "clear": "Temizle",
+  "historyCleared": "Sunum geçmişi temizlendi",
+  "timeUp": "Sunum süresi doldu!",
+  "timeRemaining": "Sürenin bitimine {time} kaldı!",
+  "@timeRemaining": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "enterValidDuration": "Lütfen dakika ve/veya saniye olarak geçerli bir süre girin.",
+  "setPresentationTime": "Sunum Süresi Belirle",
+  "noTimeLimit": "Serbest",
+  "unitMinutes": "dk",
+  "unitSeconds": "sn",
+  "startWhenPicked": "Seçince hemen başlat",
+  "timerHelp": "Dokun: başlat/duraklat · Basılı tut: yeni süre · ↻: seçili süreye dön",
+  "actionSet": "Ayarla",
+  "reportTitle": "Sunum Raporu",
+  "totalTime": "Toplam Süre",
+  "slideCountLabel": "Slayt Sayısı",
+  "avgPerSlideShort": "Ort/Slayt",
+  "totalTransitions": "Toplam Geçiş: {count}",
+  "@totalTransitions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timePerSlide": "Slayt Bazlı Süre",
+  "copyToClipboard": "Panoya Kopyala",
+  "ok": "Tamam",
+  "presentationDetails": "Sunum Detayı",
+  "reportDate": "Tarih",
+  "reportAvgPerSlide": "Ort. Süre/Slayt",
+  "reportTransitions": "Geçiş Sayısı",
+  "reportSlideDetails": "Slayt Detayları",
+  "reportSlide": "Slayt {n}",
+  "@reportSlide": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "reportCopied": "Rapor panoya kopyalandı",
+  "noSlideData": "Slayt verisi bulunamadı",
+  "backgroundNotification": "Arka planda bağlantı devam ediyor..."
+}

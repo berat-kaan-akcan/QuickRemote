@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../utils/throttler.dart';
 import 'glass_panel.dart';
+import '../../../l10n/app_language.dart';
 
 class VolumePanel extends StatefulWidget {
   final bool isConnected;
@@ -135,7 +136,7 @@ class _VolumePanelState extends State<VolumePanel> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        isMuted ? 'Sessiz' : 'Açık',
+                        isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn,
                         style: TextStyle(
                           color: isMuted ? Colors.redAccent : accent,
                           fontSize: 12,

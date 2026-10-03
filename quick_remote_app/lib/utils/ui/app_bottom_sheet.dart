@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'app_popup_theme.dart';
+import '../../l10n/app_language.dart';
 
 /// Ortak bottom sheet wrapper.
 /// Tüm bottom sheet'ler bu fonksiyon üzerinden açılarak
@@ -110,7 +111,7 @@ class AppBottomSheet {
   }
 
   /// Bottom sheet'te kullanılan standart "İptal" butonu.
-  static Widget buildCancelButton(BuildContext context, {String text = 'İptal'}) {
+  static Widget buildCancelButton(BuildContext context, {String? text}) {
     return SizedBox(
       width: double.infinity,
       height: 52,
@@ -123,7 +124,7 @@ class AppBottomSheet {
           ),
         ),
         child: Text(
-          text,
+          text ?? context.l10n.cancel,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
