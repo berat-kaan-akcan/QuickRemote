@@ -8,12 +8,10 @@ import 'dart:ui' as ui;
 import 'screens/home/home_screen.dart';
 import 'providers/server_provider.dart';
 import 'services/linux/desktop_entry.dart';
-import 'services/presenter_settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _registerFontLicense();
-  await PresenterSettings.load();
 
   await windowManager.ensureInitialized();
 

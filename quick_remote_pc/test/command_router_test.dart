@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/input/command_router.dart';
+import 'package:quick_remote_pc/services/presenter_settings.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import 'fakes.dart';
@@ -36,6 +37,16 @@ void main() {
   });
 
   group('prefix commands', () {
+    test('SET_KEEP_INK sets the PC setting and calls nothing else', () {
+      addTearDown(() => PresenterSettings.keepInkOnSlideChange = false);
+      expect(run(RemoteCommands.keepInk(true)), isEmpty);
+      expect(PresenterSettings.keepInkOnSlideChange, isTrue);
+      run(RemoteCommands.keepInk(false));
+      expect(PresenterSettings.keepInkOnSlideChange, isFalse);
+      run('SET_KEEP_INK:2');
+      expect(PresenterSettings.keepInkOnSlideChange, isFalse);
+    });
+
     test('START_AT accepts 1..9999', () {
       expect(run('START_AT:1'), ['slideStartAt:1']);
       service.calls.clear();

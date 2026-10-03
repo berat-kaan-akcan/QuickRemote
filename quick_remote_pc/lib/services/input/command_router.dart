@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
+import '../presenter_settings.dart';
 import 'input_service.dart';
 
 /// Parses a validated remote command string and routes it to the platform
@@ -25,6 +26,12 @@ class CommandRouter {
       if (slideNumber != null) {
         service.slideStartAt(slideNumber);
       }
+      return;
+    }
+
+    if (command.startsWith('SET_KEEP_INK:')) {
+      final keep = parseIntArg(command, min: 0, max: 1);
+      if (keep != null) PresenterSettings.keepInkOnSlideChange = keep == 1;
       return;
     }
 
