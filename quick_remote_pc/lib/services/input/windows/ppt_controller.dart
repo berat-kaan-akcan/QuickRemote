@@ -22,13 +22,16 @@ class PptController {
 
   static Future<void> slideNext() async {
     await _clearInkBeforeMove();
-    KeyboardSimulator.pressKey(VK_NEXT);
+    KeyboardSimulator.pressKeyCombo(_viewerInFront()?.next ?? [VK_NEXT]);
   }
 
   static Future<void> slidePrev() async {
     await _clearInkBeforeMove();
-    KeyboardSimulator.pressKey(VK_PRIOR);
+    KeyboardSimulator.pressKeyCombo(_viewerInFront()?.prev ?? [VK_PRIOR]);
   }
+
+  static ViewerKeys? _viewerInFront() =>
+      PdfViewers.forProgram(_windowExecutable(GetForegroundWindow()).split(r'').last);
 
   /// PowerPoint and WPS keep a slide's ink and show it again when the show
   /// comes back. With the setting on, the ink is erased first: in PowerPoint
