@@ -5,6 +5,7 @@ import 'evdev_keys.dart';
 import 'impress_bridge.dart';
 import 'mpris_controller.dart';
 import 'pactl_volume.dart';
+import '../../presenter_settings.dart';
 import 'uinput_device.dart';
 
 /// Linux implementation: LibreOffice Impress over UNO for presentation
@@ -15,6 +16,7 @@ import 'uinput_device.dart';
 class LinuxInputService implements InputService {
   LinuxInputService() {
     _device.ensureOpen();
+    _impress.onEvent = _onImpressEvent;
   }
 
   final UinputDevice _device = UinputDevice.instance;
@@ -23,6 +25,15 @@ class LinuxInputService implements InputService {
   final PactlVolume _volume = PactlVolume();
 
   bool _laserViaImpress = false;
+
+  /// Over a video the laser is hidden behind it, so the bridge has the OS
+  /// cursor, which shows above the video, stand in for it.
+  void _onImpressEvent(Map<String, dynamic> event) {
+    final x = event['x'], y = event['y'];
+    if (event['event'] == 'cursor' && x is num && y is num) {
+      UinputDevice.pointer.moveAbsolute(x.toDouble(), y.toDouble());
+    }
+  }
 
   @override
   void Function(String detail)? onCommandError;
@@ -97,18 +108,20 @@ class LinuxInputService implements InputService {
 
   // ── Presentation ──
   @override
-  void slideNext() => _impressOr('next', fallbackKeys: [Evdev.keyPageDown]);
+  void slideNext() => _impressOr('next', args: _inkArgs, fallbackKeys: [Evdev.keyPageDown]);
   @override
-  void slidePrev() => _impressOr('prev', fallbackKeys: [Evdev.keyPageUp]);
+  void slidePrev() => _impressOr('prev', args: _inkArgs, fallbackKeys: [Evdev.keyPageUp]);
+
+  static Map<String, Object?> get _inkArgs => {'clearInk': PresenterSettings.clearInkOnSlideChange};
   @override
-  Future<void> slideStart() => _impressOr('start', fallbackKeys: [Evdev.keyF5]);
+  Future<void> slideStart() => _impressOr('start', args: _inkArgs, fallbackKeys: [Evdev.keyF5]);
 
   @override
   Future<void> slideStartAt(int slideNumber) async {
     // Without the bridge there is no way to tell whether F5 opened a show, and
     // typing the number + Enter into any other window could send a chat
     // message. So the fallback only starts the show from its first slide.
-    await _impressOr('startAt', args: {'slide': slideNumber}, fallbackKeys: [Evdev.keyF5]);
+    await _impressOr('startAt', args: {'slide': slideNumber, ..._inkArgs}, fallbackKeys: [Evdev.keyF5]);
   }
 
   @override
@@ -125,11 +138,13 @@ class LinuxInputService implements InputService {
   void eraseAllInk() => _impressOnly('eraseAll');
 
   @override
-  Future<void> setPenColor(int bgrColor) {
-    // PowerPoint uses BGR, UNO uses RGB.
-    final rgb = ((bgrColor & 0xFF) << 16) | (bgrColor & 0xFF00) | ((bgrColor >> 16) & 0xFF);
-    return _impressOnly('penColor', args: {'rgb': rgb});
-  }
+  Future<void> setPenColor(int bgrColor) => _impressOnly('penColor', args: {'rgb': _rgb(bgrColor)});
+  @override
+  Future<void> setHighlighterColor(int bgrColor) =>
+      _impressOnly('highlighterColor', args: {'rgb': _rgb(bgrColor)});
+
+  /// PowerPoint uses BGR, UNO uses RGB.
+  static int _rgb(int bgr) => ((bgr & 0xFF) << 16) | (bgr & 0xFF00) | ((bgr >> 16) & 0xFF);
 
   @override
   Future<void> pptMediaPlayPause() => _impressOnly('mediaToggle');
@@ -157,6 +172,8 @@ class LinuxInputService implements InputService {
     // any pointer update sent after it. Waiting for the reply would move the
     // real cursor meanwhile.
     _laserViaImpress = true;
+    // Created ahead of the first video: a new device misses its first events.
+    UinputDevice.pointer.ensureOpen();
     final reply = await _impress.request('laserOn');
     if (reply['ok'] == true) return;
     _laserViaImpress = false;

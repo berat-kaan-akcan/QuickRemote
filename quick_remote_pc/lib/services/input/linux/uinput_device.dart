@@ -16,14 +16,28 @@ typedef _CloseD = int Function(int);
 typedef _AccessC = Int32 Function(Pointer<Utf8>, Int32);
 typedef _AccessD = int Function(Pointer<Utf8>, int);
 
-/// A virtual keyboard + mouse created through /dev/uinput.
+/// A virtual input device created through /dev/uinput.
 ///
 /// Works on X11 and every Wayland compositor because events enter the kernel
 /// input stack like a real device. Requires write access to /dev/uinput
 /// (see LinuxSetup.installUinputRule).
 class UinputDevice {
-  UinputDevice._();
-  static final UinputDevice instance = UinputDevice._();
+  UinputDevice._(this._name, this._product, {required bool absolute}) : _absolute = absolute;
+
+  /// Keyboard + relative mouse.
+  static final UinputDevice instance = UinputDevice._('QuickRemote Virtual Input', 0x5152, absolute: false);
+
+  /// Pointer that jumps to a position on the desktop, like the absolute
+  /// mouse of a virtual machine. A separate device: libinput does not take
+  /// absolute motion from a device that also has relative axes.
+  static final UinputDevice pointer = UinputDevice._('QuickRemote Virtual Pointer', 0x5153, absolute: true);
+
+  final String _name;
+  final int _product;
+  final bool _absolute;
+
+  /// Range of the absolute axes; the compositor scales it to the desktop.
+  static const absMax = 65535;
 
   static const _path = '/dev/uinput';
   static const _oWronly = 1;
@@ -37,6 +51,8 @@ class UinputDevice {
   static const _uiSetEvBit = 0x40045564;
   static const _uiSetKeyBit = 0x40045565;
   static const _uiSetRelBit = 0x40045566;
+  static const _uiSetAbsBit = 0x40045567;
+  static const _uiAbsSetup = 0x401C5504; // _IOW('U', 4, struct uinput_abs_setup) — 28 bytes
 
   static final DynamicLibrary _libc = DynamicLibrary.process();
   static final _open = _libc.lookupFunction<_OpenC, _OpenD>('open');
@@ -85,21 +101,35 @@ class UinputDevice {
     final setup = calloc<Uint8>(92);
     try {
       _ioctlInt(fd, _uiSetEvBit, Evdev.evKey);
-      _ioctlInt(fd, _uiSetEvBit, Evdev.evRel);
       _ioctlInt(fd, _uiSetEvBit, Evdev.evSyn);
-      for (final key in Evdev.allKeys.toSet()) {
-        _ioctlInt(fd, _uiSetKeyBit, key);
+      if (_absolute) {
+        // udev counts absolute axes plus a mouse button as a mouse.
+        _ioctlInt(fd, _uiSetKeyBit, Evdev.btnLeft);
+        _ioctlInt(fd, _uiSetEvBit, Evdev.evAbs);
+        for (final axis in const [Evdev.absX, Evdev.absY]) {
+          _ioctlInt(fd, _uiSetAbsBit, axis);
+          if (!_setupAxis(fd, axis)) {
+            debugPrint('uinput: absolute axis setup failed');
+            _close(fd);
+            return false;
+          }
+        }
+      } else {
+        _ioctlInt(fd, _uiSetEvBit, Evdev.evRel);
+        for (final key in Evdev.allKeys.toSet()) {
+          _ioctlInt(fd, _uiSetKeyBit, key);
+        }
+        _ioctlInt(fd, _uiSetRelBit, Evdev.relX);
+        _ioctlInt(fd, _uiSetRelBit, Evdev.relY);
       }
-      _ioctlInt(fd, _uiSetRelBit, Evdev.relX);
-      _ioctlInt(fd, _uiSetRelBit, Evdev.relY);
 
       // struct uinput_setup { input_id{bustype,vendor,product,version}; char name[80]; u32 ff_effects_max; }
       final view = ByteData.sublistView(setup.asTypedList(92));
       view.setUint16(0, 0x03, Endian.host); // BUS_USB
       view.setUint16(2, 0x1d6b, Endian.host);
-      view.setUint16(4, 0x5152, Endian.host);
+      view.setUint16(4, _product, Endian.host);
       view.setUint16(6, 1, Endian.host);
-      final name = 'QuickRemote Virtual Input'.codeUnits;
+      final name = _name.codeUnits;
       for (var i = 0; i < name.length; i++) {
         setup[8 + i] = name[i];
       }
@@ -114,8 +144,22 @@ class UinputDevice {
     }
 
     _fd = fd;
-    debugPrint('uinput: virtual device created');
+    debugPrint('uinput: $_name created');
     return true;
+  }
+
+  /// struct uinput_abs_setup { u16 code; struct input_absinfo { s32 value,
+  /// minimum, maximum, fuzz, flat, resolution; } } — 2 bytes padding after code.
+  static bool _setupAxis(int fd, int axis) {
+    final buf = calloc<Uint8>(28);
+    try {
+      final view = ByteData.sublistView(buf.asTypedList(28));
+      view.setUint16(0, axis, Endian.host);
+      view.setInt32(12, absMax, Endian.host);
+      return _ioctlPtr(fd, _uiAbsSetup, buf) >= 0;
+    } finally {
+      calloc.free(buf);
+    }
   }
 
   void close() {
@@ -170,6 +214,17 @@ class UinputDevice {
 
   void click(int code) {
     _emit([(Evdev.evKey, code, 1), _syn, (Evdev.evKey, code, 0), _syn]);
+  }
+
+  /// Moves the cursor of an absolute device to ([fx], [fy]), fractions of
+  /// the desktop's width and height.
+  void moveAbsolute(double fx, double fy) {
+    assert(_absolute);
+    _emit([
+      (Evdev.evAbs, Evdev.absX, (fx.clamp(0.0, 1.0) * absMax).round()),
+      (Evdev.evAbs, Evdev.absY, (fy.clamp(0.0, 1.0) * absMax).round()),
+      _syn,
+    ]);
   }
 
   void moveRelative(int dx, int dy) {

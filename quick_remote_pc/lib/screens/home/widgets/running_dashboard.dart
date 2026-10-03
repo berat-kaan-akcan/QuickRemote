@@ -230,7 +230,10 @@ class _RunningDashboardState extends State<RunningDashboard> {
                             onPressed: () => setState(() => _revealed = false),
                             icon: const Icon(Icons.visibility_off_rounded, size: 16),
                             label: const Text('Kodu gizle'),
-                            style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white70,
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
                         const SizedBox(height: 12),
                         Text(
@@ -328,20 +331,20 @@ class _RunningDashboardState extends State<RunningDashboard> {
           ),
         ),
         if (provider.connectedClients.isNotEmpty) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _ConnectedClients(
             clients: provider.connectedClients,
             onKick: provider.server.kickClient,
           ),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         HoverScale(
           scale: 1.05,
           onTap: () async {
             await provider.stopServer();
           },
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: const Color(0xFFFF1744).withValues(alpha: 0.9),
               shape: BoxShape.circle,
@@ -355,7 +358,7 @@ class _RunningDashboardState extends State<RunningDashboard> {
             ),
             child: const Icon(
               Icons.power_settings_new_rounded,
-              size: 32,
+              size: 28,
               color: Colors.white,
             ),
           ),
@@ -439,7 +442,7 @@ class _ConnectedClients extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(14, 8, 6, 4),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(14),
@@ -458,17 +461,38 @@ class _ConnectedClients extends StatelessWidget {
                 const Icon(Icons.smartphone_rounded, color: Colors.white70, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    '${client.address}  ·  ${_time(client.since)}',
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontFamily: 'Consolas', fontSize: 13),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (client.name != null)
+                        Text(
+                          client.name!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      // Two phones of the same model differ here.
+                      Text(
+                        '${client.address}  ·  ${_time(client.since)}',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: client.name == null ? Colors.white : Colors.white60,
+                          fontFamily: 'Consolas',
+                          fontSize: client.name == null ? 13 : 11,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Tooltip(
                   message: 'Bağlantıyı keser ve PIN\'i yeniler. Diğer cihazlar bağlı kalır.',
                   child: TextButton(
                     onPressed: () => onKick(client.id),
-                    style: TextButton.styleFrom(foregroundColor: const Color(0xFFFF5252)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFFF5252),
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: const Text('Çıkar'),
                   ),
                 ),

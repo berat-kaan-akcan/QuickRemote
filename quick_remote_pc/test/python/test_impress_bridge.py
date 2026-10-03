@@ -145,6 +145,95 @@ class ReleaseIfEndedTest(unittest.TestCase):
         self.assertEqual(impress.released, 0)
 
 
+class LaserGeometryTest(unittest.TestCase):
+    def test_show_on_the_second_monitor(self):
+        geometry = bridge.show_geometry(1920, 0, 1920, 1080, (3840, 1080))
+        self.assertEqual(geometry, (1920, 0, 1920, 1080, 3840, 1080))
+        # Slide centre -> centre of the right half of the desktop.
+        x, y = bridge.desktop_fraction(geometry, 28000, 15750, 0.5, 0.5)
+        self.assertAlmostEqual(x, 2880 / 3840, places=3)
+        self.assertAlmostEqual(y, 0.5, places=2)
+
+    def test_without_an_x_root_the_show_fills_the_desktop(self):
+        self.assertEqual(bridge.show_geometry(0, 0, 1536, 864, None), (0, 0, 1536, 864, 1536, 864))
+        # A window outside the root: not an X client, its position is unknown.
+        self.assertEqual(bridge.show_geometry(1920, 0, 1920, 1080, (1920, 1080)),
+                         (0, 0, 1920, 1080, 1920, 1080))
+
+    def test_letterboxed_slide(self):
+        # 4:3 slide on a 16:9 screen: its left edge is 240 px in.
+        geometry = (0, 0, 1920, 1080, 1920, 1080)
+        self.assertAlmostEqual(bridge.desktop_fraction(geometry, 28000, 21000, 0, 0)[0], 240 / 1920)
+
+    def test_park_stays_off_the_screen_corner(self):
+        x, y = bridge.park_fraction((0, 0, 1920, 1080, 1920, 1080))
+        self.assertLess(x * 1920, 1919)
+        self.assertLess(y * 1080, 1079)
+
+
+class FollowLaserTest(unittest.TestCase):
+    class Ctrl:
+        MouseVisible = False
+
+    def make(self):
+        impress = bridge.Impress()
+        ctrl = self.Ctrl()
+        impress.props = []
+        impress._running = lambda: ("doc", "pres", ctrl)
+        impress._slide_media_rects = lambda _ctrl: (28000, 15750, [(0.25, 0.25, 0.75, 0.75)])
+        impress._show_geometry = lambda _doc, _ctrl: (0, 0, 1920, 1080, 1920, 1080)
+        impress._engine = lambda _ctrl: "engine"
+        impress._set = lambda _show, name, value: impress.props.append((name, value))
+        return impress, ctrl
+
+    def test_cursor_stands_in_for_the_laser_over_a_video(self):
+        impress, ctrl = self.make()
+        self.assertIsNone(impress._follow_laser(0.1, 0.1))
+
+        event = impress._follow_laser(0.5, 0.5)
+        self.assertEqual(event["event"], "cursor")
+        self.assertAlmostEqual(event["x"], 0.5, places=2)
+        self.assertEqual(impress.props, [("PointerVisible", False)])
+        self.assertTrue(ctrl.MouseVisible)
+
+        # Leaving the video parks the cursor and brings the laser back.
+        park = impress._follow_laser(0.1, 0.5)
+        self.assertGreater(park["x"], 0.99)
+        self.assertEqual(impress.props[-1], ("PointerVisible", True))
+        self.assertFalse(ctrl.MouseVisible)
+        self.assertIsNone(impress._follow_laser(0.1, 0.6))
+
+
+class NavigationDropsInkTest(unittest.TestCase):
+    class Ctrl:
+        def __init__(self):
+            self.calls = []
+
+        def setEraseAllInk(self, value):
+            self.calls.append(("erase", value))
+
+        def gotoNextEffect(self):
+            self.calls.append("next")
+
+        def gotoPreviousEffect(self):
+            self.calls.append("prev")
+
+    def test_ink_is_erased_before_the_show_moves(self):
+        impress = bridge.Impress()
+        ctrl = self.Ctrl()
+        impress._require_running = lambda: ("doc", "pres", ctrl)
+        impress.next({})
+        impress.prev({})
+        self.assertEqual(ctrl.calls, [("erase", True), "next", ("erase", True), "prev"])
+
+    def test_the_setting_keeps_the_ink(self):
+        impress = bridge.Impress()
+        ctrl = self.Ctrl()
+        impress._require_running = lambda: ("doc", "pres", ctrl)
+        impress.next({"clearInk": False})
+        self.assertEqual(ctrl.calls, ["next"])
+
+
 class PipeIsTrustedTest(unittest.TestCase):
     def setUp(self):
         self.path = "/tmp/OSL_PIPE_%d_%s" % (os.getuid(), bridge.PIPE_NAME)

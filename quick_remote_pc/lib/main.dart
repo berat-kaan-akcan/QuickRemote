@@ -3,18 +3,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
+import 'dart:io';
 import 'dart:ui' as ui;
 import 'screens/home/home_screen.dart';
 import 'providers/server_provider.dart';
+import 'services/linux/desktop_entry.dart';
+import 'services/presenter_settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _registerFontLicense();
+  await PresenterSettings.load();
 
   await windowManager.ensureInitialized();
 
   final windowOptions = WindowOptions(
-    size: const ui.Size(420, 650),
+    size: const ui.Size(420, 700),
     minimumSize: const ui.Size(380, 550),
     center: true,
     title: 'QuickRemote PC',
@@ -27,6 +31,9 @@ void main() async {
   });
 
   runApp(const QuickRemotePC());
+
+  // Gives the window its icon in the taskbar (Wayland finds it by app id).
+  if (Platform.isLinux) DesktopEntry.ensureInstalled();
 }
 
 class QuickRemotePC extends StatelessWidget {

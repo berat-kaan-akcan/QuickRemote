@@ -5,9 +5,12 @@ abstract class Evdev {
   static const evSyn = 0x00;
   static const evKey = 0x01;
   static const evRel = 0x02;
+  static const evAbs = 0x03;
   static const synReport = 0;
   static const relX = 0x00;
   static const relY = 0x01;
+  static const absX = 0x00;
+  static const absY = 0x01;
 
   // Mouse buttons
   static const btnLeft = 0x110;
