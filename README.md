@@ -275,6 +275,11 @@ flutter run -d linux        # veya: flutter build linux
 
 Impress'e ulaşılamazsa ileri/geri, başlat ve bitir komutları klavye kısayoluna (PageDown/PageUp/F5/Esc) düşer; böylece PDF görüntüleyiciler ve tarayıcıdaki sunumlar da kontrol edilebilir. Çizim modları ve siyah/beyaz ekran yalnızca bir slayt gösterisi açıkken çalışır, başka bir pencereye tuş yazmaz.
 
+**PDF sunumları:** İleri/geri her PDF görüntüleyicide çalışır (PageDown/PageUp). Telefondaki BAŞLAT ise görüntüleyiciye göre davranır:
+- Linux'ta PDF LibreOffice Draw'da açıksa (çoğu dağıtımda varsayılan), PDF Impress'te sunum olarak açılır ve gösteri başlar. Her sayfa bir slayt olur: slayt numarası, kalem, lazer ve siyah ekran çalışır. Orijinal PDF değişmez. PowerPoint'ten dışa aktarılmış PDF'ler aynen görünür; LaTeX gibi başka kaynaklı PDF'lerde yazı tipleri kayabilir.
+- Firefox'ta sunum modu açılır (Ctrl+Alt+P), Adobe Acrobat/Reader'da tam ekran (Ctrl+L), Okular'da sunum modu (Ctrl+Shift+P), WPS PDF'te tam ekran (F11; WPS PDF'te F5 bir şey yapmaz). Arch tabanlı dağıtımlarda WPS PDF `libtiff.so.5` eksik olduğu için hiç açılmayabilir; AUR'daki `libtiff5` paketi bunu çözer. Chrome, Edge ve Brave'de F11 ile tam ekran olur; BİTİR yine F11 ile çıkar. Tarayıcıya F5 gönderilmez, çünkü sayfayı yeniler.
+- Linux'ta bu tanıma yalnızca X11/XWayland pencerelerinde yapılabilir; Wayland'da doğrudan çalışan tarayıcılar tanınmaz ve onlara F5 gider.
+
 **WPS Office (Linux):** WPS'in RPC arayüzü yalnızca kendi başlattığı WPS'i yönetebilir, sizin açtığınız bir WPS'e bağlanamaz. Bu yüzden iki mod vardır:
 
 | | Paneldeki "Sunum aç" ile açılan sunum | WPS'i kendiniz açtığınızda |
