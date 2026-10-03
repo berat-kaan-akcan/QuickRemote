@@ -106,6 +106,14 @@ HIGHLIGHTER_COLOR = 0xFFE600
 MEDIA_SHAPES = ("com.sun.star.presentation.MediaShape", "com.sun.star.drawing.MediaShape")
 # UserData entry marking the media triggers this bridge adds (see _prepare_pages).
 TRIGGER_MARK = "quickremote-media"
+PRESENTATION_DOC = "com.sun.star.presentation.PresentationDocument"
+DRAWING_DOC = "com.sun.star.drawing.DrawingDocument"
+# Opens a PDF in Impress, one slide per page (LibreOffice opens PDFs in Draw).
+PDF_IMPORT_FILTER = "impress_pdf_import"
+
+
+def is_pdf_url(url):
+    return url.lower().split("?", 1)[0].endswith(".pdf")
 
 
 class BridgeError(Exception):
@@ -218,6 +226,8 @@ class Impress:
         self.media_rects = None
         # (controller, show_geometry()) of the full screen show.
         self.geometry = None
+        # PDF URL -> the Impress document it was imported into.
+        self.pdf_imports = {}
 
     # ── Connection ──
     def connect(self):
@@ -254,6 +264,7 @@ class Impress:
         self.mouse_visible = None
         self.media_rects = None
         self.geometry = None
+        self.pdf_imports = {}
 
     def on_main_thread(self, fn, timeout=5.0):
         call = MainThreadCall(fn)
@@ -270,13 +281,13 @@ class Impress:
         docs = []
         current = self.desktop.getCurrentComponent()
         if current is not None and current.supportsService(
-                "com.sun.star.presentation.PresentationDocument"):
+                PRESENTATION_DOC):
             docs.append(current)
         enum = self.desktop.getComponents().createEnumeration()
         while enum.hasMoreElements():
             doc = enum.nextElement()
             if doc is not None and doc not in docs and doc.supportsService(
-                    "com.sun.star.presentation.PresentationDocument"):
+                    PRESENTATION_DOC):
                 docs.append(doc)
         return docs
 
@@ -307,6 +318,41 @@ class Impress:
         if not docs:
             raise BridgeError("NO_DOCUMENT")
         return docs[0]
+
+    def _show_document(self):
+        """The document a new show starts from: a PDF in the frontmost Draw
+        window opened as a presentation (a PDF exported from slides is shown
+        like them), otherwise the presentation _document() finds."""
+        pdf = self._pdf_in_draw()
+        if pdf is None:
+            return self._document()
+        doc = self.pdf_imports.get(pdf)
+        if doc is not None:
+            try:
+                if doc.getCurrentController() is not None:
+                    return doc  # imported before and still open
+            except Exception:  # noqa: BLE001 - closed since
+                pass
+        doc = self._import_pdf(pdf)
+        self.pdf_imports[pdf] = doc
+        return doc
+
+    def _pdf_in_draw(self):
+        current = self.desktop.getCurrentComponent()
+        if (current is None or not current.supportsService(DRAWING_DOC)
+                or current.supportsService(PRESENTATION_DOC)):
+            return None
+        url = current.getURL()
+        return url if is_pdf_url(url) else None
+
+    def _import_pdf(self, url):
+        prop = uno.createUnoStruct("com.sun.star.beans.PropertyValue")
+        prop.Name = "FilterName"
+        prop.Value = PDF_IMPORT_FILTER
+        doc = self.desktop.loadComponentFromURL(url, "_blank", 0, (prop,))
+        if doc is None or not doc.supportsService(PRESENTATION_DOC):
+            raise BridgeError("PDF_IMPORT_FAILED")
+        return doc
 
     @staticmethod
     def _engine(ctrl):
@@ -420,7 +466,7 @@ class Impress:
         if running is not None:
             self._goto(running, 0, args)
             return
-        doc = self._document()
+        doc = self._show_document()
         pres = doc.getPresentation()
         custom = pres.getPropertyValue("CustomShow")
         if custom:
@@ -439,7 +485,7 @@ class Impress:
         if running is not None:
             self._goto(running, min(max(0, number - 1), running[2].getSlideCount() - 1), args)
             return
-        doc = self._document()
+        doc = self._show_document()
         pages = doc.getDrawPages()
         number = min(max(1, number), pages.getCount())
         self._start(doc, doc.getPresentation(), (self._first_page(pages.getByIndex(number - 1)),),
@@ -953,6 +999,9 @@ COMMANDS = {
 }
 
 
+SLOW_COMMANDS = {"start", "startAt"}
+
+
 def handle(impress, request):
     if uno is None:
         return {"ok": False, "error": "NO_UNO"}
@@ -961,7 +1010,9 @@ def handle(impress, request):
         return {"ok": False, "error": "UNKNOWN_COMMAND"}
     try:
         impress.connect()
-        result = impress.on_main_thread(lambda: getattr(impress, cmd)(request)) or {}
+        # Starting may first import a PDF, which takes a while for long ones.
+        timeout = 60.0 if cmd in SLOW_COMMANDS else 5.0
+        result = impress.on_main_thread(lambda: getattr(impress, cmd)(request), timeout) or {}
         result["ok"] = True
         return result
     except BridgeError as e:

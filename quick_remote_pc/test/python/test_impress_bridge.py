@@ -35,7 +35,8 @@ class FakeImpress:
     def connect(self):
         pass
 
-    def on_main_thread(self, fn):
+    def on_main_thread(self, fn, timeout=5.0):
+        self.timeout = timeout
         return fn()
 
     def reset(self):
@@ -79,6 +80,14 @@ class HandleTest(unittest.TestCase):
         impress = FakeImpress()
         self.assertEqual(bridge.handle(impress, {"cmd": "next"}), {"ok": True})
         self.assertEqual(impress.called, ["next"])
+
+    def test_the_slow_commands_get_a_longer_timeout(self):
+        impress = FakeImpress()
+        impress.start = lambda _request: None
+        bridge.handle(impress, {"cmd": "start"})
+        self.assertEqual(impress.timeout, 60.0)
+        bridge.handle(impress, {"cmd": "next"})
+        self.assertEqual(impress.timeout, 5.0)
 
     def test_refuses_names_outside_the_allowlist(self):
         # getattr must never reach internals such as reset or connect.
@@ -232,6 +241,64 @@ class NavigationDropsInkTest(unittest.TestCase):
         impress._require_running = lambda: ("doc", "pres", ctrl)
         impress.next({"clearInk": False})
         self.assertEqual(ctrl.calls, ["next"])
+
+
+class Doc:
+    """A LibreOffice document: its services, URL and whether it is open."""
+
+    def __init__(self, services, url="", closed=False):
+        self.services, self.url, self.closed = services, url, closed
+
+    def supportsService(self, name):
+        return name in self.services
+
+    def getURL(self):
+        return self.url
+
+    def getCurrentController(self):
+        if self.closed:
+            raise RuntimeError("disposed")
+        return object()
+
+
+class ShowDocumentTest(unittest.TestCase):
+    DRAW = (bridge.DRAWING_DOC,)
+    IMPRESS = (bridge.PRESENTATION_DOC,)
+
+    def _impress(self, current, presentations=()):
+        impress = bridge.Impress()
+        impress.desktop = type("Desktop", (), {"getCurrentComponent": lambda _self: current})()
+        impress._presentation_docs = lambda: list(presentations)
+        self.imported = []
+
+        def import_pdf(url):
+            doc = Doc(self.IMPRESS, url)
+            self.imported.append(url)
+            return doc
+        impress._import_pdf = import_pdf
+        return impress
+
+    def test_a_pdf_in_draw_is_shown_as_a_presentation_once(self):
+        impress = self._impress(Doc(self.DRAW, "file:///home/u/Sunum.PDF"))
+        first = impress._show_document()
+        self.assertIs(impress._show_document(), first)
+        self.assertEqual(self.imported, ["file:///home/u/Sunum.PDF"])
+
+    def test_a_closed_import_is_imported_again(self):
+        impress = self._impress(Doc(self.DRAW, "file:///a.pdf"))
+        impress._show_document().closed = True
+        impress._show_document()
+        self.assertEqual(len(self.imported), 2)
+
+    def test_other_drawings_are_left_alone(self):
+        odp = Doc(self.IMPRESS, "file:///b.odp")
+        impress = self._impress(Doc(self.DRAW, "file:///plan.odg"), [odp])
+        self.assertIs(impress._show_document(), odp)
+        self.assertEqual(self.imported, [])
+
+    def test_is_pdf_url(self):
+        self.assertTrue(bridge.is_pdf_url("file:///x/Sunum.pdf"))
+        self.assertFalse(bridge.is_pdf_url("file:///x/sunum.pdf.odp"))
 
 
 class PipeIsTrustedTest(unittest.TestCase):
