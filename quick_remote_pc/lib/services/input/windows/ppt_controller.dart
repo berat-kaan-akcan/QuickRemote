@@ -6,6 +6,7 @@ import 'keyboard_simulator.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
 import '../../presenter_settings.dart';
+import '../pdf_viewers.dart';
 import 'presenter_com.dart';
 
 /// PowerPoint and WPS Presentation: the same COM object model and mostly the
@@ -84,7 +85,28 @@ try {
     return result == 'OK';
   }
 
+  /// The window a START toggled a mode on in (a browser's full screen), and
+  /// the keys with which END toggles it off there.
+  static (HWND, List<int>)? _toggled;
+
+  /// Presses the start keys of the PDF viewer or browser in front, instead
+  /// of F5 (which reloads a browser page). Returns whether it did.
+  static bool _startViewer() {
+    final hwnd = GetForegroundWindow();
+    final viewer = PdfViewers.forProgram(_windowExecutable(hwnd).split(r'\').last);
+    if (viewer == null) return false;
+    KeyboardSimulator.pressKeyCombo(viewer.start);
+    final end = viewer.end;
+    _toggled = end == null ? null : (hwnd, end);
+    return true;
+  }
+
   static Future<void> slideStart() async {
+    if (_startViewer()) return;
+    await _startPresenter();
+  }
+
+  static Future<void> _startPresenter() async {
     try {
       final script = '${PresenterCom.lookup}'
           r'''
@@ -109,7 +131,9 @@ try {
   /// number + Enter (PowerPoint's own shortcut) would land in whatever window
   /// has the focus when the show did not open.
   static Future<void> slideStartAt(int slideNumber) async {
-    await slideStart();
+    // A PDF viewer has no slide to jump to: it starts where it is.
+    if (_startViewer()) return;
+    await _startPresenter();
     // The lookup runs again on every try: with PowerPoint and WPS both open,
     // the one whose show F5 opened is known only once the show is up.
     // $slideNumber is an int validated by CommandRouter (1..9999).
@@ -147,6 +171,12 @@ try {
   }
 
   static Future<void> slideEnd() async {
+    final toggled = _toggled;
+    _toggled = null;
+    if (toggled != null && GetForegroundWindow() == toggled.$1) {
+      KeyboardSimulator.pressKeyCombo(toggled.$2);
+      return;
+    }
     KeyboardSimulator.pressKey(VK_ESCAPE);
     await Future.delayed(const Duration(milliseconds: 350));
     final hwnd = GetForegroundWindow();

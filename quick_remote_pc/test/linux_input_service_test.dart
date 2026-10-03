@@ -12,6 +12,7 @@ class FakeBridge extends ScriptBridge {
 
   final Map<String, Map<String, dynamic>> replies;
   final List<(String, Map<String, Object?>)> requests = [];
+  final List<Duration> timeouts = [];
 
   List<String> get commands => [for (final r in requests) r.$1];
 
@@ -25,6 +26,7 @@ class FakeBridge extends ScriptBridge {
     Duration timeout = const Duration(seconds: 6),
   ]) async {
     requests.add((cmd, args));
+    timeouts.add(timeout);
     return replies[cmd] ?? {'ok': false, 'error': 'NOT_RUNNING'};
   }
 }
@@ -175,6 +177,47 @@ void main() {
       expect(impress.requests.single.$2, {'rgb': 0xFF0000});
       expect(wps.commands, ['penColor']);
       expect(wps.requests.single.$2, {'bgr': 0x0000FF});
+    });
+  });
+
+  group('PDF viewers', () {
+    const firefox = X11Window(4, ['Navigator', 'firefox']);
+    const chrome = X11Window(5, ['google-chrome', 'Google-chrome']);
+
+    test('START opens Firefox\'s presentation mode instead of reloading', () async {
+      active = firefox;
+      await service().slideStart();
+      expect(keys, [
+        [Evdev.keyLeftCtrl, Evdev.keyLeftAlt, Evdev.keyP]
+      ]);
+      expect(impress.requests, isEmpty);
+    });
+
+    test('END leaves the full screen START entered in a browser', () async {
+      active = chrome;
+      final s = service();
+      await s.slideStart();
+      await s.slideEnd();
+      expect(keys, [
+        [Evdev.fromVk(0x7A)],
+        [Evdev.fromVk(0x7A)],
+      ]);
+    });
+
+    test('END elsewhere is the usual Esc', () async {
+      active = chrome;
+      final s = service();
+      await s.slideStart();
+      active = null;
+      await s.slideEnd();
+      expect(keys.last, [Evdev.keyEsc]);
+    });
+
+    test('START gives Impress time to open a PDF as a presentation', () async {
+      impress.replies['start'] = _ok;
+      await service().slideStart();
+      expect(impress.timeouts.single, greaterThan(const Duration(seconds: 60)));
+      expect(keys, isEmpty);
     });
   });
 }

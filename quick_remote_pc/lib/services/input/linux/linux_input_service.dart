@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../input_service.dart';
+import '../pdf_viewers.dart';
 import 'evdev_keys.dart';
 import 'impress_bridge.dart';
 import 'mpris_controller.dart';
@@ -116,8 +117,9 @@ class LinuxInputService implements InputService {
     String cmd, [
     Map<String, Object?> args = const {},
     Map<String, Object?>? wpsArgs,
+    Duration impressTimeout = const Duration(seconds: 6),
   ]) async {
-    final impress = await _impress.request(cmd, args);
+    final impress = await _impress.request(cmd, args, impressTimeout);
     if (impress['ok'] == true) return null;
     final wps = await _wpsRequest(cmd, wpsArgs ?? args);
     if (wps['ok'] == true) return null;
@@ -126,8 +128,13 @@ class LinuxInputService implements InputService {
   }
 
   /// Runs [cmd]; when no show took it, presses [fallbackKeys] (if any).
-  Future<bool> _showOrKeys(String cmd, {Map<String, Object?> args = const {}, List<int>? fallbackKeys}) async {
-    if (await _showCommand(cmd, args) == null) return true;
+  Future<bool> _showOrKeys(
+    String cmd, {
+    Map<String, Object?> args = const {},
+    List<int>? fallbackKeys,
+    Duration impressTimeout = const Duration(seconds: 6),
+  }) async {
+    if (await _showCommand(cmd, args, null, impressTimeout) == null) return true;
     if (fallbackKeys != null) _keys(fallbackKeys);
     return false;
   }
@@ -234,23 +241,52 @@ class LinuxInputService implements InputService {
       // message. So the key fallback only starts the show from its first slide.
       _start('startAt', {'slide': slideNumber, ..._inkArgs});
 
-  /// Starts the show of the focused WPS, or else of Impress or the bridge's
-  /// WPS; F5 when none of them can.
+  /// Starts the show of the focused WPS or PDF viewer, or else of Impress
+  /// (a PDF open in Draw becomes a presentation there) or the bridge's WPS;
+  /// F5 when none of them can.
   Future<void> _start(String cmd, Map<String, Object?> args) async {
-    final focused = _focusedWps();
-    if (focused != null) {
-      if (!_isBridgeWps(focused) || (await _wpsRequest(cmd, args))['ok'] != true) {
+    final window = _activeWindow();
+    if (window != null && window.hasClass('wpp')) {
+      if (!_isBridgeWps(window) || (await _wpsRequest(cmd, args))['ok'] != true) {
         _keys([Evdev.keyF5]);
       }
       return;
     }
-    await _showOrKeys(cmd, args: args, fallbackKeys: [Evdev.keyF5]);
+    final viewer = window == null ? null : _viewerOf(window);
+    if (viewer != null) {
+      _keys(_evdev(viewer.start));
+      final end = viewer.end;
+      _toggled = end == null ? null : (window!.id, end);
+      return;
+    }
+    await _showOrKeys(cmd,
+        args: args, fallbackKeys: [Evdev.keyF5], impressTimeout: const Duration(seconds: 65));
   }
+
+  /// The X11 window a START toggled a mode on in (a browser's full screen),
+  /// and the keys with which END toggles it off there.
+  (int, List<int>)? _toggled;
+
+  static ViewerKeys? _viewerOf(X11Window window) {
+    for (final name in window.wmClass) {
+      final viewer = PdfViewers.forProgram(name);
+      if (viewer != null) return viewer;
+    }
+    return null;
+  }
+
+  static List<int> _evdev(List<int> vks) => [for (final vk in vks) Evdev.fromVk(vk)!];
 
   @override
   Future<void> slideEnd() async {
     _laserViaImpress = false;
     _laserOn = false;
+    final toggled = _toggled;
+    _toggled = null;
+    if (toggled != null && _activeWindow()?.id == toggled.$1) {
+      _keys(_evdev(toggled.$2));
+      return;
+    }
     await _showOrKeys('end', fallbackKeys: [Evdev.keyEsc]);
   }
 
