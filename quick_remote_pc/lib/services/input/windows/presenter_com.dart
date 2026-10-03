@@ -7,7 +7,8 @@ class PresenterCom {
   /// (`$null` when neither runs), preferring one with a running slideshow,
   /// and `$qrPresenter` to 'powerpoint' or 'wps'. WPS registers as
   /// KWPP.Application, or as PowerPoint.Application when it is set up to
-  /// stand in for Microsoft Office: its Name then tells it apart.
+  /// stand in for Microsoft Office. Its Name is "Microsoft PowerPoint" too
+  /// (Version 12.0, WPS 12.2), so its install Path tells it apart.
   static const lookup = r'''
 $ppt = $null
 $qrPresenter = $null
@@ -19,11 +20,11 @@ foreach ($qrId in @('PowerPoint.Application', 'KWPP.Application')) {
     $qrShow = $false
     try { $qrShow = $qrApp.SlideShowWindows.Count -gt 0 } catch {}
     if ($ppt -eq $null -or ($qrShow -and -not $qrPptShow)) {
-        $qrName = ''
-        try { $qrName = "$($qrApp.Name)" } catch {}
+        $qrPath = ''
+        try { $qrPath = "$($qrApp.Path)" } catch {}
         $ppt = $qrApp
         $qrPptShow = $qrShow
-        if ($qrId -eq 'KWPP.Application' -or ($qrName -ne '' -and $qrName -notmatch 'PowerPoint')) {
+        if ($qrId -eq 'KWPP.Application' -or $qrPath -match 'Kingsoft|WPS Office') {
             $qrPresenter = 'wps'
         } else {
             $qrPresenter = 'powerpoint'
@@ -38,6 +39,4 @@ foreach ($qrId in @('PowerPoint.Application', 'KWPP.Application')) {
 
   static bool get wpsActive => active == 'wps';
 
-  /// Executable names of the programs' windows.
-  static const executables = [r'\powerpnt.exe', r'\wpp.exe'];
 }
