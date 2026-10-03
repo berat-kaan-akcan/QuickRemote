@@ -75,8 +75,8 @@
 | **Gizlenen Eşleştirme Kodu** | İlk telefon bağlandıktan sonra QR kodu ve PIN gizlenir ("Kodu göster" ile açılır); yansıtılan ekranda görünmez |
 | **Bağlı Cihazlar** | PC bağlı telefonları listeler; "Çıkar" o telefonun bağlantısını keser ve PIN'i yeniler |
 | **Kimlik Doğrulama Zaman Aşımı** | Bağlanan istemci 5 saniye içinde doğrulanmazsa bağlantı kapatılır |
-| **Odak Kontrolü** | Windows'ta çizim/siyah ekran kısayolları yalnızca PowerPoint veya WPS öndeyken gönderilir; başka bir pencereye yazılmaz |
-| **WPS Office** | Windows'ta WPS Presentation, PowerPoint ile aynı COM arayüzünden (`KWPP.Application`) kontrol edilir; Linux'ta RPC ve kısayollarla (aşağıya bakın). WPS'te lazer yoktur, yerine görünür fare imleci kullanılır. ⚠️ Windows'taki WPS desteği henüz gerçek bir WPS kurulumunda denenmedi |
+| **Odak Kontrolü** | Windows'ta çizim/siyah ekran kısayolları yalnızca slayt gösterisi penceresine gönderilir; gösteri başka bir pencerenin (Word, sunumun kendi düzenleyicisi) arkasındaysa önce öne getirilir, kısayollar başka bir pencereye yazılmaz |
+| **WPS Office** | Windows'ta WPS Presentation, PowerPoint ile aynı COM arayüzünden (`KWPP.Application`) kontrol edilir; Linux'ta RPC ve kısayollarla (aşağıya bakın). WPS'te lazer yoktur, yerine görünür fare imleci kullanılır. Windows'ta WPS 12.2 ile denendi: gezinme, siyah/beyaz ekran, kalem, fosforlu kalem, silgi, renkler, tümünü sil. Video oynat/duraklat videoya tıklanarak yapılır; WPS'te başa sarma yoktur |
 | **Canlı Ağ İzleme** | Ağ profiliniz sürekli izlenir; herkese açık ağ tespit edilirse uyarılır ve ağ ayarlarını açabilirsiniz |
 
 ---
@@ -275,9 +275,9 @@ flutter run -d linux        # veya: flutter build linux
 
 Impress'e ulaşılamazsa ileri/geri, başlat ve bitir komutları klavye kısayoluna (PageDown/PageUp/F5/Esc) düşer; böylece PDF görüntüleyiciler ve tarayıcıdaki sunumlar da kontrol edilebilir. Çizim modları ve siyah/beyaz ekran yalnızca bir slayt gösterisi açıkken çalışır, başka bir pencereye tuş yazmaz.
 
-**PDF sunumları:** İleri/geri her PDF görüntüleyicide çalışır (PageDown/PageUp). Telefondaki BAŞLAT ise görüntüleyiciye göre davranır:
+**PDF sunumları:** İleri/geri PDF görüntüleyicilerde PageDown/PageUp ile çalışır. Windows'ta tarayıcılarda (Chrome, Edge, Brave, Firefox) sağ/sol ok gönderilir: PageDown orada bir ekran boyu kaydırıp sayfanın ortasında durur, oklar ise her zaman bir sonraki sayfanın başına gider. Telefondaki BAŞLAT ise görüntüleyiciye göre davranır:
 - Linux'ta PDF LibreOffice Draw'da açıksa (çoğu dağıtımda varsayılan), PDF Impress'te sunum olarak açılır ve gösteri başlar. Her sayfa bir slayt olur: slayt numarası, kalem, lazer ve siyah ekran çalışır. Orijinal PDF değişmez. PowerPoint'ten dışa aktarılmış PDF'ler aynen görünür; LaTeX gibi başka kaynaklı PDF'lerde yazı tipleri kayabilir.
-- Firefox'ta sunum modu açılır (Ctrl+Alt+P), Adobe Acrobat/Reader'da tam ekran (Ctrl+L), Okular'da sunum modu (Ctrl+Shift+P), WPS PDF'te tam ekran (F11; WPS PDF'te F5 bir şey yapmaz). Arch tabanlı dağıtımlarda WPS PDF `libtiff.so.5` eksik olduğu için hiç açılmayabilir; AUR'daki `libtiff5` paketi bunu çözer. Chrome, Edge ve Brave'de F11 ile tam ekran olur; BİTİR yine F11 ile çıkar. Tarayıcıya F5 gönderilmez, çünkü sayfayı yeniler.
+- Firefox'ta sunum modu açılır (Ctrl+Alt+P), Adobe Acrobat/Reader'da tam ekran (Ctrl+L), Okular'da sunum modu (Ctrl+Shift+P), WPS PDF'te tam ekran (F11; WPS PDF'te F5 bir şey yapmaz). Arch tabanlı dağıtımlarda WPS PDF `libtiff.so.5` eksik olduğu için hiç açılmayabilir; AUR'daki `libtiff5` paketi bunu çözer. Chrome, Edge ve Brave'de F11 ile tam ekran olur; BİTİR yine F11 ile çıkar. Tarayıcıya F5 gönderilmez, çünkü sayfayı yeniler. SumatraPDF'te F5 sunum modunu açar. Windows'ta Edge, Chrome, Firefox, Acrobat ve SumatraPDF ile denendi; Windows'taki WPS 12.2 PDF'leri `wps.exe` penceresinde sekme olarak açtığı için ayrıca tanınmaz (BAŞLAT F5 gönderir).
 - Linux'ta bu tanıma yalnızca X11/XWayland pencerelerinde yapılabilir; Wayland'da doğrudan çalışan tarayıcılar tanınmaz ve onlara F5 gider.
 
 **WPS Office (Linux):** WPS'in RPC arayüzü yalnızca kendi başlattığı WPS'i yönetebilir, sizin açtığınız bir WPS'e bağlanamaz. Bu yüzden iki mod vardır:
