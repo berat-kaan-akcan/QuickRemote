@@ -63,4 +63,16 @@ void main() {
     expect(sent, hasLength(2));
     expect(sent.last['thumbnail'], 'COVER');
   });
+
+  test('the slide state names the program running the show', () async {
+    input.slideState = {'current': 2, 'total': 5, 'notes': '', 'presenter': 'wps'};
+    await broadcaster.fetchAndBroadcastSlideState();
+    expect(sent.single, containsPair('presenter', 'wps'));
+
+    // The same slide in another program is news too.
+    input.slideState = {'current': 2, 'total': 5, 'notes': '', 'presenter': 'impress'};
+    await broadcaster.fetchAndBroadcastSlideState();
+    expect(sent, hasLength(2));
+    expect(sent.last, containsPair('presenter', 'impress'));
+  });
 }

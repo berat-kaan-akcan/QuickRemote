@@ -5,26 +5,72 @@ import 'evdev_keys.dart';
 import 'impress_bridge.dart';
 import 'mpris_controller.dart';
 import 'pactl_volume.dart';
+import 'script_bridge.dart';
 import '../../presenter_settings.dart';
 import 'uinput_device.dart';
+import 'wps_bridge.dart';
+import 'x11_windows.dart';
 
-/// Linux implementation: LibreOffice Impress over UNO for presentation
-/// features, uinput for keyboard/mouse, pactl for volume, MPRIS for media.
+/// Linux implementation: LibreOffice Impress over UNO and WPS Presentation
+/// over RPC for presentation features, uinput for keyboard/mouse, pactl for
+/// volume, MPRIS for media.
 ///
-/// Presentation commands fall back to plain key presses when no Impress
-/// slideshow is reachable, so PDF viewers and browser slides still work.
+/// Presentation commands go to the first program whose show runs: Impress,
+/// then the WPS the WPS bridge opened. A WPS the user started is out of the
+/// bridge's reach, so it gets WPS's own shortcuts, only while it has the
+/// focus. Anything else falls back to plain key presses, so PDF viewers and
+/// browser slides still work.
 class LinuxInputService implements InputService {
-  LinuxInputService() {
+  LinuxInputService()
+      : _impress = ImpressBridge.instance,
+        _wps = WpsBridge.instance,
+        _activeWindow = X11Windows.instance.activeWindow,
+        _clientWindows = X11Windows.instance.clientWindows,
+        _keys = UinputDevice.instance.combo {
     _device.ensureOpen();
     _impress.onEvent = _onImpressEvent;
   }
 
+  /// With fake bridges, windows and keyboard; the uinput device stays closed.
+  @visibleForTesting
+  LinuxInputService.withDependencies({
+    required ScriptBridge impress,
+    required ScriptBridge wps,
+    required X11Window? Function() activeWindow,
+    required List<X11Window> Function() clientWindows,
+    required void Function(List<int> keys) keys,
+  })  : _impress = impress,
+        _wps = wps,
+        _activeWindow = activeWindow,
+        _clientWindows = clientWindows,
+        _keys = keys;
+
   final UinputDevice _device = UinputDevice.instance;
-  final ImpressBridge _impress = ImpressBridge.instance;
+  final ScriptBridge _impress;
+  final ScriptBridge _wps;
+  final X11Window? Function() _activeWindow;
+  final List<X11Window> Function() _clientWindows;
+
+  /// Presses keys together (uinput), then releases them.
+  final void Function(List<int> keys) _keys;
   final MprisController _mpris = MprisController();
   final PactlVolume _volume = PactlVolume();
 
   bool _laserViaImpress = false;
+  bool _laserOn = false;
+
+  /// pid of the WPS the bridge controls, from its last reply.
+  int? _wpsRpcPid;
+
+  /// Ink colors (BGR) for WPS, whose single pointer color the pen and the
+  /// highlighter share; null until the phone picks one.
+  int? _penColor;
+  int? _highlighterColor;
+  bool _wpsHighlighter = false;
+  static const _defaultPenColor = 0x0000FF; // red, BGR
+
+  static const _wpsKeysOnly =
+      'WPS\'te bu özellik yalnızca QuickRemote\'tan açılan sunumda çalışır ("Sunumu WPS ile aç").';
 
   /// Over a video the laser is hidden behind it, so the bridge has the OS
   /// cursor, which shows above the video, stand in for it.
@@ -41,22 +87,64 @@ class LinuxInputService implements InputService {
   @override
   String get presenter => 'impress';
 
-  /// Runs an Impress command; on failure presses [fallbackKeys] (if any).
-  Future<bool> _impressOr(String cmd, {Map<String, Object?> args = const {}, List<int>? fallbackKeys}) async {
-    final reply = await _impress.request(cmd, args);
-    if (reply['ok'] == true) return true;
-    debugPrint('Impress "$cmd" failed: ${reply['error']}');
-    if (fallbackKeys != null) _device.combo(fallbackKeys);
+  @override
+  List<String> get presenters => const ['impress', 'wps'];
+
+  // ── Presenter lookup ──
+
+  /// The focused window when it belongs to WPS Presentation.
+  X11Window? _focusedWps() {
+    final window = _activeWindow();
+    return window != null && window.hasClass('wpp') ? window : null;
+  }
+
+  /// A WPS slideshow (a full-screen WPS Presentation window) is on screen.
+  bool _wpsShowOnScreen() => _clientWindows().any((w) => w.hasClass('wpp') && w.fullscreen);
+
+  /// Whether the focused WPS is the one the bridge controls.
+  bool _isBridgeWps(X11Window window) => window.pid != null && window.pid == _wpsRpcPid;
+
+  Future<Map<String, dynamic>> _wpsRequest(String cmd, [Map<String, Object?> args = const {}]) async {
+    final reply = await _wps.request(cmd, args);
+    if (reply['pid'] is int) _wpsRpcPid = reply['pid'] as int;
+    return reply;
+  }
+
+  /// Runs [cmd] on Impress, then on the bridge's WPS. Returns null when one
+  /// of them ran it, otherwise the two replies.
+  Future<(Map<String, dynamic>, Map<String, dynamic>)?> _showCommand(
+    String cmd, [
+    Map<String, Object?> args = const {},
+    Map<String, Object?>? wpsArgs,
+  ]) async {
+    final impress = await _impress.request(cmd, args);
+    if (impress['ok'] == true) return null;
+    final wps = await _wpsRequest(cmd, wpsArgs ?? args);
+    if (wps['ok'] == true) return null;
+    debugPrint('Presentation "$cmd" failed: Impress ${impress['error']}, WPS ${wps['error']}');
+    return (impress, wps);
+  }
+
+  /// Runs [cmd]; when no show took it, presses [fallbackKeys] (if any).
+  Future<bool> _showOrKeys(String cmd, {Map<String, Object?> args = const {}, List<int>? fallbackKeys}) async {
+    if (await _showCommand(cmd, args) == null) return true;
+    if (fallbackKeys != null) _keys(fallbackKeys);
     return false;
   }
 
-  /// For features that only exist through Impress: report failures to the phone.
-  Future<void> _impressOnly(String cmd, {Map<String, Object?> args = const {}}) async {
-    final reply = await _impress.request(cmd, args);
-    if (reply['ok'] == true) return;
-    final error = '${reply['error']}';
-    debugPrint('Impress "$cmd" failed: $error');
-    onCommandError?.call(_describeError(error));
+  /// For features without a key: report failures to the phone.
+  Future<void> _showOnly(String cmd, {Map<String, Object?> args = const {}, Map<String, Object?>? wpsArgs}) async {
+    final failed = await _showCommand(cmd, args, wpsArgs);
+    if (failed != null) onCommandError?.call(_describeFailure(failed.$1, failed.$2));
+  }
+
+  /// The error worth showing out of Impress's and WPS's replies.
+  String _describeFailure(Map<String, dynamic> impress, Map<String, dynamic> wps) {
+    final wpsError = '${wps['error']}';
+    const absent = {'NO_RPC', 'NOT_RUNNING', 'NO_PRESENTATION', 'BRIDGE_DIED'};
+    if (!absent.contains(wpsError)) return _describeError(wpsError);
+    if (_wpsShowOnScreen()) return _wpsKeysOnly;
+    return _describeError('${impress['error']}');
   }
 
   static String _describeError(String error) {
@@ -69,7 +157,11 @@ class LinuxInputService implements InputService {
     if (error == 'NO_MEDIA_TRIGGER') return 'Bu slayttaki medya kumandadan kontrol edilemiyor.';
     if (error == 'MEDIA_NEEDS_FULLSCREEN') return 'Slayt medyası yalnızca tam ekran slayt gösterisinde kontrol edilebilir.';
     if (error == 'SCREEN_BLANKED') return 'Ekran karartılmışken slayt medyası kontrol edilemez.';
-    return 'Impress komutu başarısız: $error';
+    if (error == 'NO_RPC') return 'WPS desteği kurulu değil.';
+    if (error == 'NO_PRESENTATION') return 'WPS\'te açık sunum yok.';
+    if (error == 'WPS_START_FAILED') return 'WPS başlatılamadı.';
+    if (error == 'TIMEOUT') return 'Sunum programı yanıt vermiyor.';
+    return 'Sunum komutu başarısız: $error';
   }
 
   // ── States ──
@@ -78,20 +170,38 @@ class LinuxInputService implements InputService {
 
   @override
   Future<Map<String, dynamic>?> getSlideState() async {
-    final reply = await _impress.request('state');
-    if (reply['ok'] != true || reply['state'] != 'RUNNING') {
-      _laserViaImpress = false;
-      return {'error': 'POWERPOINT_NOT_RUNNING'};
+    final impress = await _impress.request('state');
+    if (impress['ok'] == true && impress['state'] == 'RUNNING') {
+      return _slideState(impress, 'impress');
     }
-    return {
-      'current': reply['current'],
-      'total': reply['total'],
-      'notes': reply['notes'] ?? '',
-      'hasMedia': reply['hasMedia'] ?? false,
-      'isMediaPlaying': reply['isMediaPlaying'],
-      'isBlackScreen': reply['isBlackScreen'] ?? false,
-    };
+    _laserViaImpress = false;
+    final wps = await _wpsRequest('state');
+    if (wps['ok'] == true && wps['state'] == 'RUNNING') return _slideState(wps, 'wps');
+    if (_wpsShowOnScreen()) {
+      // A WPS the bridge cannot reach: the show runs, its slide is unknown.
+      return {
+        'current': 0,
+        'total': 0,
+        'notes': '',
+        'hasMedia': false,
+        'isMediaPlaying': null,
+        'isBlackScreen': false,
+        'presenter': 'wps',
+      };
+    }
+    _laserOn = false;
+    return {'error': 'POWERPOINT_NOT_RUNNING'};
   }
+
+  static Map<String, dynamic> _slideState(Map<String, dynamic> reply, String presenter) => {
+        'current': reply['current'],
+        'total': reply['total'],
+        'notes': reply['notes'] ?? '',
+        'hasMedia': reply['hasMedia'] ?? false,
+        'isMediaPlaying': reply['isMediaPlaying'],
+        'isBlackScreen': reply['isBlackScreen'] ?? false,
+        'presenter': presenter,
+      };
 
   @override
   Future<VolumeState?> getVolumeState() => _volume.getState();
@@ -108,63 +218,124 @@ class LinuxInputService implements InputService {
 
   // ── Presentation ──
   @override
-  void slideNext() => _impressOr('next', args: _inkArgs, fallbackKeys: [Evdev.keyPageDown]);
+  void slideNext() => _showOrKeys('next', args: _inkArgs, fallbackKeys: [Evdev.keyPageDown]);
   @override
-  void slidePrev() => _impressOr('prev', args: _inkArgs, fallbackKeys: [Evdev.keyPageUp]);
+  void slidePrev() => _showOrKeys('prev', args: _inkArgs, fallbackKeys: [Evdev.keyPageUp]);
 
   static Map<String, Object?> get _inkArgs => {'clearInk': PresenterSettings.clearInkOnSlideChange};
-  @override
-  Future<void> slideStart() => _impressOr('start', args: _inkArgs, fallbackKeys: [Evdev.keyF5]);
 
   @override
-  Future<void> slideStartAt(int slideNumber) async {
-    // Without the bridge there is no way to tell whether F5 opened a show, and
-    // typing the number + Enter into any other window could send a chat
-    // message. So the fallback only starts the show from its first slide.
-    await _impressOr('startAt', args: {'slide': slideNumber, ..._inkArgs}, fallbackKeys: [Evdev.keyF5]);
+  Future<void> slideStart() => _start('start', _inkArgs);
+
+  @override
+  Future<void> slideStartAt(int slideNumber) =>
+      // Without a bridge there is no way to tell whether F5 opened a show, and
+      // typing the number + Enter into any other window could send a chat
+      // message. So the key fallback only starts the show from its first slide.
+      _start('startAt', {'slide': slideNumber, ..._inkArgs});
+
+  /// Starts the show of the focused WPS, or else of Impress or the bridge's
+  /// WPS; F5 when none of them can.
+  Future<void> _start(String cmd, Map<String, Object?> args) async {
+    final focused = _focusedWps();
+    if (focused != null) {
+      if (!_isBridgeWps(focused) || (await _wpsRequest(cmd, args))['ok'] != true) {
+        _keys([Evdev.keyF5]);
+      }
+      return;
+    }
+    await _showOrKeys(cmd, args: args, fallbackKeys: [Evdev.keyF5]);
   }
 
   @override
   Future<void> slideEnd() async {
     _laserViaImpress = false;
-    await _impressOr('end', fallbackKeys: [Evdev.keyEsc]);
+    _laserOn = false;
+    await _showOrKeys('end', fallbackKeys: [Evdev.keyEsc]);
   }
 
   @override
-  void blackScreen() => _impressOr('blank', args: {'color': 0x000000}, fallbackKeys: [Evdev.keyB]);
+  void blackScreen() => _showOrKeys('blank', args: {'color': 0x000000}, fallbackKeys: [Evdev.keyB]);
   @override
-  void whiteScreen() => _impressOr('blank', args: {'color': 0xFFFFFF}, fallbackKeys: [Evdev.keyW]);
-  @override
-  void eraseAllInk() => _impressOnly('eraseAll');
+  void whiteScreen() => _showOrKeys('blank', args: {'color': 0xFFFFFF}, fallbackKeys: [Evdev.keyW]);
 
   @override
-  Future<void> setPenColor(int bgrColor) => _impressOnly('penColor', args: {'rgb': _rgb(bgrColor)});
-  @override
-  Future<void> setHighlighterColor(int bgrColor) =>
-      _impressOnly('highlighterColor', args: {'rgb': _rgb(bgrColor)});
+  Future<void> eraseAllInk() async {
+    final failed = await _showCommand('eraseAll');
+    if (failed == null) return;
+    if (_focusedWps() != null) {
+      _keys([Evdev.keyE]); // WPS's own "erase all ink" key
+      return;
+    }
+    onCommandError?.call(_describeFailure(failed.$1, failed.$2));
+  }
 
-  /// PowerPoint uses BGR, UNO uses RGB.
+  @override
+  Future<void> setPenColor(int bgrColor) {
+    _penColor = bgrColor;
+    return _showOnly('penColor', args: {'rgb': _rgb(bgrColor)}, wpsArgs: {'bgr': bgrColor});
+  }
+
+  @override
+  Future<void> setHighlighterColor(int bgrColor) async {
+    _highlighterColor = bgrColor;
+    final reply = await _impress.request('highlighterColor', {'rgb': _rgb(bgrColor)});
+    if (reply['ok'] == true) return;
+    // WPS's highlighter takes the color when it is next chosen (Ctrl+I).
+    if (_wpsHighlighter) await _wpsRequest('pointerColor', {'bgr': bgrColor});
+  }
+
+  /// PowerPoint and WPS use BGR, UNO uses RGB.
   static int _rgb(int bgr) => ((bgr & 0xFF) << 16) | (bgr & 0xFF00) | ((bgr >> 16) & 0xFF);
 
   @override
-  Future<void> pptMediaPlayPause() => _impressOnly('mediaToggle');
+  Future<void> pptMediaPlayPause() => _showOnly('mediaToggle');
   @override
-  Future<void> pptMediaRewind() => _impressOnly('mediaRewind');
+  Future<void> pptMediaRewind() => _showOnly('mediaRewind');
 
   // ── Modes ──
   @override
-  void toggleLaserCursor() => _laserViaImpress ? laserOff() : modeLaser();
+  void toggleLaserCursor() => _laserOn ? laserOff() : modeLaser();
 
   @override
-  void modeArrow() => _setMode('arrow');
+  void modeArrow() => _setMode('arrow', wpsKeys: [Evdev.keyLeftCtrl, Evdev.keyA]);
+
   @override
-  void modePen() => _setMode('pen');
-  @override
-  void modeHighlighter() => _setMode('highlighter');
+  void modePen() => _setMode(
+        'pen',
+        // After the highlighter, the shared pointer color is the highlighter's.
+        wpsArgs: {'bgr': _penColor ?? (_highlighterColor == null ? null : _defaultPenColor)},
+        wpsKeys: [Evdev.keyLeftCtrl, Evdev.keyP],
+      );
+
   @override
   void modeEraser() => _setMode('eraser');
+
   @override
-  void laserOff() => _setMode('laserOff');
+  void laserOff() => _setMode('laserOff', wpsKeys: const []);
+
+  @override
+  Future<void> modeHighlighter() async {
+    _laserViaImpress = false;
+    _laserOn = false;
+    final reply = await _impress.request('highlighter');
+    if (reply['ok'] == true) return;
+    // WPS's object model has no highlighter: only its Ctrl+I reaches it.
+    final focused = _focusedWps();
+    if (focused == null) {
+      onCommandError?.call(_wpsShowOnScreen() || _wpsRpcPid != null
+          ? 'WPS\'te fosforlu kalem yalnızca slayt gösterisi odaktayken seçilebilir.'
+          : _describeError('${reply['error']}'));
+      return;
+    }
+    _keys([Evdev.keyLeftCtrl, Evdev.keyI]);
+    _wpsHighlighter = true;
+    final color = _highlighterColor;
+    if (color != null && _isBridgeWps(focused)) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _wpsRequest('pointerColor', {'bgr': color});
+    }
+  }
 
   @override
   Future<void> modeLaser() async {
@@ -172,17 +343,44 @@ class LinuxInputService implements InputService {
     // any pointer update sent after it. Waiting for the reply would move the
     // real cursor meanwhile.
     _laserViaImpress = true;
+    _wpsHighlighter = false;
     // Created ahead of the first video: a new device misses its first events.
     UinputDevice.pointer.ensureOpen();
     final reply = await _impress.request('laserOn');
-    if (reply['ok'] == true) return;
+    if (reply['ok'] == true) {
+      _laserOn = true;
+      return;
+    }
     _laserViaImpress = false;
-    onCommandError?.call(_describeError('${reply['error']}'));
+    // WPS has no laser: the server moves its visible arrow pointer instead.
+    final wps = await _wpsRequest('laserOn');
+    if (wps['ok'] == true) {
+      _laserOn = true;
+    } else if (_focusedWps() != null) {
+      _keys([Evdev.keyLeftCtrl, Evdev.keyA]);
+      _laserOn = true;
+    } else {
+      onCommandError?.call(_describeFailure(reply, wps));
+    }
   }
 
-  void _setMode(String cmd) {
+  /// Switches the pointer mode on Impress or the bridge's WPS, or presses
+  /// [wpsKeys] in a focused WPS (null: the mode has no key there).
+  Future<void> _setMode(String cmd, {Map<String, Object?>? wpsArgs, List<int>? wpsKeys}) async {
     _laserViaImpress = false;
-    _impressOnly(cmd);
+    _laserOn = false;
+    _wpsHighlighter = false;
+    final failed = await _showCommand(cmd, const {}, wpsArgs);
+    if (failed == null) return;
+    if (_focusedWps() != null) {
+      if (wpsKeys == null) {
+        onCommandError?.call(_wpsKeysOnly);
+      } else if (wpsKeys.isNotEmpty) {
+        _keys(wpsKeys);
+      }
+      return;
+    }
+    onCommandError?.call(_describeFailure(failed.$1, failed.$2));
   }
 
   @override

@@ -6,7 +6,8 @@ import 'bt_hid_service.dart';
 /// Over Bluetooth the phone cannot detect it, so the user picks it.
 enum BtTarget {
   powerpoint,
-  impress;
+  impress,
+  wps;
 
   static BtTarget fromName(String? name) =>
       values.firstWhere((t) => t.name == name, orElse: () => powerpoint);
@@ -56,10 +57,12 @@ abstract class BtKeyMapping {
   /// Returns the [BtAction] for a given QuickRemote command string, or null
   /// if the command is not supported in BT HID mode.
   static BtAction? forCommand(String command, {BtTarget target = BtTarget.powerpoint}) {
-    if (target == BtTarget.impress && _impressOverrides.containsKey(command)) {
-      return _impressOverrides[command];
-    }
-    return _map[command];
+    final overrides = switch (target) {
+      BtTarget.powerpoint => const <String, BtAction>{},
+      BtTarget.impress => _impressOverrides,
+      BtTarget.wps => _wpsOverrides,
+    };
+    return overrides[command] ?? _map[command];
   }
 
   /// LibreOffice Impress slideshow shortcuts, verified against Impress 26.8:
@@ -75,6 +78,17 @@ abstract class BtKeyMapping {
     RemoteCommands.laserOff:        _NoopAction(),
     RemoteCommands.modeHighlighter: _NoopAction(),
     RemoteCommands.modeEraser:      _NoopAction(),
+  };
+
+  /// WPS Presentation slideshow shortcuts, verified against WPS 11.1 on
+  /// Linux: F5/Esc/B/W/E/PageUp/PageDown and Ctrl+P/Ctrl+I/Ctrl+A behave like
+  /// PowerPoint. Ctrl+L moves the show and Ctrl+E is not the eraser, and WPS
+  /// has no laser: the "laser" is the arrow pointer (Ctrl+A), moved with the
+  /// mouse, and the toolbar hides the eraser.
+  static final Map<String, BtAction> _wpsOverrides = {
+    RemoteCommands.modeLaser:   _KeyAction(modLCtrl, [keyA]),
+    RemoteCommands.laserCursor: _KeyAction(modLCtrl, [keyA]),
+    RemoteCommands.modeEraser:  _NoopAction(),
   };
 
   static final Map<String, BtAction> _map = {

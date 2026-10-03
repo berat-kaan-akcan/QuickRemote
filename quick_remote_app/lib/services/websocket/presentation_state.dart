@@ -4,9 +4,29 @@ class PresentationState {
   String slideNotes = '';
   bool isPptRunning = true;
 
-  /// Presentation program on the PC ('powerpoint' on Windows, 'impress' on Linux).
+  /// Presentation program on the PC ('powerpoint' on Windows, 'impress' on
+  /// Linux; 'wps' while WPS runs the show).
   String presenter = 'powerpoint';
-  String get presenterName => presenter == 'impress' ? 'LibreOffice Impress' : 'PowerPoint';
+
+  /// Every program the PC controls (older PCs send only [presenter]).
+  List<String> presenters = const ['powerpoint'];
+
+  static String nameOf(String presenter) => switch (presenter) {
+        'impress' => 'LibreOffice Impress',
+        'wps' => 'WPS Office',
+        _ => 'PowerPoint',
+      };
+
+  /// The program running the show, or while none does, every one the PC
+  /// controls ("PowerPoint veya WPS Office").
+  String get presenterName =>
+      isPptRunning ? nameOf(presenter) : presenters.map(nameOf).join(' veya ');
+
+  void updatePresenters(Map<String, dynamic> authReply) {
+    presenter = authReply['presenter'] as String? ?? 'powerpoint';
+    final list = authReply['presenters'];
+    presenters = list is List && list.isNotEmpty ? list.whereType<String>().toList() : [presenter];
+  }
 
   bool hasMedia = false;
   String? mediaTitle;
@@ -42,6 +62,8 @@ class PresentationState {
 
   void updateFromSlideState(Map<String, dynamic> message) {
     isPptRunning = true;
+    final running = message['presenter'];
+    if (running is String) presenter = running;
     final newSlide = message['current'] as int? ?? 0;
     if (newSlide != currentSlide) {
       pptIsMediaPlaying = false;

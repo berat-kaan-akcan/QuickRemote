@@ -32,6 +32,7 @@ class InputSimulator {
   static void Function(String detail)? get onCommandError => _instance.onCommandError;
 
   static String get presenter => _instance.presenter;
+  static List<String> get presenters => _instance.presenters;
 
   // Dispatcher
   static void executeCommand(String command) => CommandRouter.execute(_instance, command);

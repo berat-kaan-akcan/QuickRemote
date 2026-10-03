@@ -57,17 +57,21 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   /// Son gönderilen mod — aynı modu tekrar göndermemek için.
   String? _lastSentMode;
 
-  bool get _impress => widget.target == BtTarget.impress;
+  /// Impress and WPS have no laser shortcut: the "laser" is the mouse cursor.
+  bool get _cursorLaser => widget.target != BtTarget.powerpoint;
 
-  /// Impress has no keyboard shortcuts for highlighter/eraser (see BtKeyMapping),
-  /// and without the pen a click advances the slide, so only laser and pen remain.
-  Set<DrawTool> get _availableTools =>
-      _impress ? const {DrawTool.laser, DrawTool.pen} : DrawTool.values.toSet();
+  /// Tools with a shortcut in the target (see BtKeyMapping). Without the pen
+  /// a click advances the slide, so a tool without one cannot stand in.
+  Set<DrawTool> get _availableTools => switch (widget.target) {
+        BtTarget.powerpoint => DrawTool.values.toSet(),
+        BtTarget.impress => const {DrawTool.laser, DrawTool.pen},
+        BtTarget.wps => const {DrawTool.laser, DrawTool.pen, DrawTool.highlighter},
+      };
 
   DrawTool get _selectedTool => _availableTools.contains(_drawTool) ? _drawTool : DrawTool.pen;
 
-  /// In Impress the "laser" is just the mouse cursor.
-  String get _laserLabel => _impress ? 'İmleç' : 'Lazer';
+  /// In Impress and WPS the "laser" is just the mouse cursor.
+  String get _laserLabel => _cursorLaser ? 'İmleç' : 'Lazer';
 
   @override
   void dispose() {
@@ -330,7 +334,8 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
           child: SegmentedButton<BtTarget>(
             segments: const [
               ButtonSegment(value: BtTarget.powerpoint, label: Text('PowerPoint')),
-              ButtonSegment(value: BtTarget.impress, label: Text('LibreOffice Impress')),
+              ButtonSegment(value: BtTarget.impress, label: Text('Impress')),
+              ButtonSegment(value: BtTarget.wps, label: Text('WPS')),
             ],
             selected: {widget.target},
             showSelectedIcon: false,

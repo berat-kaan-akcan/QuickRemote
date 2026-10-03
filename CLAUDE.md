@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 QuickRemote is a presentation/PC remote built as three Dart projects (no workspace tooling; each is built separately):
 
 - `quick_remote_app/`: Flutter mobile client, Android only (there is no `ios/` project).
-- `quick_remote_pc/`: Flutter desktop server for Windows (controls PowerPoint) and Linux (controls LibreOffice Impress).
+- `quick_remote_pc/`: Flutter desktop server for Windows (controls PowerPoint and WPS Presentation) and Linux (controls LibreOffice Impress and WPS Presentation).
 - `packages/quick_remote_shared/`: pure-Dart package with `RemoteCommands` (command strings, allowlists), referenced by both apps via a `path:` dependency.
 
 `landing-page/` is a static HTML/CSS site. README and many code comments are in Turkish.
@@ -26,11 +26,11 @@ flutter run -d windows           # PC server (or -d linux)
 flutter run                      # mobile client
 ```
 
-The shared package and the Impress bridge have their own tests:
+The shared package and the Impress and WPS bridges have their own tests:
 
 ```bash
 cd packages/quick_remote_shared && dart test
-python3 -m unittest discover -s quick_remote_pc/test/python   # from the repo root; no LibreOffice needed
+python3 -m unittest discover -s quick_remote_pc/test/python   # from the repo root; no LibreOffice or WPS needed
 ```
 
 `WebSocketServer` tests (`quick_remote_pc/test/websocket_server_test.dart`) run the real server over plain `ws://` through `serveForTesting`, with `InputSimulator.instance` and the `MouseController` replaced by the fakes in `test/fakes.dart`.
@@ -83,13 +83,18 @@ The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' |
   - `setEraseAllInk` needs an `XSlideShow.update()` after it, otherwise the screen keeps the ink until something else repaints.
   - LibreOffice keeps a slide's ink and shows it again when the show returns to the slide. Unless the PC setting `PresenterSettings.keepInkOnSlideChange` is on (off by default), the bridge erases the ink before every NEXT, PREV and jump (`"clearInk"` in the request). On Windows erasing presses E before PageDown/PageUp, but only when the PowerPoint slideshow window (`screenClass`) has the focus.
   - Presentation commands fall back to key presses when no Impress slideshow is reachable.
-- The Linux server still reports "not running" as `STATUS: POWERPOINT_NOT_RUNNING` for protocol compatibility. The `auth` ok reply carries `presenter` (`powerpoint`/`impress`), which the mobile app uses for its texts.
+- WPS Presentation (both platforms):
+  - Windows: every COM script starts with `PresenterCom.lookup` (`input/windows/presenter_com.dart`), which sets `$ppt` to PowerPoint or WPS (`KWPP.Application`, or `PowerPoint.Application` when WPS stands in for Office), preferring the one with a running show, and `$qrPresenter`. The slide-state poll caches it in `PresenterCom.active`. WPS gets pointer modes through COM `View.PointerType` (its Ctrl+L moves the show, Ctrl+E is not the eraser, it has no laser: the visible arrow follows the phone), erase-all and ink clearing through `EraseDrawing`, and no Alt+P media fallback. The Windows WPS paths have not been run against a real WPS.
+  - Linux: `assets/linux/wps_bridge.py` drives WPS through `pywpsrpc` (installed by the setup panel into a venv under the app support dir, `wps-rpc/`; `WpsBridge` runs the bridge with that venv's python). The RPC client cannot attach to a WPS the user started: `getWppApplication()` always spawns its own `wpp -automation`. So only "open" (the panel's "Sunumu WPS ile aç") starts WPS, and the bridge controls that instance (and files the user opens later while no other WPS runs). `WpsBridge` never restarts on a timeout, since a restart loses that instance.
+  - A WPS the user started is driven with its own keys (F5, Esc, B/W, Ctrl+P/Ctrl+I/Ctrl+A, E, all verified on WPS 11.1), only while it has the focus. `x11_windows.dart` reads EWMH properties over XCB (not Xlib, whose error handler is process-wide); WPS runs on XWayland, class `wpp`, and its show is a full-screen window. Such a show is reported as running with `current: 0`, which the app shows as "Slayt gösterisi açık".
+  - `LinuxInputService` tries Impress, then the bridge's WPS, then keys; `LinuxInputService.withDependencies` takes fake bridges, windows and keys for tests (`test/linux_input_service_test.dart`). Both bridges share `ScriptBridge` (process, JSON lines, `id` matching).
+- The Linux server still reports "not running" as `STATUS: POWERPOINT_NOT_RUNNING` for protocol compatibility. The `auth` ok reply carries `presenter` (`powerpoint`/`impress`) and `presenters` (every program the PC controls), and `SLIDE_STATE` carries `presenter` of the program running the show. The mobile app uses them for its texts.
 
 ### Mobile client (`quick_remote_app/lib`)
 
 - State uses Provider: `WebSocketService`, `SettingsProvider` and `DiscoveryService` are registered in `main.dart`. `WebSocketService` is a facade over `websocket/websocket_client.dart` (transport, TLS and pinning), `presentation_state.dart` (slide/media state) and `analytics_tracker.dart` (per-slide timing for analytics reports).
 - There are two independent control modes:
   - **Wi-Fi mode**: `screens/remote/` talks to the PC server.
-  - **Bluetooth HID mode**: `screens/bt_remote/` makes the phone act as a Bluetooth keyboard and mouse, so no PC app is needed. `services/bluetooth/bt_hid_service.dart` bridges over the `com.quickremote.quick_remote_app/bt_hid` MethodChannel and the `bt_hid_events` EventChannel to the native `android/.../BluetoothHidService.kt` (`BluetoothHidDevice` API). `bt_key_mapping.dart` maps commands to HID key/consumer reports per `BtTarget` (user-selected PowerPoint or Impress, stored in `SettingsProvider`). Impress's slideshow has no keyboard shortcut for laser, highlighter or eraser, so those are no-ops. A left click without the pen advances the Impress slide, so the BT toolbar hides highlighter and eraser for that target.
+  - **Bluetooth HID mode**: `screens/bt_remote/` makes the phone act as a Bluetooth keyboard and mouse, so no PC app is needed. `services/bluetooth/bt_hid_service.dart` bridges over the `com.quickremote.quick_remote_app/bt_hid` MethodChannel and the `bt_hid_events` EventChannel to the native `android/.../BluetoothHidService.kt` (`BluetoothHidDevice` API). `bt_key_mapping.dart` maps commands to HID key/consumer reports per `BtTarget` (user-selected PowerPoint, Impress or WPS, stored in `SettingsProvider`). Impress's slideshow has no keyboard shortcut for laser, highlighter or eraser, so those are no-ops; WPS has Ctrl+I for the highlighter but no laser or eraser key, so its laser is Ctrl+A (the arrow). A left click without the pen advances the slide, so the BT toolbar hides the tools without a key.
 - Hardware volume keys are captured natively in `MainActivity.kt` and exposed through the `.../volume_keys` MethodChannel (`screens/remote/utils/hardware_key_handler.dart`).
 - `flutter_background` keeps the connection alive when the app is in the background or the phone is locked, but only while a remote screen (Wi-Fi or Bluetooth) is open: `services/background_session.dart` enables it on open and disables it on close. The plugin does not declare its `IsolateHolderService`, so the app manifest does, with `foregroundServiceType="connectedDevice"` and `FOREGROUND_SERVICE_CONNECTED_DEVICE` (required on Android 14+; its runtime prerequisite is covered by `CHANGE_WIFI_MULTICAST_STATE`).

@@ -55,8 +55,22 @@ void main() {
     }
   });
 
+  test('WPS uses the arrow for the laser and has no eraser key', () async {
+    expect(await keyReport('MODE_PEN', BtTarget.wps), (ctrl, BtKeyMapping.keyP));
+    calls.clear();
+    expect(await keyReport('MODE_HIGHLIGHTER', BtTarget.wps), (ctrl, BtKeyMapping.keyI));
+    calls.clear();
+    // Ctrl+L moves WPS's show: the "laser" is the arrow pointer.
+    expect(await keyReport('MODE_LASER', BtTarget.wps), (ctrl, BtKeyMapping.keyA));
+    calls.clear();
+    expect(await keyReport('ERASE_ALL', BtTarget.wps), (0, BtKeyMapping.keyE));
+    calls.clear();
+    expect(await keyReport('MODE_ERASER', BtTarget.wps), isNull);
+  });
+
   test('BtTarget.fromName falls back to PowerPoint', () {
     expect(BtTarget.fromName('impress'), BtTarget.impress);
+    expect(BtTarget.fromName('wps'), BtTarget.wps);
     expect(BtTarget.fromName(null), BtTarget.powerpoint);
     expect(BtTarget.fromName('bogus'), BtTarget.powerpoint);
   });
