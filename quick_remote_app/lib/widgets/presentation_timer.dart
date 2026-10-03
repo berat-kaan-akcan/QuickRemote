@@ -7,6 +7,7 @@ import '../services/presentation_timer_controller.dart';
 import '../utils/ui/app_bottom_sheet.dart';
 import '../utils/ui/app_popup_theme.dart';
 import '../utils/ui/app_snackbar.dart';
+import '../l10n/app_language.dart';
 
 /// Vibrates with one of the patterns chosen in the timer settings.
 void vibrateTimerPattern(String pattern) {
@@ -44,7 +45,7 @@ void bindTimerToSettings(BuildContext context, PresentationTimerController contr
       if (settings.timeOutVibrationEnabled) vibrateTimerPattern(settings.timeOutVibrationPattern);
       AppSnackbar.show(
         context,
-        message: 'Sunum süresi doldu!',
+        message: context.l10n.timeUp,
         type: SnackbarType.error,
         duration: const Duration(seconds: 3),
       );
@@ -52,7 +53,7 @@ void bindTimerToSettings(BuildContext context, PresentationTimerController contr
       vibrateTimerPattern(settings.warningVibrations[alert.remainingSeconds] ?? 'double');
       AppSnackbar.show(
         context,
-        message: 'Sürenin bitimine ${formatTimerSeconds(alert.remainingSeconds)} kaldı!',
+        message: context.l10n.timeRemaining(formatTimerSeconds(alert.remainingSeconds)),
         type: SnackbarType.warning,
         duration: const Duration(seconds: 2),
       );
@@ -222,7 +223,7 @@ class _DurationPickerState extends State<_DurationPicker> {
     if (minutes == null || seconds == null || total <= 0) {
       AppSnackbar.show(
         context,
-        message: 'Lütfen dakika ve/veya saniye olarak geçerli bir süre girin.',
+        message: context.l10n.enterValidDuration,
         type: SnackbarType.error,
       );
       return;
@@ -238,24 +239,24 @@ class _DurationPickerState extends State<_DurationPicker> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppBottomSheet.buildTitle('Sunum Süresi Belirle', icon: Icons.timer_outlined),
+        AppBottomSheet.buildTitle(context.l10n.setPresentationTime, icon: Icons.timer_outlined),
         const SizedBox(height: 16),
         Wrap(
           spacing: 12,
           runSpacing: 12,
           alignment: WrapAlignment.center,
           children: [
-            _DurationChip(label: 'Serbest', selected: selected == 0, onTap: () => _select(0)),
+            _DurationChip(label: context.l10n.noTimeLimit, selected: selected == 0, onTap: () => _select(0)),
             for (final m in _presetMinutes)
-              _DurationChip(label: '$m dk', selected: selected == m * 60, onTap: () => _select(m * 60)),
+              _DurationChip(label: context.l10n.durationMinutes(m), selected: selected == m * 60, onTap: () => _select(m * 60)),
           ],
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _numberField(_minutes, 'dk', TextInputAction.next)),
+            Expanded(child: _numberField(_minutes, context.l10n.unitMinutes, TextInputAction.next)),
             const SizedBox(width: 8),
-            Expanded(child: _numberField(_seconds, 'sn', TextInputAction.done, maxValue: 59)),
+            Expanded(child: _numberField(_seconds, context.l10n.unitSeconds, TextInputAction.done, maxValue: 59)),
             const SizedBox(width: 12),
             FilledButton(
               onPressed: _submitCustom,
@@ -264,7 +265,7 @@ class _DurationPickerState extends State<_DurationPicker> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius)),
               ),
               child: Text(
-                settings.timerAutoStart ? 'Başlat' : 'Ayarla',
+                settings.timerAutoStart ? context.l10n.actionStart : context.l10n.actionSet,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -273,8 +274,8 @@ class _DurationPickerState extends State<_DurationPicker> {
         const SizedBox(height: 8),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text(
-            'Seçince hemen başlat',
+          title: Text(
+            context.l10n.startWhenPicked,
             style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
           ),
           value: settings.timerAutoStart,
@@ -282,8 +283,8 @@ class _DurationPickerState extends State<_DurationPicker> {
           onChanged: settings.setTimerAutoStart,
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Dokun: başlat/duraklat · Basılı tut: yeni süre · ↻: seçili süreye dön',
+        Text(
+          context.l10n.timerHelp,
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white38, fontSize: 12),
         ),

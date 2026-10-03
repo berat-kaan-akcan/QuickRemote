@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
+import '../../../l10n/app_language.dart';
 
 class ManualConnectData {
   final String host;
@@ -58,8 +59,8 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
               children: [
                 const Icon(Icons.link_rounded, color: Colors.white, size: 24),
                 const SizedBox(width: 8),
-                const Text(
-                  'Manuel Bağlantı',
+                Text(
+                  context.l10n.manualTitle,
                   style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.5),
                 ),
               ],
@@ -71,7 +72,7 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
               style: const TextStyle(color: Colors.white),
               decoration: AppPopupTheme.inputDecoration(
                 context: context,
-                labelText: 'IP Adresi',
+                labelText: context.l10n.manualIp,
                 hintText: '192.168.1.x',
               ),
               keyboardType: TextInputType.number,
@@ -92,7 +93,7 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
               decoration: AppPopupTheme.inputDecoration(
                 context: context,
                 labelText: 'PIN',
-                hintText: 'PC ekranındaki PIN',
+                hintText: context.l10n.manualPinHint,
                 prefixIcon: Icon(Icons.lock_rounded, color: Colors.white.withValues(alpha: 0.4), size: 20),
               ),
               keyboardType: TextInputType.number,
@@ -108,11 +109,11 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
                 // 6 digits; PCs running an older version show 4.
                 final isValid = host.isNotEmpty && (pin.length == 6 || pin.length == 4);
 
-                String buttonText = 'Bağlan';
+                String buttonText = context.l10n.manualConnect;
                 if (host.isEmpty) {
-                  buttonText = 'IP Bekleniyor...';
+                  buttonText = context.l10n.manualWaitingIp;
                 } else if (!isValid) {
-                  buttonText = 'PIN Bekleniyor...';
+                  buttonText = context.l10n.manualWaitingPin;
                 }
 
                 return SizedBox(
@@ -126,7 +127,7 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
                             if (port < 1 || port > 65535) {
                               AppSnackbar.show(
                                 context,
-                                message: 'Port 1-65535 arası olmalı',
+                                message: context.l10n.manualPortRange,
                                 type: SnackbarType.warning,
                               );
                               return;

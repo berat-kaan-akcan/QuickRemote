@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
+import '../l10n/app_language.dart';
+import '../l10n/failure_text.dart';
 import '../services/background_session.dart';
 import '../services/presentation_timer_controller.dart';
 import '../services/wifi_low_latency.dart';
@@ -87,11 +89,13 @@ class _RemoteScreenState extends State<RemoteScreen> {
     }
 
     // Check for command errors
-    if (_wsRef.lastCommandError != null) {
-      _persistentError = _wsRef.lastCommandError;
+    final failure = _wsRef.lastCommandError;
+    if (failure != null) {
+      final message = context.l10n.failure(failure);
+      _persistentError = message;
       AppSnackbar.show(
         context,
-        message: _wsRef.lastCommandError!,
+        message: message,
         type: SnackbarType.error,
         duration: const Duration(seconds: 3),
       );
@@ -104,7 +108,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
       if (_wsRef.connectionState != AppConnectionState.failed) {
         AppSnackbar.show(
           context,
-          message: 'Bağlantı koptu, otomatik bağlanılıyor...',
+          message: context.l10n.remoteConnectionLost,
           type: SnackbarType.warning,
           duration: const Duration(seconds: 3),
         );
@@ -114,7 +118,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
       _persistentError = null; // Clear stale errors on reconnect
       AppSnackbar.show(
         context,
-        message: 'Yeniden bağlanıldı!',
+        message: context.l10n.remoteReconnected,
         type: SnackbarType.success,
         duration: const Duration(seconds: 2),
       );
@@ -228,18 +232,18 @@ class _RemoteScreenState extends State<RemoteScreen> {
           }
           setState(() => _currentTab = index);
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.gamepad_rounded),
-            label: 'Kontroller',
+            label: context.l10n.remoteTabControls,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.touch_app_rounded),
-            label: 'Touchpad',
+            label: context.l10n.remoteTabTouchpad,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.queue_music_rounded),
-            label: 'Medya',
+            label: context.l10n.remoteTabMedia,
           ),
         ],
       ),
@@ -253,8 +257,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
         children: [
           const Icon(Icons.wifi_off_rounded, color: Colors.white54, size: 64),
           const SizedBox(height: 16),
-          const Text(
-            'Bağlantı Kurulamadı',
+          Text(
+            context.l10n.remoteConnectFailedTitle,
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -265,7 +269,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
-              _persistentError ?? 'Sunucuya ulaşılamıyor. Lütfen PC uygulamasının açık olduğundan emin olun.',
+              _persistentError ?? context.l10n.remoteServerUnreachable,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white54, fontSize: 14),
             ),
@@ -274,7 +278,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
           ElevatedButton.icon(
             onPressed: () => _performExit(skipDialog: true),
             icon: const Icon(Icons.home_rounded),
-            label: const Text('Ana Ekrana Dön'),
+            label: Text(context.l10n.remoteBackHome),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
@@ -350,7 +354,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
             onPressed: () {
               ws.manualReconnect();
             },
-            tooltip: 'Yeniden Bağlan',
+            tooltip: context.l10n.remoteReconnect,
           ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -395,12 +399,12 @@ class _RemoteScreenState extends State<RemoteScreen> {
                 ),
               Text(
                 ws.isConnected
-                    ? 'Bağlı'
+                    ? context.l10n.statusConnected
                     : (ws.connectionState == AppConnectionState.reconnecting ||
                               ws.connectionState ==
                                   AppConnectionState.connecting
-                          ? 'Bağlanıyor...'
-                          : 'Kopuk'),
+                          ? context.l10n.homeConnecting
+                          : context.l10n.statusDisconnected),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -419,7 +423,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
             color: Colors.white54,
             size: 22,
           ),
-          tooltip: 'Ayarlar',
+          tooltip: context.l10n.homeSettingsTooltip,
           onPressed: () {
             Navigator.push(
               context,
@@ -433,7 +437,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
             color: Colors.white54,
             size: 22,
           ),
-          tooltip: 'Kapat',
+          tooltip: context.l10n.close,
           onPressed: () => _performExit(skipDialog: false),
         ),
       ],

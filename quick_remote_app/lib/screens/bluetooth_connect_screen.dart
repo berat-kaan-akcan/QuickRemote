@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../services/bluetooth/bt_hid_service.dart';
 import 'bt_remote_screen.dart';
+import '../l10n/app_language.dart';
 
 /// Bluetooth Classic HID connection screen.
 /// Registers the phone as a BT HID device and guides the user through
@@ -58,7 +59,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       setState(() {
         _state = BtHidConnectionState.unsupported;
         _errorMessage =
-            'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.';
+            context.l10n.btUnsupportedLong;
       });
       return;
     }
@@ -72,7 +73,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       if (!mounted) return;
       setState(() {
         _state = BtHidConnectionState.error;
-        _errorMessage = 'Bluetooth izni reddedildi. Ayarlardan izin vermelisiniz.';
+        _errorMessage = context.l10n.btPermissionDenied;
       });
       return;
     }
@@ -85,7 +86,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
     setState(() {
       _state = state;
       if (state == BtHidConnectionState.error) {
-        _errorMessage = 'Bluetooth hatası. Tekrar deneyin.';
+        _errorMessage = context.l10n.btErrorRetry;
       }
     });
     if (state == BtHidConnectionState.connected) {
@@ -111,8 +112,8 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Bluetooth ile Bağlan',
+        title: Text(
+          context.l10n.homeConnectBluetooth,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
@@ -212,10 +213,10 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                   opacity: 0.5 + (_pulseController.value * 0.5),
                   child: Text(
                     _state == BtHidConnectionState.advertising
-                        ? 'Eşleştirme bekleniyor...'
+                        ? context.l10n.btWaitingPairing
                         : _state == BtHidConnectionState.disconnected
-                            ? 'Bağlantı bekleniyor...'
-                            : 'Hazırlanıyor...',
+                            ? context.l10n.btWaitingConnection
+                            : context.l10n.btPreparing,
                     style: TextStyle(
                       color: _state == BtHidConnectionState.disconnected
                           ? Colors.orangeAccent
@@ -240,12 +241,12 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                       opacity: 0.4 + (_pulseController.value * 0.6),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Icon(Icons.warning_amber_rounded,
                               color: Colors.orangeAccent, size: 20),
                           SizedBox(width: 8),
                           Text(
-                            'Bağlanılmadı, tekrar deneniyor',
+                            context.l10n.btNotConnectedRetrying,
                             style: TextStyle(color: Colors.orangeAccent),
                           ),
                         ],
@@ -274,7 +275,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text('İptal'),
+            child: Text(context.l10n.cancel),
           ),
         ),
       ],
@@ -302,7 +303,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                       color: Colors.white.withValues(alpha: 0.7), size: 20),
                   const SizedBox(width: 10),
                   Text(
-                    'Bilgisayarınızda şunları yapın:',
+                    context.l10n.btOnYourComputer,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 14,
@@ -330,17 +331,17 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
               ),
               const SizedBox(height: 16),
               if (_linuxGuide) ...[
-                _buildStep(1, 'Sistem Ayarları\'nı açın (KDE: Bluetooth, GNOME: Ayarlar → Bluetooth)'),
-                _buildStep(2, 'Bluetooth\'un açık olduğundan emin olun'),
-                _buildStep(3, '"Yeni cihaz ekle" / cihaz aramayı başlatın'),
-                _buildStep(4, 'Listeden telefonunuzun adını seçin'),
-                _buildStep(5, 'Eşleştirmeyi onaylayın'),
+                _buildStep(1, context.l10n.btLinuxStep1),
+                _buildStep(2, context.l10n.btLinuxStep2),
+                _buildStep(3, context.l10n.btLinuxStep3),
+                _buildStep(4, context.l10n.btStepPickPhone),
+                _buildStep(5, context.l10n.btStepConfirm),
               ] else ...[
-                _buildStep(1, 'Windows Ayarlar\'ı açın'),
-                _buildStep(2, 'Bluetooth ve diğer cihazlar\'a gidin'),
-                _buildStep(3, '"Cihaz ekle" butonuna basın'),
-                _buildStep(4, 'Listeden telefonunuzun adını seçin'),
-                _buildStep(5, 'Eşleştirmeyi onaylayın'),
+                _buildStep(1, context.l10n.btWindowsStep1),
+                _buildStep(2, context.l10n.btWindowsStep2),
+                _buildStep(3, context.l10n.btWindowsStep3),
+                _buildStep(4, context.l10n.btStepPickPhone),
+                _buildStep(5, context.l10n.btStepConfirm),
               ],
               const SizedBox(height: 8),
               Container(
@@ -359,7 +360,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'İlk bağlantıda yalnızca bir kez eşleştirme gerekir. Sonraki bağlantılarda otomatik bağlanır.',
+                        context.l10n.btPairOnce,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
@@ -442,8 +443,8 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Bağlandı!',
+          Text(
+            context.l10n.btConnected,
             style: TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -452,15 +453,15 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            _bt.connectedDeviceName ?? 'Bilinmeyen cihaz',
+            _bt.connectedDeviceName ?? context.l10n.unknownDevice,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.6),
               fontSize: 15,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Uzaktan kontrol açılıyor...',
+          Text(
+            context.l10n.btOpeningRemote,
             style: TextStyle(color: Colors.white38, fontSize: 13),
           ),
         ],
@@ -478,8 +479,8 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
             const Icon(Icons.bluetooth_disabled_rounded,
                 color: Colors.white38, size: 72),
             const SizedBox(height: 24),
-            const Text(
-              'Desteklenmiyor',
+            Text(
+              context.l10n.btUnsupported,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 22,
@@ -488,7 +489,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              _errorMessage ?? 'Bu cihaz Bluetooth HID\'i desteklemiyor.',
+              _errorMessage ?? context.l10n.btUnsupportedShort,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
@@ -500,7 +501,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.wifi_rounded),
-              label: const Text('WiFi Modunu Kullan'),
+              label: Text(context.l10n.btUseWifi),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF64B5F6),
                 side: const BorderSide(color: Color(0xFF1565C0)),
@@ -524,14 +525,14 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
           const Icon(Icons.error_outline_rounded,
               color: Color(0xFFFF5252), size: 64),
           const SizedBox(height: 20),
-          const Text(
-            'Hata',
+          Text(
+            context.l10n.errorTitle,
             style: TextStyle(
                 color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Text(
-            _errorMessage ?? 'Bluetooth hatası oluştu.',
+            _errorMessage ?? context.l10n.btErrorOccurred,
             textAlign: TextAlign.center,
             style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
@@ -548,7 +549,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
               _startAdvertising();
             },
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Tekrar Dene'),
+            label: Text(context.l10n.tryAgain),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1565C0),
               foregroundColor: Colors.white,

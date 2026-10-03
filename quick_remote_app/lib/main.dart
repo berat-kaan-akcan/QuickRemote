@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'l10n/app_language.dart';
 import 'screens/home_screen.dart';
+import 'services/background_session.dart';
 import 'services/websocket_service.dart';
 import 'providers/settings_provider.dart';
 import 'services/discovery_service.dart';
@@ -29,18 +32,32 @@ class QuickRemoteApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => DiscoveryService()),
       ],
-      child: MaterialApp(
-        title: 'QuickRemote',
-        debugShowCheckedModeBanner: false,
-        themeMode: ThemeMode.dark,
-        darkTheme: ThemeData(
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
-          colorSchemeSeed: const Color(0xFF005B96),
-          useMaterial3: true,
-          fontFamily: 'Inter',
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, _) => MaterialApp(
+          title: 'QuickRemote',
+          locale: settings.language.locale,
+          supportedLocales: supportedAppLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          debugShowCheckedModeBanner: false,
+          themeMode: ThemeMode.dark,
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
+            colorSchemeSeed: const Color(0xFF005B96),
+            useMaterial3: true,
+            fontFamily: 'Inter',
+          ),
+          builder: (context, child) {
+            BackgroundSession.notificationText = context.l10n.backgroundNotification;
+            return child!;
+          },
+          home: const HomeScreen(),
         ),
-        home: const HomeScreen(),
       ),
     );
   }

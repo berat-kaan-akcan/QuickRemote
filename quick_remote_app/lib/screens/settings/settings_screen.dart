@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_language.dart';
 import '../../providers/settings_provider.dart';
+import '../../utils/ui/app_bottom_sheet.dart';
 import 'timer_settings_screen.dart';
 import 'presentation_history_screen.dart';
 
@@ -9,12 +11,13 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Ayarlar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(l10n.settingsTitle, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
@@ -26,16 +29,16 @@ class SettingsScreen extends StatelessWidget {
           _buildMenuTile(
             context,
             icon: Icons.timer_outlined,
-            title: 'Sunum Sayacı Ayarları',
-            subtitle: 'Otomatik başlatma, titreşim ve erken uyarılar',
+            title: l10n.settingsTimerTitle,
+            subtitle: l10n.settingsTimerSubtitle,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimerSettingsScreen())),
           ),
           const SizedBox(height: 12),
           _buildMenuTile(
             context,
             icon: Icons.history_rounded,
-            title: 'Sunum Geçmişi',
-            subtitle: 'Önceki sunum istatistikleri ve notları',
+            title: l10n.settingsHistoryTitle,
+            subtitle: l10n.settingsHistorySubtitle,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PresentationHistoryScreen())),
           ),
           const SizedBox(height: 12),
@@ -43,13 +46,50 @@ class SettingsScreen extends StatelessWidget {
             builder: (context, settings, _) => _buildSwitchTile(
               context,
               icon: Icons.draw_outlined,
-              title: 'Slayt Değişince Çizimleri Koru',
-              subtitle: 'Çizimler kendi slaytında kalır, o slayta dönünce yeniden görünür. '
-                  'Kapalıyken ileri veya geri gidince kalemle çizilenler silinir.',
+              title: l10n.settingsKeepInkTitle,
+              subtitle: l10n.settingsKeepInkSubtitle,
               value: settings.keepInkOnSlideChange,
               onChanged: settings.setKeepInkOnSlideChange,
             ),
           ),
+          const SizedBox(height: 12),
+          Consumer<SettingsProvider>(
+            builder: (context, settings, _) => _buildMenuTile(
+              context,
+              icon: Icons.language_rounded,
+              title: l10n.settingsLanguageTitle,
+              subtitle: _languageName(context, settings.language),
+              onTap: () => _showLanguagePicker(context, settings),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _languageName(BuildContext context, AppLanguage language) =>
+      language == AppLanguage.system ? context.l10n.languageSystem : language.nativeName;
+
+  void _showLanguagePicker(BuildContext context, SettingsProvider settings) {
+    AppBottomSheet.show<void>(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppBottomSheet.buildTitle(ctx.l10n.settingsLanguageTitle, icon: Icons.language_rounded),
+          const SizedBox(height: 16),
+          for (final language in AppLanguage.values)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(_languageName(ctx, language), style: const TextStyle(color: Colors.white, fontSize: 16)),
+              trailing: language == settings.language
+                  ? Icon(Icons.check_rounded, color: Theme.of(ctx).colorScheme.primary)
+                  : null,
+              onTap: () {
+                settings.setLanguage(language);
+                Navigator.pop(ctx);
+              },
+            ),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/draw_tool.dart';
+import '../../../l10n/app_language.dart';
 
 class DrawToolBar extends StatelessWidget {
   final DrawTool activeTool;
@@ -14,8 +15,9 @@ class DrawToolBar extends StatelessWidget {
   /// Tools to show (all by default).
   final Set<DrawTool> tools;
 
-  /// Label of the laser tool (e.g. 'İmleç' when it only moves the mouse cursor).
-  final String laserLabel;
+  /// Label of the laser tool (e.g. "Cursor" when it only moves the mouse
+  /// cursor); null: "Laser".
+  final String? laserLabel;
 
   const DrawToolBar({
     super.key,
@@ -24,7 +26,7 @@ class DrawToolBar extends StatelessWidget {
     required this.onClear,
     this.onColorPickerRequested,
     this.tools = const {DrawTool.laser, DrawTool.pen, DrawTool.highlighter, DrawTool.eraser},
-    this.laserLabel = 'Lazer',
+    this.laserLabel,
   });
 
   @override
@@ -33,18 +35,20 @@ class DrawToolBar extends StatelessWidget {
       children: [
         if (tools.contains(DrawTool.laser)) ...[
           _buildToolButton(
+            context,
             tool: DrawTool.laser,
             icon: Icons.highlight_rounded,
-            label: laserLabel,
+            label: laserLabel ?? context.l10n.toolLaser,
             activeColor: const Color(0xFFFF1744),
           ),
           const SizedBox(width: 4),
         ],
         if (tools.contains(DrawTool.pen)) ...[
           _buildToolButton(
+            context,
             tool: DrawTool.pen,
             icon: Icons.edit_rounded,
-            label: 'Kalem',
+            label: context.l10n.toolPen,
             activeColor: const Color(0xFF00E676),
             supportsColorPicker: true,
           ),
@@ -52,9 +56,10 @@ class DrawToolBar extends StatelessWidget {
         ],
         if (tools.contains(DrawTool.highlighter)) ...[
           _buildToolButton(
+            context,
             tool: DrawTool.highlighter,
             icon: Icons.border_color_rounded,
-            label: 'Vurgula',
+            label: context.l10n.toolHighlight,
             activeColor: const Color(0xFFFFEA00),
             supportsColorPicker: true,
           ),
@@ -62,19 +67,20 @@ class DrawToolBar extends StatelessWidget {
         ],
         if (tools.contains(DrawTool.eraser)) ...[
           _buildToolButton(
+            context,
             tool: DrawTool.eraser,
             icon: Icons.auto_fix_high_rounded,
-            label: 'Silgi',
+            label: context.l10n.toolEraser,
             activeColor: const Color(0xFFFF9800),
           ),
           const SizedBox(width: 4),
         ],
-        _buildClearButton(),
+        _buildClearButton(context),
       ],
     );
   }
 
-  Widget _buildToolButton({
+  Widget _buildToolButton(BuildContext context, {
     required DrawTool tool,
     required IconData icon,
     required String label,
@@ -89,7 +95,7 @@ class DrawToolBar extends StatelessWidget {
         button: true,
         label: label,
         child: Tooltip(
-          message: '$label aracını seç',
+          message: context.l10n.selectTool(label),
           child: GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
@@ -159,13 +165,13 @@ class DrawToolBar extends StatelessWidget {
     );
   }
 
-  Widget _buildClearButton() {
+  Widget _buildClearButton(BuildContext context) {
     return Expanded(
       child: Semantics(
         button: true,
-        label: 'Temizle',
+        label: context.l10n.clearInk,
         child: Tooltip(
-          message: 'Tüm çizimleri temizle',
+          message: context.l10n.clearInkTooltip,
           child: GestureDetector(
             onTap: () {
               HapticFeedback.mediumImpact();
@@ -193,11 +199,11 @@ class DrawToolBar extends StatelessWidget {
                     color: Colors.white38,
                   ),
                   const SizedBox(width: 2),
-                  const Flexible(
+                  Flexible(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        'Temizle',
+                        context.l10n.clearInk,
                         style: TextStyle(
                           color: Colors.white38,
                           fontSize: 11,

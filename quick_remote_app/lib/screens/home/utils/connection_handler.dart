@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../../../services/websocket_service.dart';
+import '../../../l10n/app_language.dart';
+import '../../../l10n/failure_text.dart';
 import '../../../utils/ui/app_dialog.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 
@@ -58,8 +60,8 @@ class ConnectionHandler {
       return ConnectAttemptResult(success: true);
     } else {
       return ConnectAttemptResult(
-        success: false, 
-        errorMessage: connResult.message ?? 'Bağlantı kurulamadı.\n$host:$port adresini kontrol edin.'
+        success: false,
+        errorMessage: context.l10n.connectionError(connResult.error, connResult.detail),
       );
     }
   }
@@ -69,14 +71,11 @@ class ConnectionHandler {
     return await AppDialog.showConfirm(
       context: context,
       barrierDismissible: false,
-      title: 'Güvenlik Kodunu Karşılaştırın',
-      content: 'Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:\n\n'
-          '$code\n\n'
-          'Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. '
-          'QR kodu okutarak bu adımı atlayabilirsiniz.',
-      confirmText: 'Kodlar Aynı, Bağlan',
+      title: context.l10n.verifyTitle,
+      content: context.l10n.verifyContent(code),
+      confirmText: context.l10n.verifyConfirm,
       confirmColor: AppPopupTheme.successColor,
-      cancelText: 'İptal Et',
+      cancelText: context.l10n.cancelAction,
       icon: Icons.verified_user_rounded,
     );
   }
@@ -85,15 +84,11 @@ class ConnectionHandler {
     return await AppDialog.showConfirm(
       context: context,
       barrierDismissible: false,
-      title: 'Güvenlik Uyarısı',
-      content: 'Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı.\n\n'
-          'PC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. '
-          'PC ekranındaki güvenlik kodu şu olmalı:\n\n'
-          '$code\n\n'
-          'Kodlar aynı değilse bağlanmayın.',
-      confirmText: 'Yine de Bağlan ve Güncelle',
+      title: context.l10n.certWarningTitle,
+      content: context.l10n.certWarningContent(code),
+      confirmText: context.l10n.certWarningConfirm,
       confirmColor: AppPopupTheme.warningColor,
-      cancelText: 'İptal Et',
+      cancelText: context.l10n.cancelAction,
       icon: Icons.shield_rounded,
     );
   }

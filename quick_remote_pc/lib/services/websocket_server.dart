@@ -65,7 +65,8 @@ class WebSocketServer {
   final ValueNotifier<String> localIP = ValueNotifier('');
   final ValueNotifier<NetworkTrust> networkTrust = ValueNotifier(NetworkTrust.unknown);
   /// Why the last start() failed (null when it succeeded).
-  final ValueNotifier<String?> startError = ValueNotifier(null);
+  /// Why the last start failed (the UI words it: l10n/start_error_text.dart).
+  final ValueNotifier<Object?> startError = ValueNotifier(null);
   /// Whether the mDNS advertisement succeeded (auto-discovery on the phone).
   final ValueNotifier<bool> mdnsAvailable = ValueNotifier(true);
   /// TLS certificate fingerprint for the pairing QR code (see [PairingPayload]);
@@ -270,7 +271,7 @@ class WebSocketServer {
       _stateBroadcaster.startSlideStatePoller();
     } catch (e) {
       debugPrint('Failed to start server: $e');
-      startError.value = e.toString();
+      startError.value = e;
       isRunning.value = false;
       _stopNetworkMonitor();
       await _server?.close(force: true);
@@ -282,13 +283,7 @@ class WebSocketServer {
     isRunning.value = true;
     debugPrint('WebSocket server started on port $_port');
 
-    InputSimulator.onCommandError = (detail) {
-      broadcast({
-        'type': 'STATUS',
-        'state': 'COMMAND_FAILED',
-        'detail': detail,
-      });
-    };
+    InputSimulator.onCommandError = (error, [info]) => broadcast(error.status(info));
 
     _server!.listen(_handleRequest, onError: (error) => debugPrint('Server error: $error'));
   }
@@ -625,11 +620,7 @@ class WebSocketServer {
     if (_gestureStartCommands.contains(command)) {
       if (owner != null && owner != ws) {
         _gestureBlocked.add(ws);
-        _send(ws, {
-          'type': 'STATUS',
-          'state': 'COMMAND_FAILED',
-          'detail': 'Başka bir cihaz şu an lazeri veya kalemi kullanıyor.',
-        });
+        _send(ws, RemoteError.pointerBusy.status());
         return false;
       }
       _gestureBlocked.remove(ws);

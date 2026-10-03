@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/presentation_analytics.dart';
+import '../l10n/app_language.dart';
 import '../services/bluetooth/bt_key_mapping.dart';
 
 class SettingsProvider extends ChangeNotifier {
@@ -25,6 +26,9 @@ class SettingsProvider extends ChangeNotifier {
   // Keep pen ink on its slide when the slide changes (sent to the PC)
   bool _keepInkOnSlideChange = false;
 
+  // UI language; system follows the phone (not sent to the PC)
+  AppLanguage _language = AppLanguage.system;
+
   // Presentation History
   List<PresentationAnalytics> _presentationHistory = [];
   static const int _maxHistoryCount = 20;
@@ -42,6 +46,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get timerAutoStart => _timerAutoStart;
   BtTarget get btTarget => _btTarget;
   bool get keepInkOnSlideChange => _keepInkOnSlideChange;
+  AppLanguage get language => _language;
   List<PresentationAnalytics> get presentationHistory =>
       List.unmodifiable(_presentationHistory);
 
@@ -57,6 +62,7 @@ class SettingsProvider extends ChangeNotifier {
     _timerAutoStart = prefs.getBool('timer_auto_start') ?? false;
     _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
     _keepInkOnSlideChange = prefs.getBool('keep_ink_on_slide_change') ?? false;
+    _language = AppLanguage.fromCode(prefs.getString('language'));
     
     final timesStrList = prefs.getStringList('warning_times');
     final vibrationsStr = prefs.getString('warning_vibrations');
@@ -165,6 +171,18 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('keep_ink_on_slide_change', value);
+  }
+
+  Future<void> setLanguage(AppLanguage language) async {
+    _language = language;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    final code = language.code;
+    if (code == null) {
+      await prefs.remove('language');
+    } else {
+      await prefs.setString('language', code);
+    }
   }
 
   // ─── Presentation History Management ───

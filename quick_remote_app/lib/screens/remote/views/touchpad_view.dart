@@ -10,6 +10,7 @@ import '../../../models/draw_tool.dart';
 import '../widgets/color_picker_sheet.dart';
 import '../widgets/touchpad_gesture_area.dart';
 import '../widgets/draw_tool_bar.dart';
+import '../../../l10n/app_language.dart';
 class TouchpadView extends StatefulWidget {
   final WebSocketService ws;
   final PresentationTimerController timer;
@@ -81,8 +82,8 @@ class _TouchpadViewState extends State<TouchpadView> {
                           size: 18,
                         ),
                         const SizedBox(width: 4),
-                        const Text(
-                          'Başlat',
+                        Text(
+                          context.l10n.actionStart,
                           style: TextStyle(
                             color: Color(0xFF4CAF50),
                             fontSize: 12,
@@ -117,7 +118,7 @@ class _TouchpadViewState extends State<TouchpadView> {
                         color: const Color(0xFFFF5252).withValues(alpha: 0.3),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
@@ -127,7 +128,7 @@ class _TouchpadViewState extends State<TouchpadView> {
                         ),
                         SizedBox(width: 4),
                         Text(
-                          'Bitir',
+                          context.l10n.actionEnd,
                           style: TextStyle(
                             color: Color(0xFFFF5252),
                             fontSize: 12,
@@ -171,7 +172,7 @@ class _TouchpadViewState extends State<TouchpadView> {
               Expanded(
                 child: SlideButton(
                   icon: Icons.arrow_back_rounded,
-                  label: 'Geri',
+                  label: context.l10n.actionPrev,
                   onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.prev),
                 ),
               ),
@@ -179,7 +180,7 @@ class _TouchpadViewState extends State<TouchpadView> {
               Expanded(
                 child: SlideButton(
                   icon: Icons.arrow_forward_rounded,
-                  label: 'İleri',
+                  label: context.l10n.actionNext,
                   isPrimary: true,
                   onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.next),
                 ),

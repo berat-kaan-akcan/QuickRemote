@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../device_name.dart';
 import '../websocket_service.dart' show AppConnectionState, ConnectionError, ConnectionResult;
+import 'failure.dart';
 
 class WebSocketClient {
   WebSocketChannel? _channel;
@@ -28,7 +29,7 @@ class WebSocketClient {
   // Callbacks
   final void Function(AppConnectionState) onConnectionStateChanged;
   final void Function(Map<String, dynamic>) onMessage;
-  final void Function(String?) onAuthResolved;
+  final void Function(ConnectionFailure?) onAuthResolved;
 
   WebSocketClient({
     required this.onConnectionStateChanged,
@@ -54,8 +55,7 @@ class WebSocketClient {
     if (pin == null || pin.isEmpty) {
       return const ConnectionResult(
         success: false,
-        error: ConnectionError.wrongPin,
-        message: 'PIN kodu boş olamaz.',
+        error: ConnectionError.pinEmpty,
       );
     }
 
@@ -121,7 +121,6 @@ class WebSocketClient {
           return ConnectionResult(
             success: false,
             error: ConnectionError.unverified,
-            message: 'Bu PC ile ilk bağlantı: güvenlik kodunu karşılaştırın.',
             newFingerprint: seenFingerprint,
             mismatchHost: host,
           );
@@ -132,15 +131,12 @@ class WebSocketClient {
             return ConnectionResult(
               success: false,
               error: ConnectionError.certRejected,
-              message: 'PC\'nin sertifikası QR kodundakiyle eşleşmiyor. Bağlantı güvenli değil, '
-                  'bağlanılmadı. QR kodunu yeniden tarayın.',
               mismatchHost: host,
             );
           }
           return ConnectionResult(
             success: false,
             error: ConnectionError.certMismatch,
-            message: 'Sertifika değişti! Olası MITM saldırısı veya cihaz formatlanmış olabilir.',
             newFingerprint: seenFingerprint,
             mismatchHost: host,
           );
@@ -149,11 +145,7 @@ class WebSocketClient {
       } on WebSocketException catch (e) {
         if (e.httpStatusCode == HttpStatus.tooManyRequests) {
           _setState(AppConnectionState.disconnected);
-          return const ConnectionResult(
-            success: false,
-            error: ConnectionError.rateLimited,
-            message: 'Çok fazla hatalı deneme. Bir dakika sonra tekrar deneyin.',
-          );
+          return const ConnectionResult(success: false, error: ConnectionError.rateLimited);
         }
         rethrow;
       }
@@ -179,17 +171,9 @@ class WebSocketClient {
                 _channel?.sink.close();
                 if (!authResolved) {
                   authResolved = true;
-                  final text = rateLimited
-                      ? 'Çok fazla hatalı deneme. Bir dakika sonra tekrar deneyin.'
-                      : 'PIN kodu yanlış.';
-                  onAuthResolved(text);
-                  authCompleter.complete(
-                    ConnectionResult(
-                      success: false,
-                      error: rateLimited ? ConnectionError.rateLimited : ConnectionError.wrongPin,
-                      message: text,
-                    ),
-                  );
+                  final error = rateLimited ? ConnectionError.rateLimited : ConnectionError.wrongPin;
+                  onAuthResolved(ConnectionFailure(error));
+                  authCompleter.complete(ConnectionResult(success: false, error: error));
                 }
                 return;
               }
@@ -222,20 +206,14 @@ class WebSocketClient {
           if (ws.closeCode == closedByPc) {
             // The user removed this phone on the PC; the PIN changed too.
             _reconnectTimer?.cancel();
-            onAuthResolved('PC bu cihazın bağlantısını kesti. Yeniden bağlanmak için QR kodu tekrar okutun.');
+            onAuthResolved(const ConnectionFailure(ConnectionError.closedByPc));
             _setState(AppConnectionState.failed);
             return;
           }
           if (!authResolved) {
             authResolved = true;
-            onAuthResolved('Bağlantı beklenmedik şekilde kapandı.');
-            authCompleter.complete(
-              const ConnectionResult(
-                success: false,
-                error: ConnectionError.unknown,
-                message: 'Bağlantı beklenmedik şekilde kapandı.',
-              ),
-            );
+            onAuthResolved(const ConnectionFailure(ConnectionError.closed));
+            authCompleter.complete(const ConnectionResult(success: false, error: ConnectionError.closed));
           }
           if (wasConnected) {
             _scheduleReconnect();
@@ -248,13 +226,9 @@ class WebSocketClient {
           debugPrint('WebSocket error: $error');
           if (!authResolved) {
             authResolved = true;
-            onAuthResolved('WebSocket hatası: $error');
+            onAuthResolved(ConnectionFailure(ConnectionError.unknown, '$error'));
             authCompleter.complete(
-              ConnectionResult(
-                success: false,
-                error: ConnectionError.unknown,
-                message: 'WebSocket hatası: $error',
-              ),
+              ConnectionResult(success: false, error: ConnectionError.unknown, detail: '$error'),
             );
           }
           if (wasConnected) {
@@ -275,11 +249,7 @@ class WebSocketClient {
           debugPrint('Auth response timeout');
           _setState(AppConnectionState.disconnected);
           _channel?.sink.close();
-          return const ConnectionResult(
-            success: false,
-            error: ConnectionError.timeout,
-            message: 'Kimlik doğrulama zaman aşımına uğradı.',
-          );
+          return const ConnectionResult(success: false, error: ConnectionError.authTimeout);
         },
       );
     } on SocketException catch (e) {
@@ -288,23 +258,19 @@ class WebSocketClient {
       return ConnectionResult(
         success: false,
         error: ConnectionError.serverNotFound,
-        message: 'Sunucuya ulaşılamadı: ${e.message}',
+        detail: e.message,
       );
     } on TimeoutException catch (_) {
       debugPrint('Connection failed (timeout)');
       _setState(AppConnectionState.disconnected);
-      return const ConnectionResult(
-        success: false,
-        error: ConnectionError.timeout,
-        message: 'Bağlantı zaman aşımına uğradı.',
-      );
+      return const ConnectionResult(success: false, error: ConnectionError.timeout);
     } catch (e) {
       debugPrint('Connection failed: $e');
       _setState(AppConnectionState.disconnected);
       return ConnectionResult(
         success: false,
         error: ConnectionError.unknown,
-        message: 'Bilinmeyen hata: $e',
+        detail: '$e',
       );
     }
   }
@@ -330,7 +296,8 @@ class WebSocketClient {
       debugPrint('Attempting reconnect...');
       final result = await connect(_lastHost!, _lastPort!, pin: _lastPin);
       if (!result.success && !isConnected) {
-        if (result.error == ConnectionError.wrongPin ||
+        if (result.error == ConnectionError.pinEmpty ||
+            result.error == ConnectionError.wrongPin ||
             result.error == ConnectionError.certMismatch ||
             result.error == ConnectionError.unverified ||
             result.error == ConnectionError.certRejected) {

@@ -7,6 +7,7 @@ import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
 import '../utils/remote_dialogs.dart';
 import '../utils/slide_picker_sheet.dart';
+import '../../../l10n/app_language.dart';
 
 class MainControlsView extends StatefulWidget {
   final WebSocketService ws;
@@ -94,8 +95,8 @@ class _MainControlsViewState extends State<MainControlsView> {
                             child: Text(
                               // 0: a show the PC sees but cannot read (a WPS it did not open).
                               ws.isPptRunning && ws.currentSlide == 0 && ws.totalSlides == 0
-                                  ? 'Slayt gösterisi açık'
-                                  : 'Slayt: ${ws.currentSlide} / ${ws.totalSlides > 0 ? ws.totalSlides.toString() : '?'}',
+                                  ? context.l10n.slideshowOpen
+                                  : context.l10n.slideCounter(ws.currentSlide, ws.totalSlides > 0 ? ws.totalSlides.toString() : '?'),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -122,7 +123,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Notlar',
+                                      context.l10n.notes,
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.primary,
                                         fontSize: 13,
@@ -153,7 +154,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                'Sunum Açık Değil, ${ws.presenterName}\'i başlatın',
+                                context.l10n.presentationNotOpen(ws.presenterNames.join(context.l10n.listOr)),
                                 style: const TextStyle(
                                   color: Colors.redAccent,
                                   fontSize: 14,
@@ -175,7 +176,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.play_arrow_rounded,
-                                  label: 'Başlat',
+                                  label: context.l10n.actionStart,
                                   color: const Color(0xFF4CAF50),
                                   onTap: !ws.isConnected ? null : () {
                                     _send(RemoteCommands.start);
@@ -190,7 +191,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.stop_rounded,
-                                  label: 'Bitir',
+                                  label: context.l10n.actionEnd,
                                   color: const Color(0xFFFF5252),
                                   onTap: !ws.isConnected ? null : () => _send(RemoteCommands.end),
                                 ),
@@ -203,7 +204,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.visibility_off_rounded,
-                                  label: 'Siyah Ekran',
+                                  label: context.l10n.blackScreen,
                                   color: Colors.grey,
                                   isActive: _activeScreen == 'BLACK',
                                   onTap: !ws.isConnected ? null : () => _send(RemoteCommands.blackScreen),
@@ -213,7 +214,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                               Expanded(
                                 child: ActionButton(
                                   icon: Icons.visibility_rounded,
-                                  label: 'Beyaz Ekran',
+                                  label: context.l10n.whiteScreen,
                                   color: Colors.white,
                                   isActive: _activeScreen == 'WHITE',
                                   onTap: !ws.isConnected ? null : () => _send(RemoteCommands.whiteScreen),
@@ -227,7 +228,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                               Expanded(
                                 child: SlideButton(
                                   icon: Icons.arrow_back_rounded,
-                                  label: 'Geri',
+                                  label: context.l10n.actionPrev,
                                   onTap: !ws.isConnected ? null : () => _send(RemoteCommands.prev),
                                 ),
                               ),
@@ -235,7 +236,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                               Expanded(
                                 child: SlideButton(
                                   icon: Icons.arrow_forward_rounded,
-                                  label: 'İleri',
+                                  label: context.l10n.actionNext,
                                   isPrimary: true,
                                   onTap: !ws.isConnected ? null : () => _send(RemoteCommands.next),
                                 ),

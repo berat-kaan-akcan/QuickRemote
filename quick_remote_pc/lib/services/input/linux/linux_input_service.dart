@@ -70,9 +70,6 @@ class LinuxInputService implements InputService {
   bool _wpsHighlighter = false;
   static const _defaultPenColor = 0x0000FF; // red, BGR
 
-  static const _wpsKeysOnly =
-      'WPS\'te bu özellik yalnızca QuickRemote\'tan açılan sunumda çalışır ("Sunumu WPS ile aç").';
-
   /// Over a video the laser is hidden behind it, so the bridge has the OS
   /// cursor, which shows above the video, stand in for it.
   void _onImpressEvent(Map<String, dynamic> event) {
@@ -83,7 +80,7 @@ class LinuxInputService implements InputService {
   }
 
   @override
-  void Function(String detail)? onCommandError;
+  CommandErrorHandler? onCommandError;
 
   @override
   String get presenter => 'impress';
@@ -142,33 +139,27 @@ class LinuxInputService implements InputService {
   /// For features without a key: report failures to the phone.
   Future<void> _showOnly(String cmd, {Map<String, Object?> args = const {}, Map<String, Object?>? wpsArgs}) async {
     final failed = await _showCommand(cmd, args, wpsArgs);
-    if (failed != null) onCommandError?.call(_describeFailure(failed.$1, failed.$2));
+    if (failed != null) _report(_describeFailure(failed.$1, failed.$2));
   }
 
+  void _report((RemoteError, String?) failure) => onCommandError?.call(failure.$1, failure.$2);
+
   /// The error worth showing out of Impress's and WPS's replies.
-  String _describeFailure(Map<String, dynamic> impress, Map<String, dynamic> wps) {
+  (RemoteError, String?) _describeFailure(Map<String, dynamic> impress, Map<String, dynamic> wps) {
     final wpsError = '${wps['error']}';
     const absent = {'NO_RPC', 'NOT_RUNNING', 'NO_PRESENTATION', 'BRIDGE_DIED'};
     if (!absent.contains(wpsError)) return _describeError(wpsError);
-    if (_wpsShowOnScreen()) return _wpsKeysOnly;
+    if (_wpsShowOnScreen()) return (RemoteError.wpsOpenFromApp, null);
     return _describeError('${impress['error']}');
   }
 
-  static String _describeError(String error) {
-    if (error == 'NOT_RUNNING') return 'Slayt gösterisi aktif değil.';
-    if (error == 'NO_MEDIA') return 'Bu slaytta medya yok.';
-    if (error == 'NO_CONNECTION') return 'LibreOffice Impress\'e bağlanılamadı.';
-    if (error == 'NO_UNO' || error == 'NO_PYTHON') return 'LibreOffice Python (UNO) desteği bulunamadı.';
-    if (error == 'UNTRUSTED_PIPE') return 'LibreOffice bağlantı soketi başka bir kullanıcıya ait; bağlanılmadı.';
-    if (error == 'MEDIA_RELOADED') return 'Slayt yeniden yüklendi, video baştan başladı. Kontrol için tekrar deneyin.';
-    if (error == 'NO_MEDIA_TRIGGER') return 'Bu slayttaki medya kumandadan kontrol edilemiyor.';
-    if (error == 'MEDIA_NEEDS_FULLSCREEN') return 'Slayt medyası yalnızca tam ekran slayt gösterisinde kontrol edilebilir.';
-    if (error == 'SCREEN_BLANKED') return 'Ekran karartılmışken slayt medyası kontrol edilemez.';
-    if (error == 'NO_RPC') return 'WPS desteği kurulu değil.';
-    if (error == 'NO_PRESENTATION') return 'WPS\'te açık sunum yok.';
-    if (error == 'WPS_START_FAILED') return 'WPS başlatılamadı.';
-    if (error == 'TIMEOUT') return 'Sunum programı yanıt vermiyor.';
-    return 'Sunum komutu başarısız: $error';
+  /// Maps a bridge's error code. The bridges and [RemoteError] share most
+  /// codes; any other becomes [RemoteError.commandFailed].
+  static (RemoteError, String?) _describeError(String error) {
+    if (error == 'NO_PYTHON') return (RemoteError.impressNoUno, null);
+    final known = RemoteError.fromCode(error);
+    if (known != null && known != RemoteError.commandFailed) return (known, null);
+    return (RemoteError.commandFailed, error);
   }
 
   // ── States ──
@@ -303,7 +294,7 @@ class LinuxInputService implements InputService {
       _keys([Evdev.keyE]); // WPS's own "erase all ink" key
       return;
     }
-    onCommandError?.call(_describeFailure(failed.$1, failed.$2));
+    _report(_describeFailure(failed.$1, failed.$2));
   }
 
   @override
@@ -359,8 +350,8 @@ class LinuxInputService implements InputService {
     // WPS's object model has no highlighter: only its Ctrl+I reaches it.
     final focused = _focusedWps();
     if (focused == null) {
-      onCommandError?.call(_wpsShowOnScreen() || _wpsRpcPid != null
-          ? 'WPS\'te fosforlu kalem yalnızca slayt gösterisi odaktayken seçilebilir.'
+      _report(_wpsShowOnScreen() || _wpsRpcPid != null
+          ? (RemoteError.wpsHighlighterNeedsFocus, null)
           : _describeError('${reply['error']}'));
       return;
     }
@@ -396,7 +387,7 @@ class LinuxInputService implements InputService {
       _keys([Evdev.keyLeftCtrl, Evdev.keyA]);
       _laserOn = true;
     } else {
-      onCommandError?.call(_describeFailure(reply, wps));
+      _report(_describeFailure(reply, wps));
     }
   }
 
@@ -410,13 +401,13 @@ class LinuxInputService implements InputService {
     if (failed == null) return;
     if (_focusedWps() != null) {
       if (wpsKeys == null) {
-        onCommandError?.call(_wpsKeysOnly);
+        onCommandError?.call(RemoteError.wpsOpenFromApp);
       } else if (wpsKeys.isNotEmpty) {
         _keys(wpsKeys);
       }
       return;
     }
-    onCommandError?.call(_describeFailure(failed.$1, failed.$2));
+    _report(_describeFailure(failed.$1, failed.$2));
   }
 
   @override
@@ -451,7 +442,7 @@ class LinuxInputService implements InputService {
         if (result.exitCode == 0) return;
       } catch (_) {}
     }
-    onCommandError?.call('Bilgisayar kilitlenemedi.');
+    onCommandError?.call(RemoteError.lockFailed);
   }
 
   Future<void> _media(String method, int fallbackKey) async {

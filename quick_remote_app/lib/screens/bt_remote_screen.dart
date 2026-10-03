@@ -13,6 +13,7 @@ import 'settings/settings_screen.dart';
 import 'bt_remote/views/bt_main_controls_view.dart';
 import 'bt_remote/views/bt_touchpad_view.dart';
 import 'bt_remote/views/bt_media_view.dart';
+import '../l10n/app_language.dart';
 
 // ─── BT Remote Screen ────────────────────────────────────────────────────────
 // WiFi remote screen ile aynı tasarım; BT HID'de çalışmayan özellikler
@@ -75,7 +76,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       if (!_isIntentionalDisconnect) {
         AppSnackbar.show(
           context,
-          message: 'Bluetooth bağlantısı koptu. Yeniden bağlanılıyor...',
+          message: context.l10n.btConnectionLost,
           type: SnackbarType.warning,
           duration: const Duration(seconds: 3),
         );
@@ -83,7 +84,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
     } else if (state == BtHidConnectionState.connected) {
       AppSnackbar.show(
         context,
-        message: 'Bluetooth bağlandı: ${_bt.connectedDeviceName ?? ""}',
+        message: context.l10n.btConnectedTo(_bt.connectedDeviceName ?? ''),
         type: SnackbarType.success,
         duration: const Duration(seconds: 2),
       );
@@ -259,7 +260,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
               ),
               const SizedBox(width: 5),
               Text(
-                isConnected ? 'Bağlı' : 'Kopuk',
+                isConnected ? context.l10n.statusConnected : context.l10n.statusDisconnected,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -275,7 +276,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
         // Settings button
         IconButton(
           icon: const Icon(Icons.settings_rounded, color: Colors.white54, size: 22),
-          tooltip: 'Ayarlar',
+          tooltip: context.l10n.homeSettingsTooltip,
           onPressed: () {
             Navigator.push(
               context,
@@ -286,7 +287,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
         // Close button
         IconButton(
           icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 22),
-          tooltip: 'Kapat',
+          tooltip: context.l10n.close,
           onPressed: () async {
             final nav = Navigator.of(context);
             final shouldPop = await _showExitDialog();
@@ -318,18 +319,18 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
           HapticFeedback.lightImpact();
           setState(() => _currentTab = index);
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.gamepad_rounded),
-            label: 'Kontroller',
+            label: context.l10n.remoteTabControls,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.touch_app_rounded),
-            label: 'Touchpad',
+            label: context.l10n.remoteTabTouchpad,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.queue_music_rounded),
-            label: 'Medya',
+            label: context.l10n.remoteTabMedia,
           ),
         ],
       ),
@@ -343,16 +344,16 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
             backgroundColor: const Color(0xFF1E293B),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFFB74D), size: 40),
-            title: const Text('Bağlantıyı Kes',
+            title: Text(context.l10n.disconnectTitle,
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            content: const Text(
-              'Bluetooth bağlantısı kesilecek ve ana ekrana dönülecek.',
+            content: Text(
+              context.l10n.btDisconnectContent,
               style: TextStyle(color: Colors.white70, fontSize: 14),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('İptal', style: TextStyle(color: Colors.white54)),
+                child: Text(context.l10n.cancel, style: TextStyle(color: Colors.white54)),
               ),
               FilledButton(
                 onPressed: () {
@@ -363,7 +364,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
                   backgroundColor: const Color(0xFFFF5252),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Bağlantıyı Kes', style: TextStyle(color: Colors.white)),
+                child: Text(context.l10n.disconnectTitle, style: TextStyle(color: Colors.white)),
               ),
             ],
           ),

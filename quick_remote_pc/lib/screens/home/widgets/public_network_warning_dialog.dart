@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../services/websocket_server.dart';
+import '../../../l10n/app_language.dart';
 
 class PublicNetworkWarningDialog extends StatefulWidget {
   final WebSocketServer server;
@@ -21,8 +22,8 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
       backgroundColor: const Color(0xFF1E293B),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       icon: const Icon(Icons.wifi_tethering_rounded, color: Color(0xFFFF9800), size: 48),
-      title: const Text(
-        'Ortak Ağ Uyarısı',
+      title: Text(
+        context.l10n.publicNetworkTitle,
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       content: Column(
@@ -30,12 +31,8 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
         children: [
           Text(
             Platform.isLinux
-                ? 'Bu ağ, güvenlik duvarında güvenilmeyen ağ olarak tanımlı. Bu ağdaki '
-                    'diğer kişiler QuickRemote sunucunuzu görebilir.\n\n'
-                    'Güvenilir bir ağda olduğunuzdan emin olun.'
-                : 'Şu an ortak bir ağdasınız. Bu ağdaki diğer kişiler '
-                    'QuickRemote sunucunuzu görebilir.\n\n'
-                    'Güvenilir bir ağda olduğunuzdan emin olun.',
+                ? context.l10n.publicNetworkLinux
+                : context.l10n.publicNetworkWindows,
             style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
           ),
           const SizedBox(height: 16),
@@ -44,7 +41,7 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
             child: OutlinedButton.icon(
               onPressed: () => widget.server.openNetworkSettings(),
               icon: const Icon(Icons.settings_rounded, size: 16),
-              label: const Text('Ağ Ayarlarını Aç', style: TextStyle(fontSize: 13)),
+              label: Text(context.l10n.openNetworkSettings, style: TextStyle(fontSize: 13)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF00BCD4),
                 side: const BorderSide(color: Color(0xFF00BCD4), width: 1),
@@ -72,8 +69,8 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
               Expanded(
                 child: GestureDetector(
                   onTap: () => setState(() => _dontShowAgain = !_dontShowAgain),
-                  child: const Text(
-                    'Bu uyarıyı bir daha gösterme',
+                  child: Text(
+                    context.l10n.dontShowAgain,
                     style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ),
@@ -87,7 +84,7 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
           onPressed: () {
             if (context.mounted) Navigator.of(context).pop(false);
           },
-          child: const Text('Sunucuyu Durdur', style: TextStyle(color: Colors.white54)),
+          child: Text(context.l10n.stopServer, style: TextStyle(color: Colors.white54)),
         ),
         FilledButton(
           onPressed: () async {
@@ -101,7 +98,7 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
             backgroundColor: const Color(0xFFFF9800),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: const Text('Devam Et', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          child: Text(context.l10n.continueAction, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         ),
       ],
     );

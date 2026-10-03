@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QuickRemote — Control your PowerPoint presentations from your smartphone. Slide control, laser pointer, drawing tools and touchpad support.">
+  <meta name="keywords" content="presentation remote, PowerPoint remote control, QuickRemote, wireless presenter, slide control, clicker">
+  <meta name="author" content="QuickRemote">
+  <meta name="theme-color" content="#06080f">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="QuickRemote — Run Your Presentations from Your Phone">
+  <meta property="og:description" content="Control your PowerPoint presentations from your smartphone. Slide changes, laser pointer, drawing tools, touchpad and presentation timer — all in the palm of your hand.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="../assets/hero-mockup.jpg">
+
+  <title>QuickRemote — Run Your Presentations from Your Phone</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="../style.css">
+
+  <!-- Languages -->
+  <link rel="alternate" hreflang="tr" href="../index.html">
+  <link rel="alternate" hreflang="en" href="index.html">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%23a855f7'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><path d='M30 55 L45 70 L70 35' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+  <!-- Without JavaScript the scroll animations never run: show everything. -->
+  <noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <!-- Logo -->
+      <a href="#" class="logo" aria-label="QuickRemote Home">
+        <div class="logo-icon">
+          <img src="../assets/logo.png" alt="QuickRemote Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+        </div>
+        <span class="logo-text">Quick<span>Remote</span></span>
+      </a>
+
+      <!-- Navigation -->
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <!-- Header CTA -->
+      <div class="header-cta">
+        <a href="../index.html" class="lang-switch" lang="tr" hreflang="tr">Türkçe</a>
+        <a href="#download" class="btn btn-primary btn-sm">
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download Now
+        </a>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" id="mobile-nav">
+    <button class="mobile-nav-close" id="mobile-nav-close" aria-label="Close menu">
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <a href="#features" class="mobile-nav-link">Features</a>
+    <a href="#how-it-works" class="mobile-nav-link">How It Works</a>
+    <a href="#faq" class="mobile-nav-link">FAQ</a>
+    <a href="#contact" class="mobile-nav-link">Contact</a>
+    <a href="../index.html" class="mobile-nav-link" lang="tr" hreflang="tr">Türkçe</a>
+    <a href="#download" class="btn btn-primary" style="margin-top: 16px;">Download Now</a>
+  </div>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" id="hero">
+    <div class="hero-grid"></div>
+    <div class="ambient-orb orb-blue"></div>
+    <div class="ambient-orb orb-purple"></div>
+
+    <div class="container">
+      <div class="hero-inner">
+        <!-- Text Content -->
+        <div class="hero-content reveal">
+          <div class="hero-badge">
+            <span class="dot"></span>
+            Your Presentation Remote, in Your Pocket
+          </div>
+
+          <h1 class="hero-title">
+            Your Presentations, Now <span class="highlight">in the Palm of Your Hand.</span>
+          </h1>
+
+          <p class="hero-description">
+            Run your PowerPoint presentations from your smartphone. Slide changes, laser pointer, drawing tools, touchpad and presentation timer — all in one app. A secure, low-latency connection over Wi-Fi.
+          </p>
+
+          <div class="hero-buttons" id="download">
+            <a href="#" class="btn btn-primary">
+              <!-- Windows icon -->
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
+              </svg>
+              Windows Server App
+            </a>
+            <a href="#" class="btn btn-secondary">
+              <!-- Mobile icon -->
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              Mobile Remote App
+            </a>
+          </div>
+
+          <div class="hero-trust">
+            <div class="trust-item">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              TLS/WSS encrypted connection
+            </div>
+            <div class="trust-item">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Low latency (WebSocket)
+            </div>
+            <div class="trust-item">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              Free · Open source
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual -->
+        <div class="hero-visual reveal reveal-delay-2">
+          <div class="hero-image-wrapper">
+            <img src="../assets/hero-mockup.jpg" alt="QuickRemote — Controlling a PowerPoint presentation from a phone" width="600" height="338" loading="eager">
+          </div>
+
+          <!-- Floating Badges -->
+          <div class="floating-badge badge-latency">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Slide: 12 / 34
+          </div>
+          <div class="floating-badge badge-secure">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            PIN Protected · TLS
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== HOW IT WORKS ===================== -->
+  <section class="section how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          How It Works
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Control Your Presentation in 3 Steps</h2>
+        <p class="section-subtitle">
+          No complicated setup. Turn your phone into a wireless presentation remote in minutes.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <!-- Step 1 -->
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-number">1</div>
+          <div class="step-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <h3>Run the PC App</h3>
+          <p>Start the QuickRemote server app on your Windows computer. A TLS certificate is created automatically and a QR code appears on the screen.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-number">2</div>
+          <div class="step-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
+          <h3>Open the Mobile App</h3>
+          <p>Open the QuickRemote app on your phone. PCs on the same network are listed automatically through mDNS, or scan the QR code.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-number">3</div>
+          <div class="step-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="8" height="8" rx="1"/>
+              <rect x="14" y="2" width="8" height="8" rx="1"/>
+              <rect x="2" y="14" width="8" height="8" rx="1"/>
+              <rect x="14" y="14" width="8" height="8" rx="1"/>
+            </svg>
+          </div>
+          <h3>Pair with the QR Code or PIN</h3>
+          <p>Scan the QR code or enter the 6-digit PIN to connect securely. With the certificate fingerprint checked, start running your presentation right away.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="section features" id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Features
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Professional Presentation Tools</h2>
+        <p class="section-subtitle">
+          QuickRemote gives you every tool you need to run your presentations flawlessly, in one app.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1: Slide Control -->
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">
+            <!-- Slides/presentation icon -->
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8"/>
+              <path d="M12 17v4"/>
+              <path d="M7 8l3 3-3 3"/>
+              <line x1="13" y1="11" x2="17" y2="11"/>
+            </svg>
+          </div>
+          <h3>Slide Control</h3>
+          <p>Move forward or back with a single tap. Start the show (F5), jump to a given slide, end it (ESC). The slide number and total appear on your phone in real time.</p>
+        </div>
+
+        <!-- Feature 2: Drawing Tools -->
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">
+            <!-- Pen/drawing icon -->
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+              <path d="M2 2l7.586 7.586"/>
+              <circle cx="11" cy="11" r="2"/>
+            </svg>
+          </div>
+          <h3>Drawing Tools</h3>
+          <p>Control the laser pointer, pen, highlighter and eraser right from your phone. Change the pen color on the fly through COM automation.</p>
+        </div>
+
+        <!-- Feature 3: Touchpad & Mouse -->
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">
+            <!-- Touchpad/cursor icon -->
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16v16H4z" rx="2"/>
+              <path d="M9 14l2.5-2.5L14 14"/>
+              <path d="M11.5 11.5V8"/>
+            </svg>
+          </div>
+          <h3>Touchpad and Mouse</h3>
+          <p>Use your phone's screen as a precise trackpad. Full control with left/right click, drag and drop and adjustable mouse sensitivity.</p>
+        </div>
+
+        <!-- Feature 4: Security -->
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">
+            <!-- Shield/lock icon -->
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <rect x="9" y="10" width="6" height="5" rx="1"/>
+              <path d="M10 10V8a2 2 0 0 1 4 0v2"/>
+            </svg>
+          </div>
+          <h3>Strong Security</h3>
+          <p>A TLS/WSS encrypted connection, a random 6-digit PIN every session, certificate pinning and security code checks, brute-force protection (5 failed attempts → 60 s block), a QR code hidden after pairing and an authentication timeout.</p>
+        </div>
+
+        <!-- Feature 5: Auto Discovery -->
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">
+            <!-- Wifi/discovery icon -->
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <circle cx="12" cy="20" r="1"/>
+            </svg>
+          </div>
+          <h3>Automatic Discovery and Pairing</h3>
+          <p>PCs on the same network are listed automatically through mDNS (_quickremote._tcp). Scan a QR code, enter an IP by hand or quickly reconnect to one of the last 5 devices. Reconnects automatically when the connection drops.</p>
+        </div>
+
+        <!-- Feature 6: Presentation Timer -->
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">
+            <!-- Timer/clock icon -->
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h3>Presentation Timer</h3>
+          <p>Track how long your presentation runs in real time. Speaker notes, the current slide number and the slide count reach your phone instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CROSS-PLATFORM ===================== -->
+  <section class="section cross-platform" id="platforms">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Platforms
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Two Parts, One Seamless Connection</h2>
+        <p class="section-subtitle">
+          Install the server app on your Windows computer and the remote app on your phone. Pair instantly on the same Wi-Fi network.
+        </p>
+      </div>
+
+      <div class="platform-showcase">
+        <!-- Windows -->
+        <div class="platform-item reveal reveal-delay-1">
+          <div class="platform-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
+              <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
+            </svg>
+          </div>
+          <h3>Windows Server</h3>
+          <p>Windows 10/11 · PowerPoint<br>WebSocket server + Win32 API</p>
+        </div>
+
+        <!-- Connector -->
+        <div class="platform-connector reveal reveal-delay-2">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+
+        <!-- Linux -->
+        <div class="platform-item reveal reveal-delay-3">
+          <div class="platform-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
+              <path d="M20 4H4c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8h16v10zm-2-1h-6v-2h6v2zM7.5 17l-1.41-1.41L8.67 13l-2.59-2.59L7.5 9l4 4-4 4z"/>
+            </svg>
+          </div>
+          <h3>Linux Server</h3>
+          <p>LibreOffice Impress · X11 and Wayland<br>WebSocket server + uinput</p>
+        </div>
+
+        <!-- Connector -->
+        <div class="platform-connector reveal reveal-delay-4">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+
+        <!-- Android -->
+        <div class="platform-item reveal reveal-delay-5">
+          <div class="platform-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
+              <path d="M17.523 2.377l1.595-1.595a.436.436 0 0 0-.617-.617l-1.727 1.727A8.197 8.197 0 0 0 12 .784a8.197 8.197 0 0 0-4.774 1.108L5.499.165a.436.436 0 0 0-.617.617L6.477 2.377A7.63 7.63 0 0 0 3.07 8.56h17.86a7.63 7.63 0 0 0-3.407-6.183zM8.628 5.96a.718.718 0 1 1 .718-.718.718.718 0 0 1-.718.718zm6.744 0a.718.718 0 1 1 .718-.718.718.718 0 0 1-.718.718zM3.07 9.83v8.35A1.61 1.61 0 0 0 4.68 19.8h.87v3.06a1.3 1.3 0 0 0 2.6 0V19.8h3.7v3.06a1.3 1.3 0 0 0 2.6 0V19.8h.87a1.61 1.61 0 0 0 1.61-1.62V9.83zm-2.4 0a1.3 1.3 0 0 0-1.3 1.3v5.52a1.3 1.3 0 0 0 2.6 0v-5.52a1.3 1.3 0 0 0-1.3-1.3zm22.66 0a1.3 1.3 0 0 0-1.3 1.3v5.52a1.3 1.3 0 0 0 2.6 0v-5.52a1.3 1.3 0 0 0-1.3-1.3z"/>
+            </svg>
+          </div>
+          <h3>Android Remote</h3>
+          <p>Android phones and tablets<br>Flutter · QR scanning · mDNS</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TECH STACK ===================== -->
+  <section class="section tech-stack" id="tech">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Technology
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Infrastructure and Protocols</h2>
+        <p class="section-subtitle">
+          Built on a reliable, high-performance architecture.
+        </p>
+      </div>
+
+      <div class="tech-grid reveal">
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>Flutter & Dart</h4>
+            <p>Cross-platform UI framework</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>WebSocket (WSS)</h4>
+            <p>Low-latency two-way communication</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>TLS 1.2+ Encryption</h4>
+            <p>A secure channel with a self-signed certificate</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8"/>
+              <path d="M12 17v4"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>Win32 & PowerShell COM</h4>
+            <p>SendInput API + PowerPoint automation</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <circle cx="12" cy="20" r="1"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>mDNS Discovery</h4>
+            <p>Automatic service discovery with _quickremote._tcp</p>
+          </div>
+        </div>
+
+        <div class="tech-item">
+          <div class="tech-icon">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="8" height="8" rx="1"/>
+              <rect x="14" y="2" width="8" height="8" rx="1"/>
+              <rect x="2" y="14" width="8" height="8" rx="1"/>
+              <rect x="14" y="14" width="8" height="8" rx="1"/>
+            </svg>
+          </div>
+          <div class="tech-info">
+            <h4>Binary Protocol</h4>
+            <p>A high-frequency binary format for mouse/laser data</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="section faq" id="faq">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Frequently Asked Questions
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Your Questions</h2>
+        <p class="section-subtitle">
+          Answers to the most common questions about QuickRemote.
+        </p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item reveal reveal-delay-1">
+          <button class="faq-question" aria-expanded="false">
+            What exactly does QuickRemote do?
+            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>QuickRemote turns your smartphone into a wireless presentation remote and touchpad. You can start PowerPoint presentations remotely, move slides forward and back, use drawing tools like the laser pointer, pen and highlighter, control the mouse and track your presentation time.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-2">
+          <button class="faq-question" aria-expanded="false">
+            Do I need an internet connection?
+            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>No. QuickRemote works entirely over your local Wi-Fi network, with no internet connection needed. It works as long as your computer and phone are on the same Wi-Fi network. All data stays on the local network; nothing is sent to outside servers.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-3">
+          <button class="faq-question" aria-expanded="false">
+            How is it kept secure?
+            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>All communication is encrypted with TLS/WSS. Every session gets a random 6-digit PIN, compared in constant time. After 5 failed PIN attempts the IP address is blocked for 60 seconds. A device that doesn't authenticate within 5 seconds is disconnected. The QR code carries the certificate fingerprint; on a first connection without it, you are asked to compare the security code on the PC screen before the PIN is sent. Once the first phone connects, the QR code and PIN are hidden.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-4">
+          <button class="faq-question" aria-expanded="false">
+            Which platforms are supported?
+            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>The server app runs on Windows 10/11 (PowerPoint) and Linux (LibreOffice Impress). The remote app runs on Android devices. In Bluetooth mode your phone acts as a keyboard and mouse, with no app on the PC. Both apps are built with Flutter.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-5">
+          <button class="faq-question" aria-expanded="false">
+            How do I connect?
+            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>There are three ways to connect: (1) scan the QR code on the PC screen with your phone, (2) pick the PC from the list of PCs found on the network through mDNS, (3) enter the IP address and PIN by hand. You can also quickly reconnect to the last 5 devices you used.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-5">
+          <button class="faq-question" aria-expanded="false">
+            How do the drawing tools work?
+            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <p>QuickRemote controls PowerPoint's own drawing tools remotely. Pick the laser pointer (Ctrl+L), pen (Ctrl+P), highlighter (Ctrl+I) and eraser (Ctrl+E) from your phone. Thanks to COM automation you can also change the pen color on the fly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA SECTION ===================== -->
+  <section class="section cta-section" id="contact">
+    <div class="container">
+      <div class="cta-card reveal">
+        <div class="section-label">
+          <span class="line"></span>
+          Get Started
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title">Try QuickRemote in<br>Your Next Presentation</h2>
+        <p class="section-subtitle">
+          Turn your phone into a professional presentation remote, touchpad and drawing tool. Completely free.
+        </p>
+        <div class="cta-buttons">
+          <a href="#" class="btn btn-primary">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
+            </svg>
+            Windows Server App
+          </a>
+          <a href="#" class="btn btn-secondary">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            Mobile Remote App
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <!-- Brand -->
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <div class="logo-icon">
+              <img src="../assets/logo.png" alt="QuickRemote Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+            </div>
+            <span class="logo-text">Quick<span>Remote</span></span>
+          </a>
+          <p>Control your PowerPoint presentations from your smartphone. Presentation control, mouse control and drawing tools — all in the palm of your hand.</p>
+          <div class="social-links">
+            <!-- GitHub -->
+            <a href="https://github.com/berat-kaan-akcan/QuickRemote" class="social-link" aria-label="GitHub" target="_blank" rel="noopener">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Product -->
+        <div class="footer-column">
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#download">Downloads</a>
+          <a href="https://github.com/berat-kaan-akcan/QuickRemote" target="_blank" rel="noopener">Source Code</a>
+        </div>
+
+        <!-- Support -->
+        <div class="footer-column">
+          <h4>Support</h4>
+          <a href="#faq">Frequently Asked Questions</a>
+          <a href="https://github.com/berat-kaan-akcan/QuickRemote" target="_blank" rel="noopener">Documentation</a>
+          <a href="https://github.com/berat-kaan-akcan/QuickRemote/issues" target="_blank" rel="noopener">Report a Bug</a>
+        </div>
+
+        <!-- Legal -->
+        <div class="footer-column">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">License</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 QuickRemote. For personal use.</p>
+        <div class="footer-legal">
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== JAVASCRIPT ===================== -->
+  <script>
+    // ---- Scroll Reveal (Intersection Observer) ----
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -60px 0px'
+    });
+
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // ---- Sticky Header Background ----
+    const header = document.getElementById('site-header');
+    let lastScroll = 0;
+
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.scrollY;
+      if (currentScroll > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+      lastScroll = currentScroll;
+    }, { passive: true });
+
+    // ---- Mobile Menu ----
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    const mobileNavClose = document.getElementById('mobile-nav-close');
+    const mobileNavLinks = mobileNav.querySelectorAll('.mobile-nav-link');
+
+    function openMobileMenu() {
+      mobileNav.classList.add('open');
+      mobileMenuBtn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileMenu() {
+      mobileNav.classList.remove('open');
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    mobileMenuBtn.addEventListener('click', openMobileMenu);
+    mobileNavClose.addEventListener('click', closeMobileMenu);
+    mobileNavLinks.forEach(link => {
+      link.addEventListener('click', closeMobileMenu);
+    });
+
+    // ---- FAQ Accordion ----
+    const faqItems = document.querySelectorAll('.faq-item');
+
+    faqItems.forEach(item => {
+      const question = item.querySelector('.faq-question');
+      question.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+
+        // Close all
+        faqItems.forEach(i => {
+          i.classList.remove('active');
+          i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+        });
+
+        // Open clicked (if it wasn't already open)
+        if (!isActive) {
+          item.classList.add('active');
+          question.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    // ---- Smooth scroll for anchor links ----
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          const headerOffset = 80;
+          const elementPosition = target.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

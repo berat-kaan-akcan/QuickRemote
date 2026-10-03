@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../remote/widgets/glass_panel.dart';
 import '../../remote/widgets/premium_media_btn.dart';
+import '../../../l10n/app_language.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 2: Media View  (WiFi MediaControlView ile aynı tasarım)
@@ -28,12 +29,12 @@ class BtMediaView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Başlık — WiFi ile aynı
-            const Row(
+            Row(
               children: [
                 Icon(Icons.queue_music_rounded, color: Colors.white70, size: 20),
                 SizedBox(width: 8),
                 Text(
-                  'Medya Kontrolü',
+                  context.l10n.mediaControlTitle,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -54,7 +55,7 @@ class BtMediaView extends StatelessWidget {
                       // Sistem Medya Kontrolleri
                       _buildSectionLabel(
                         icon: Icons.album_rounded,
-                        label: 'Sistem Medyası',
+                        label: context.l10n.systemMedia,
                         color: const Color(0xFFF43F5E),
                       ),
                       const SizedBox(height: 8),
@@ -64,7 +65,7 @@ class BtMediaView extends StatelessWidget {
                       // Sistem Sesi
                       _buildSectionLabel(
                         icon: Icons.volume_up_rounded,
-                        label: 'Sistem Sesi',
+                        label: context.l10n.systemVolume,
                         color: const Color(0xFF0EA5E9),
                       ),
                       const SizedBox(height: 8),
@@ -85,7 +86,7 @@ class BtMediaView extends StatelessWidget {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için WiFi modunu kullanın.',
+                                context.l10n.btMediaLimits,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.5),
                                   fontSize: 12,
@@ -158,8 +159,8 @@ class BtMediaView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Sistem Medyası',
+                    Text(
+                      context.l10n.systemMedia,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -168,7 +169,7 @@ class BtMediaView extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'BT modunda medya bilgisi alınamaz',
+                      context.l10n.btNoMediaInfo,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 13,
@@ -200,7 +201,7 @@ class BtMediaView extends StatelessWidget {
                 Expanded(
                   child: PremiumMediaBtn(
                     icon: Icons.play_arrow_rounded,
-                    label: 'Oynat / Duraklat',
+                    label: context.l10n.mediaPlayPause,
                     color: Colors.white,
                     large: true,
                     glow: true,

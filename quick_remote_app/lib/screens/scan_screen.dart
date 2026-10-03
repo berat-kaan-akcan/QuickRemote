@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../utils/ui/app_snackbar.dart';
+import '../l10n/app_language.dart';
 
 /// QR Code scanner screen to connect to PC companion app.
 class ScanScreen extends StatefulWidget {
@@ -34,12 +35,12 @@ class _ScanScreenState extends State<ScanScreen> {
     final (payload, error) = PairingPayload.parse(barcode.rawValue!);
     if (payload == null) {
       _showQrError(switch (error) {
-        PairingError.notQuickRemote => 'Geçersiz QR kodu. "quickremote://" formatı bekleniyor.',
-        PairingError.missingHost => 'QR kodunda IP adresi eksik.',
-        PairingError.invalidPort => 'QR kodunda geçersiz port numarası.',
-        PairingError.invalidPin => 'QR kodundaki PIN geçersiz. Kodu yeniden tarayın.',
-        PairingError.invalidFingerprint => 'QR kodundaki sertifika bilgisi bozuk. Kodu yeniden tarayın.',
-        _ => 'QR kodu beklenen formatta değil.\nFormat: quickremote://IP:PORT:PIN',
+        PairingError.notQuickRemote => context.l10n.qrNotQuickRemote,
+        PairingError.missingHost => context.l10n.qrMissingHost,
+        PairingError.invalidPort => context.l10n.qrInvalidPort,
+        PairingError.invalidPin => context.l10n.qrInvalidPin,
+        PairingError.invalidFingerprint => context.l10n.qrInvalidFingerprint,
+        _ => context.l10n.qrBadFormat,
       });
       return;
     }
@@ -124,7 +125,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        'QR Kodu Tara',
+                        context.l10n.scanTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -149,7 +150,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 const Icon(Icons.qr_code_scanner, color: Colors.white70, size: 32),
                 const SizedBox(height: 8),
                 Text(
-                  'PC ekranındaki QR kodu tarayın',
+                  context.l10n.scanHint,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: Colors.white70,
                     fontWeight: FontWeight.w500,

@@ -13,7 +13,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   bool _laserActive = false;
   String _pin = '';
   NetworkTrust _networkTrust = NetworkTrust.unknown;
-  String? _startError;
+  Object? _startError;
   bool _mdnsAvailable = true;
   String? _certFingerprint;
 
@@ -27,7 +27,7 @@ class WebSocketServerProvider extends ChangeNotifier {
   String get pin => _pin;
   NetworkTrust get networkTrust => _networkTrust;
   bool get publicNetwork => _networkTrust == NetworkTrust.untrusted;
-  String? get startError => _startError;
+  Object? get startError => _startError;
   bool get mdnsAvailable => _mdnsAvailable;
   String? get certFingerprint => _certFingerprint;
   bool get pairingPaused => server.pairingPaused.value;
