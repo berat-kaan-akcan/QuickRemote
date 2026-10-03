@@ -24,13 +24,13 @@ class NetworkStatusBanner extends StatelessWidget {
     // Linux has no network profiles; the trust level is the firewalld zone.
     final text = Platform.isLinux
         ? switch (trust) {
-            NetworkTrust.trusted => 'Yerel Ağ',
-            NetworkTrust.untrusted => 'Güvenilmeyen Ağ (firewalld)',
-            NetworkTrust.unknown => 'Ağ türü bilinmiyor (firewalld yok)',
+            NetworkTrust.trusted => 'Güvenilir Ağ',
+            NetworkTrust.untrusted => 'Güvenilmeyen Ağ',
+            NetworkTrust.unknown => 'Ağ türü bilinmiyor',
           }
         : switch (trust) {
-            NetworkTrust.trusted => 'Güvenli Ağ (Private)',
-            NetworkTrust.untrusted => 'Ortak Ağ (Public)',
+            NetworkTrust.trusted => 'Özel Ağ',
+            NetworkTrust.untrusted => 'Ortak Ağ',
             NetworkTrust.unknown => 'Ağ türü okunamadı',
           };
 

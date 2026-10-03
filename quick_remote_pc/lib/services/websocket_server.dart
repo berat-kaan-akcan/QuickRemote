@@ -15,11 +15,31 @@ import 'server/state_broadcaster.dart';
 
 /// An authenticated phone, as listed on the PC.
 class ConnectedClient {
-  ConnectedClient(this.id, this.address, this.since);
+  ConnectedClient(this.id, this.address, this.since, {this.name});
 
   final int id;
   final String address;
   final DateTime since;
+
+  /// What the phone calls itself (its user-given name or model), if it said.
+  final String? name;
+
+  static const maxNameLength = 40;
+
+  /// Makes a phone-supplied name safe to show: no control or bidi override
+  /// characters (which could make it read as another phone), single spaces,
+  /// at most [maxNameLength] characters. Null if nothing is left.
+  static String? sanitizeName(Object? raw) {
+    if (raw is! String) return null;
+    final cleaned = raw
+        .replaceAll(RegExp(r'[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (cleaned.isEmpty) return null;
+    final runes = cleaned.runes;
+    if (runes.length <= maxNameLength) return cleaned;
+    return '${String.fromCharCodes(runes.take(maxNameLength - 1)).trimRight()}…';
+  }
 }
 
 /// WebSocket server that listens for commands from mobile clients.
@@ -74,6 +94,23 @@ class WebSocketServer {
   /// Clients that sent LEFT_DOWN without a LEFT_UP yet.
   final Set<WebSocket> _leftButtonHeld = {};
 
+  /// The phone pointing or drawing right now (laser, pen, highlighter,
+  /// eraser). Until its gesture ends, the other phones' pointer commands and
+  /// motion are dropped: with the cursor, the laser and the mouse button
+  /// shared, one phone lifting its finger would end the other's laser or
+  /// cut its line.
+  WebSocket? _gestureOwner;
+  final Stopwatch _clock = Stopwatch()..start();
+  Duration _gestureOwnerSeen = Duration.zero;
+  /// Phones whose gesture began while another phone owned the pointer: the
+  /// rest of that gesture is dropped too.
+  final Set<WebSocket> _gestureBlocked = {};
+
+  // Last press of a command in [_onePressCommands], see _isEchoOfOtherPhone.
+  String? _lastPress;
+  WebSocket? _lastPressBy;
+  Duration _lastPressAt = Duration.zero;
+
   Timer? _networkCheckTimer;
   int _networkProfileTick = 0;
 
@@ -101,6 +138,46 @@ class WebSocketServer {
     RemoteCommands.blackScreen,
     RemoteCommands.whiteScreen,
   };
+
+  static const _gestureStartCommands = {
+    RemoteCommands.modeLaser,
+    RemoteCommands.laserCursor,
+    RemoteCommands.modePen,
+    RemoteCommands.modeHighlighter,
+    RemoteCommands.modeEraser,
+  };
+
+  /// Commands that act on the shared pointer, see [_gestureOwner].
+  static const _gestureCommands = {
+    ..._gestureStartCommands,
+    RemoteCommands.modeArrow, // every gesture ends with it
+    RemoteCommands.laserOff,
+    RemoteCommands.leftDown,
+    RemoteCommands.leftUp,
+    RemoteCommands.leftClick,
+    RemoteCommands.rightClick,
+  };
+
+  /// An owner silent this long is taken to be gone. A phone ends every
+  /// gesture with MODE_ARROW, and a closed socket releases it at once, so
+  /// this only covers an app that stopped mid-gesture.
+  static const _gestureOwnerTimeout = Duration(seconds: 15);
+
+  /// Presses two people make at once to do one thing (both see the slide is
+  /// done and press NEXT). A second phone repeating one within
+  /// [_samePressWindow] is ignored; the toggles would otherwise undo it.
+  static const _onePressCommands = {
+    RemoteCommands.next,
+    RemoteCommands.prev,
+    RemoteCommands.blackScreen,
+    RemoteCommands.whiteScreen,
+    RemoteCommands.mediaPlayPause,
+    RemoteCommands.sysMediaPlayPause,
+    RemoteCommands.sysMediaNext,
+    RemoteCommands.sysMediaPrev,
+    RemoteCommands.volumeMute,
+  };
+  static const _samePressWindow = Duration(milliseconds: 300);
 
   static const _volumeCommands = {
     RemoteCommands.volumeUp,
@@ -314,6 +391,13 @@ class WebSocketServer {
       // The phone went away mid-drag: don't leave the button pressed on the PC.
       InputSimulator.executeCommand(RemoteCommands.leftUp);
     }
+    _gestureBlocked.remove(ws);
+    if (_gestureOwner == ws) {
+      _gestureOwner = null;
+      // Mid-gesture: put the laser or pen away, as the phone would have.
+      if (_isSlideshowRunning) InputSimulator.executeCommand(RemoteCommands.modeArrow);
+    }
+    if (_lastPressBy == ws) _lastPressBy = null;
     _pendingAddress.remove(ws);
     if (_clientInfo.remove(ws) != null) _publishClients();
     if (_authenticatedClients.remove(ws)) {
@@ -440,7 +524,12 @@ class WebSocketServer {
     final shown = address?.type == InternetAddressType.IPv6 && !remoteIP.contains('.')
         ? address!.address
         : remoteIP;
-    _clientInfo[ws] = ConnectedClient(_nextClientId++, shown, DateTime.now());
+    _clientInfo[ws] = ConnectedClient(
+      _nextClientId++,
+      shown,
+      DateTime.now(),
+      name: ConnectedClient.sanitizeName(message['name']),
+    );
     _publishClients();
     pairedOnce.value = true;
     _authManager.recordSuccessfulAuth(remoteIP);
@@ -499,6 +588,7 @@ class WebSocketServer {
     if (typeId > 1 || !dx.isFinite || !dy.isFinite || dx.abs() > 500 || dy.abs() > 500) {
       return;
     }
+    if (!_allowsMotion(ws)) return;
     _moves
         .putIfAbsent(ws, () => MoveCoalescer(minInterval: _moveInterval, onMove: _applyMove))
         .add(typeId, dx, dy);
@@ -527,6 +617,70 @@ class WebSocketServer {
   Future<void> _checkSlideshow() =>
       _slideCheck ??= _stateBroadcaster.fetchAndBroadcastSlideState().whenComplete(() => _slideCheck = null);
 
+  /// Whether [ws] may run [command] while another phone may own the pointer.
+  bool _allowsGesture(WebSocket ws, String command) {
+    if (!_gestureCommands.contains(command)) return true;
+    final owner = _currentGestureOwner();
+    if (_gestureStartCommands.contains(command)) {
+      if (owner != null && owner != ws) {
+        _gestureBlocked.add(ws);
+        _send(ws, {
+          'type': 'STATUS',
+          'state': 'COMMAND_FAILED',
+          'detail': 'Başka bir cihaz şu an lazeri veya kalemi kullanıyor.',
+        });
+        return false;
+      }
+      _gestureBlocked.remove(ws);
+      _gestureOwner = ws;
+      _gestureOwnerSeen = _clock.elapsed;
+      return true;
+    }
+    if (_gestureBlocked.contains(ws)) {
+      if (command == RemoteCommands.modeArrow) _gestureBlocked.remove(ws);
+      return false;
+    }
+    if (owner == null) return true;
+    if (owner != ws) return false;
+    if (command == RemoteCommands.modeArrow) {
+      _gestureOwner = null;
+    } else {
+      _gestureOwnerSeen = _clock.elapsed;
+    }
+    return true;
+  }
+
+  bool _allowsMotion(WebSocket ws) {
+    if (_gestureBlocked.contains(ws)) return false;
+    final owner = _currentGestureOwner();
+    if (owner == null) return true;
+    if (owner != ws) return false;
+    _gestureOwnerSeen = _clock.elapsed;
+    return true;
+  }
+
+  WebSocket? _currentGestureOwner() {
+    if (_gestureOwner != null && _clock.elapsed - _gestureOwnerSeen > _gestureOwnerTimeout) {
+      debugPrint('Pointer owner silent for ${_gestureOwnerTimeout.inSeconds} s — released');
+      _gestureOwner = null;
+    }
+    return _gestureOwner;
+  }
+
+  /// Whether [command] repeats what another phone sent a moment ago. The
+  /// same phone pressing twice is meant, and runs twice.
+  bool _isEchoOfOtherPhone(WebSocket ws, String command) {
+    if (!_onePressCommands.contains(command)) return false;
+    final now = _clock.elapsed;
+    if (command == _lastPress && ws != _lastPressBy && now - _lastPressAt < _samePressWindow) {
+      return true;
+    }
+    _lastPress = command;
+    _lastPressBy = ws;
+    _lastPressAt = now;
+    return false;
+  }
+
   void _handleCommand(WebSocket ws, String command) {
     final baseCommand = command.contains(':') ? command.split(':')[0] : command;
     if (!RemoteCommands.allowedCommands.contains(command) &&
@@ -535,6 +689,19 @@ class WebSocketServer {
       return;
     }
 
+    if (!_allowsGesture(ws, command)) {
+      debugPrint('Ignored $command: another phone is using the pointer');
+      return;
+    }
+    if (_isEchoOfOtherPhone(ws, command)) {
+      debugPrint('Ignored $command: another phone just sent it');
+      _send(ws, {'type': 'ack', 'command': command});
+      return;
+    }
+    _runCommand(ws, command);
+  }
+
+  void _runCommand(WebSocket ws, String command) {
     if (!_isSlideshowRunning && _slideshowOnlyCommands.contains(command)) {
       // After "not running" the poller skips a few rounds, so a show just
       // started on the PC may not be known yet: check once, then decide.
@@ -542,7 +709,7 @@ class WebSocketServer {
         if (!_isSlideshowRunning) {
           debugPrint('Ignored command $command because no slideshow is running');
         } else if (_authenticatedClients.contains(ws)) {
-          _handleCommand(ws, command);
+          _runCommand(ws, command);
         }
       });
       return;
@@ -608,6 +775,9 @@ class WebSocketServer {
     }
     _pendingAuth.clear();
     _invalidMessageCount.clear();
+    _gestureOwner = null;
+    _gestureBlocked.clear();
+    _lastPressBy = null;
 
     // Copy first: closing a socket runs its onDone, which edits these collections.
     final clients = List.of(_clients);

@@ -28,6 +28,7 @@ abstract class InputService {
   void whiteScreen();
   void eraseAllInk();
   Future<void> setPenColor(int bgrColor);
+  Future<void> setHighlighterColor(int bgrColor);
   Future<void> pptMediaPlayPause();
   Future<void> pptMediaRewind();
 

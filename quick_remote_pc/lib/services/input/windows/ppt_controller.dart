@@ -5,12 +5,35 @@ import 'package:win32/win32.dart';
 import 'keyboard_simulator.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
+import '../../presenter_settings.dart';
 
 class PptController {
   static bool _isLaserActive = false;
 
-  static void slideNext() => KeyboardSimulator.pressKey(VK_NEXT);
-  static void slidePrev() => KeyboardSimulator.pressKey(VK_PRIOR);
+  static void slideNext() {
+    _clearInkBeforeMove();
+    KeyboardSimulator.pressKey(VK_NEXT);
+  }
+
+  static void slidePrev() {
+    _clearInkBeforeMove();
+    KeyboardSimulator.pressKey(VK_PRIOR);
+  }
+
+  /// PowerPoint keeps a slide's ink and shows it again when the show comes
+  /// back. With the setting on, E erases it first, but only in the slideshow
+  /// window ('screenClass'): in the editor it would type an E.
+  static void _clearInkBeforeMove() {
+    if (!PresenterSettings.clearInkOnSlideChange) return;
+    final hwnd = GetForegroundWindow();
+    final classNamePtr = wsalloc(256);
+    GetClassName(hwnd, classNamePtr, 256);
+    final className = classNamePtr.toDartString();
+    free(classNamePtr);
+    if (className == 'screenClass' && _isPowerPointWindow(hwnd)) {
+      KeyboardSimulator.pressKey(0x45); // E
+    }
+  }
 
   static Future<void> slideStart() async {
     try {
@@ -127,12 +150,14 @@ try {
     KeyboardSimulator.pressKeyCombo(keys);
     return true;
   }
-  
+
   static void setLaserActive(bool active) {
       _isLaserActive = active;
   }
 
-  static Future<void> setPenColor(int bgrColor) async {
+  /// Sets the ink color of the running show's pen (or of the highlighter,
+  /// while it is the active tool).
+  static Future<void> setPointerColor(int bgrColor) async {
     final script = '''
 try {
     \$ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
@@ -147,7 +172,7 @@ try {
 ''';
     try {
       final output = await PowerShellRunner.execute(script);
-      debugPrint('setPenColor output: $output');
+      debugPrint('setPointerColor output: $output');
       if (output.trim().startsWith('ERROR:')) {
         String errorMsg = output.trim().substring(7).trim();
         if (errorMsg.contains('SLIDESHOW_NOT_ACTIVE')) {
@@ -157,11 +182,11 @@ try {
         } else if (errorMsg.contains('0x800706BA') || errorMsg.contains('RPC server is unavailable')) {
           errorMsg = 'PowerPoint yanıt vermiyor.';
         }
-        debugPrint('setPenColor failed: $errorMsg');
+        debugPrint('setPointerColor failed: $errorMsg');
         InputSimulator.onCommandError?.call(errorMsg);
       }
     } catch (e) {
-      debugPrint('Exception in setPenColor: $e');
+      debugPrint('Exception in setPointerColor: $e');
       InputSimulator.onCommandError?.call('Beklenmeyen bir hata oluştu: $e');
     }
   }

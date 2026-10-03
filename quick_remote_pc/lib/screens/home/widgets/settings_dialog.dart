@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../services/presenter_settings.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -10,6 +11,7 @@ class SettingsDialog extends StatefulWidget {
 
 class _SettingsDialogState extends State<SettingsDialog> {
   bool _hideWarning = false;
+  bool _keepInk = PresenterSettings.keepInkOnSlideChange;
 
   @override
   void initState() {
@@ -63,6 +65,25 @@ class _SettingsDialogState extends State<SettingsDialog> {
             activeTrackColor: const Color(0xFF00BCD4).withValues(alpha: 0.5),
             activeThumbColor: const Color(0xFF00BCD4),
             onChanged: _saveSettings,
+            contentPadding: EdgeInsets.zero,
+          ),
+          SwitchListTile(
+            title: const Text(
+              'Slayt Değişince Çizimleri Koru',
+              style: TextStyle(color: Colors.white70, fontSize: 15),
+            ),
+            subtitle: const Text(
+              'Çizimler kendi slaytında kalır, o slayta dönünce yeniden görünür. '
+              'Kapalıyken ileri veya geri gidince kalemle çizilenler silinir.',
+              style: TextStyle(color: Colors.white54, fontSize: 13),
+            ),
+            value: _keepInk,
+            activeTrackColor: const Color(0xFF00BCD4).withValues(alpha: 0.5),
+            activeThumbColor: const Color(0xFF00BCD4),
+            onChanged: (value) {
+              setState(() => _keepInk = value);
+              PresenterSettings.setKeepInkOnSlideChange(value);
+            },
             contentPadding: EdgeInsets.zero,
           ),
         ],

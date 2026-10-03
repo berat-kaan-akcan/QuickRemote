@@ -30,10 +30,10 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
         children: [
           Text(
             Platform.isLinux
-                ? 'Bu ağ güvenlik duvarında güvenilmeyen (public) bölgede. Bu ağdaki '
+                ? 'Bu ağ, güvenlik duvarında güvenilmeyen ağ olarak tanımlı. Bu ağdaki '
                     'diğer kişiler QuickRemote sunucunuzu görebilir.\n\n'
                     'Güvenilir bir ağda olduğunuzdan emin olun.'
-                : 'Şu an ortak (Public) bir ağdasınız. Bu ağdaki diğer kişiler '
+                : 'Şu an ortak bir ağdasınız. Bu ağdaki diğer kişiler '
                     'QuickRemote sunucunuzu görebilir.\n\n'
                     'Güvenilir bir ağda olduğunuzdan emin olun.',
             style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),

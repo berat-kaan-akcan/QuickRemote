@@ -264,6 +264,106 @@ void main() {
     });
   });
 
+  group('two phones', () {
+    Future<(TestClient, TestClient)> twoInAShow() async {
+      input.slideState = {'current': 1, 'total': 3, 'notes': ''};
+      final a = await authed();
+      await a.next('SLIDE_STATE');
+      final b = await authed();
+      return (a, b);
+    }
+
+    int count(String call) => input.calls.where((c) => c == call).length;
+
+    test('the second phone does not end the first one\'s laser', () async {
+      final (a, b) = await twoInAShow();
+      a.command('MODE_LASER');
+      await a.next('ack');
+
+      // B's whole gesture is dropped, and B is told why.
+      b.command('MODE_PEN');
+      b.ws.add(moveFrame(0, 5, 5));
+      b.command('LEFT_DOWN');
+      b.command('LEFT_UP');
+      b.command('MODE_ARROW');
+      final busy = await b.next('STATUS');
+      expect(busy['state'], 'COMMAND_FAILED');
+      await settle();
+      expect(input.calls, isNot(contains('modePen')));
+      expect(input.calls, isNot(contains('modeArrow')));
+      expect(mouse.moves, isEmpty);
+
+      // A's gesture goes on and ends; then B may draw.
+      a.ws.add(moveFrame(0, 3, 0));
+      a.command('MODE_ARROW');
+      await eventually(() => input.calls.contains('modeArrow'));
+      expect(mouse.moves, [(3.0, 0.0)]);
+      b.command('MODE_PEN');
+      await eventually(() => input.calls.contains('modePen'));
+    });
+
+    test('slide commands still work while another phone points', () async {
+      final (a, b) = await twoInAShow();
+      a.command('MODE_LASER');
+      await a.next('ack');
+      b.command('NEXT');
+      await eventually(() => input.calls.contains('slideNext'));
+    });
+
+    test('a phone that leaves mid-gesture frees the pointer', () async {
+      final (a, b) = await twoInAShow();
+      a.command('MODE_LASER');
+      await a.next('ack');
+      await a.ws.close();
+      await eventually(() => input.calls.contains('modeArrow'));
+      b.command('MODE_PEN');
+      await eventually(() => input.calls.contains('modePen'));
+    });
+
+    test('two phones pressing NEXT at once advance one slide', () async {
+      final (a, b) = await twoInAShow();
+      a.command('NEXT');
+      b.command('NEXT');
+      await b.next('ack');
+      await a.next('ack');
+      await settle();
+      expect(count('slideNext'), 1);
+    });
+
+    test('one phone pressing twice advances twice', () async {
+      final (a, _) = await twoInAShow();
+      a.command('NEXT');
+      a.command('NEXT');
+      await eventually(() => count('slideNext') == 2);
+    });
+
+    test('a second press after the window counts', () async {
+      final (a, b) = await twoInAShow();
+      a.command('NEXT');
+      await eventually(() => count('slideNext') == 1);
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      b.command('NEXT');
+      await eventually(() => count('slideNext') == 2);
+    });
+  });
+
+  group('phone names', () {
+    test('keeps ordinary names, including non-ASCII', () {
+      expect(ConnectedClient.sanitizeName('Ayşe\'nin Telefonu'), 'Ayşe\'nin Telefonu');
+    });
+
+    test('drops non-strings and names with nothing visible', () {
+      expect(ConnectedClient.sanitizeName(42), isNull);
+      expect(ConnectedClient.sanitizeName(' \u200B\t '), isNull);
+    });
+
+    test('shortens long names', () {
+      final name = ConnectedClient.sanitizeName('x' * 100)!;
+      expect(name.runes.length, ConnectedClient.maxNameLength);
+      expect(name, endsWith('…'));
+    });
+  });
+
   group('connected clients', () {
     test('lists authenticated phones and marks the server as paired', () async {
       expect(server.pairedOnce.value, isFalse);
@@ -286,6 +386,15 @@ void main() {
       expect(server.connectedClients.value, hasLength(1));
       other.command('NEXT');
       await other.next('ack'); // still connected
+    });
+
+    test('shows the name a phone sends with its PIN', () async {
+      final named = await connect();
+      named.send({'auth': server.pin.value, 'name': 'Berat\u202Es Galaxy\n A52'});
+      expect((await named.next('auth'))['status'], 'ok');
+      await authed(); // an older app sends no name
+      final names = server.connectedClients.value.map((c) => c.name).toList();
+      expect(names, ['Berats Galaxy A52', null]);
     });
 
     test('stop forgets the pairing', () async {
