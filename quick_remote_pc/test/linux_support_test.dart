@@ -1,9 +1,13 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/input/command_router.dart';
 import 'package:quick_remote_pc/services/input/linux/evdev_keys.dart';
 import 'package:quick_remote_pc/services/input/linux/impress_bridge.dart';
 import 'package:quick_remote_pc/services/input/linux/mpris_controller.dart';
 import 'package:quick_remote_pc/services/input/linux/pactl_volume.dart';
+import 'package:quick_remote_pc/services/input/linux/x11_windows.dart';
 import 'package:quick_remote_pc/services/linux/linux_setup.dart';
 import 'package:quick_remote_pc/services/server/network/linux_network.dart';
 import 'package:quick_remote_pc/services/server/network/platform_network.dart';
@@ -199,5 +203,19 @@ void main() {
     // On another network that rule does not let the phone in.
     expect(LinuxNetwork.zoneAllowsPort(zone, 8091, subnet: '10.0.0.0/24'), isFalse);
     expect(LinuxNetwork.zoneAllowsPort(zone, 8100, subnet: '192.168.1.0/24'), isFalse);
+  });
+
+  test('X11Windows.parseWmClass splits instance and class', () {
+    expect(X11Windows.parseWmClass(Uint8List.fromList(utf8.encode('wpp\u0000wpp\u0000'))), ['wpp', 'wpp']);
+    expect(X11Windows.parseWmClass(Uint8List.fromList(utf8.encode('soffice\u0000Soffice'))),
+        ['soffice', 'Soffice']);
+    expect(X11Windows.parseWmClass(Uint8List(0)), isEmpty);
+  });
+
+  test('every key the WPS shortcuts use is registered on the device', () {
+    final keys = Evdev.allKeys.toSet();
+    for (final key in [Evdev.keyLeftCtrl, Evdev.keyA, Evdev.keyP, Evdev.keyI, Evdev.keyE, Evdev.keyF5]) {
+      expect(keys, contains(key));
+    }
   });
 }

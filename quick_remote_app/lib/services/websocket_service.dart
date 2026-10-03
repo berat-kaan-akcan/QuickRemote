@@ -152,7 +152,7 @@ class WebSocketService extends ChangeNotifier {
 
   void _handleMessage(Map<String, dynamic> message) {
     if (message['type'] == 'auth') {
-      _state.presenter = message['presenter'] as String? ?? 'powerpoint';
+      _state.updatePresenters(message);
       notifyListeners();
       return;
     }

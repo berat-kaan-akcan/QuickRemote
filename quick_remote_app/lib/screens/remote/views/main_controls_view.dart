@@ -92,7 +92,10 @@ class _MainControlsViewState extends State<MainControlsView> {
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              'Slayt: ${ws.currentSlide} / ${ws.totalSlides > 0 ? ws.totalSlides.toString() : '?'}',
+                              // 0: a show the PC sees but cannot read (a WPS it did not open).
+                              ws.isPptRunning && ws.currentSlide == 0 && ws.totalSlides == 0
+                                  ? 'Slayt gösterisi açık'
+                                  : 'Slayt: ${ws.currentSlide} / ${ws.totalSlides > 0 ? ws.totalSlides.toString() : '?'}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,

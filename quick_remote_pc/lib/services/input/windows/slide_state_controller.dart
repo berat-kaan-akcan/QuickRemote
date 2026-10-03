@@ -2,16 +2,19 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
+import 'presenter_com.dart';
 
+/// Polls the running show of PowerPoint or WPS ([PresenterCom.lookup]).
 class SlideStateController {
   static Future<Map<String, dynamic>?> getSlideState() async {
-    const script = r'''
+    const script = '${PresenterCom.lookup}'
+        r'''
 try {
-    $ppt = [System.Runtime.InteropServices.Marshal]::GetActiveObject("PowerPoint.Application")
     if ($ppt -ne $null -and $ppt.SlideShowWindows.Count -gt 0) {
         $view = $ppt.SlideShowWindows.Item(1).View
+        $presentation = $ppt.SlideShowWindows.Item(1).Presentation
         $current = $view.CurrentShowPosition
-        $total = $ppt.ActivePresentation.Slides.Count
+        $total = $presentation.Slides.Count
         
         $isBlackScreen = $false
         if ($current -gt $total) {
@@ -24,7 +27,7 @@ try {
         $isMediaPlaying = $null
 
         if (-not $isBlackScreen) {
-            $slide = $ppt.ActivePresentation.Slides.Item($current)
+            $slide = $presentation.Slides.Item($current)
             if ($slide.HasNotesPage) {
                 $shapes = $slide.NotesPage.Shapes
                 foreach ($shape in $shapes) {
@@ -43,7 +46,9 @@ try {
                     if ($s.Type -eq 16) {
                         $hasMedia = $true
                         try {
-                            $p = $view.Player($s.Name)
+                            $p = $null
+                            try { $p = $view.Player($s.Name) } catch {}
+                            if ($p -eq $null) { $p = $view.Player($s.Id) }
                             if ($p -ne $null) {
                                 if ($p.State -eq 0) {
                                     $isMediaPlaying = $true
@@ -64,6 +69,7 @@ try {
             hasMedia = $hasMedia
             isMediaPlaying = $isMediaPlaying
             isBlackScreen = $isBlackScreen
+            presenter = $qrPresenter
         }
         $data | ConvertTo-Json -Compress
     } else {
@@ -76,10 +82,13 @@ try {
     try {
       final output = await PowerShellRunner.execute(script, isPolling: true);
       if (output.trim() == 'POWERPOINT_NOT_RUNNING') {
+        PresenterCom.active = null;
         return {'error': 'POWERPOINT_NOT_RUNNING'};
       }
       if (output.isNotEmpty && output.startsWith('{')) {
-        return jsonDecode(output) as Map<String, dynamic>;
+        final state = jsonDecode(output) as Map<String, dynamic>;
+        PresenterCom.active = state['presenter'] as String?;
+        return state;
       }
     } catch (e) {
       debugPrint('Exception in getSlideState: $e');

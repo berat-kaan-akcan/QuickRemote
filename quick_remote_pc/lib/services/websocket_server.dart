@@ -539,6 +539,7 @@ class WebSocketServer {
       'type': 'auth',
       'status': 'ok',
       'presenter': InputSimulator.presenter,
+      'presenters': InputSimulator.presenters,
       'platform': Platform.operatingSystem,
     });
 

@@ -3,9 +3,13 @@ typedef VolumeState = ({int volume, bool muted});
 abstract class InputService {
   void Function(String detail)? onCommandError;
 
-  /// Presentation program controlled on this platform ('powerpoint' / 'impress').
+  /// Main presentation program of this platform ('powerpoint' / 'impress').
   /// Sent to the mobile client so it can adapt its texts and controls.
   String get presenter;
+
+  /// Every presentation program this platform controls, [presenter] first
+  /// ('wps' on both platforms). SLIDE_STATE names the one running the show.
+  List<String> get presenters;
 
   // States
   Future<Map<String, dynamic>?> getSmtcState();

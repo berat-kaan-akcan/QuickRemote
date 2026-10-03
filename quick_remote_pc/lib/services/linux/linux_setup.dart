@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import '../input/linux/impress_bridge.dart';
 import '../input/linux/uinput_device.dart';
+import '../input/linux/wps_bridge.dart';
 import 'system_executable.dart';
 
 enum ImpressStatus {
@@ -31,6 +32,20 @@ enum ImpressStatus {
 
   /// python3 or LibreOffice's Python-UNO bridge is missing.
   noUno,
+}
+
+enum WpsStatus {
+  /// The bridge controls a WPS it opened a presentation in.
+  connected,
+
+  /// pywpsrpc is installed: "Sunumu WPS ile aç" gives full control.
+  ready,
+
+  /// WPS is installed but pywpsrpc is not: only key presses reach it.
+  noRpc,
+
+  /// WPS Office is not installed.
+  notInstalled,
 }
 
 /// One-time system setup the Linux server needs, and checks for it.
@@ -174,6 +189,58 @@ udevadm settle
       return true;
     } catch (e) {
       debugPrint('Could not update LibreOffice profile: $e');
+      return false;
+    }
+  }
+
+  // ── WPS Office ──
+
+  /// pywpsrpc versions with wheels for current Pythons (2.4.0 has 3.7-3.14).
+  static const _pywpsrpc = 'pywpsrpc>=2.4,<3';
+
+  static Future<bool> wpsInstalled() async {
+    for (final path in const ['/usr/bin/wpp', '/opt/kingsoft/wps-office/office6/wpp', '/usr/lib/office6/wpp']) {
+      if (File(path).existsSync()) return true;
+    }
+    return _succeeds('sh', ['-c', 'command -v wpp']);
+  }
+
+  static Future<WpsStatus> wpsStatus() async {
+    if (!await wpsInstalled()) return WpsStatus.notInstalled;
+    final ping = await WpsBridge.instance.request('ping');
+    if (ping['ok'] != true || ping['rpc'] != true) return WpsStatus.noRpc;
+    return ping['connected'] == true ? WpsStatus.connected : WpsStatus.ready;
+  }
+
+  /// Installs pywpsrpc (WPS's RPC bindings) into a venv of the app's own,
+  /// leaving the system Python untouched. Needs the internet once.
+  static Future<bool> installWpsSupport() async {
+    final dir = await WpsBridge.venvDirectory();
+    final python = await WpsBridge.venvPython();
+    try {
+      if (!File(python).existsSync()) {
+        final venv = await Process.run(systemExecutable('python3'), ['-m', 'venv', dir.path]);
+        if (venv.exitCode != 0) {
+          debugPrint('python3 -m venv failed: ${venv.stderr}');
+          return false;
+        }
+      }
+      final pip = await Process.run(
+          python, ['-m', 'pip', 'install', '--disable-pip-version-check', '--quiet', _pywpsrpc]);
+      if (pip.exitCode != 0) {
+        debugPrint('pip install pywpsrpc failed: ${pip.stderr}');
+        return false;
+      }
+      final check = await Process.run(python, ['-c', 'import pywpsrpc.rpcwppapi']);
+      if (check.exitCode != 0) {
+        debugPrint('pywpsrpc does not load: ${check.stderr}');
+        return false;
+      }
+      // A bridge started before the install runs without pywpsrpc.
+      WpsBridge.instance.restart();
+      return true;
+    } catch (e) {
+      debugPrint('WPS support install failed: $e');
       return false;
     }
   }
