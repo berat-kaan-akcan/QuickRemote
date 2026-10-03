@@ -8,10 +8,13 @@ void main() {
       RemoteCommands.penColor(0xFF),
       RemoteCommands.highlighterColor(0xFFFF),
       RemoteCommands.volumeSet(40),
+      RemoteCommands.keepInk(true),
     ]) {
       expect(RemoteCommands.allowedPrefixes, contains(command.split(':').first), reason: command);
     }
     expect(RemoteCommands.startAt(3), 'START_AT:3');
+    expect(RemoteCommands.keepInk(true), 'SET_KEEP_INK:1');
+    expect(RemoteCommands.keepInk(false), 'SET_KEEP_INK:0');
   });
 
   test('plain commands and prefixes do not overlap', () {

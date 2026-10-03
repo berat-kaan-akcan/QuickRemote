@@ -72,11 +72,17 @@ class WebSocketService extends ChangeNotifier {
   // Command error state (for COMMAND_FAILED from PC)
   String? _lastCommandError;
 
+  // The PC does not store this setting: it is sent after every connect.
+  bool _keepInkOnSlideChange = false;
+
   WebSocketService() {
     _client = WebSocketClient(
       onConnectionStateChanged: (state) {
         if (state == AppConnectionState.disconnected || state == AppConnectionState.failed) {
           _state.reset();
+        } else if (state == AppConnectionState.connected) {
+          // Not on the auth message: the client counts as connected only after it.
+          _client.sendCommand(RemoteCommands.keepInk(_keepInkOnSlideChange));
         }
         notifyListeners();
       },
@@ -207,6 +213,14 @@ class WebSocketService extends ChangeNotifier {
   Future<ConnectionResult> connect(String host, int port, {String? pin, String? certFingerprint}) {
     _client.resetReconnectAttempts();
     return _client.connect(host, port, pin: pin, expectedFingerprint: certFingerprint);
+  }
+
+  /// Sets the "keep the ink on slide change" setting, and sends it to the PC
+  /// when it changed while connected.
+  void setKeepInkOnSlideChange(bool keep) {
+    if (keep == _keepInkOnSlideChange) return;
+    _keepInkOnSlideChange = keep;
+    _client.sendCommand(RemoteCommands.keepInk(keep));
   }
 
   /// Send a command to the PC.

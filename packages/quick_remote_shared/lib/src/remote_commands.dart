@@ -65,6 +65,7 @@ abstract class RemoteCommands {
     'SET_HIGHLIGHTER_COLOR',
     'START_AT',
     'VOLUME_SET',
+    'SET_KEEP_INK',
   };
 
   // Parameterized commands; the PC validates the range of each value.
@@ -72,5 +73,9 @@ abstract class RemoteCommands {
   static String penColor(int bgr) => 'SET_PEN_COLOR:$bgr';
   static String highlighterColor(int bgr) => 'SET_HIGHLIGHTER_COLOR:$bgr';
   static String volumeSet(int level) => 'VOLUME_SET:$level';
+
+  /// The phone's "keep the ink on slide change" setting, sent after every
+  /// connect and on change (the PC does not store it).
+  static String keepInk(bool keep) => 'SET_KEEP_INK:${keep ? 1 : 0}';
 }
 
