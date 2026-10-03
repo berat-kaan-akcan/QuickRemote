@@ -1,334 +1,332 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 import '../providers/settings_provider.dart';
+import '../services/presentation_timer_controller.dart';
 import '../utils/ui/app_bottom_sheet.dart';
 import '../utils/ui/app_popup_theme.dart';
 import '../utils/ui/app_snackbar.dart';
 
-class PresentationTimer extends StatefulWidget {
+/// Vibrates with one of the patterns chosen in the timer settings.
+void vibrateTimerPattern(String pattern) {
+  switch (pattern) {
+    case 'short':
+      Vibration.vibrate(pattern: [0, 300]);
+      break;
+    case 'long':
+      Vibration.vibrate(pattern: [0, 800]);
+      break;
+    case 'triple':
+      Vibration.vibrate(pattern: [0, 500, 150, 500, 150, 800]);
+      break;
+    case 'double':
+    default:
+      Vibration.vibrate(pattern: [0, 300, 100, 300]);
+      break;
+  }
+}
+
+String formatTimerSeconds(int seconds) {
+  final int m = seconds ~/ 60;
+  final int s = seconds % 60;
+  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+}
+
+/// Connects [controller] to the timer settings: early warnings, vibration
+/// patterns and the snackbars shown on [context].
+void bindTimerToSettings(BuildContext context, PresentationTimerController controller) {
+  final settings = context.read<SettingsProvider>();
+  controller.warningTimes = () => settings.earlyWarningHaptic ? settings.warningTimes : const [];
+  controller.onAlert = (alert) {
+    if (!context.mounted) return;
+    if (alert.kind == TimerAlertKind.timeUp) {
+      if (settings.timeOutVibrationEnabled) vibrateTimerPattern(settings.timeOutVibrationPattern);
+      AppSnackbar.show(
+        context,
+        message: 'Sunum süresi doldu!',
+        type: SnackbarType.error,
+        duration: const Duration(seconds: 3),
+      );
+    } else {
+      vibrateTimerPattern(settings.warningVibrations[alert.remainingSeconds] ?? 'double');
+      AppSnackbar.show(
+        context,
+        message: 'Sürenin bitimine ${formatTimerSeconds(alert.remainingSeconds)} kaldı!',
+        type: SnackbarType.warning,
+        duration: const Duration(seconds: 2),
+      );
+    }
+  };
+}
+
+class PresentationTimer extends StatelessWidget {
+  final PresentationTimerController controller;
   final double fontSize;
   final double iconSize;
 
   const PresentationTimer({
     super.key,
+    required this.controller,
     this.fontSize = 16.0,
     this.iconSize = 18.0,
   });
 
-  @override
-  State<PresentationTimer> createState() => _PresentationTimerState();
-}
-
-class _PresentationTimerState extends State<PresentationTimer> {
-  Timer? _timer;
-  int _elapsedSeconds = 0;
-  int _targetSeconds = 0; // 0 means just count up
-  bool _isRunning = false;
-  bool _isDurationSelected = false;
-  DateTime? _startTime;
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _toggleTimer() {
-    if (_isRunning) {
-      _timer?.cancel();
-      setState(() => _isRunning = false);
+  void _toggle(BuildContext context) {
+    if (controller.isRunning) {
+      HapticFeedback.lightImpact();
+      controller.pause();
+    } else if (!controller.isDurationSelected) {
+      showDurationPicker(context);
     } else {
-      if (!_isDurationSelected) {
-        // If not started yet, ask for duration first
-        _showDurationPicker();
-      } else {
-        _startTimer();
-      }
+      HapticFeedback.lightImpact();
+      controller.start();
     }
   }
 
-  void _startTimer() {
-    HapticFeedback.lightImpact();
-    setState(() => _isRunning = true);
-    
-    // Set or resume start time
-    _startTime = DateTime.now().subtract(Duration(seconds: _elapsedSeconds));
-    
-    // Run timer more frequently (e.g., 500ms) so it instantly updates when coming from background
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (!mounted || _startTime == null) return;
-      
-      final now = DateTime.now();
-      final newElapsed = now.difference(_startTime!).inSeconds;
-      
-      if (newElapsed != _elapsedSeconds) {
-        setState(() {
-          _elapsedSeconds = newElapsed;
-        });
-        
-        if (_targetSeconds > 0) {
-          int remaining = _targetSeconds - _elapsedSeconds;
-          final settings = context.read<SettingsProvider>();
-          final shouldWarn = settings.earlyWarningHaptic;
-          
-          if (shouldWarn && settings.warningTimes.contains(remaining)) {
-            final pattern = settings.warningVibrations[remaining] ?? 'double';
-            _vibrateWithPattern(pattern);
-            
-            // Ufak bir bildirim
-            AppSnackbar.show(
-              context,
-              message: 'Sürenin bitimine ${_formatTime(remaining)} kaldı!',
-              type: SnackbarType.warning,
-              duration: const Duration(seconds: 2),
-            );
-          } else if (remaining == 0) {
-            // Süre Doldu
-            if (settings.timeOutVibrationEnabled) {
-              _vibrateWithPattern(settings.timeOutVibrationPattern);
-            }
-            AppSnackbar.show(
-              context,
-              message: 'Sunum süresi doldu!',
-              type: SnackbarType.error,
-              duration: const Duration(seconds: 3),
-            );
-          }
-        }
-      }
-    });
-  }
-
-  void _vibrateWithPattern(String pattern) {
-    switch (pattern) {
-      case 'short':
-        Vibration.vibrate(pattern: [0, 300]);
-        break;
-      case 'long':
-        Vibration.vibrate(pattern: [0, 800]);
-        break;
-      case 'triple':
-        Vibration.vibrate(pattern: [0, 500, 150, 500, 150, 800]);
-        break;
-      case 'double':
-      default:
-        Vibration.vibrate(pattern: [0, 300, 100, 300]);
-        break;
-    }
-  }
-
-  void _resetTimer() {
+  void _reset() {
     HapticFeedback.mediumImpact();
-    _timer?.cancel();
-    setState(() {
-      _isRunning = false;
-      _elapsedSeconds = 0;
-      _targetSeconds = 0;
-      _isDurationSelected = false;
-      _startTime = null;
-    });
+    controller.reset();
   }
 
-  void _showDurationPicker() {
+  void showDurationPicker(BuildContext context) {
     HapticFeedback.mediumImpact();
-    final customController = TextEditingController();
-
     AppBottomSheet.show(
       context: context,
-      builder: (ctx) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppBottomSheet.buildTitle('Sunum Süresi Belirle', icon: Icons.timer_outlined),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children: [
-                _DurationChip(label: 'Serbest', minutes: 0, onTap: (m) => _setDuration(ctx, m)),
-                _DurationChip(label: '5 dk', minutes: 5, onTap: (m) => _setDuration(ctx, m)),
-                _DurationChip(label: '10 dk', minutes: 10, onTap: (m) => _setDuration(ctx, m)),
-                _DurationChip(label: '15 dk', minutes: 15, onTap: (m) => _setDuration(ctx, m)),
-                _DurationChip(label: '20 dk', minutes: 20, onTap: (m) => _setDuration(ctx, m)),
-                _DurationChip(label: '30 dk', minutes: 30, onTap: (m) => _setDuration(ctx, m)),
-                _DurationChip(label: '45 dk', minutes: 45, onTap: (m) => _setDuration(ctx, m)),
-                _DurationChip(label: '60 dk', minutes: 60, onTap: (m) => _setDuration(ctx, m)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: customController,
-                    style: const TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: AppPopupTheme.inputDecoration(
-                      context: ctx,
-                      hintText: 'Özel süre girin (dk)',
-                    ),
-                    onSubmitted: (val) {
-                      final m = int.tryParse(val);
-                      if (m != null && m > 0) {
-                        _setDuration(ctx, m);
-                      } else {
-                        AppSnackbar.show(
-                          ctx,
-                          message: 'Lütfen geçerli bir süre (tam sayı, saniye) girin.',
-                          type: SnackbarType.error,
-                        );
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                FilledButton(
-                  onPressed: () {
-                    final m = int.tryParse(customController.text);
-                    if (m != null && m > 0) {
-                      _setDuration(ctx, m);
-                    } else {
-                      AppSnackbar.show(
-                        ctx,
-                        message: 'Lütfen geçerli bir süre (tam sayı, saniye) girin.',
-                        type: SnackbarType.error,
-                      );
-                    }
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius)),
-                  ),
-                  child: const Text('Ayarla', style: TextStyle(fontWeight: FontWeight.w600)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Sayaç üzerine basılı tutarak sıfırlayabilirsiniz.',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
-            ),
-            const SizedBox(height: 8),
-          ],
-        );
-      },
+      builder: (ctx) => _DurationPicker(
+        initialSeconds: controller.isDurationSelected ? controller.targetSeconds : null,
+        onSelected: (seconds, start) {
+          Navigator.of(ctx).pop();
+          if (start) HapticFeedback.lightImpact();
+          controller.setDuration(seconds, start: start);
+        },
+      ),
     );
-  }
-
-  void _setDuration(BuildContext ctx, int minutes) {
-    Navigator.of(ctx).pop();
-    setState(() {
-      _targetSeconds = minutes * 60;
-      _elapsedSeconds = 0;
-      _isDurationSelected = true;
-      _startTime = null;
-    });
-  }
-
-  String _formatTime(int seconds) {
-    final int m = seconds ~/ 60;
-    final int s = seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isOvertime = _targetSeconds > 0 && _elapsedSeconds > _targetSeconds;
-    int displaySeconds = _targetSeconds > 0
-        ? (_targetSeconds - _elapsedSeconds).abs()
-        : _elapsedSeconds;
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final isOvertime = controller.isOvertime;
+        var timeStr = formatTimerSeconds(controller.displaySeconds);
+        if (isOvertime) timeStr = '+$timeStr';
 
-    String timeStr = _formatTime(displaySeconds);
-    if (isOvertime) {
-      timeStr = '+$timeStr';
-    }
+        final primary = Theme.of(context).colorScheme.primary;
+        final textColor = isOvertime ? const Color(0xFFFF5252) : Colors.white;
+        final bgColor = isOvertime
+            ? const Color(0xFFFF5252).withValues(alpha: 0.15)
+            : primary.withValues(alpha: 0.15);
+        final borderColor = isOvertime
+            ? const Color(0xFFFF5252).withValues(alpha: 0.5)
+            : primary.withValues(alpha: 0.3);
+        final canReset = controller.isRunning || controller.elapsedSeconds > 0;
 
-    Color textColor = isOvertime ? const Color(0xFFFF5252) : Colors.white;
-    Color bgColor = isOvertime
-        ? const Color(0xFFFF5252).withValues(alpha: 0.15)
-        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
-    Color borderColor = isOvertime
-        ? const Color(0xFFFF5252).withValues(alpha: 0.5)
-        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3);
-
-    return GestureDetector(
-      onTap: _toggleTimer,
-      onLongPress: () {
-        if (_isRunning || _elapsedSeconds > 0 || _isDurationSelected) {
-          _resetTimer();
-        } else {
-          _showDurationPicker();
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
-              color: textColor,
-              size: widget.iconSize,
+        return GestureDetector(
+          onTap: () => _toggle(context),
+          onLongPress: () => showDurationPicker(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor),
             ),
-            const SizedBox(width: 8),
-            Text(
-              timeStr,
-              style: TextStyle(
-                color: textColor,
-                fontSize: widget.fontSize,
-                fontWeight: FontWeight.bold,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-            if (_isRunning || _elapsedSeconds > 0 || _isDurationSelected) ...[
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: _resetTimer,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: textColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.refresh_rounded,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  controller.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  color: textColor,
+                  size: iconSize,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  timeStr,
+                  style: TextStyle(
                     color: textColor,
-                    size: widget.iconSize * 0.8,
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.bold,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
-              ),
-            ],
+                if (canReset) ...[
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: _reset,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: textColor.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        color: textColor,
+                        size: iconSize * 0.8,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DurationPicker extends StatefulWidget {
+  /// The duration selected before, shown in the custom fields.
+  final int? initialSeconds;
+  final void Function(int seconds, bool start) onSelected;
+
+  const _DurationPicker({required this.initialSeconds, required this.onSelected});
+
+  @override
+  State<_DurationPicker> createState() => _DurationPickerState();
+}
+
+class _DurationPickerState extends State<_DurationPicker> {
+  static const _presetMinutes = [5, 10, 15, 20, 30, 45, 60];
+
+  late final TextEditingController _minutes;
+  late final TextEditingController _seconds;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialSeconds;
+    final hasInitial = initial != null && initial > 0;
+    _minutes = TextEditingController(text: hasInitial ? '${initial ~/ 60}' : '');
+    _seconds = TextEditingController(text: hasInitial && initial % 60 > 0 ? '${initial % 60}' : '');
+  }
+
+  @override
+  void dispose() {
+    _minutes.dispose();
+    _seconds.dispose();
+    super.dispose();
+  }
+
+  void _select(int seconds) {
+    widget.onSelected(seconds, context.read<SettingsProvider>().timerAutoStart);
+  }
+
+  void _submitCustom() {
+    final minutes = int.tryParse(_minutes.text.trim().isEmpty ? '0' : _minutes.text.trim());
+    final seconds = int.tryParse(_seconds.text.trim().isEmpty ? '0' : _seconds.text.trim());
+    final total = (minutes ?? -1) * 60 + (seconds ?? -1);
+    if (minutes == null || seconds == null || total <= 0) {
+      AppSnackbar.show(
+        context,
+        message: 'Lütfen dakika ve/veya saniye olarak geçerli bir süre girin.',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+    _select(total);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final selected = widget.initialSeconds;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppBottomSheet.buildTitle('Sunum Süresi Belirle', icon: Icons.timer_outlined),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          alignment: WrapAlignment.center,
+          children: [
+            _DurationChip(label: 'Serbest', selected: selected == 0, onTap: () => _select(0)),
+            for (final m in _presetMinutes)
+              _DurationChip(label: '$m dk', selected: selected == m * 60, onTap: () => _select(m * 60)),
           ],
         ),
-      ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: _numberField(_minutes, 'dk', TextInputAction.next)),
+            const SizedBox(width: 8),
+            Expanded(child: _numberField(_seconds, 'sn', TextInputAction.done, maxValue: 59)),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: _submitCustom,
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius)),
+              ),
+              child: Text(
+                settings.timerAutoStart ? 'Başlat' : 'Ayarla',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text(
+            'Seçince hemen başlat',
+            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          value: settings.timerAutoStart,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
+          onChanged: settings.setTimerAutoStart,
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Dokun: başlat/duraklat · Basılı tut: yeni süre · ↻: seçili süreye dön',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white38, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _numberField(TextEditingController controller, String unit, TextInputAction action, {int? maxValue}) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
+      keyboardType: TextInputType.number,
+      textInputAction: action,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(3),
+        if (maxValue != null)
+          TextInputFormatter.withFunction(
+            (old, value) => (int.tryParse(value.text) ?? 0) > maxValue ? old : value,
+          ),
+      ],
+      decoration: AppPopupTheme.inputDecoration(context: context, hintText: '0').copyWith(suffixText: unit),
+      onSubmitted: action == TextInputAction.done ? (_) => _submitCustom() : null,
     );
   }
 }
 
 class _DurationChip extends StatelessWidget {
   final String label;
-  final int minutes;
-  final Function(int) onTap;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _DurationChip({required this.label, required this.minutes, required this.onTap});
+  const _DurationChip({required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return ActionChip(
-      label: Text(label, style: const TextStyle(color: Colors.white)),
-      backgroundColor: const Color(0xFF262C4A),
-      side: BorderSide.none,
-      onPressed: () => onTap(minutes),
+      label: Text(label, style: TextStyle(color: selected ? primary : Colors.white)),
+      backgroundColor: selected ? primary.withValues(alpha: 0.2) : const Color(0xFF262C4A),
+      side: selected ? BorderSide(color: primary) : BorderSide.none,
+      onPressed: onTap,
     );
   }
 }

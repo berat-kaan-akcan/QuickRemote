@@ -16,6 +16,9 @@ class SettingsProvider extends ChangeNotifier {
   bool _timeOutVibrationEnabled = true;
   String _timeOutVibrationPattern = 'triple';
 
+  // Start the presentation timer as soon as a duration is picked
+  bool _timerAutoStart = false;
+
   // Presentation program targeted in Bluetooth HID mode
   BtTarget _btTarget = BtTarget.powerpoint;
 
@@ -33,6 +36,7 @@ class SettingsProvider extends ChangeNotifier {
   }
   bool get timeOutVibrationEnabled => _timeOutVibrationEnabled;
   String get timeOutVibrationPattern => _timeOutVibrationPattern;
+  bool get timerAutoStart => _timerAutoStart;
   BtTarget get btTarget => _btTarget;
   List<PresentationAnalytics> get presentationHistory =>
       List.unmodifiable(_presentationHistory);
@@ -46,6 +50,7 @@ class SettingsProvider extends ChangeNotifier {
     _earlyWarningHaptic = prefs.getBool('early_warning_haptic') ?? true;
     _timeOutVibrationEnabled = prefs.getBool('timeout_vibration_enabled') ?? true;
     _timeOutVibrationPattern = prefs.getString('timeout_vibration_pattern') ?? 'triple';
+    _timerAutoStart = prefs.getBool('timer_auto_start') ?? false;
     _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
     
     final timesStrList = prefs.getStringList('warning_times');
@@ -134,6 +139,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('timeout_vibration_pattern', pattern);
+  }
+
+  Future<void> setTimerAutoStart(bool value) async {
+    _timerAutoStart = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('timer_auto_start', value);
   }
 
   Future<void> setBtTarget(BtTarget target) async {
