@@ -31,7 +31,12 @@ try {
             if ($slide.HasNotesPage) {
                 $shapes = $slide.NotesPage.Shapes
                 foreach ($shape in $shapes) {
-                    if ($shape.Type -eq 14 -or $shape.HasTextFrame) {
+                    # The notes body (placeholder type 2) and text boxes. The
+                    # slide number (13), header, footer and date placeholders
+                    # have text too: the slide number ended up in the notes.
+                    $placeholder = -1
+                    try { $placeholder = $shape.PlaceholderFormat.Type } catch {}
+                    if ($placeholder -eq 2 -or ($placeholder -eq -1 -and $shape.HasTextFrame)) {
                         $text = $shape.TextFrame.TextRange.Text
                         if ($text -ne $null -and $text.Trim() -ne "") {
                             $notes += $text + "`n"

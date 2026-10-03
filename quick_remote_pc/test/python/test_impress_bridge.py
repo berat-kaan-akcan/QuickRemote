@@ -301,6 +301,7 @@ class ShowDocumentTest(unittest.TestCase):
         self.assertFalse(bridge.is_pdf_url("file:///x/sunum.pdf.odp"))
 
 
+@unittest.skipUnless(sys.platform.startswith("linux"), "Unix sockets and uids are Linux-only")
 class PipeIsTrustedTest(unittest.TestCase):
     def setUp(self):
         self.path = "/tmp/OSL_PIPE_%d_%s" % (os.getuid(), bridge.PIPE_NAME)

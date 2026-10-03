@@ -5,6 +5,7 @@ Run from the repo root: python3 -m unittest discover -s quick_remote_pc/test/pyt
 import importlib.util
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -199,6 +200,7 @@ class HandleTest(unittest.TestCase):
 
 
 class ProcessTest(unittest.TestCase):
+    @unittest.skipUnless(sys.platform.startswith("linux"), "needs waitpid and the true command")
     def test_a_finished_child_is_not_alive(self):
         child = subprocess.Popen(["true"])
         while child.poll() is None:
