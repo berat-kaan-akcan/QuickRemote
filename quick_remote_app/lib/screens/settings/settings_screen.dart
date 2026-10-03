@@ -25,7 +25,7 @@ class SettingsScreen extends StatelessWidget {
             context,
             icon: Icons.timer_outlined,
             title: 'Sunum Sayacı Ayarları',
-            subtitle: 'Titreşim ve erken uyarı süreleri',
+            subtitle: 'Otomatik başlatma, titreşim ve erken uyarılar',
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimerSettingsScreen())),
           ),
           const SizedBox(height: 12),

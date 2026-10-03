@@ -62,6 +62,7 @@ abstract class RemoteCommands {
   /// Parametreli komutların prefix'leri (ör: SET_PEN_COLOR:123, START_AT:5).
   static const allowedPrefixes = <String>{
     'SET_PEN_COLOR',
+    'SET_HIGHLIGHTER_COLOR',
     'START_AT',
     'VOLUME_SET',
   };
@@ -69,6 +70,7 @@ abstract class RemoteCommands {
   // Parameterized commands; the PC validates the range of each value.
   static String startAt(int slide) => 'START_AT:$slide';
   static String penColor(int bgr) => 'SET_PEN_COLOR:$bgr';
+  static String highlighterColor(int bgr) => 'SET_HIGHLIGHTER_COLOR:$bgr';
   static String volumeSet(int level) => 'VOLUME_SET:$level';
 }
 

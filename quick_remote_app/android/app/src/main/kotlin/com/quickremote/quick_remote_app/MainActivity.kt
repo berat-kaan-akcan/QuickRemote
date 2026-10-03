@@ -1,5 +1,9 @@
 package com.quickremote.quick_remote_app
 
+import android.content.Context
+import android.net.wifi.WifiManager
+import android.os.Build
+import android.provider.Settings
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -17,6 +21,12 @@ class MainActivity : FlutterActivity() {
     private val BT_HID_EVENT_CHANNEL  = "com.quickremote.quick_remote_app/bt_hid_events"
 
     private lateinit var btHidService: BluetoothHidService
+
+    // ── Wi-Fi low latency channel ─────────────────────────────────────────
+    private val WIFI_LOCK_CHANNEL = "com.quickremote.quick_remote_app/wifi_lock"
+    private var wifiLock: WifiManager.WifiLock? = null
+
+    private val DEVICE_CHANNEL = "com.quickremote.quick_remote_app/device"
     private var btEventSink: EventChannel.EventSink? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -31,6 +41,32 @@ class MainActivity : FlutterActivity() {
                 "startIntercepting" -> { isIntercepting = true; result.success(null) }
                 "stopIntercepting"  -> { isIntercepting = false; result.success(null) }
                 else                -> result.notImplemented()
+            }
+        }
+
+        // ── Wi-Fi low latency ──────────────────────────────────────────────
+        // An idle phone puts its Wi-Fi into power save, which holds incoming
+        // and outgoing packets for up to a few hundred ms until traffic keeps
+        // it awake: the first seconds of the laser stutter. The low latency
+        // lock turns power save off while the app is in front with the
+        // screen on, and Android lifts it by itself otherwise.
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger, WIFI_LOCK_CHANNEL
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "acquire" -> { acquireWifiLock(); result.success(null) }
+                "release" -> { releaseWifiLock(); result.success(null) }
+                else      -> result.notImplemented()
+            }
+        }
+
+        // ── Device name, shown in the PC's list of connected phones ────────
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger, DEVICE_CHANNEL
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "name" -> result.success(deviceName())
+                else   -> result.notImplemented()
             }
         }
 
@@ -142,7 +178,37 @@ class MainActivity : FlutterActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
+    /** The name the user gave the phone in its settings, else its model. */
+    private fun deviceName(): String {
+        val named = Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
+        if (!named.isNullOrBlank()) return named
+        val maker = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        return if (Build.MODEL.startsWith(Build.MANUFACTURER, ignoreCase = true)) Build.MODEL
+        else "$maker ${Build.MODEL}"
+    }
+
+    private fun acquireWifiLock() {
+        if (wifiLock?.isHeld == true) return
+        val wifi = applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            WifiManager.WIFI_MODE_FULL_LOW_LATENCY
+        } else {
+            @Suppress("DEPRECATION")
+            WifiManager.WIFI_MODE_FULL_HIGH_PERF
+        }
+        wifiLock = wifi.createWifiLock(mode, "QuickRemote:remote").apply {
+            setReferenceCounted(false)
+            acquire()
+        }
+    }
+
+    private fun releaseWifiLock() {
+        wifiLock?.let { if (it.isHeld) it.release() }
+        wifiLock = null
+    }
+
     override fun onDestroy() {
+        releaseWifiLock()
         // lateinit: unset when the Activity dies before the engine was configured.
         if (::btHidService.isInitialized) btHidService.stopAdvertising()
         super.onDestroy()

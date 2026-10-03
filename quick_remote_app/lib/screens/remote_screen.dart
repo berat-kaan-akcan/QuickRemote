@@ -5,6 +5,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../services/background_session.dart';
+import '../services/presentation_timer_controller.dart';
+import '../services/wifi_low_latency.dart';
 import '../services/websocket_service.dart';
 import 'settings/settings_screen.dart';
 import 'analytics_report_screen.dart';
@@ -13,6 +15,7 @@ import '../providers/settings_provider.dart';
 import 'remote/utils/hardware_key_handler.dart';
 import 'remote/utils/remote_dialogs.dart';
 import '../utils/ui/app_snackbar.dart';
+import '../widgets/presentation_timer.dart';
 import 'remote/views/main_controls_view.dart';
 import 'remote/views/touchpad_view.dart';
 import 'remote/views/media_control_view.dart';
@@ -29,8 +32,8 @@ class RemoteScreen extends StatefulWidget {
 class _RemoteScreenState extends State<RemoteScreen> {
   /// 0 = Kontroller, 1 = Touchpad, 2 = Medya
   int _currentTab = 0;
-  final GlobalKey _presentationTimerKeyMain = GlobalKey();
-  final GlobalKey _presentationTimerKeyTouchpad = GlobalKey();
+  /// Shared by the tabs that show the timer, so switching tabs keeps it running.
+  final PresentationTimerController _timer = PresentationTimerController();
 
   late WebSocketService _wsRef;
   late HardwareKeyHandler _hardwareKeyHandler;
@@ -44,6 +47,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
     super.initState();
     WakelockPlus.enable();
     BackgroundSession.acquire();
+    WifiLowLatency.acquire();
+    bindTimerToSettings(context, _timer);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _wsRef = context.read<WebSocketService>();
@@ -141,8 +146,10 @@ class _RemoteScreenState extends State<RemoteScreen> {
       _hardwareKeyHandler.detach();
       _wsRef.removeListener(_onConnectionChanged);
     }
+    _timer.dispose();
     WakelockPlus.disable();
     BackgroundSession.release();
+    WifiLowLatency.release();
     super.dispose();
   }
 
@@ -156,14 +163,14 @@ class _RemoteScreenState extends State<RemoteScreen> {
     } else if (_currentTab == 1) {
       body = TouchpadView(
         ws: ws,
-        presentationTimerKey: _presentationTimerKeyTouchpad,
+        timer: _timer,
       );
     } else if (_currentTab == 2) {
       body = MediaControlView(ws: ws);
     } else {
       body = MainControlsView(
         ws: ws,
-        presentationTimerKey: _presentationTimerKeyMain,
+        timer: _timer,
       );
     }
 

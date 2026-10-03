@@ -7,6 +7,7 @@ import 'package:web_socket_channel/io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../device_name.dart';
 import '../websocket_service.dart' show AppConnectionState, ConnectionError, ConnectionResult;
 
 class WebSocketClient {
@@ -162,7 +163,9 @@ class WebSocketClient {
       final authCompleter = Completer<ConnectionResult>();
       bool authResolved = false;
 
-      _channel!.sink.add(jsonEncode({'auth': pin}));
+      final name = await DeviceName.get();
+      // Older PCs read only "auth" and ignore the name.
+      _channel!.sink.add(jsonEncode({'auth': pin, 'name': ?name}));
 
       _streamSubscription = _channel!.stream.listen(
         (data) {

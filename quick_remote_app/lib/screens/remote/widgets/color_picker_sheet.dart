@@ -15,32 +15,32 @@ class ColorPickerSheet {
           {
             'name': 'Kırmızı',
             'color': const Color(0xFFFF1744),
-            'cmd': RemoteCommands.penColor(255),
+            'bgr': 255,
           },
           {
             'name': 'Mavi',
             'color': const Color(0xFF2979FF),
-            'cmd': RemoteCommands.penColor(16711680),
+            'bgr': 16711680,
           },
           {
             'name': 'Yeşil',
             'color': const Color(0xFF00E676),
-            'cmd': RemoteCommands.penColor(65280),
+            'bgr': 65280,
           },
           {
             'name': 'Sarı',
             'color': const Color(0xFFFFEA00),
-            'cmd': RemoteCommands.penColor(65535),
+            'bgr': 65535,
           },
           {
             'name': 'Beyaz',
             'color': const Color(0xFFFFFFFF),
-            'cmd': RemoteCommands.penColor(16777215),
+            'bgr': 16777215,
           },
           {
             'name': 'Mor',
             'color': const Color(0xFFD500F9),
-            'cmd': RemoteCommands.penColor(8388736),
+            'bgr': 8388736,
           },
         ];
 
@@ -106,7 +106,11 @@ class ColorPickerSheet {
                       return GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          onSend(c['cmd'] as String);
+                          final bgr = c['bgr'] as int;
+                          // Pen and highlighter keep separate colors.
+                          onSend(tool == DrawTool.pen
+                              ? RemoteCommands.penColor(bgr)
+                              : RemoteCommands.highlighterColor(bgr));
                           Navigator.pop(context);
                         },
                         child: Column(

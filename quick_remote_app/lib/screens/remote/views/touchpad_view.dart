@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
+import '../../../services/presentation_timer_controller.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
 import '../utils/slide_picker_sheet.dart';
@@ -11,12 +12,12 @@ import '../widgets/touchpad_gesture_area.dart';
 import '../widgets/draw_tool_bar.dart';
 class TouchpadView extends StatefulWidget {
   final WebSocketService ws;
-  final GlobalKey presentationTimerKey;
+  final PresentationTimerController timer;
 
   const TouchpadView({
     super.key,
     required this.ws,
-    required this.presentationTimerKey,
+    required this.timer,
   });
 
   @override
@@ -102,7 +103,7 @@ class _TouchpadViewState extends State<TouchpadView> {
                 ),
               ),
               const SizedBox(width: 8),
-              PresentationTimer(key: widget.presentationTimerKey),
+              PresentationTimer(controller: widget.timer),
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
