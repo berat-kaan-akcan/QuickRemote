@@ -740,6 +740,13 @@ class WebSocketServer {
 
     if (_slideCommands.contains(command) || command.startsWith('START_AT:')) {
       triggerSlideStateUpdate(const Duration(milliseconds: 500));
+      if (command == RemoteCommands.start || command.startsWith('START_AT:')) {
+        // PowerPoint's show can take seconds to open. A check that finds no
+        // show makes the poller skip its next rounds, which kept the phone
+        // on "not running" for 6-8 s after START.
+        triggerSlideStateUpdate(const Duration(milliseconds: 1500));
+        triggerSlideStateUpdate(const Duration(seconds: 3));
+      }
     } else if (_mediaCommands.contains(command)) {
       triggerSlideStateUpdate(const Duration(milliseconds: 350));
     } else if (command == RemoteCommands.refreshState) {
