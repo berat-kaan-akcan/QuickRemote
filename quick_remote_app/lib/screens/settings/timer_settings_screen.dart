@@ -6,6 +6,7 @@ import '../../utils/ui/app_bottom_sheet.dart';
 import '../../utils/ui/app_popup_theme.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../../widgets/presentation_timer.dart';
+import '../../l10n/app_language.dart';
 
 class TimerSettingsScreen extends StatelessWidget {
   const TimerSettingsScreen({super.key});
@@ -19,7 +20,7 @@ class TimerSettingsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Sunum Sayacı', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(context.l10n.timerSettingsTitle, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
@@ -36,12 +37,12 @@ class TimerSettingsScreen extends StatelessWidget {
             ),
             child: SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text(
-                'Süre Seçilince Hemen Başlat',
+              title: Text(
+                context.l10n.timerAutoStartTitle,
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
               ),
               subtitle: Text(
-                'Kapalıyken süre seçildikten sonra sayaca dokunarak başlatılır.',
+                context.l10n.timerAutoStartSubtitle,
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
               ),
               value: settings.timerAutoStart,
@@ -61,12 +62,12 @@ class TimerSettingsScreen extends StatelessWidget {
               children: [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text(
-                    'Erken Uyarı Titreşimi',
+                  title: Text(
+                    context.l10n.earlyWarningTitle,
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                   ),
                   subtitle: Text(
-                    'Sürenin bitimine seçilen süreler kala uyarır.',
+                    context.l10n.earlyWarningSubtitle,
                     style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
                   ),
                   value: settings.earlyWarningHaptic,
@@ -77,14 +78,14 @@ class TimerSettingsScreen extends StatelessWidget {
                 ),
                 if (settings.earlyWarningHaptic) ...[
                   const Divider(color: Colors.white12, height: 32),
-                  const Text(
-                    'Uyarı Süreleri',
+                  Text(
+                    context.l10n.warningTimes,
                     style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 12),
                   if (settings.warningTimes.isEmpty)
                     Text(
-                      'Henüz uyarı süresi yok.',
+                      context.l10n.noWarningTimes,
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
                     ),
                   ListView.separated(
@@ -106,7 +107,7 @@ class TimerSettingsScreen extends StatelessWidget {
                             const Icon(Icons.timer_outlined, color: Colors.white70, size: 20),
                             const SizedBox(width: 12),
                             Text(
-                              '${_formatSecondsToText(timeInSeconds)} kala',
+                              context.l10n.timeLeft(_formatSecondsToText(context, timeInSeconds)),
                               style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                             ),
                             const Spacer(),
@@ -123,7 +124,7 @@ class TimerSettingsScreen extends StatelessWidget {
                                     Icon(Icons.vibration_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
                                     const SizedBox(width: 6),
                                     Text(
-                                      _getPatternName(pattern),
+                                      _getPatternName(context, pattern),
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.primary,
                                         fontSize: 12,
@@ -157,7 +158,7 @@ class TimerSettingsScreen extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => _showAddWarningTimeDialog(context),
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('Yeni Uyarı Ekle'),
+                      label: Text(context.l10n.addWarning),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.primary,
                         side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
@@ -180,8 +181,8 @@ class TimerSettingsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Süre Bittiğinde',
+                Text(
+                  context.l10n.whenTimeIsUp,
                   style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 12),
@@ -194,8 +195,8 @@ class TimerSettingsScreen extends StatelessWidget {
                     children: [
                       SwitchListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                        title: const Text(
-                          'Bitiş Titreşimi',
+                        title: Text(
+                          context.l10n.endVibration,
                           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                         value: settings.timeOutVibrationEnabled,
@@ -208,7 +209,7 @@ class TimerSettingsScreen extends StatelessWidget {
                         const Divider(color: Colors.white12, height: 1, indent: 16, endIndent: 16),
                         ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                          title: const Text('Titreşim Deseni', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          title: Text(context.l10n.vibrationPattern, style: TextStyle(color: Colors.white70, fontSize: 14)),
                           trailing: GestureDetector(
                             onTap: () => _showPatternDialog(context, null, settings.timeOutVibrationPattern),
                             child: Container(
@@ -223,7 +224,7 @@ class TimerSettingsScreen extends StatelessWidget {
                                   Icon(Icons.vibration_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
                                   const SizedBox(width: 6),
                                   Text(
-                                    _getPatternName(settings.timeOutVibrationPattern),
+                                    _getPatternName(context, settings.timeOutVibrationPattern),
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.primary,
                                       fontSize: 12,
@@ -249,23 +250,23 @@ class TimerSettingsScreen extends StatelessWidget {
     );
   }
 
-  String _formatSecondsToText(int seconds) {
+  String _formatSecondsToText(BuildContext context, int seconds) {
     if (seconds >= 60) {
       final m = seconds ~/ 60;
       final s = seconds % 60;
-      if (s == 0) return '$m dk';
-      return '$m dk $s sn';
+      if (s == 0) return context.l10n.durationMinutes(m);
+      return context.l10n.durationMinSec(m, s);
     }
-    return '$seconds sn';
+    return context.l10n.durationSeconds(seconds);
   }
 
-  String _getPatternName(String pattern) {
+  String _getPatternName(BuildContext context, String pattern) {
     switch (pattern) {
-      case 'short': return 'Kısa';
-      case 'long': return 'Uzun';
-      case 'triple': return 'Üçlü';
+      case 'short': return context.l10n.patternShort;
+      case 'long': return context.l10n.patternLong;
+      case 'triple': return context.l10n.patternTriple;
       case 'double':
-      default: return 'Çift';
+      default: return context.l10n.patternDouble;
     }
   }
 
@@ -278,21 +279,21 @@ class TimerSettingsScreen extends StatelessWidget {
           children: [
             AppBottomSheet.buildTitle(
               timeInSeconds != null 
-                ? '${_formatSecondsToText(timeInSeconds)} İçin Titreşim'
-                : 'Bitiş Titreşimi',
+                ? context.l10n.vibrationFor(_formatSecondsToText(context, timeInSeconds))
+                : context.l10n.endVibration,
               icon: Icons.vibration_rounded,
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Önizlemek için seçeneklere dokunun',
+            Text(
+              context.l10n.tapToPreview,
               style: TextStyle(color: Colors.white54, fontSize: 13),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'short', 'Kısa Titreşim', Icons.short_text_rounded),
-            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'double', 'Çift Titreşim', Icons.view_stream_rounded),
-            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'long', 'Uzun Titreşim', Icons.horizontal_rule_rounded),
-            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'triple', 'Üçlü Titreşim', Icons.dehaze_rounded),
+            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'short', context.l10n.vibrationShort, Icons.short_text_rounded),
+            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'double', context.l10n.vibrationDouble, Icons.view_stream_rounded),
+            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'long', context.l10n.vibrationLong, Icons.horizontal_rule_rounded),
+            _buildSheetOption(ctx, timeInSeconds, currentPattern, 'triple', context.l10n.vibrationTriple, Icons.dehaze_rounded),
             const SizedBox(height: 16),
             AppBottomSheet.buildCancelButton(ctx),
             const SizedBox(height: 8),
@@ -362,7 +363,7 @@ class TimerSettingsScreen extends StatelessWidget {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppBottomSheet.buildTitle('Yeni Uyarı Süresi', icon: Icons.timer_rounded),
+                AppBottomSheet.buildTitle(context.l10n.newWarningTime, icon: Icons.timer_rounded),
                 const SizedBox(height: 24),
                 TextField(
                   controller: controller,
@@ -371,7 +372,7 @@ class TimerSettingsScreen extends StatelessWidget {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: AppPopupTheme.inputDecoration(
                     context: context,
-                    hintText: 'Süre girin',
+                    hintText: context.l10n.enterTime,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -379,7 +380,7 @@ class TimerSettingsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _TypeChip(
-                        label: 'Saniye',
+                        label: context.l10n.unitSecondsLong,
                         isSelected: !isMinutes,
                         onTap: () => setState(() => isMinutes = false),
                       ),
@@ -387,7 +388,7 @@ class TimerSettingsScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _TypeChip(
-                        label: 'Dakika',
+                        label: context.l10n.unitMinutesLong,
                         isSelected: isMinutes,
                         onTap: () => setState(() => isMinutes = true),
                       ),
@@ -408,8 +409,8 @@ class TimerSettingsScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Text(
-                            'İptal',
+                          child: Text(
+                            context.l10n.cancel,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -433,7 +434,7 @@ class TimerSettingsScreen extends StatelessWidget {
                             } else {
                               AppSnackbar.show(
                                 ctx,
-                                message: 'Lütfen geçerli bir sayı girin.',
+                                message: context.l10n.enterValidNumber,
                                 type: SnackbarType.error,
                               );
                             }
@@ -444,7 +445,7 @@ class TimerSettingsScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
                             ),
                           ),
-                          child: const Text('Ekle', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          child: Text(context.l10n.add, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                         ),
                       ),
                     ),

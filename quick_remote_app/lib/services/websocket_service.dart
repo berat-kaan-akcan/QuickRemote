@@ -6,12 +6,19 @@ import '../models/presentation_analytics.dart';
 import 'websocket/websocket_client.dart';
 import 'websocket/presentation_state.dart';
 import 'websocket/analytics_tracker.dart';
+import 'websocket/failure.dart';
+
+export 'websocket/failure.dart';
 
 /// Describes why a connection attempt failed.
 enum ConnectionError {
   none,
+  /// No PIN was given.
+  pinEmpty,
   wrongPin,
   timeout,
+  /// The PC did not answer the PIN in time.
+  authTimeout,
   serverNotFound,
   /// The certificate differs from the one pinned earlier; the user may accept it.
   certMismatch,
@@ -23,6 +30,10 @@ enum ConnectionError {
   unverified,
   /// The PC refuses pairing for now after too many wrong PINs.
   rateLimited,
+  /// The user removed this phone on the PC (close code 4005).
+  closedByPc,
+  /// The PC closed the socket before answering the PIN.
+  closed,
   unknown,
 }
 
@@ -40,7 +51,8 @@ enum AppConnectionState {
 class ConnectionResult {
   final bool success;
   final ConnectionError error;
-  final String? message;
+  /// Untranslated detail for [error] (a socket or exception message).
+  final String? detail;
   /// Non-null only when error == certMismatch or unverified.
   final String? newFingerprint;
   /// The host whose certificate mismatched.
@@ -49,7 +61,7 @@ class ConnectionResult {
   const ConnectionResult({
     required this.success,
     this.error = ConnectionError.none,
-    this.message,
+    this.detail,
     this.newFingerprint,
     this.mismatchHost,
   });
@@ -57,9 +69,11 @@ class ConnectionResult {
   const ConnectionResult.ok()
     : success = true,
       error = ConnectionError.none,
-      message = null,
+      detail = null,
       newFingerprint = null,
       mismatchHost = null;
+
+  ConnectionFailure get failure => ConnectionFailure(error, detail);
 }
 
 /// WebSocket client service for connecting to PC companion app.
@@ -69,8 +83,8 @@ class WebSocketService extends ChangeNotifier {
   final PresentationState _state = PresentationState();
   final AnalyticsTracker _analytics = AnalyticsTracker();
 
-  // Command error state (for COMMAND_FAILED from PC)
-  String? _lastCommandError;
+  // COMMAND_FAILED from the PC, or a lost connection
+  Failure? _lastCommandError;
 
   // The PC does not store this setting: it is sent after every connect.
   bool _keepInkOnSlideChange = false;
@@ -108,7 +122,7 @@ class WebSocketService extends ChangeNotifier {
   int get totalSlides => _state.totalSlides;
   String get slideNotes => _state.slideNotes;
   bool get isPptRunning => _state.isPptRunning;
-  String get presenterName => _state.presenterName;
+  List<String> get presenterNames => _state.presenterNames;
   bool get pptHasMedia => _state.pptHasMedia;
   bool get pptIsMediaPlaying => _state.pptIsMediaPlaying;
   
@@ -131,7 +145,7 @@ class WebSocketService extends ChangeNotifier {
   // ⚠️ Command Errors ⚠️
 
   /// Non-null when the PC reports a command failure. Read once and clear.
-  String? get lastCommandError => _lastCommandError;
+  Failure? get lastCommandError => _lastCommandError;
   void clearCommandError() {
     _lastCommandError = null;
   }
@@ -198,7 +212,7 @@ class WebSocketService extends ChangeNotifier {
       if (stateStr == 'POWERPOINT_NOT_RUNNING') {
         _autoStopTracking();
       } else if (stateStr == 'COMMAND_FAILED') {
-        _lastCommandError = message['detail'] as String? ?? 'İşlem başarısız oldu.';
+        _lastCommandError = RemoteFailure.fromStatus(message);
       }
       
       notifyListeners();

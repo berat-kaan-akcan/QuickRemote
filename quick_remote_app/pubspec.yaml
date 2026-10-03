@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   mobile_scanner: ^7.2.0
   provider: ^6.1.5+1
   shared_preferences: ^2.5.5
@@ -33,6 +36,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     - assets/images/
     - assets/fonts/OFL.txt

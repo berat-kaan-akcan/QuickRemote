@@ -25,11 +25,11 @@ class InputSimulator {
     throw UnsupportedError('QuickRemote PC does not support ${Platform.operatingSystem}');
   }
 
-  static set onCommandError(void Function(String detail)? callback) {
+  static set onCommandError(CommandErrorHandler? callback) {
     _instance.onCommandError = callback;
   }
 
-  static void Function(String detail)? get onCommandError => _instance.onCommandError;
+  static CommandErrorHandler? get onCommandError => _instance.onCommandError;
 
   static String get presenter => _instance.presenter;
   static List<String> get presenters => _instance.presenters;

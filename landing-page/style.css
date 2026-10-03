@@ -274,6 +274,25 @@ img {
 /* Header CTA */
 .header-cta {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Language switch */
+.lang-switch {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border: 1px solid var(--border-glass);
+  border-radius: 8px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.lang-switch:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 /* Mobile menu button */

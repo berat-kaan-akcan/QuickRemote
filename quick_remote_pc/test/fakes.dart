@@ -9,7 +9,7 @@ class FakeInputService implements InputService {
   Map<String, dynamic>? smtcState;
 
   @override
-  void Function(String detail)? onCommandError;
+  CommandErrorHandler? onCommandError;
   @override
   String get presenter => 'fake';
   @override

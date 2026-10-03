@@ -289,6 +289,8 @@ void main() {
       b.command('MODE_ARROW');
       final busy = await b.next('STATUS');
       expect(busy['state'], 'COMMAND_FAILED');
+      expect(busy['code'], 'POINTER_BUSY');
+      expect(busy['detail'], isNotEmpty, reason: 'phones without error codes show it');
       await settle();
       expect(input.calls, isNot(contains('modePen')));
       expect(input.calls, isNot(contains('modeArrow')));

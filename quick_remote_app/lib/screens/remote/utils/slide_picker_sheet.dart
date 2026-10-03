@@ -4,6 +4,7 @@ import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
+import '../../../l10n/app_language.dart';
 
 /// A8 ve A9'un birleştirilmiş hali.
 /// Belirli bir slayttan sunum başlatmak için bottom sheet açar.
@@ -23,7 +24,7 @@ class SlidePickerSheet {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppBottomSheet.buildTitle('Sunuma Başla', icon: Icons.slideshow_rounded),
+            AppBottomSheet.buildTitle(context.l10n.startPresentation, icon: Icons.slideshow_rounded),
             const SizedBox(height: 24),
             TextField(
               controller: controller,
@@ -34,11 +35,11 @@ class SlidePickerSheet {
               decoration: AppPopupTheme.inputDecoration(
                 context: ctx,
                 hintText: totalSlides > 0
-                    ? 'Slayt (1-$totalSlides)'
-                    : 'Slayt Numarası (Örn: 5)',
+                    ? context.l10n.slidePickerRange(totalSlides)
+                    : context.l10n.slidePickerHint,
                 helperText: totalSlides > 0
-                    ? 'Maksimum $totalSlides slayt girebilirsiniz.'
-                    : 'Boş bırakırsanız baştan başlar.',
+                    ? context.l10n.slidePickerMax(totalSlides)
+                    : context.l10n.slidePickerEmpty,
               ),
               onSubmitted: (value) {
                 _handleSubmit(ctx, value, totalSlides, onSend);
@@ -58,8 +59,8 @@ class SlidePickerSheet {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'İptal',
+                      child: Text(
+                        context.l10n.cancel,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -84,8 +85,8 @@ class SlidePickerSheet {
                           borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
                         ),
                       ),
-                      child: const Text(
-                        'Başlat',
+                      child: Text(
+                        context.l10n.actionStart,
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
@@ -113,7 +114,7 @@ class SlidePickerSheet {
       if (parsed == null || parsed <= 0 || parsed > maxSlide) {
         AppSnackbar.show(
           context,
-          message: 'Geçerli bir slayt numarası girin (1-$maxSlide)',
+          message: context.l10n.slidePickerInvalid(maxSlide),
           type: SnackbarType.error,
         );
         return;

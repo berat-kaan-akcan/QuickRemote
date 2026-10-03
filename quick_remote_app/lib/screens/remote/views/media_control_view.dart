@@ -5,6 +5,7 @@ import '../../../services/websocket_service.dart';
 import '../widgets/now_playing_card.dart';
 import '../widgets/volume_panel.dart';
 import '../widgets/ppt_media_controls.dart';
+import '../../../l10n/app_language.dart';
 
 class MediaControlView extends StatefulWidget {
   final WebSocketService ws;
@@ -47,8 +48,8 @@ class _MediaControlViewState extends State<MediaControlView> {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Medya Kontrolü',
+                Text(
+                  context.l10n.mediaControlTitle,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -67,9 +68,9 @@ class _MediaControlViewState extends State<MediaControlView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Şu An Çalan (Now Playing) + Medya Kontrolleri
-                      const _SectionLabel(
+                      _SectionLabel(
                         icon: Icons.album_rounded,
-                        label: 'Şu An Çalan',
+                        label: context.l10n.nowPlaying,
                         color: Color(0xFFF43F5E), // Rose color
                       ),
                       const SizedBox(height: 8),
@@ -91,9 +92,9 @@ class _MediaControlViewState extends State<MediaControlView> {
 
 
                       // Sistem Sesi
-                      const _SectionLabel(
+                      _SectionLabel(
                         icon: Icons.volume_up_rounded,
-                        label: 'Sistem Sesi',
+                        label: context.l10n.systemVolume,
                         color: Color(0xFF0EA5E9),
                       ),
                       const SizedBox(height: 8),
@@ -109,9 +110,9 @@ class _MediaControlViewState extends State<MediaControlView> {
                       const SizedBox(height: 20),
 
                       // PPT Video (Her zaman görünür)
-                      const _SectionLabel(
+                      _SectionLabel(
                         icon: Icons.smart_display_rounded,
-                        label: 'Slayt Medyası',
+                        label: context.l10n.slideMedia,
                         color: Color(0xFF10B981),
                       ),
                       const SizedBox(height: 8),

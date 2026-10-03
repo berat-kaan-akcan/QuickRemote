@@ -8,6 +8,7 @@ import '../../../services/bluetooth/bt_key_mapping.dart';
 import '../../remote/widgets/shared_buttons.dart';
 import '../../remote/widgets/draw_tool_bar.dart';
 import '../../../models/draw_tool.dart';
+import '../../../l10n/app_language.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 1: Touchpad View  (WiFi TouchpadView ile aynı tasarım)
@@ -71,7 +72,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   DrawTool get _selectedTool => _availableTools.contains(_drawTool) ? _drawTool : DrawTool.pen;
 
   /// In Impress and WPS the "laser" is just the mouse cursor.
-  String get _laserLabel => _cursorLaser ? 'İmleç' : 'Lazer';
+  String get _laserLabel => _cursorLaser ? context.l10n.toolCursor : context.l10n.toolLaser;
 
   @override
   void dispose() {
@@ -100,13 +101,13 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                         color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.play_arrow_rounded, color: Color(0xFF4CAF50), size: 18),
                         SizedBox(width: 4),
                         Text(
-                          'Başlat',
+                          context.l10n.actionStart,
                           style: TextStyle(
                             color: Color(0xFF4CAF50),
                             fontSize: 12,
@@ -149,13 +150,13 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                         color: const Color(0xFFFF5252).withValues(alpha: 0.3),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.stop_rounded, color: Color(0xFFFF5252), size: 18),
                         SizedBox(width: 4),
                         Text(
-                          'Bitir',
+                          context.l10n.actionEnd,
                           style: TextStyle(
                             color: Color(0xFFFF5252),
                             fontSize: 12,
@@ -182,7 +183,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
               Expanded(
                 child: SlideButton(
                   icon: Icons.arrow_back_rounded,
-                  label: 'Geri',
+                  label: context.l10n.actionPrev,
                   onTap: !widget.isConnected ? null : () => widget.send(RemoteCommands.prev),
                 ),
               ),
@@ -190,7 +191,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
               Expanded(
                 child: SlideButton(
                   icon: Icons.arrow_forward_rounded,
-                  label: 'İleri',
+                  label: context.l10n.actionNext,
                   isPrimary: true,
                   onTap: !widget.isConnected ? null : () => widget.send(RemoteCommands.next),
                 ),
@@ -251,7 +252,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 Icon(Icons.edit_rounded,
                     color: const Color(0xFF00E676).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
-                Text('Kalem',
+                Text(context.l10n.toolPen,
                     style: TextStyle(
                         color: const Color(0xFF00E676).withValues(alpha: 0.4),
                         fontSize: 14, fontWeight: FontWeight.w600)),
@@ -259,7 +260,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 Icon(Icons.border_color_rounded,
                     color: const Color(0xFFFFEA00).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
-                Text('Vurgulayıcı',
+                Text(context.l10n.toolHighlighter,
                     style: TextStyle(
                         color: const Color(0xFFFFEA00).withValues(alpha: 0.4),
                         fontSize: 14, fontWeight: FontWeight.w600)),
@@ -267,7 +268,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 Icon(Icons.auto_fix_high_rounded,
                     color: const Color(0xFFFF9800).withValues(alpha: 0.3), size: 48),
                 const SizedBox(height: 8),
-                Text('Silgi',
+                Text(context.l10n.toolEraser,
                     style: TextStyle(
                         color: const Color(0xFFFF9800).withValues(alpha: 0.4),
                         fontSize: 14, fontWeight: FontWeight.w600)),
@@ -283,12 +284,12 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 Icon(Icons.touch_app_rounded,
                     color: Colors.white.withValues(alpha: 0.08), size: 48),
                 const SizedBox(height: 12),
-                Text('Tek dokunuş → $_laserLabel',
+                Text(context.l10n.tapForTool(_laserLabel),
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.15),
                         fontSize: 12, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 4),
-                Text('Çift dokunuş → Seçili Araç',
+                Text(context.l10n.doubleTapSelected,
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.15),
                         fontSize: 12, fontWeight: FontWeight.w500)),
@@ -326,7 +327,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     return Row(
       children: [
         Text(
-          'Hedef:',
+          context.l10n.btTarget,
           style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
         ),
         const SizedBox(width: 8),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../services/server/network_manager.dart';
 import '../../../../services/websocket_server.dart';
 import '../../../../widgets/hover_scale.dart';
+import '../../../l10n/app_language.dart';
 
 class NetworkStatusBanner extends StatelessWidget {
   final NetworkTrust trust;
@@ -24,14 +25,14 @@ class NetworkStatusBanner extends StatelessWidget {
     // Linux has no network profiles; the trust level is the firewalld zone.
     final text = Platform.isLinux
         ? switch (trust) {
-            NetworkTrust.trusted => 'Güvenilir Ağ',
-            NetworkTrust.untrusted => 'Güvenilmeyen Ağ',
-            NetworkTrust.unknown => 'Ağ türü bilinmiyor',
+            NetworkTrust.trusted => context.l10n.networkTrusted,
+            NetworkTrust.untrusted => context.l10n.networkUntrusted,
+            NetworkTrust.unknown => context.l10n.networkZoneUnknown,
           }
         : switch (trust) {
-            NetworkTrust.trusted => 'Özel Ağ',
-            NetworkTrust.untrusted => 'Ortak Ağ',
-            NetworkTrust.unknown => 'Ağ türü okunamadı',
+            NetworkTrust.trusted => context.l10n.networkPrivate,
+            NetworkTrust.untrusted => context.l10n.networkPublic,
+            NetworkTrust.unknown => context.l10n.networkUnreadable,
           };
 
     return AnimatedContainer(
@@ -75,7 +76,7 @@ class NetworkStatusBanner extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Ayarlar',
+                  context.l10n.settingsTitle,
                   style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ),

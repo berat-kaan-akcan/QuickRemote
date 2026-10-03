@@ -11,6 +11,9 @@ dependencies:
   ffi: ^2.2.0
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   provider: ^6.1.5+1
   qr_flutter: ^4.1.0
   screen_retriever: ^0.2.0
@@ -35,6 +38,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     - assets/images/
     - assets/linux/

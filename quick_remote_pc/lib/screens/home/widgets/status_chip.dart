@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_language.dart';
 
 class StatusChip extends StatelessWidget {
   final bool isRunning;
@@ -37,7 +38,7 @@ class StatusChip extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            isRunning ? '$clientCount Bağlı' : 'Kapalı',
+            isRunning ? context.l10n.clientsConnected(clientCount) : context.l10n.serverOff,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,

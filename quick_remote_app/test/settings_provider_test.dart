@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:quick_remote_app/l10n/app_language.dart';
 import 'package:quick_remote_app/providers/settings_provider.dart';
 
 void main() {
@@ -25,6 +26,22 @@ void main() {
     expect(provider.timeOutVibrationPattern, 'triple');
     expect(provider.presentationHistory, isEmpty);
     expect(provider.keepInkOnSlideChange, false);
+    expect(provider.language, AppLanguage.system);
+  });
+
+  test('SettingsProvider stores the language, system clears it', () async {
+    final provider = SettingsProvider();
+    await Future.delayed(Duration.zero);
+    await provider.setLanguage(AppLanguage.en);
+
+    final reloaded = SettingsProvider();
+    await Future.delayed(Duration.zero);
+    expect(reloaded.language, AppLanguage.en);
+
+    await reloaded.setLanguage(AppLanguage.system);
+    final cleared = SettingsProvider();
+    await Future.delayed(Duration.zero);
+    expect(cleared.language, AppLanguage.system);
   });
 
   test('SettingsProvider stores keep ink on slide change', () async {

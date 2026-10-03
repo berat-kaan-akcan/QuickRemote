@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_popup_theme.dart';
+import '../../l10n/app_language.dart';
 
 /// Ortak dialog wrapper fonksiyonları.
 /// Onay, uyarı ve bilgi dialogları için standart yapı sağlar.
@@ -15,7 +16,7 @@ class AppDialog {
     required String content,
     required String confirmText,
     Color confirmColor = AppPopupTheme.dangerColor,
-    String cancelText = 'İptal',
+    String? cancelText,
     IconData? icon,
     Color? iconColor,
     bool barrierDismissible = true,
@@ -46,7 +47,7 @@ class AppDialog {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              cancelText,
+              cancelText ?? context.l10n.cancel,
               style: const TextStyle(
                 color: AppPopupTheme.cancelTextColor,
                 fontWeight: FontWeight.w600,
@@ -77,7 +78,7 @@ class AppDialog {
     required BuildContext context,
     required String title,
     required Widget content,
-    String closeText = 'Kapat',
+    String? closeText,
     IconData? icon,
     Color? iconColor,
   }) {
@@ -117,7 +118,7 @@ class AppDialog {
               ),
             ),
             child: Text(
-              closeText,
+              closeText ?? context.l10n.close,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),

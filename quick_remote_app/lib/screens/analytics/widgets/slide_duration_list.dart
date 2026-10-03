@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../models/presentation_analytics.dart';
 import '../../../../utils/formatters.dart';
+import '../../../l10n/app_language.dart';
 
 class SlideDurationList extends StatelessWidget {
   final PresentationAnalytics analytics;
@@ -18,7 +19,7 @@ class SlideDurationList extends StatelessWidget {
           padding: const EdgeInsets.all(40),
           child: Center(
             child: Text(
-              'Slayt verisi bulunamadı',
+              context.l10n.noSlideData,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 14,

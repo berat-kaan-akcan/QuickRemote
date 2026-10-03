@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:quick_remote_pc/services/input/linux/evdev_keys.dart';
 import 'package:quick_remote_pc/services/input/linux/linux_input_service.dart';
 import 'package:quick_remote_pc/services/input/linux/script_bridge.dart';
@@ -37,7 +38,7 @@ void main() {
   late FakeBridge impress;
   late FakeBridge wps;
   late List<List<int>> keys;
-  late List<String> errors;
+  late List<(RemoteError, String?)> errors;
   X11Window? active;
   List<X11Window> windows = const [];
 
@@ -49,7 +50,7 @@ void main() {
       clientWindows: () => windows,
       keys: keys.add,
     );
-    s.onCommandError = errors.add;
+    s.onCommandError = (error, [info]) => errors.add((error, info));
     return s;
   }
 
@@ -134,6 +135,21 @@ void main() {
     });
   });
 
+  group('errors', () {
+    test('Impress\'s error when WPS is absent', () async {
+      impress.replies['penColor'] = {'ok': false, 'error': 'NO_PYTHON'};
+      wps.replies['penColor'] = {'ok': false, 'error': 'NO_RPC'};
+      await service().setPenColor(0xFF);
+      expect(errors.single, (RemoteError.impressNoUno, null));
+    });
+
+    test('an unknown bridge error travels as info', () async {
+      wps.replies['penColor'] = {'ok': false, 'error': 'BOOM'};
+      await service().setPenColor(0xFF);
+      expect(errors.single, (RemoteError.commandFailed, 'BOOM'));
+    });
+  });
+
   group('tools', () {
     test('a WPS out of the bridge\'s reach has no eraser', () async {
       active = userWps;
@@ -141,7 +157,7 @@ void main() {
       service().modeEraser();
       await pumpEventQueue();
       expect(keys, isEmpty);
-      expect(errors.single, contains('QuickRemote\'tan açılan'));
+      expect(errors.single, (RemoteError.wpsOpenFromApp, null));
     });
 
     test('a focused WPS takes the pen and erase-all keys', () async {

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../../l10n/start_error_text.dart';
 import '../../../../providers/server_provider.dart';
 import '../../../../widgets/hover_scale.dart';
 import '../../../../widgets/status_snack_bar.dart';
+import '../../../l10n/app_language.dart';
 
 class StoppedDashboard extends StatelessWidget {
   const StoppedDashboard({super.key});
@@ -23,7 +26,7 @@ class StoppedDashboard extends StatelessWidget {
                 if (context.mounted) {
                   showStatusSnackBar(
                     context,
-                    'Sunucu başlatılamadı: Port kullanımda. Lütfen 8090-8099 portlarını kullanan uygulamaları kapatıp tekrar deneyin.',
+                    context.l10n.portsInUse,
                     kind: StatusKind.error,
                     duration: const Duration(seconds: 5),
                   );
@@ -35,7 +38,7 @@ class StoppedDashboard extends StatelessWidget {
                 if (context.mounted) {
                   showStatusSnackBar(
                     context,
-                    'Sunucu başlatılamadı: $startError',
+                    context.l10n.serverStartFailed(startErrorText(context.l10n, startError)),
                     kind: StatusKind.error,
                     duration: const Duration(seconds: 6),
                   );
@@ -46,7 +49,7 @@ class StoppedDashboard extends StatelessWidget {
               if (actualPort != 8090 && context.mounted) {
                 showStatusSnackBar(
                   context,
-                  'Port 8090 kullanımda olduğu için sunucu $actualPort portunda başlatıldı.',
+                  context.l10n.portFallback(actualPort),
                   kind: StatusKind.warning,
                 );
               }
@@ -76,13 +79,13 @@ class StoppedDashboard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Sunucu Kapalı',
+          Text(
+            context.l10n.serverStopped,
             style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Text(
-            'Telefonunuzdan bağlanmak ve sunumunuzu\nkontrol etmek için sunucuyu başlatın.',
+            context.l10n.serverStoppedHint,
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 15, height: 1.5),
           ),

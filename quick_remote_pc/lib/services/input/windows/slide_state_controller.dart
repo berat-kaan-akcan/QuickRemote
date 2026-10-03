@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
+import '../input_service.dart' show RemoteError;
 import 'presenter_com.dart';
 
 /// Polls the running show of PowerPoint or WPS ([PresenterCom.lookup]).
@@ -99,7 +100,7 @@ try {
       }
     } catch (e) {
       debugPrint('Exception in getSlideState: $e');
-      InputSimulator.onCommandError?.call('Slayt durumu alınamadı: $e');
+      InputSimulator.onCommandError?.call(RemoteError.slideStateFailed, '$e');
     }
     return null;
   }

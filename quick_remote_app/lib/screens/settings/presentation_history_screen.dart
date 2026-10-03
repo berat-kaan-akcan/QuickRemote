@@ -6,6 +6,7 @@ import '../../utils/formatters.dart';
 import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../analytics_report_screen.dart';
+import '../../l10n/app_language.dart';
 
 class PresentationHistoryScreen extends StatelessWidget {
   const PresentationHistoryScreen({super.key});
@@ -19,7 +20,7 @@ class PresentationHistoryScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Sunum Geçmişi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(context.l10n.settingsHistoryTitle, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
@@ -28,7 +29,7 @@ class PresentationHistoryScreen extends StatelessWidget {
           if (settings.presentationHistory.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_outline_rounded, color: Colors.white70),
-              tooltip: 'Geçmişi Temizle',
+              tooltip: context.l10n.clearHistory,
               onPressed: () => _showClearHistoryDialog(context),
             ),
         ],
@@ -48,7 +49,7 @@ class PresentationHistoryScreen extends StatelessWidget {
                     Icon(Icons.analytics_outlined, size: 48, color: Colors.white.withValues(alpha: 0.2)),
                     const SizedBox(height: 16),
                     Text(
-                      'Henüz sunum verisi yok',
+                      context.l10n.noHistory,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 16,
@@ -57,7 +58,7 @@ class PresentationHistoryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Bir sunum başlatıp bitirdikten sonra\nveriler burada görünecek.',
+                      context.l10n.noHistoryHint,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.25),
@@ -99,7 +100,7 @@ class PresentationHistoryScreen extends StatelessWidget {
           settings.deletePresentationAnalytics(analytics.id);
           AppSnackbar.show(
             context,
-            message: 'Sunum kaydı silindi',
+            message: context.l10n.historyDeleted,
             type: SnackbarType.success,
             duration: const Duration(seconds: 2),
           );
@@ -147,7 +148,7 @@ class PresentationHistoryScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          Formatters.formatDate(analytics.startTime),
+                          Formatters.formatDate(analytics.startTime, context.l10n),
                           style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 6),
@@ -156,14 +157,14 @@ class PresentationHistoryScreen extends StatelessWidget {
                             Icon(Icons.timer_outlined, size: 14, color: Colors.white.withValues(alpha: 0.4)),
                             const SizedBox(width: 4),
                             Text(
-                              Formatters.formatDuration(analytics.totalDuration),
+                              Formatters.formatDuration(analytics.totalDuration, context.l10n),
                               style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
                             ),
                             const SizedBox(width: 16),
                             Icon(Icons.layers_outlined, size: 14, color: Colors.white.withValues(alpha: 0.4)),
                             const SizedBox(width: 4),
                             Text(
-                              '${analytics.distinctSlideCount} slayt',
+                              context.l10n.slideCount(analytics.distinctSlideCount),
                               style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
                             ),
                           ],
@@ -184,16 +185,16 @@ class PresentationHistoryScreen extends StatelessWidget {
   void _showClearHistoryDialog(BuildContext context) async {
     final confirmed = await AppDialog.showConfirm(
       context: context,
-      title: 'Geçmişi Temizle',
-      content: 'Tüm sunum geçmişi silinecek. Bu işlem geri alınamaz.',
-      confirmText: 'Temizle',
+      title: context.l10n.clearHistory,
+      content: context.l10n.clearHistoryContent,
+      confirmText: context.l10n.clear,
     );
 
     if (confirmed && context.mounted) {
       context.read<SettingsProvider>().clearPresentationHistory();
       AppSnackbar.show(
         context,
-        message: 'Sunum geçmişi temizlendi',
+        message: context.l10n.historyCleared,
         type: SnackbarType.success,
         duration: const Duration(seconds: 2),
       );
