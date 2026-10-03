@@ -8,22 +8,32 @@ class ViewerKeys {
   /// (null: END keeps its Esc, which leaves the mode).
   final List<int>? end;
 
-  const ViewerKeys(this.start, {this.end});
+  /// Pressed on NEXT and PREV instead of PageDown and PageUp (null: those).
+  final List<int>? next;
+  final List<int>? prev;
+
+  const ViewerKeys(this.start, {this.end, this.next, this.prev});
 }
 
 /// PDF viewers and browsers. Their F5 does not start a presentation: browsers
 /// reload the page (and lose the PDF's place), LibreOffice Draw opens its
-/// navigator. Next and previous need nothing: PageDown/PageUp turn the pages.
+/// navigator. Next and previous are PageDown/PageUp, except in browsers.
 class PdfViewers {
   PdfViewers._();
 
   static const _ctrl = 0x11, _alt = 0x12, _shift = 0x10, _f11 = 0x7A, _l = 0x4C, _p = 0x50;
+  static const _left = 0x25, _right = 0x27;
 
-  /// Firefox's PDF viewer: presentation mode (Esc leaves it).
-  static const firefox = ViewerKeys([_ctrl, _alt, _p]);
+  /// Firefox's PDF viewer: presentation mode (Esc leaves it). Out of it,
+  /// PageDown scrolls by a screen and stops between pages, the arrows jump
+  /// to the next page's top (measured on Firefox 157, Windows).
+  static const firefox = ViewerKeys([_ctrl, _alt, _p], next: [_right], prev: [_left]);
 
   /// Chromium browsers have no presentation mode: full screen, left with F11.
-  static const fullScreen = ViewerKeys([_f11], end: [_f11]);
+  /// PageDown scrolls by a screen (Chrome's first presses did nothing at
+  /// all), the arrows turn whole pages, also in full screen (measured on
+  /// Edge and Chrome 154, Windows).
+  static const fullScreen = ViewerKeys([_f11], end: [_f11], next: [_right], prev: [_left]);
 
   /// Adobe Acrobat / Reader: full screen mode (Esc leaves it).
   static const acrobat = ViewerKeys([_ctrl, _l]);
@@ -32,7 +42,9 @@ class PdfViewers {
   static const okular = ViewerKeys([_ctrl, _shift, _p]);
 
   /// WPS PDF: its F5 does nothing, F11 is full screen (Esc leaves it).
-  /// Verified on WPS 11.1 (Linux), whose window class is "pdf".
+  /// Verified on WPS 11.1 (Linux), whose window class is "pdf". WPS 12 on
+  /// Windows opens PDFs in a tab of its wps.exe window, so it is not told
+  /// apart from WPS's other documents there.
   static const wpsPdf = ViewerKeys([_f11]);
 
   static const _chromium = ['chrome', 'msedge', 'brave', 'vivaldi', 'opera'];

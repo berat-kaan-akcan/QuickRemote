@@ -26,4 +26,16 @@ void main() {
     expect(PdfViewers.fullScreen.end, isNotNull);
     expect(PdfViewers.firefox.end, isNull);
   });
+
+  test('browsers turn pages with the arrows, the others with PageDown/PageUp', () {
+    const right = 0x27, left = 0x25;
+    for (final viewer in [PdfViewers.fullScreen, PdfViewers.firefox]) {
+      expect(viewer.next, [right]);
+      expect(viewer.prev, [left]);
+    }
+    for (final viewer in [PdfViewers.acrobat, PdfViewers.okular, PdfViewers.wpsPdf]) {
+      expect(viewer.next, isNull);
+      expect(viewer.prev, isNull);
+    }
+  });
 }
