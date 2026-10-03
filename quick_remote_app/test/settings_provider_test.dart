@@ -24,6 +24,18 @@ void main() {
     expect(provider.timeOutVibrationEnabled, true);
     expect(provider.timeOutVibrationPattern, 'triple');
     expect(provider.presentationHistory, isEmpty);
+    expect(provider.keepInkOnSlideChange, false);
+  });
+
+  test('SettingsProvider stores keep ink on slide change', () async {
+    final provider = SettingsProvider();
+    await Future.delayed(Duration.zero);
+    await provider.setKeepInkOnSlideChange(true);
+    expect(provider.keepInkOnSlideChange, true);
+
+    final reloaded = SettingsProvider();
+    await Future.delayed(Duration.zero);
+    expect(reloaded.keepInkOnSlideChange, true);
   });
 
   test('SettingsProvider updates early warning haptic', () async {

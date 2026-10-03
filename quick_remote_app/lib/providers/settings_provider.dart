@@ -22,6 +22,9 @@ class SettingsProvider extends ChangeNotifier {
   // Presentation program targeted in Bluetooth HID mode
   BtTarget _btTarget = BtTarget.powerpoint;
 
+  // Keep pen ink on its slide when the slide changes (sent to the PC)
+  bool _keepInkOnSlideChange = false;
+
   // Presentation History
   List<PresentationAnalytics> _presentationHistory = [];
   static const int _maxHistoryCount = 20;
@@ -38,6 +41,7 @@ class SettingsProvider extends ChangeNotifier {
   String get timeOutVibrationPattern => _timeOutVibrationPattern;
   bool get timerAutoStart => _timerAutoStart;
   BtTarget get btTarget => _btTarget;
+  bool get keepInkOnSlideChange => _keepInkOnSlideChange;
   List<PresentationAnalytics> get presentationHistory =>
       List.unmodifiable(_presentationHistory);
 
@@ -52,6 +56,7 @@ class SettingsProvider extends ChangeNotifier {
     _timeOutVibrationPattern = prefs.getString('timeout_vibration_pattern') ?? 'triple';
     _timerAutoStart = prefs.getBool('timer_auto_start') ?? false;
     _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
+    _keepInkOnSlideChange = prefs.getBool('keep_ink_on_slide_change') ?? false;
     
     final timesStrList = prefs.getStringList('warning_times');
     final vibrationsStr = prefs.getString('warning_vibrations');
@@ -153,6 +158,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('bt_target', target.name);
+  }
+
+  Future<void> setKeepInkOnSlideChange(bool value) async {
+    _keepInkOnSlideChange = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('keep_ink_on_slide_change', value);
   }
 
   // ─── Presentation History Management ───

@@ -20,8 +20,13 @@ class QuickRemoteApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => WebSocketService()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        // Hands the phone's PC-side settings to the connection.
+        ChangeNotifierProxyProvider<SettingsProvider, WebSocketService>(
+          create: (_) => WebSocketService(),
+          update: (_, settings, service) =>
+              service!..setKeepInkOnSlideChange(settings.keepInkOnSlideChange),
+        ),
         ChangeNotifierProvider(create: (_) => DiscoveryService()),
       ],
       child: MaterialApp(
