@@ -63,6 +63,12 @@ void main() {
       expect(run('SET_PEN_COLOR:16777216'), isEmpty);
       expect(run('SET_PEN_COLOR'), isEmpty);
     });
+
+    test('SET_HIGHLIGHTER_COLOR goes to the highlighter, not the pen', () {
+      expect(run('SET_HIGHLIGHTER_COLOR:65535'), ['setHighlighterColor:65535']);
+      service.calls.clear();
+      expect(run('SET_HIGHLIGHTER_COLOR:-1'), isEmpty);
+    });
   });
 
   test('ignores unknown commands', () {

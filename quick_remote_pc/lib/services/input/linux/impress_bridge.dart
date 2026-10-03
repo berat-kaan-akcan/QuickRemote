@@ -32,6 +32,11 @@ class ImpressBridge {
   int _nextId = 1;
   final Map<int, Completer<Map<String, dynamic>>> _pending = {};
 
+  /// Lines carrying an `event` (replies, or unasked lines for laser
+  /// positions): `{"event": "cursor", "x", "y"}` asks to move the OS cursor
+  /// to that fraction of the desktop.
+  void Function(Map<String, dynamic> event)? onEvent;
+
   Future<String> _scriptPath() async {
     if (scriptPathOverride != null) return scriptPathOverride!;
     final source = await rootBundle.loadString('assets/linux/impress_bridge.py');
@@ -74,7 +79,9 @@ class ImpressBridge {
   void _onLine(String line) {
     try {
       final reply = jsonDecode(line) as Map<String, dynamic>;
-      _pending.remove(reply['id'])?.complete(reply);
+      if (reply.containsKey('event')) onEvent?.call(reply);
+      final id = reply['id'];
+      if (id != null) _pending.remove(id)?.complete(reply);
     } catch (e) {
       debugPrint('ImpressBridge: bad reply "$line": $e');
     }

@@ -96,7 +96,7 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         content: const Text(
-          'Güvenlik duvarı (firewalld) telefonun bu bilgisayara bağlanmasını '
+          'Güvenlik duvarı telefonun bu bilgisayara bağlanmasını '
           'engelliyor. Uygulamayı kullanmak için 8090-8099 portlarını açmalısınız.\n\n'
           'Portlar bu ağ bölgesinde kalıcı olarak açılır. Yönetici parolanız '
           'bir kez sorulacak.',

@@ -7,12 +7,15 @@ import 'input_service.dart';
 /// validation behave identically everywhere.
 class CommandRouter {
   static void execute(InputService service, String command) {
-    if (command.startsWith('SET_PEN_COLOR:')) {
+    final isPen = command.startsWith('SET_PEN_COLOR:');
+    if (isPen || command.startsWith('SET_HIGHLIGHTER_COLOR:')) {
       final bgr = parseIntArg(command, min: 0, max: 0xFFFFFF);
-      if (bgr != null) {
+      if (bgr == null) {
+        debugPrint('Invalid BGR color value in $command (must be 0-16777215)');
+      } else if (isPen) {
         service.setPenColor(bgr);
       } else {
-        debugPrint('Invalid BGR color value in $command (must be 0-16777215)');
+        service.setHighlighterColor(bgr);
       }
       return;
     }

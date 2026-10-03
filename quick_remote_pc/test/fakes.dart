@@ -30,6 +30,8 @@ class FakeInputService implements InputService {
   Future<void> setVolume(int level) async => calls.add('setVolume:$level');
   @override
   Future<void> setPenColor(int bgrColor) async => calls.add('setPenColor:$bgrColor');
+  @override
+  Future<void> setHighlighterColor(int bgrColor) async => calls.add('setHighlighterColor:$bgrColor');
 
   @override
   dynamic noSuchMethod(Invocation invocation) {

@@ -112,6 +112,64 @@ class BridgeError(Exception):
     pass
 
 
+def x11_root_size():
+    """Size of the X root window, the whole desktop in X pixels, or None
+    without an X server. LibreOffice under X11 or XWayland reports window
+    positions in these pixels."""
+    if not os.environ.get("DISPLAY"):
+        return None
+    try:
+        import ctypes
+        import ctypes.util
+        x11 = ctypes.CDLL(ctypes.util.find_library("X11") or "libX11.so.6")
+        x11.XOpenDisplay.restype = ctypes.c_void_p
+        x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+        x11.XDefaultScreen.argtypes = [ctypes.c_void_p]
+        x11.XDisplayWidth.argtypes = [ctypes.c_void_p, ctypes.c_int]
+        x11.XDisplayHeight.argtypes = [ctypes.c_void_p, ctypes.c_int]
+        x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+        display = x11.XOpenDisplay(None)
+        if not display:
+            return None
+        try:
+            screen = x11.XDefaultScreen(display)
+            return x11.XDisplayWidth(display, screen), x11.XDisplayHeight(display, screen)
+        finally:
+            x11.XCloseDisplay(display)
+    except Exception:  # noqa: BLE001 - no libX11: treated as no X server
+        return None
+
+
+def show_geometry(win_x, win_y, win_w, win_h, root):
+    """(window x, y, width, height, desktop width, height) in pixels. Without
+    an X root the window's position means nothing (Wayland clients do not
+    know it): the show is taken to fill the desktop."""
+    if root is None or win_x + win_w > root[0] or win_y + win_h > root[1]:
+        return 0, 0, win_w, win_h, win_w, win_h
+    return win_x, win_y, win_w, win_h, root[0], root[1]
+
+
+def desktop_fraction(geometry, slide_w, slide_h, x, y):
+    """Maps a laser position (fractions of the slide) to fractions of the
+    desktop, the coordinates of the absolute virtual pointer."""
+    win_x, win_y, win_w, win_h, desk_w, desk_h = geometry
+    px, py = slide_to_window(slide_w, slide_h, win_w, win_h, x * slide_w, y * slide_h)
+    return (min(max((win_x + px) / desk_w, 0.0), 1.0),
+            min(max((win_y + py) / desk_h, 0.0), 1.0))
+
+
+def park_fraction(geometry):
+    """A spot in the show's bottom right corner, out of the audience's way,
+    for the cursor once it no longer stands in for the laser. Two pixels in,
+    so it does not touch a screen corner that triggers desktop actions."""
+    win_x, win_y, win_w, win_h, desk_w, desk_h = geometry
+    return (win_x + win_w - 3) / desk_w, (win_y + win_h - 3) / desk_h
+
+
+def point_in_rects(rects, x, y):
+    return any(x0 <= x <= x1 and y0 <= y <= y1 for x0, y0, x1, y1 in rects)
+
+
 def slide_to_window(slide_w, slide_h, win_w, win_h, x, y):
     """Maps a slide position (1/100 mm) to slideshow window pixels. The slide
     is scaled to fit and centred, as in sd's SlideShowView::getTransformation."""
@@ -134,6 +192,9 @@ class Impress:
         self.toolkit = None
         self.version = None
         self.pen_color = 0xFF0000
+        self.highlighter_color = HIGHLIGHTER_COLOR
+        # "pen" or "highlighter" while one of them draws, for the color commands.
+        self.ink_tool = None
         self.blank_color = None
         # (document, presentation, controller) of the running slideshow.
         self.show = None
@@ -146,6 +207,17 @@ class Impress:
         # [controller, slide index, playing] of the current slide's media.
         self.media_state = None
         self.click_side = 1
+        self.laser_on = False
+        # Newest laser position, fractions of the slide.
+        self.laser_pos = (0.5, 0.5)
+        # The OS cursor stands in for the laser over a video, see _follow_laser.
+        self.cursor_shown = False
+        # MouseVisible of the show before the cursor stood in for the laser.
+        self.mouse_visible = None
+        # (controller, slide index, slide width, height, media rectangles)
+        self.media_rects = None
+        # (controller, show_geometry()) of the full screen show.
+        self.geometry = None
 
     # ── Connection ──
     def connect(self):
@@ -177,6 +249,11 @@ class Impress:
         self.slide_info = None
         self.media = None
         self.media_state = None
+        self.laser_on = False
+        self.cursor_shown = False
+        self.mouse_visible = None
+        self.media_rects = None
+        self.geometry = None
 
     def on_main_thread(self, fn, timeout=5.0):
         call = MainThreadCall(fn)
@@ -320,16 +397,28 @@ class Impress:
                 yield shape
 
     # ── Navigation ──
-    def next(self, _args):
-        self._require_running()[2].gotoNextEffect()
+    def next(self, args):
+        ctrl = self._require_running()[2]
+        self._drop_ink(ctrl, args)
+        ctrl.gotoNextEffect()
 
-    def prev(self, _args):
-        self._require_running()[2].gotoPreviousEffect()
+    def prev(self, args):
+        ctrl = self._require_running()[2]
+        self._drop_ink(ctrl, args)
+        ctrl.gotoPreviousEffect()
 
-    def start(self, _args):
+    @staticmethod
+    def _drop_ink(ctrl, args=None):
+        """Erases the ink before the show moves on, unless the request says
+        "clearInk": false. LibreOffice keeps a slide's ink and shows it again
+        when the show comes back, and an animation step leaves it on screen."""
+        if args is None or args.get("clearInk", True):
+            ctrl.setEraseAllInk(True)
+
+    def start(self, args):
         running = self._running()
         if running is not None:
-            self._goto(running, 0)
+            self._goto(running, 0, args)
             return
         doc = self._document()
         pres = doc.getPresentation()
@@ -348,7 +437,7 @@ class Impress:
         number = int(args["slide"])
         running = self._running()
         if running is not None:
-            self._goto(running, min(max(0, number - 1), running[2].getSlideCount() - 1))
+            self._goto(running, min(max(0, number - 1), running[2].getSlideCount() - 1), args)
             return
         doc = self._document()
         pages = doc.getDrawPages()
@@ -370,8 +459,9 @@ class Impress:
         self._try_prepare(doc, pres, first_pages)
         pres.startWithArguments(arguments)
 
-    def _goto(self, running, index):
+    def _goto(self, running, index, args):
         doc, pres, ctrl = running
+        self._drop_ink(ctrl, args)
         self._try_prepare(doc, pres, lambda: self._upcoming(ctrl, index, ctrl.getSlideCount()), ctrl)
         ctrl.gotoSlideIndex(index)
 
@@ -382,8 +472,14 @@ class Impress:
 
     def _reset_show_state(self):
         self.blank_color = None
+        self.ink_tool = None
         self.slide_info = None
         self.media_state = None
+        self.laser_on = False
+        self.cursor_shown = False
+        self.mouse_visible = None
+        self.media_rects = None
+        self.geometry = None
 
     def blank(self, args):
         color = int(args["color"])
@@ -397,7 +493,10 @@ class Impress:
             self.blank_color = color
 
     # ── Ink / pointer ──
-    def _ink(self, ctrl, pen, eraser=False, color=None, width=PEN_WIDTH):
+    def _ink(self, ctrl, pen, eraser=False, color=None, width=PEN_WIDTH, tool=None):
+        self.ink_tool = tool
+        self.laser_on = False
+        self._hide_cursor(ctrl)
         show = self._engine(ctrl)
         self._set(show, "PointerVisible", False)
         ctrl.UsePen = pen
@@ -408,42 +507,152 @@ class Impress:
         self._set(show, "SwitchPenMode", not eraser)
 
     def arrow(self, _args):
-        self._ink(self._require_running()[2], pen=False)
+        doc, _pres, ctrl = self._require_running()
+        park = self._park(doc, ctrl)
+        self._ink(ctrl, pen=False)
+        return park
 
     def pen(self, _args):
-        self._ink(self._require_running()[2], pen=True)
+        self._ink(self._require_running()[2], pen=True, tool="pen")
 
     def highlighter(self, _args):
-        self._ink(self._require_running()[2], pen=True,
-                  color=HIGHLIGHTER_COLOR, width=HIGHLIGHTER_WIDTH)
+        self._ink(self._require_running()[2], pen=True, tool="highlighter",
+                  color=self.highlighter_color, width=HIGHLIGHTER_WIDTH)
 
     def eraser(self, _args):
         self._ink(self._require_running()[2], pen=True, eraser=True)
 
     def eraseAll(self, _args):
-        self._require_running()[2].setEraseAllInk(True)
+        ctrl = self._require_running()[2]
+        self._drop_ink(ctrl)
+        # The ink is gone from the canvas, but the screen shows that only on
+        # the show's next update, which an idle show may never run.
+        # LibreOffice's own E key runs one at once, as this does.
+        self._engine(ctrl).update(0.0)
 
     def penColor(self, args):
         self.pen_color = int(args["rgb"])
+        self._recolor("pen", self.pen_color)
+
+    def highlighterColor(self, args):
+        self.highlighter_color = int(args["rgb"])
+        self._recolor("highlighter", self.highlighter_color)
+
+    def _recolor(self, tool, color):
+        """Applies a color to the tool drawing now; otherwise the tool takes
+        it when it is next chosen."""
         running = self._running()
-        if running is not None and running[2].UsePen:
-            running[2].PenColor = self.pen_color
+        if running is not None and self.ink_tool == tool and running[2].UsePen:
+            running[2].PenColor = color
 
     def laserOn(self, _args):
         ctrl = self._require_running()[2]
         ctrl.UsePen = False
         self._set(self._engine(ctrl), "PointerVisible", True)
+        self.laser_on = True
+        # The laser may start where the last gesture left it, over a video.
+        return self._follow_laser(*self.laser_pos)
 
     def laserOff(self, _args):
-        self._set(self._engine(self._require_running()[2]), "PointerVisible", False)
+        doc, _pres, ctrl = self._require_running()
+        park = self._park(doc, ctrl)
+        self.laser_on = False
+        self._hide_cursor(ctrl)
+        self._set(self._engine(ctrl), "PointerVisible", False)
+        return park
 
     def pointer(self, args):
-        pos = uno.createUnoStruct("com.sun.star.geometry.RealPoint2D",
-                                  float(args["x"]), float(args["y"]))
+        x, y = float(args["x"]), float(args["y"])
+        self.laser_pos = (x, y)
+        pos = uno.createUnoStruct("com.sun.star.geometry.RealPoint2D", x, y)
         # One call on the cached engine; it answers False once its show is over.
         if self.pointer_engine is None or not self._set(self.pointer_engine, "PointerPosition", pos):
             self.pointer_engine = self._engine(self._require_running()[2])
             self._set(self.pointer_engine, "PointerPosition", pos)
+        if self.laser_on:
+            return self._follow_laser(x, y)
+        return None
+
+    # ── Laser over videos ──
+    # A video plays in a window of its own above the slide, so the laser and
+    # the ink, drawn on the slide, disappear behind it. The OS cursor shows
+    # above every window: over a video the server moves it to the laser
+    # position (an absolute virtual pointer) and the laser hides. The replies
+    # carry {"event": "cursor", "x", "y"} in fractions of the desktop.
+    def _follow_laser(self, x, y):
+        running = self._running()
+        if running is None:
+            return None
+        doc, _pres, ctrl = running
+        slide_w, slide_h, rects = self._slide_media_rects(ctrl)
+        if point_in_rects(rects, x, y):
+            geometry = self._show_geometry(doc, ctrl)
+            if geometry is None:
+                return None
+            if not self.cursor_shown:
+                self.cursor_shown = True
+                self._set(self._engine(ctrl), "PointerVisible", False)
+                # LibreOffice hides an idle cursor after a while.
+                self.mouse_visible = bool(ctrl.MouseVisible)
+                ctrl.MouseVisible = True
+            fx, fy = desktop_fraction(geometry, slide_w, slide_h, x, y)
+            return {"event": "cursor", "x": fx, "y": fy}
+        if not self.cursor_shown:
+            return None
+        park = self._park(doc, ctrl)
+        self._hide_cursor(ctrl)
+        self._set(self._engine(ctrl), "PointerVisible", True)
+        return park
+
+    def _park(self, doc, ctrl):
+        """The reply that moves a cursor standing in for the laser away."""
+        if not self.cursor_shown:
+            return None
+        geometry = self._show_geometry(doc, ctrl)
+        if geometry is None:
+            return None
+        fx, fy = park_fraction(geometry)
+        return {"event": "cursor", "x": fx, "y": fy}
+
+    def _hide_cursor(self, ctrl):
+        """Ends the cursor standing in for the laser; the caller parks it."""
+        if not self.cursor_shown:
+            return
+        self.cursor_shown = False
+        if self.mouse_visible is not None:
+            ctrl.MouseVisible = self.mouse_visible
+            self.mouse_visible = None
+
+    def _slide_media_rects(self, ctrl):
+        """(slide width, height, media rectangles in fractions of the slide)
+        of the slide on screen."""
+        index = ctrl.getCurrentSlideIndex()
+        cached = self.media_rects
+        if cached is None or cached[0] is not ctrl or cached[1] != index:
+            slide = ctrl.getCurrentSlide()
+            width, height, rects = 1, 1, []
+            if slide is not None:
+                width, height = slide.Width, slide.Height
+                for shape in self._media_shapes(slide):
+                    pos, size = shape.getPosition(), shape.getSize()
+                    rects.append((pos.X / width, pos.Y / height,
+                                  (pos.X + size.Width) / width, (pos.Y + size.Height) / height))
+            cached = self.media_rects = (ctrl, index, width, height, rects)
+        return cached[2:]
+
+    def _show_geometry(self, doc, ctrl):
+        cached = self.geometry
+        if cached is not None and cached[0] is ctrl:
+            return cached[1]
+        frame = self._fullscreen_frame(doc)
+        if frame is None:
+            return None  # a windowed show: its position is not worth guessing
+        outer = frame.getContainerWindow().getPosSize()
+        inner = frame.getComponentWindow().getPosSize()
+        geometry = show_geometry(outer.X + inner.X, outer.Y + inner.Y,
+                                 inner.Width, inner.Height, x11_root_size())
+        self.geometry = (ctrl, geometry)
+        return geometry
 
     # ── Embedded media ──
     # LibreOffice does not implement XSlideShow.startShapeActivity, and its
@@ -687,16 +896,21 @@ class Impress:
             state = self.media_state = [ctrl, index, autoplay]
         return state
 
-    def _click_media(self, doc, slide, shape, double=False):
-        window = None
+    @staticmethod
+    def _fullscreen_frame(doc):
         controllers = doc.getControllers()
-        while window is None and controllers.hasMoreElements():
+        while controllers.hasMoreElements():
             controller = controllers.nextElement()
             # The full screen show runs in a frame of its own.
             if controller.ViewControllerName == "FullScreenPresentation":
-                window = controller.getFrame().getComponentWindow()
-        if window is None:
+                return controller.getFrame()
+        return None
+
+    def _click_media(self, doc, slide, shape, double=False):
+        frame = self._fullscreen_frame(doc)
+        if frame is None:
             raise BridgeError("MEDIA_NEEDS_FULLSCREEN")
+        window = frame.getComponentWindow()
         area = window.getPosSize()
         pos, size = shape.getPosition(), shape.getSize()
         x = pos.X + size.Width / 2
@@ -734,7 +948,7 @@ class Impress:
 
 COMMANDS = {
     "state", "next", "prev", "start", "startAt", "end", "blank",
-    "arrow", "pen", "highlighter", "eraser", "eraseAll", "penColor",
+    "arrow", "pen", "highlighter", "eraser", "eraseAll", "penColor", "highlighterColor",
     "laserOn", "laserOff", "pointer", "mediaToggle", "mediaRewind", "ping",
 }
 
@@ -816,8 +1030,12 @@ def main():
                 request, newest_pointer[0] = newest_pointer[0], None
         reply = handle(impress, request)
         if request.get("noreply"):
-            continue
-        reply["id"] = request.get("id")
+            # Pointer updates answer only to move the cursor (_follow_laser).
+            if "event" not in reply:
+                continue
+            reply = {key: value for key, value in reply.items() if key != "ok"}
+        else:
+            reply["id"] = request.get("id")
         sys.stdout.write(json.dumps(reply) + "\n")
         sys.stdout.flush()
 

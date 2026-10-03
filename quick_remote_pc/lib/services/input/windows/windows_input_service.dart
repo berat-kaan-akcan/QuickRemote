@@ -47,8 +47,24 @@ class WindowsInputService implements InputService {
   void whiteScreen() => PptController.whiteScreen();
   @override
   void eraseAllInk() => PptController.eraseAllInk();
+  // PowerPoint's COM API has a single PointerColor, and Ctrl+P / Ctrl+I
+  // switch to each tool with the color it had: the chosen colors are applied
+  // again after the switch.
+  int? _penColor;
+  int? _highlighterColor;
+  static const _defaultPenColor = 0x0000FF; // red, BGR
+
   @override
-  Future<void> setPenColor(int bgrColor) => PptController.setPenColor(bgrColor);
+  Future<void> setPenColor(int bgrColor) {
+    _penColor = bgrColor;
+    return PptController.setPointerColor(bgrColor);
+  }
+
+  @override
+  Future<void> setHighlighterColor(int bgrColor) async {
+    // Applied at the next Ctrl+I; the phone picks colors between gestures.
+    _highlighterColor = bgrColor;
+  }
   @override
   Future<void> pptMediaPlayPause() => PptController.pptMediaPlayPause();
   @override
@@ -61,17 +77,18 @@ class WindowsInputService implements InputService {
   @override
   void modeLaser() => _switchMode(0x4C, laser: true); // Ctrl + L
   @override
-  void modePen() => _switchMode(0x50, laser: false); // Ctrl + P
+  void modePen() => _switchMode(0x50, laser: false, color: _highlighterColor == null ? null : _penColor ?? _defaultPenColor); // Ctrl + P
   @override
-  void modeHighlighter() => _switchMode(0x49, laser: false); // Ctrl + I
+  void modeHighlighter() => _switchMode(0x49, laser: false, color: _highlighterColor); // Ctrl + I
   @override
   void modeEraser() => _switchMode(0x45, laser: false); // Ctrl + E
   @override
   void laserOff() => _switchMode(0x41, laser: false); // Ctrl + A
 
-  Future<void> _switchMode(int key, {required bool laser}) async {
+  Future<void> _switchMode(int key, {required bool laser, int? color}) async {
     if (await PptController.pressInSlideShow([VK_CONTROL, key])) {
       PptController.setLaserActive(laser);
+      if (color != null) await PptController.setPointerColor(color);
     }
   }
 
