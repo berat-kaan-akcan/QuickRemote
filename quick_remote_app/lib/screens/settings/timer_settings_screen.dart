@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:vibration/vibration.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
 import '../../utils/ui/app_popup_theme.dart';
 import '../../utils/ui/app_snackbar.dart';
+import '../../widgets/presentation_timer.dart';
 
 class TimerSettingsScreen extends StatelessWidget {
   const TimerSettingsScreen({super.key});
@@ -28,6 +28,28 @@ class TimerSettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(
+                'Süre Seçilince Hemen Başlat',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+              ),
+              subtitle: Text(
+                'Kapalıyken süre seçildikten sonra sayaca dokunarak başlatılır.',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+              ),
+              value: settings.timerAutoStart,
+              activeThumbColor: Theme.of(context).colorScheme.primary,
+              onChanged: (val) => context.read<SettingsProvider>().setTimerAutoStart(val),
+            ),
+          ),
+          const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -60,6 +82,11 @@ class TimerSettingsScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 12),
+                  if (settings.warningTimes.isEmpty)
+                    Text(
+                      'Henüz uyarı süresi yok.',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
+                    ),
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -139,70 +166,81 @@ class TimerSettingsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  const Divider(color: Colors.white12, height: 32),
-                  const Text(
-                    'Süre Bittiğinde (0 dk)',
-                    style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Süre Bittiğinde',
+                  style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF262C4A),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF262C4A),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                          title: const Text(
-                            'Bitiş Titreşimi',
-                            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
-                          ),
-                          value: settings.timeOutVibrationEnabled,
-                          activeThumbColor: Theme.of(context).colorScheme.primary,
-                          onChanged: (val) {
-                            context.read<SettingsProvider>().setTimeOutVibrationEnabled(val);
-                          },
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                        title: const Text(
+                          'Bitiş Titreşimi',
+                          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                         ),
-                        if (settings.timeOutVibrationEnabled) ...[
-                          const Divider(color: Colors.white12, height: 1, indent: 16, endIndent: 16),
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                            title: const Text('Titreşim Deseni', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                            trailing: GestureDetector(
-                              onTap: () => _showPatternDialog(context, null, settings.timeOutVibrationPattern),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.vibration_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      _getPatternName(settings.timeOutVibrationPattern),
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                        value: settings.timeOutVibrationEnabled,
+                        activeThumbColor: Theme.of(context).colorScheme.primary,
+                        onChanged: (val) {
+                          context.read<SettingsProvider>().setTimeOutVibrationEnabled(val);
+                        },
+                      ),
+                      if (settings.timeOutVibrationEnabled) ...[
+                        const Divider(color: Colors.white12, height: 1, indent: 16, endIndent: 16),
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                          title: const Text('Titreşim Deseni', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          trailing: GestureDetector(
+                            onTap: () => _showPatternDialog(context, null, settings.timeOutVibrationPattern),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.vibration_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _getPatternName(settings.timeOutVibrationPattern),
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Theme.of(context).colorScheme.primary),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Theme.of(context).colorScheme.primary),
+                                ],
                               ),
                             ),
                           ),
-                        ]
-                      ],
-                    ),
+                        ),
+                      ]
+                    ],
                   ),
-                ],
+                ),
               ],
             ),
           ),
@@ -310,15 +348,7 @@ class TimerSettingsScreen extends StatelessWidget {
     );
   }
 
-  void _previewVibration(String pattern) {
-    switch (pattern) {
-      case 'short': Vibration.vibrate(pattern: [0, 300]); break;
-      case 'long': Vibration.vibrate(pattern: [0, 800]); break;
-      case 'triple': Vibration.vibrate(pattern: [0, 500, 150, 500, 150, 800]); break;
-      case 'double':
-      default: Vibration.vibrate(pattern: [0, 300, 100, 300]); break;
-    }
-  }
+  void _previewVibration(String pattern) => vibrateTimerPattern(pattern);
 
   void _showAddWarningTimeDialog(BuildContext context) {
     AppBottomSheet.show(

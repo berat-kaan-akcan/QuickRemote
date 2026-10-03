@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
+import '../../../services/presentation_timer_controller.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
 import '../utils/remote_dialogs.dart';
@@ -9,12 +10,12 @@ import '../utils/slide_picker_sheet.dart';
 
 class MainControlsView extends StatefulWidget {
   final WebSocketService ws;
-  final GlobalKey presentationTimerKey;
+  final PresentationTimerController timer;
 
   const MainControlsView({
     super.key,
     required this.ws,
-    required this.presentationTimerKey,
+    required this.timer,
   });
 
   @override
@@ -66,7 +67,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                 child: Column(
                   children: [
                     PresentationTimer(
-                      key: widget.presentationTimerKey,
+                      controller: widget.timer,
                       fontSize: 16.0,
                       iconSize: 20.0,
                     ),

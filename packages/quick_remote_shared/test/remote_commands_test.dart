@@ -6,6 +6,7 @@ void main() {
     for (final command in [
       RemoteCommands.startAt(3),
       RemoteCommands.penColor(0xFF),
+      RemoteCommands.highlighterColor(0xFFFF),
       RemoteCommands.volumeSet(40),
     ]) {
       expect(RemoteCommands.allowedPrefixes, contains(command.split(':').first), reason: command);
