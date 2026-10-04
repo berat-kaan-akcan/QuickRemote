@@ -9,7 +9,9 @@ import 'services/background_session.dart';
 import 'services/websocket_service.dart';
 import 'providers/settings_provider.dart';
 import 'services/discovery_service.dart';
-import 'theme/app_colors.dart';
+import 'theme/app_palette.dart';
+import 'theme/app_theme.dart';
+import 'widgets/brand/brand_splash.dart';
 
 // Background execution starts with a remote screen (services/background_session.dart).
 void main() {
@@ -45,17 +47,22 @@ class QuickRemoteApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           debugShowCheckedModeBanner: false,
-          themeMode: ThemeMode.dark,
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: AppColors.background, // Deep Space Black
-            colorSchemeSeed: AppColors.primary,
-            useMaterial3: true,
-            fontFamily: 'Inter',
-          ),
+          // Light and dark follow the system setting.
+          themeMode: ThemeMode.system,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
           builder: (context, child) {
             BackgroundSession.notificationText = context.l10n.backgroundNotification;
-            return child!;
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: AppTheme.overlayStyle(context.palette),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  child!,
+                  BrandSplash(tagline: context.l10n.homeTagline),
+                ],
+              ),
+            );
           },
           home: const HomeScreen(),
         ),
@@ -64,9 +71,14 @@ class QuickRemoteApp extends StatelessWidget {
   }
 }
 
-/// Inter is bundled under the SIL Open Font License, which travels with it.
+/// Inter and Space Grotesk are bundled under the SIL Open Font License,
+/// which travels with them.
 void _registerFontLicense() {
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks(['Inter'], await rootBundle.loadString('assets/fonts/OFL.txt'));
+    yield LicenseEntryWithLineBreaks(
+      ['Space Grotesk'],
+      await rootBundle.loadString('assets/fonts/OFL-SpaceGrotesk.txt'),
+    );
   });
 }

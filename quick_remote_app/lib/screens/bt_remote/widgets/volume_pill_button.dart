@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../widgets/ui/ui.dart';
+
 /// One segment of the Bluetooth volume pill: down, mute or up.
-class VolumePillButton extends StatefulWidget {
+class VolumePillButton extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback? onTap;
   final bool isLeft;
   final bool isRight;
+  final String? label;
 
   const VolumePillButton({
     super.key,
@@ -16,44 +19,28 @@ class VolumePillButton extends StatefulWidget {
     this.onTap,
     this.isLeft = false,
     this.isRight = false,
+    this.label,
   });
 
   @override
-  State<VolumePillButton> createState() => VolumePillButtonState();
-}
-
-class VolumePillButtonState extends State<VolumePillButton> {
-  bool _isPressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    final enabled = widget.onTap != null;
+    final radius = BorderRadius.horizontal(
+      left: isLeft ? const Radius.circular(AppRadius.pill) : Radius.zero,
+      right: isRight ? const Radius.circular(AppRadius.pill) : Radius.zero,
+    );
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: enabled ? (_) => setState(() => _isPressed = true) : null,
-        onTapUp: enabled
-            ? (_) {
-                setState(() => _isPressed = false);
+      child: Pressable(
+        onTap: onTap == null
+            ? null
+            : () {
                 HapticFeedback.lightImpact();
-                widget.onTap!();
-              }
-            : null,
-        onTapCancel: enabled ? () => setState(() => _isPressed = false) : null,
-        child: AnimatedOpacity(
-          opacity: enabled ? (_isPressed ? 0.7 : 1.0) : 0.45,
-          duration: const Duration(milliseconds: 100),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: _isPressed ? widget.color.withValues(alpha: 0.15) : Colors.transparent,
-              borderRadius: BorderRadius.horizontal(
-                left: widget.isLeft ? const Radius.circular(40) : Radius.zero,
-                right: widget.isRight ? const Radius.circular(40) : Radius.zero,
-              ),
-            ),
-            child: Icon(widget.icon, color: widget.color, size: 24),
-          ),
+                onTap!();
+              },
+        semanticLabel: label,
+        pressedScale: 0.9,
+        borderRadius: radius,
+        child: SizedBox.expand(
+          child: Icon(icon, color: color, size: 26),
         ),
       ),
     );

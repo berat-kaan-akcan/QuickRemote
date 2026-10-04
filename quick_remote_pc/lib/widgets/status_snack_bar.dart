@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import 'ui/ui.dart';
 
 enum StatusKind { success, warning, error }
 
@@ -11,10 +11,11 @@ void showStatusSnackBar(
   StatusKind kind = StatusKind.success,
   Duration duration = const Duration(seconds: 4),
 }) {
+  final p = context.palette;
   final (color, icon) = switch (kind) {
-    StatusKind.success => (AppColors.success, Icons.check_circle_rounded),
-    StatusKind.warning => (AppColors.warning, Icons.warning_amber_rounded),
-    StatusKind.error => (AppColors.danger, Icons.error_outline_rounded),
+    StatusKind.success => (p.success, Icons.check_circle_rounded),
+    StatusKind.warning => (p.warning, Icons.warning_amber_rounded),
+    StatusKind.error => (p.danger, Icons.error_rounded),
   };
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
@@ -23,25 +24,28 @@ void showStatusSnackBar(
       behavior: SnackBarBehavior.floating,
       duration: duration,
       padding: EdgeInsets.zero,
-      content: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          // Opaque base so the page does not show through the tint.
-          color: Color.alphaBlend(color.withValues(alpha: 0.12), AppColors.background),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+      content: Semantics(
+        liveRegion: true,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(AppSpace.sm, AppSpace.sm, AppSpace.md, AppSpace.sm),
+          decoration: BoxDecoration(
+            color: p.surfaceRaised,
+            borderRadius: AppRadius.all(AppRadius.md),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+            boxShadow: AppShadows.raised(p),
+          ),
+          child: Row(
+            children: [
+              IconBadge(icon: icon, color: color, size: 32),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  style: AppType.bodySmall.copyWith(color: p.textPrimary, fontWeight: FontWeight.w500),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),

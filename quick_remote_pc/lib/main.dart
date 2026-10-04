@@ -11,7 +11,7 @@ import 'screens/home/home_screen.dart';
 import 'providers/language_provider.dart';
 import 'providers/server_provider.dart';
 import 'services/linux/desktop_entry.dart';
-import 'theme/app_colors.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +20,8 @@ void main() async {
   await windowManager.ensureInitialized();
 
   final windowOptions = WindowOptions(
-    size: const ui.Size(420, 700),
-    minimumSize: const ui.Size(380, 550),
+    size: const ui.Size(440, 760),
+    minimumSize: const ui.Size(380, 560),
     center: true,
     title: 'QuickRemote PC',
     titleBarStyle: TitleBarStyle.normal,
@@ -60,14 +60,10 @@ class QuickRemotePC extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           debugShowCheckedModeBanner: false,
-          themeMode: ThemeMode.dark,
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: AppColors.background, // Deep Space Black
-            colorSchemeSeed: AppColors.primary,
-            useMaterial3: true,
-            fontFamily: 'Inter',
-          ),
+          // Light and dark follow the system setting.
+          themeMode: ThemeMode.system,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
           home: const HomeScreen(),
         ),
       ),
@@ -75,9 +71,14 @@ class QuickRemotePC extends StatelessWidget {
   }
 }
 
-/// Inter is bundled under the SIL Open Font License, which travels with it.
+/// Inter and Space Grotesk are bundled under the SIL Open Font License,
+/// which travels with them.
 void _registerFontLicense() {
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks(['Inter'], await rootBundle.loadString('assets/fonts/OFL.txt'));
+    yield LicenseEntryWithLineBreaks(
+      ['Space Grotesk'],
+      await rootBundle.loadString('assets/fonts/OFL-SpaceGrotesk.txt'),
+    );
   });
 }

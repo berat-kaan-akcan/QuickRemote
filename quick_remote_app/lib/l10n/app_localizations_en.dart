@@ -855,4 +855,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backgroundNotification => 'Staying connected in the background...';
+
+  @override
+  String get homeHeroSubtitle =>
+      'Scan the QR code shown by QuickRemote PC, or connect the phone over Bluetooth as a keyboard and mouse.';
+
+  @override
+  String get slideLabel => 'Slide';
+
+  @override
+  String get settingsSectionPresentation => 'Presentation';
+
+  @override
+  String get settingsSectionGeneral => 'General';
 }

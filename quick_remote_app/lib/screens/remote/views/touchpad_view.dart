@@ -11,7 +11,8 @@ import '../widgets/color_picker_sheet.dart';
 import '../widgets/touchpad_gesture_area.dart';
 import '../widgets/draw_tool_bar.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
+
 class TouchpadView extends StatefulWidget {
   final WebSocketService ws;
   final PresentationTimerController timer;
@@ -45,91 +46,98 @@ class _TouchpadViewState extends State<TouchpadView> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: PillButton(
-                  icon: Icons.play_arrow_rounded,
-                  label: context.l10n.actionStart,
-                  color: AppColors.success,
-                  showMenuHint: true,
-                  onTap: !widget.ws.isConnected
-                      ? null
-                      : () {
-                          HapticFeedback.heavyImpact();
-                          _send(RemoteCommands.start);
-                        },
-                  onLongPress: !widget.ws.isConnected
-                      ? null
-                      : () {
-                          HapticFeedback.heavyImpact();
-                          _showStartSlideDialog(context);
-                        },
+    final p = context.palette;
+    return ContentWidth(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, AppSpace.sm),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: PillButton(
+                    icon: Icons.play_arrow_rounded,
+                    label: context.l10n.actionStart,
+                    color: p.success,
+                    showMenuHint: true,
+                    onTap: !widget.ws.isConnected
+                        ? null
+                        : () {
+                            HapticFeedback.heavyImpact();
+                            _send(RemoteCommands.start);
+                          },
+                    onLongPress: !widget.ws.isConnected
+                        ? null
+                        : () {
+                            HapticFeedback.heavyImpact();
+                            _showStartSlideDialog(context);
+                          },
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              PresentationTimer(controller: widget.timer),
-              const SizedBox(width: 8),
-              Expanded(
-                child: PillButton(
-                  icon: Icons.stop_rounded,
-                  label: context.l10n.actionEnd,
-                  color: AppColors.danger,
-                  onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.end),
+                const SizedBox(width: AppSpace.xs),
+                PresentationTimer(controller: widget.timer),
+                const SizedBox(width: AppSpace.xs),
+                Expanded(
+                  child: PillButton(
+                    icon: Icons.stop_rounded,
+                    label: context.l10n.actionEnd,
+                    color: p.danger,
+                    onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.end),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Touchpad area
-          Expanded(
-            child: TouchpadGestureArea(
-              sensitivity: _sensitivity,
-              drawTool: _drawTool,
-              onSendCommand: (cmd) => widget.ws.sendCommand(cmd),
-              onSendTouchOrLaser: (type, dx, dy) => widget.ws.sendTouchOrLaser(type, dx, dy),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          // Draw tool selector
-          DrawToolBar(
-            activeTool: _drawTool,
-            onToolSelected: (tool) => setState(() => _drawTool = tool),
-            onClear: () {
-              HapticFeedback.mediumImpact();
-              _send(RemoteCommands.eraseAll);
-            },
-            onColorPickerRequested: (tool) {
-              ColorPickerSheet.show(context, tool, _send);
-            },
-          ),
-          const SizedBox(height: 16),
-          // Slide buttons at bottom
-          Row(
-            children: [
-              Expanded(
-                child: SlideButton(
-                  icon: Icons.arrow_back_rounded,
-                  label: context.l10n.actionPrev,
-                  onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.prev),
-                ),
+            const SizedBox(height: AppSpace.sm),
+            // Touchpad area
+            Expanded(
+              child: TouchpadGestureArea(
+                sensitivity: _sensitivity,
+                drawTool: _drawTool,
+                onSendCommand: (cmd) => widget.ws.sendCommand(cmd),
+                onSendTouchOrLaser: (type, dx, dy) => widget.ws.sendTouchOrLaser(type, dx, dy),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SlideButton(
-                  icon: Icons.arrow_forward_rounded,
-                  label: context.l10n.actionNext,
-                  isPrimary: true,
-                  onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.next),
+            ),
+            const SizedBox(height: AppSpace.sm),
+            // Draw tool selector
+            DrawToolBar(
+              activeTool: _drawTool,
+              onToolSelected: (tool) => setState(() => _drawTool = tool),
+              onClear: () {
+                HapticFeedback.mediumImpact();
+                _send(RemoteCommands.eraseAll);
+              },
+              onColorPickerRequested: (tool) {
+                ColorPickerSheet.show(context, tool, _send);
+              },
+            ),
+            const SizedBox(height: AppSpace.sm),
+            // Slide buttons at bottom
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: SlideButton(
+                    icon: Icons.arrow_back_rounded,
+                    label: context.l10n.actionPrev,
+                    height: 76,
+                    onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.prev),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  flex: 3,
+                  child: SlideButton(
+                    icon: Icons.arrow_forward_rounded,
+                    label: context.l10n.actionNext,
+                    isPrimary: true,
+                    height: 76,
+                    onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.next),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

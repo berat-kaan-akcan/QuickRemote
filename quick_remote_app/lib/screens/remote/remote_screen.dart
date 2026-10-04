@@ -21,7 +21,7 @@ import 'views/main_controls_view.dart';
 import 'widgets/remote_chrome.dart';
 import 'views/touchpad_view.dart';
 import 'views/media_control_view.dart';
-import '../../theme/app_colors.dart';
+import '../../widgets/ui/ui.dart';
 
 /// Main remote control screen for presentation control.
 /// Has three views: main controls, touchpad mode, and media controls.
@@ -195,10 +195,19 @@ class _RemoteScreenState extends State<RemoteScreen> {
         await _performExit(skipDialog: false);
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
         resizeToAvoidBottomInset: false,
         appBar: _buildAppBar(ws),
-        body: body,
+        // Only the new tab fades in; the old one leaves at once, so it never
+        // takes a touch meant for the new one.
+        body: AnimatedSwitcher(
+          duration: AppMotion.of(context, AppMotion.base),
+          switchInCurve: AppMotion.enter,
+          layoutBuilder: (current, _) => current ?? const SizedBox.shrink(),
+          child: KeyedSubtree(
+            key: ValueKey(ws.connectionState == AppConnectionState.failed || _canPop ? -1 : _currentTab),
+            child: body,
+          ),
+        ),
         bottomNavigationBar: _buildBottomNav(ws),
       ),
     );
@@ -208,18 +217,11 @@ class _RemoteScreenState extends State<RemoteScreen> {
     final connecting = ws.connectionState == AppConnectionState.reconnecting ||
         ws.connectionState == AppConnectionState.connecting;
     return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
       automaticallyImplyLeading: false,
+      toolbarHeight: 64,
+      titleSpacing: AppSpace.md,
       title: RemoteHeader(
-        subtitle: Text(
-          ws.serverAddress,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 12,
-            fontFamily: 'monospace',
-          ),
-        ),
+        subtitle: Text(ws.serverAddress),
         isConnected: ws.isConnected,
         isConnecting: connecting,
         onReconnect: !ws.isConnected && ws.connectionState != AppConnectionState.failed
@@ -245,43 +247,22 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
   Widget _buildFailedView(WebSocketService ws) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.wifi_off_rounded, color: Colors.white54, size: 64),
-          const SizedBox(height: 16),
-          Text(
-            context.l10n.remoteConnectFailedTitle,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpace.xl),
+        child: FadeSlideIn(
+          child: EmptyState(
+            icon: Icons.wifi_off_rounded,
+            tone: AppTone.danger,
+            title: context.l10n.remoteConnectFailedTitle,
+            message: _persistentError ?? context.l10n.remoteServerUnreachable,
+            action: AppButton(
+              label: context.l10n.remoteBackHome,
+              icon: Icons.home_rounded,
+              expand: false,
+              onPressed: () => _performExit(skipDialog: true),
             ),
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              _persistentError ?? context.l10n.remoteServerUnreachable,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white54, fontSize: 14),
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () => _performExit(skipDialog: true),
-            icon: const Icon(Icons.home_rounded),
-            label: Text(context.l10n.remoteBackHome),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

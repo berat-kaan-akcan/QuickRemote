@@ -281,4 +281,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String tlsKeyReadable(String path) {
     return 'TLS anahtarı başka kullanıcılar tarafından okunabiliyor: $path';
   }
+
+  @override
+  String get startServer => 'Sunucuyu Başlat';
 }

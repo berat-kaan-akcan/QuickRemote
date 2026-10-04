@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 /// Shown for a moment before the remote opens.
 class BtConnectedView extends StatelessWidget {
@@ -11,47 +11,52 @@ class BtConnectedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.success.withValues(alpha: 0.15),
-              border: Border.all(
-                color: AppColors.success.withValues(alpha: 0.4),
-                width: 2,
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: AppMotion.reduced(context) ? 1 : 0, end: 1),
+            duration: AppMotion.of(context, AppMotion.slow),
+            curve: Curves.easeOutBack,
+            builder: (context, t, child) => Transform.scale(scale: t, child: child),
+            child: Container(
+              width: 128,
+              height: 128,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: p.success.withValues(alpha: p.isDark ? 0.14 : 0.10),
+                border: Border.all(color: p.success.withValues(alpha: 0.4), width: 2),
+                boxShadow: AppShadows.glow(p.success),
               ),
-            ),
-            child: const Icon(
-              Icons.bluetooth_connected_rounded,
-              color: AppColors.success,
-              size: 64,
+              child: Icon(Icons.bluetooth_connected_rounded, color: p.success, size: 60),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.xl),
           Text(
             context.l10n.btConnected,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppType.headline.copyWith(color: p.textPrimary),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.xs),
           Text(
             deviceName ?? context.l10n.unknownDevice,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 15,
-            ),
+            style: AppType.titleSmall.copyWith(color: p.textSecondary),
           ),
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.btOpeningRemote,
-            style: TextStyle(color: Colors.white38, fontSize: 13),
+          const SizedBox(height: AppSpace.md),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox.square(
+                dimension: 14,
+                child: CircularProgressIndicator(strokeWidth: 2, color: p.textMuted),
+              ),
+              const SizedBox(width: AppSpace.xs),
+              Text(
+                context.l10n.btOpeningRemote,
+                style: AppType.bodySmall.copyWith(color: p.textMuted),
+              ),
+            ],
           ),
         ],
       ),
@@ -68,53 +73,22 @@ class BtUnsupportedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.bluetooth_disabled_rounded,
-              color: Colors.white38,
-              size: 72,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              context.l10n.btUnsupported,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message ?? context.l10n.btUnsupportedShort,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 14,
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 32),
-            OutlinedButton.icon(
+      child: SingleChildScrollView(
+        child: FadeSlideIn(
+          child: EmptyState(
+            icon: Icons.bluetooth_disabled_rounded,
+            tone: AppTone.neutral,
+            title: context.l10n.btUnsupported,
+            message: message ?? context.l10n.btUnsupportedShort,
+            action: AppButton(
+              label: context.l10n.btUseWifi,
+              icon: Icons.wifi_rounded,
+              variant: AppButtonVariant.tonal,
+              tone: AppTone.info,
+              expand: false,
               onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.wifi_rounded),
-              label: Text(context.l10n.btUseWifi),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.bluetoothLight,
-                side: const BorderSide(color: AppColors.bluetooth),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -131,48 +105,23 @@ class BtErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            color: AppColors.danger,
-            size: 64,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            context.l10n.errorTitle,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+      child: SingleChildScrollView(
+        child: FadeSlideIn(
+          child: EmptyState(
+            icon: Icons.error_outline_rounded,
+            tone: AppTone.danger,
+            title: context.l10n.errorTitle,
+            message: message ?? context.l10n.btErrorOccurred,
+            action: AppButton(
+              label: context.l10n.tryAgain,
+              icon: Icons.refresh_rounded,
+              variant: AppButtonVariant.solid,
+              tone: AppTone.info,
+              expand: false,
+              onPressed: onRetry,
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            message ?? context.l10n.btErrorOccurred,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 28),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: Text(context.l10n.tryAgain),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.bluetooth,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

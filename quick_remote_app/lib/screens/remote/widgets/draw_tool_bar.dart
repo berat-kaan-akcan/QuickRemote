@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/draw_tool.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
+import 'touchpad_surface.dart';
 
 class DrawToolBar extends StatelessWidget {
   final DrawTool activeTool;
   final ValueChanged<DrawTool> onToolSelected;
   final VoidCallback onClear;
-  
+
   /// Eğer null değilse Kalem ve Vurgulayıcı araçlarında renk seçici ikonu gösterilir
   /// ve mevcut araç seçiliyken tekrar tıklanırsa veya uzun basılırsa bu callback çağrılır.
   final void Function(DrawTool)? onColorPickerRequested;
@@ -32,133 +33,127 @@ class DrawToolBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        if (tools.contains(DrawTool.laser)) ...[
-          _buildToolButton(
-            context,
-            tool: DrawTool.laser,
-            icon: Icons.highlight_rounded,
-            label: laserLabel ?? context.l10n.toolLaser,
-            activeColor: AppColors.laser,
+    final p = context.palette;
+    return Container(
+      padding: const EdgeInsets.all(AppSpace.xxs),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: AppRadius.all(AppRadius.lg),
+        border: Border.all(color: p.border),
+      ),
+      child: Row(
+        children: [
+          if (tools.contains(DrawTool.laser))
+            _buildToolButton(
+              context,
+              tool: DrawTool.laser,
+              label: laserLabel ?? context.l10n.toolLaser,
+            ),
+          if (tools.contains(DrawTool.pen))
+            _buildToolButton(
+              context,
+              tool: DrawTool.pen,
+              label: context.l10n.toolPen,
+              supportsColorPicker: true,
+            ),
+          if (tools.contains(DrawTool.highlighter))
+            _buildToolButton(
+              context,
+              tool: DrawTool.highlighter,
+              label: context.l10n.toolHighlight,
+              supportsColorPicker: true,
+            ),
+          if (tools.contains(DrawTool.eraser))
+            _buildToolButton(
+              context,
+              tool: DrawTool.eraser,
+              label: context.l10n.toolEraser,
+            ),
+          Container(
+            width: 1,
+            height: 34,
+            margin: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
+            color: p.border,
           ),
-          const SizedBox(width: 4),
+          _buildClearButton(context),
         ],
-        if (tools.contains(DrawTool.pen)) ...[
-          _buildToolButton(
-            context,
-            tool: DrawTool.pen,
-            icon: Icons.edit_rounded,
-            label: context.l10n.toolPen,
-            activeColor: AppColors.pen,
-            supportsColorPicker: true,
-          ),
-          const SizedBox(width: 4),
-        ],
-        if (tools.contains(DrawTool.highlighter)) ...[
-          _buildToolButton(
-            context,
-            tool: DrawTool.highlighter,
-            icon: Icons.border_color_rounded,
-            label: context.l10n.toolHighlight,
-            activeColor: AppColors.highlighter,
-            supportsColorPicker: true,
-          ),
-          const SizedBox(width: 4),
-        ],
-        if (tools.contains(DrawTool.eraser)) ...[
-          _buildToolButton(
-            context,
-            tool: DrawTool.eraser,
-            icon: Icons.auto_fix_high_rounded,
-            label: context.l10n.toolEraser,
-            activeColor: AppColors.warning,
-          ),
-          const SizedBox(width: 4),
-        ],
-        _buildClearButton(context),
-      ],
+      ),
     );
   }
 
   Widget _buildToolButton(BuildContext context, {
     required DrawTool tool,
-    required IconData icon,
     required String label,
-    required Color activeColor,
     bool supportsColorPicker = false,
   }) {
+    final p = context.palette;
     final isActive = activeTool == tool;
     final canPickColor = supportsColorPicker && onColorPickerRequested != null;
+    final activeColor = tool.colorIn(p);
+    final color = isActive ? activeColor : p.textMuted;
 
     return Expanded(
-      child: Semantics(
-        button: true,
-        label: label,
-        child: Tooltip(
-          message: context.l10n.selectTool(label),
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              if (isActive && canPickColor) {
+      child: Pressable(
+        semanticLabel: label,
+        selected: isActive,
+        tooltip: context.l10n.selectTool(label),
+        pressedScale: 0.92,
+        borderRadius: AppRadius.all(AppRadius.md),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          if (isActive && canPickColor) {
+            onColorPickerRequested!(tool);
+          } else {
+            onToolSelected(tool);
+          }
+        },
+        onLongPress: canPickColor
+            ? () {
+                HapticFeedback.mediumImpact();
                 onColorPickerRequested!(tool);
-              } else {
-                onToolSelected(tool);
               }
-            },
-            onLongPress: canPickColor
-                ? () {
-                    HapticFeedback.mediumImpact();
-                    onColorPickerRequested!(tool);
-                  }
-                : null,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.symmetric(
-                vertical: 10,
-                horizontal: canPickColor ? 2 : 4,
-              ),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? activeColor.withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isActive
-                      ? activeColor.withValues(alpha: 0.5)
-                      : Colors.transparent,
+            : null,
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.base),
+          curve: AppMotion.standard,
+          height: 54,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: isActive ? activeColor.withValues(alpha: p.isDark ? 0.16 : 0.11) : null,
+            borderRadius: AppRadius.all(AppRadius.md),
+            border: Border.all(
+              color: isActive ? activeColor.withValues(alpha: 0.5) : activeColor.withValues(alpha: 0),
+            ),
+          ),
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(tool.icon, size: 20, color: color),
+                    if (canPickColor)
+                      Icon(Icons.arrow_drop_down_rounded, size: 16, color: color.withValues(alpha: 0.8)),
+                  ],
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    icon,
-                    size: 14,
-                    color: isActive ? activeColor : Colors.white38,
-                  ),
-                  const SizedBox(width: 2),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          color: isActive ? activeColor : Colors.white38,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
+                const SizedBox(height: 3),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      style: AppType.labelSmall.copyWith(
+                        color: color,
+                        fontSize: 11.5,
+                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                       ),
                     ),
                   ),
-                  if (canPickColor)
-                    Icon(
-                      Icons.arrow_drop_down_rounded,
-                      size: 16,
-                      color: isActive ? activeColor : Colors.white54,
-                    ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -167,54 +162,35 @@ class DrawToolBar extends StatelessWidget {
   }
 
   Widget _buildClearButton(BuildContext context) {
-    return Expanded(
-      child: Semantics(
-        button: true,
-        label: context.l10n.clearInk,
-        child: Tooltip(
-          message: context.l10n.clearInkTooltip,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              onClear();
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                vertical: 10,
-                horizontal: 2,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: Colors.transparent,
+    final p = context.palette;
+    return SizedBox(
+      width: 60,
+      child: Pressable(
+        semanticLabel: context.l10n.clearInk,
+        tooltip: context.l10n.clearInkTooltip,
+        pressedScale: 0.92,
+        borderRadius: AppRadius.all(AppRadius.md),
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          onClear();
+        },
+        child: SizedBox(
+          height: 54,
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.cleaning_services_rounded, size: 20, color: p.textSecondary),
+                const SizedBox(height: 3),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    context.l10n.clearInk,
+                    maxLines: 1,
+                    style: AppType.labelSmall.copyWith(color: p.textSecondary, fontSize: 11.5),
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.cleaning_services_rounded,
-                    size: 14,
-                    color: Colors.white38,
-                  ),
-                  const SizedBox(width: 2),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        context.l10n.clearInk,
-                        style: TextStyle(
-                          color: Colors.white38,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
         ),

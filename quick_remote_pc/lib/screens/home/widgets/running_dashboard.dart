@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../providers/server_provider.dart';
-import '../../../widgets/hover_scale.dart';
 import 'connected_clients_list.dart';
 import 'network_status_banner.dart';
 import 'pairing_card.dart';
 import 'public_network_warning_dialog.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class RunningDashboard extends StatefulWidget {
   final WebSocketServerProvider provider;
@@ -75,35 +74,80 @@ class _RunningDashboardState extends State<RunningDashboard> {
     final provider = widget.provider;
     if (!provider.pairedOnce) _revealed = false;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        NetworkStatusBanner(
-          trust: provider.networkTrust,
-          server: provider.server,
-        ),
-        if (provider.pairingPaused) ...[
-          const SizedBox(height: 8),
-          const _PairingPausedBanner(),
-        ],
-        const SizedBox(height: 8),
-        Flexible(
-          child: PairingCard(
-            provider: provider,
-            revealed: _revealed,
-            onRevealChanged: (revealed) => setState(() => _revealed = revealed),
-          ),
-        ),
-        if (provider.connectedClients.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          ConnectedClientsList(
-            clients: provider.connectedClients,
-            onKick: provider.server.kickClient,
-          ),
-        ],
-        const SizedBox(height: 12),
-        _StopButton(onStop: provider.stopServer),
-      ],
+    final status = <Widget>[
+      NetworkStatusBanner(
+        trust: provider.networkTrust,
+        server: provider.server,
+      ),
+      Reveal(
+        child: provider.pairingPaused
+            ? const Padding(
+                padding: EdgeInsets.only(top: AppSpace.xs),
+                child: _PairingPausedBanner(),
+              )
+            : null,
+      ),
+    ];
+    final pairing = PairingCard(
+      provider: provider,
+      revealed: _revealed,
+      onRevealChanged: (revealed) => setState(() => _revealed = revealed),
+    );
+    final clients = Reveal(
+      child: provider.connectedClients.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(top: AppSpace.sm),
+              child: ConnectedClientsList(
+                clients: provider.connectedClients,
+                onKick: provider.server.kickClient,
+              ),
+            ),
+    );
+    final stop = _StopButton(onStop: provider.stopServer);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // A wide window puts the code beside the status column.
+        if (constraints.maxWidth >= 760) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 5, child: FadeSlideIn(child: pairing)),
+              const SizedBox(width: AppSpace.lg),
+              Expanded(
+                flex: 4,
+                child: FadeSlideIn(
+                  index: 1,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ...status,
+                        clients,
+                        const SizedBox(height: AppSpace.lg),
+                        Align(alignment: Alignment.centerLeft, child: stop),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...status,
+            const SizedBox(height: AppSpace.sm),
+            Flexible(child: FadeSlideIn(child: pairing)),
+            clients,
+            const SizedBox(height: AppSpace.md),
+            Center(child: stop),
+          ],
+        );
+      },
     );
   }
 }
@@ -115,29 +159,14 @@ class _StopButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const red = AppColors.stop;
-    return HoverScale(
-      scale: 1.05,
-      onTap: onStop,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: red.withValues(alpha: 0.9),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: red.withValues(alpha: 0.4),
-              blurRadius: 20,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.power_settings_new_rounded,
-          size: 28,
-          color: Colors.white,
-        ),
-      ),
+    return AppButton(
+      label: context.l10n.stopServer,
+      icon: Icons.power_settings_new_rounded,
+      variant: AppButtonVariant.tonal,
+      tone: AppTone.danger,
+      expand: false,
+      height: 46,
+      onPressed: onStop,
     );
   }
 }
@@ -147,26 +176,10 @@ class _PairingPausedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const color = AppColors.alert;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.gpp_maybe_rounded, color: color, size: 20),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              context.l10n.pairingPaused,
-              style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
+    return InlineAlert(
+      tone: AppTone.danger,
+      icon: Icons.gpp_maybe_rounded,
+      message: context.l10n.pairingPaused,
     );
   }
 }

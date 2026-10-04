@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../utils/ui/app_dialog.dart';
-import '../../../utils/ui/app_popup_theme.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class RemoteDialogs {
   static Future<bool> showExitDialog(BuildContext context) async {
@@ -12,9 +11,9 @@ class RemoteDialogs {
       title: context.l10n.disconnectTitle,
       content: context.l10n.disconnectContent,
       confirmText: context.l10n.disconnectTitle,
-      confirmColor: AppPopupTheme.dangerColor,
-      icon: Icons.warning_amber_rounded,
-      iconColor: AppColors.caution,
+      tone: AppTone.danger,
+      icon: Icons.link_off_rounded,
+      iconTone: AppTone.warning,
     );
     if (result) HapticFeedback.mediumImpact();
     return result;
@@ -31,10 +30,10 @@ class RemoteDialogs {
           physics: const BouncingScrollPhysics(),
           child: Text(
             notes.isEmpty ? context.l10n.notesEmpty : notes,
-            style: TextStyle(
-              color: notes.isEmpty ? Colors.white54 : Colors.white,
+            style: AppType.body.copyWith(
+              color: notes.isEmpty ? context.palette.textMuted : context.palette.textPrimary,
               fontSize: 16,
-              height: 1.5,
+              height: 1.55,
             ),
           ),
         ),

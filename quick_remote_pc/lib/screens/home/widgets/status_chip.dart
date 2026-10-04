@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class StatusChip extends StatelessWidget {
   final bool isRunning;
@@ -10,44 +10,16 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = (!isRunning || clientCount == 0) 
-        ? AppColors.danger 
-        : AppColors.success;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 2),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            isRunning ? context.l10n.clientsConnected(clientCount) : context.l10n.serverOff,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
-      ),
+    final p = context.palette;
+    // Running with no phone yet: waiting, not an error.
+    final color = !isRunning
+        ? p.textMuted
+        : clientCount == 0
+            ? p.warning
+            : p.success;
+    return StatusPill(
+      color: color,
+      label: isRunning ? context.l10n.clientsConnected(clientCount) : context.l10n.serverOff,
     );
   }
 }

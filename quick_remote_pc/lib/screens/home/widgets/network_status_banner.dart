@@ -2,9 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../services/server/network_manager.dart';
 import '../../../services/websocket_server.dart';
-import '../../../widgets/hover_scale.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class NetworkStatusBanner extends StatelessWidget {
   final NetworkTrust trust;
@@ -18,10 +17,11 @@ class NetworkStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final (color, icon) = switch (trust) {
-      NetworkTrust.trusted => (AppColors.success, Icons.shield_rounded),
-      NetworkTrust.untrusted => (AppColors.warning, Icons.wifi_tethering_rounded),
-      NetworkTrust.unknown => (AppColors.muted, Icons.help_outline_rounded),
+      NetworkTrust.trusted => (p.success, Icons.shield_rounded),
+      NetworkTrust.untrusted => (p.warning, Icons.wifi_tethering_rounded),
+      NetworkTrust.unknown => (p.textMuted, Icons.help_outline_rounded),
     };
     // Linux has no network profiles; the trust level is the firewalld zone.
     final text = Platform.isLinux
@@ -35,54 +35,49 @@ class NetworkStatusBanner extends StatelessWidget {
             NetworkTrust.untrusted => context.l10n.networkPublic,
             NetworkTrust.unknown => context.l10n.networkUnreadable,
           };
+    final duration = AppMotion.of(context, AppMotion.base);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      duration: duration,
+      curve: AppMotion.standard,
+      padding: const EdgeInsets.fromLTRB(AppSpace.sm, AppSpace.xs, AppSpace.xs, AppSpace.xs),
+      constraints: const BoxConstraints(minHeight: 48),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: p.isDark ? 0.12 : 0.08),
+        borderRadius: AppRadius.all(AppRadius.md),
+        border: Border.all(color: color.withValues(alpha: p.isDark ? 0.30 : 0.24)),
       ),
       child: Row(
         children: [
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: duration,
             child: Icon(icon, key: ValueKey(trust), color: color, size: 20),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpace.sm - 2),
           Expanded(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
+              duration: duration,
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.centerLeft,
+                children: [...previous, ?current],
+              ),
               child: Text(
                 text,
                 key: ValueKey(text),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppType.labelSmall.copyWith(color: color, fontSize: 13),
               ),
             ),
           ),
-          if (trust == NetworkTrust.untrusted) ...[
-            HoverScale(
-              scale: 1.1,
-              onTap: () => server.openNetworkSettings(),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  context.l10n.settingsTitle,
-                  style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
-                ),
-              ),
+          if (trust == NetworkTrust.untrusted)
+            AppButton(
+              label: context.l10n.settingsTitle,
+              icon: Icons.open_in_new_rounded,
+              variant: AppButtonVariant.tonal,
+              tone: AppTone.warning,
+              expand: false,
+              height: 34,
+              onPressed: () => server.openNetworkSettings(),
             ),
-          ],
         ],
       ),
     );

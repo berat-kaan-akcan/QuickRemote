@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'glass_panel.dart';
 import 'premium_media_btn.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class PptMediaControls extends StatelessWidget {
   final bool isConnected;
@@ -20,14 +20,10 @@ class PptMediaControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = AppColors.mediaEmeraldLight; // Lighter emerald for glassmorphism
+    final accent = context.palette.success;
 
     return GlassPanel(
-      borderColor: accent.withValues(alpha: 0.3),
-      gradientColors: [
-        accent.withValues(alpha: 0.15),
-        accent.withValues(alpha: 0.05),
-      ],
+      accent: accent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -39,7 +35,7 @@ class PptMediaControls extends StatelessWidget {
                 color: accent,
                 onTap: isConnected ? onRewind : null,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpace.sm),
               Expanded(
                 child: PremiumMediaBtn(
                   icon: isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_rounded,

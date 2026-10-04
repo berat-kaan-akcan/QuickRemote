@@ -5,7 +5,7 @@ import '../../remote/widgets/media_labels.dart';
 import '../widgets/volume_pill_button.dart';
 import '../../remote/widgets/media_transport_row.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 2: Media View  (WiFi MediaControlView ile aynı tasarım)
@@ -24,130 +24,122 @@ class BtMediaView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const MediaTitle(),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Sistem Medya Kontrolleri
-                      SectionLabel(
-                        icon: Icons.album_rounded,
-                        label: context.l10n.systemMedia,
-                        color: AppColors.mediaRose,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildSystemMediaPanel(context),
-                      const SizedBox(height: 24),
-
-                      // Sistem Sesi
-                      SectionLabel(
-                        icon: Icons.volume_up_rounded,
-                        label: context.l10n.systemVolume,
-                        color: AppColors.mediaSky,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildVolumePanel(context),
-                      const SizedBox(height: 24),
-
-                      // BT mod uyarısı
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.bluetooth.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.bluetooth.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.info_outline_rounded, color: AppColors.bluetoothLight, size: 16),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                context.l10n.btMediaLimits,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 12,
-                                  height: 1.4,
-                                ),
+      bottom: false,
+      child: ContentWidth(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const FadeSlideIn(child: MediaTitle()),
+              const SizedBox(height: AppSpace.md),
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: AppSpace.lg),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Sistem Medya Kontrolleri
+                        FadeSlideIn(
+                          index: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SectionLabel(
+                                icon: Icons.album_rounded,
+                                label: context.l10n.systemMedia,
+                                color: p.accent,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: AppSpace.xs),
+                              _buildSystemMediaPanel(context),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                        const SizedBox(height: AppSpace.xl),
+
+                        // Sistem Sesi
+                        FadeSlideIn(
+                          index: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SectionLabel(
+                                icon: Icons.volume_up_rounded,
+                                label: context.l10n.systemVolume,
+                                color: p.info,
+                              ),
+                              const SizedBox(height: AppSpace.xs),
+                              _buildVolumePanel(context),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpace.xl),
+
+                        // BT mod uyarısı
+                        FadeSlideIn(
+                          index: 3,
+                          child: InlineAlert(
+                            tone: AppTone.info,
+                            icon: Icons.info_outline_rounded,
+                            message: context.l10n.btMediaLimits,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSystemMediaPanel(BuildContext context) {
-    const accent = AppColors.mediaRose;
+    final p = context.palette;
     return GlassPanel(
-      borderColor: accent.withValues(alpha: 0.3),
-      gradientColors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
+      accent: p.accent,
       child: Column(
         children: [
           // Medya bilgisi yok uyarısı
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  gradient: const LinearGradient(
-                    colors: [Colors.white24, Colors.white10],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  borderRadius: AppRadius.all(AppRadius.md),
+                  color: p.surfaceSunken,
+                  border: Border.all(color: p.border),
                 ),
-                child: const Icon(Icons.music_note_rounded, color: Colors.white54, size: 20),
+                child: Icon(Icons.music_note_rounded, color: p.textMuted, size: 26),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: AppSpace.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       context.l10n.systemMedia,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 16.5),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       context.l10n.btNoMediaInfo,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: AppType.bodySmall.copyWith(color: p.textSecondary, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.md),
           MediaTransportRow(
             playIcon: Icons.play_arrow_rounded,
             playLabel: context.l10n.mediaPlayPause,
@@ -161,48 +153,40 @@ class BtMediaView extends StatelessWidget {
   }
 
   Widget _buildVolumePanel(BuildContext context) {
-    const accent = AppColors.mediaSkyLight;
+    final p = context.palette;
+    final accent = p.info;
     return GlassPanel(
-      borderColor: accent.withValues(alpha: 0.3),
-      gradientColors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(40),
-            border: Border.all(color: accent.withValues(alpha: 0.15)),
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: 0.05),
-                blurRadius: 12,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              VolumePillButton(
-                icon: Icons.remove_rounded,
-                color: accent,
-                isLeft: true,
-                onTap: isConnected ? () => send(RemoteCommands.volumeDown) : null,
-              ),
-              Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
-              VolumePillButton(
-                icon: Icons.volume_off_rounded,
-                color: accent,
-                onTap: isConnected ? () => send(RemoteCommands.volumeMute) : null,
-              ),
-              Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
-              VolumePillButton(
-                icon: Icons.add_rounded,
-                color: accent,
-                isRight: true,
-                onTap: isConnected ? () => send(RemoteCommands.volumeUp) : null,
-              ),
-            ],
-          ),
+      accent: accent,
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: p.surfaceSunken,
+          borderRadius: AppRadius.all(AppRadius.pill),
+          border: Border.all(color: p.border),
+        ),
+        child: Row(
+          children: [
+            VolumePillButton(
+              icon: Icons.remove_rounded,
+              color: accent,
+              isLeft: true,
+              onTap: isConnected ? () => send(RemoteCommands.volumeDown) : null,
+            ),
+            Container(width: 1, height: 28, color: p.border),
+            VolumePillButton(
+              icon: Icons.volume_off_rounded,
+              color: accent,
+              label: context.l10n.volumeMuted,
+              onTap: isConnected ? () => send(RemoteCommands.volumeMute) : null,
+            ),
+            Container(width: 1, height: 28, color: p.border),
+            VolumePillButton(
+              icon: Icons.add_rounded,
+              color: accent,
+              isRight: true,
+              onTap: isConnected ? () => send(RemoteCommands.volumeUp) : null,
+            ),
+          ],
         ),
       ),
     );

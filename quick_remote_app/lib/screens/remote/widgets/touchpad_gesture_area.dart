@@ -40,11 +40,15 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
   int _gesture = 0;
   bool _leftDownSent = false;
 
+  /// Where the finger is, for the surface's glow only.
+  final _touch = ValueNotifier<Offset?>(null);
+
   String get _moveType => _activeTool == DrawTool.laser ? 'LASER' : 'TOUCH';
 
   @override
   void dispose() {
     _sendTimer?.cancel();
+    _touch.dispose();
     super.dispose();
   }
 
@@ -59,6 +63,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
         (pos - _lastPointerUpPosition!).distance < 80;
 
     _isDrawActive = true;
+    _touch.value = pos;
     _activeTool = isDoubleTap ? widget.drawTool : DrawTool.laser;
     final gesture = ++_gesture;
     _pending.clear();
@@ -89,6 +94,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
 
   void _onPointerMove(PointerMoveEvent event) {
     if (!_isDrawActive) return;
+    _touch.value = event.localPosition;
 
     _pending.add(event.delta.dx * widget.sensitivity, event.delta.dy * widget.sensitivity);
     // Send at once when idle, then at most every 16 ms until drained.
@@ -127,6 +133,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
 
     _isDrawActive = false;
     _leftDownSent = false;
+    _touch.value = null;
     setState(() {});
   }
 
@@ -143,7 +150,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
       onPointerMove: _onPointerMove,
       onPointerUp: _onPointerUp,
       onPointerCancel: _onPointerCancel,
-      child: TouchpadSurface(isDrawActive: _isDrawActive, activeTool: _activeTool),
+      child: TouchpadSurface(isDrawActive: _isDrawActive, activeTool: _activeTool, touch: _touch),
     );
   }
 }
