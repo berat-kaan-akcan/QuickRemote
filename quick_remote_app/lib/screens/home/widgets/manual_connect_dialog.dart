@@ -106,8 +106,7 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
               builder: (context, child) {
                 final host = hostController.text.trim();
                 final pin = pinController.text.trim();
-                // 6 digits; PCs running an older version show 4.
-                final isValid = host.isNotEmpty && (pin.length == 6 || pin.length == 4);
+                final isValid = host.isNotEmpty && pin.length == 6;
 
                 String buttonText = context.l10n.manualConnect;
                 if (host.isEmpty) {
