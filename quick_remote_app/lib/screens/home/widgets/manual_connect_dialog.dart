@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
 import '../../../l10n/app_language.dart';
+import '../../../widgets/ui/ui.dart';
 
 class ManualConnectData {
   final String host;
@@ -20,7 +21,7 @@ class ManualConnectDialog extends StatefulWidget {
   const ManualConnectDialog({super.key, this.defaultIp, this.defaultPort});
 
   static Future<ManualConnectData?> show(BuildContext context, {String? defaultIp, String? defaultPort}) {
-    return showDialog<ManualConnectData>(
+    return AppPopupTheme.showAppDialog<ManualConnectData>(
       context: context,
       builder: (_) => ManualConnectDialog(defaultIp: defaultIp, defaultPort: defaultPort),
     );
@@ -45,80 +46,87 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Dialog(
-      backgroundColor: AppPopupTheme.dialogBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.dialogRadius)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.link_rounded, color: Colors.white, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.manualTitle,
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpace.lg, vertical: AppSpace.xl),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: AppPopupTheme.maxWidth),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.xl, AppSpace.xl, AppSpace.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  IconBadge(icon: Icons.lan_rounded, color: p.primaryText, size: 44),
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(
+                    child: Text(
+                      context.l10n.manualTitle,
+                      style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpace.xl),
+              TextField(
+                controller: hostController,
+                autofocus: widget.defaultIp?.isEmpty ?? true,
+                style: AppType.body.copyWith(color: p.textPrimary),
+                decoration: AppPopupTheme.inputDecoration(
+                  context: context,
+                  labelText: context.l10n.manualIp,
+                  hintText: '192.168.1.x',
+                  prefixIcon: const Icon(Icons.computer_rounded, size: 20),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: hostController,
-              autofocus: widget.defaultIp?.isEmpty ?? true,
-              style: const TextStyle(color: Colors.white),
-              decoration: AppPopupTheme.inputDecoration(
-                context: context,
-                labelText: context.l10n.manualIp,
-                hintText: '192.168.1.x',
+                keyboardType: TextInputType.number,
               ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: portController,
-              style: const TextStyle(color: Colors.white),
-              decoration: AppPopupTheme.inputDecoration(context: context, labelText: 'Port'),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: pinController,
-              autofocus: widget.defaultIp?.isNotEmpty ?? false,
-              onChanged: (_) => HapticFeedback.lightImpact(),
-              style: const TextStyle(color: Colors.white),
-              decoration: AppPopupTheme.inputDecoration(
-                context: context,
-                labelText: 'PIN',
-                hintText: context.l10n.manualPinHint,
-                prefixIcon: Icon(Icons.lock_rounded, color: Colors.white.withValues(alpha: 0.4), size: 20),
+              const SizedBox(height: AppSpace.sm),
+              TextField(
+                controller: portController,
+                style: AppType.body.copyWith(color: p.textPrimary),
+                decoration: AppPopupTheme.inputDecoration(
+                  context: context,
+                  labelText: 'Port',
+                  prefixIcon: const Icon(Icons.numbers_rounded, size: 20),
+                ),
+                keyboardType: TextInputType.number,
               ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              maxLength: 6,
-            ),
-            const SizedBox(height: 20),
-            AnimatedBuilder(
-              animation: Listenable.merge([hostController, pinController]),
-              builder: (context, child) {
-                final host = hostController.text.trim();
-                final pin = pinController.text.trim();
-                final isValid = host.isNotEmpty && pin.length == 6;
+              const SizedBox(height: AppSpace.sm),
+              TextField(
+                controller: pinController,
+                autofocus: widget.defaultIp?.isNotEmpty ?? false,
+                onChanged: (_) => HapticFeedback.lightImpact(),
+                style: AppType.title.copyWith(color: p.textPrimary, letterSpacing: 6, fontSize: 20),
+                decoration: AppPopupTheme.inputDecoration(
+                  context: context,
+                  labelText: 'PIN',
+                  hintText: context.l10n.manualPinHint,
+                  prefixIcon: const Icon(Icons.lock_rounded, size: 20),
+                ).copyWith(hintStyle: AppType.body.copyWith(color: p.textMuted, letterSpacing: 0)),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                maxLength: 6,
+              ),
+              const SizedBox(height: AppSpace.md),
+              AnimatedBuilder(
+                animation: Listenable.merge([hostController, pinController]),
+                builder: (context, child) {
+                  final host = hostController.text.trim();
+                  final pin = pinController.text.trim();
+                  final isValid = host.isNotEmpty && pin.length == 6;
 
-                String buttonText = context.l10n.manualConnect;
-                if (host.isEmpty) {
-                  buttonText = context.l10n.manualWaitingIp;
-                } else if (!isValid) {
-                  buttonText = context.l10n.manualWaitingPin;
-                }
+                  String buttonText = context.l10n.manualConnect;
+                  if (host.isEmpty) {
+                    buttonText = context.l10n.manualWaitingIp;
+                  } else if (!isValid) {
+                    buttonText = context.l10n.manualWaitingPin;
+                  }
 
-                return SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
+                  return AppButton(
+                    label: buttonText,
+                    trailingIcon: isValid ? Icons.arrow_forward_rounded : null,
                     onPressed: isValid
                         ? () {
                             final port = int.tryParse(portController.text.trim()) ?? 0;
@@ -135,26 +143,18 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
                             Navigator.of(context).pop(ManualConnectData(host: host, port: port, pin: pin));
                           }
                         : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppPopupTheme.successColor,
-                      disabledBackgroundColor: Colors.white.withValues(alpha: 0.1),
-                      foregroundColor: Colors.white,
-                      disabledForegroundColor: Colors.white.withValues(alpha: 0.4),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(buttonText, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                        if (isValid) ...[const SizedBox(width: 8), const Icon(Icons.arrow_forward_rounded, size: 20)],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpace.xs),
+              AppButton(
+                label: context.l10n.cancel,
+                variant: AppButtonVariant.ghost,
+                tone: AppTone.neutral,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
         ),
       ),
     );

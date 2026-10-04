@@ -6,7 +6,7 @@ import '../../../services/websocket_service.dart';
 import '../../../l10n/app_language.dart';
 import '../../../l10n/failure_text.dart';
 import '../../../utils/ui/app_dialog.dart';
-import '../../../utils/ui/app_popup_theme.dart';
+import '../../../theme/app_palette.dart';
 
 class ConnectAttemptResult {
   final bool success;
@@ -74,7 +74,7 @@ class ConnectionHandler {
       title: context.l10n.verifyTitle,
       content: context.l10n.verifyContent(code),
       confirmText: context.l10n.verifyConfirm,
-      confirmColor: AppPopupTheme.successColor,
+      tone: AppTone.success,
       cancelText: context.l10n.cancelAction,
       icon: Icons.verified_user_rounded,
     );
@@ -87,7 +87,7 @@ class ConnectionHandler {
       title: context.l10n.certWarningTitle,
       content: context.l10n.certWarningContent(code),
       confirmText: context.l10n.certWarningConfirm,
-      confirmColor: AppPopupTheme.warningColor,
+      tone: AppTone.warning,
       cancelText: context.l10n.cancelAction,
       icon: Icons.shield_rounded,
     );

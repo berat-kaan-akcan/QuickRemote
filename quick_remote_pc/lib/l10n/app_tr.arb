@@ -124,5 +124,9 @@
         "type": "String"
       }
     }
+  },
+  "startServer": "Sunucuyu Başlat",
+  "@startServer": {
+    "description": "Button and tooltip that starts the server."
   }
 }

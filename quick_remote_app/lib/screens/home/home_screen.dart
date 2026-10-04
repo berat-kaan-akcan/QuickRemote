@@ -13,7 +13,7 @@ import 'widgets/connect_buttons.dart';
 import 'widgets/device_lists.dart';
 import 'widgets/home_branding.dart';
 import '../../l10n/app_language.dart';
-import '../../theme/app_colors.dart';
+import '../../widgets/ui/ui.dart';
 
 /// Home screen - connection hub to scan QR and connect to PC.
 class HomeScreen extends StatefulWidget {
@@ -154,122 +154,107 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 24, top: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.settings_rounded,
-                      color: Colors.white54,
+      body: AmbientBackground(
+        child: SafeArea(
+          bottom: false,
+          child: ContentWidth(
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.sm, AppSpace.sm + 4, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: HomeTopBar(
+                      onSettings: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsScreen(),
+                          ),
+                        );
+                      },
                     ),
-                    tooltip: context.l10n.homeSettingsTooltip,
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const Expanded(
-              flex: 2,
-              child: RepaintBoundary(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
-                    child: HomeBranding(),
                   ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_error != null) ...[
-                    _ErrorBox(message: _error!),
-                    const SizedBox(height: 16),
-                  ],
-                  ConnectButtons(
-                    connecting: _connecting,
-                    onScan: _scanAndConnect,
-                    onBluetooth: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BluetoothConnectScreen(),
-                        ),
-                      );
-                    },
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpace.page,
+                    AppSpace.lg,
+                    AppSpace.page,
+                    MediaQuery.paddingOf(context).bottom + AppSpace.xl,
                   ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => _showManualConnect(context),
-                    child: Text(
-                      context.l10n.homeManualConnection,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 13,
+                  sliver: SliverList.list(
+                    children: [
+                      FadeSlideIn(
+                        child: AppCard(
+                          elevated: true,
+                          radius: AppRadius.xl,
+                          tint: p.primary,
+                          padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, AppSpace.sm),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const RepaintBoundary(child: HomeBranding()),
+                              const SizedBox(height: AppSpace.xl),
+                              ConnectButtons(
+                                connecting: _connecting,
+                                onScan: _scanAndConnect,
+                                onBluetooth: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const BluetoothConnectScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: AppSpace.xxs),
+                              Center(
+                                child: TextButton.icon(
+                                  onPressed: () => _showManualConnect(context),
+                                  icon: const Icon(Icons.keyboard_alt_outlined, size: 18),
+                                  label: Text(context.l10n.homeManualConnection),
+                                  style: TextButton.styleFrom(foregroundColor: p.textSecondary),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                      Reveal(
+                        child: _error == null
+                            ? null
+                            : Padding(
+                                key: ValueKey(_error),
+                                padding: const EdgeInsets.only(top: AppSpace.md),
+                                child: InlineAlert(
+                                  message: _error!,
+                                  tone: AppTone.danger,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: AppSpace.xxl),
+                      FadeSlideIn(
+                        index: 2,
+                        child: DeviceLists(
+                          recentDevices: _recentDevices,
+                          onDiscoveredTap: (dev) => _showManualConnect(
+                            context,
+                            defaultIp: dev.ip,
+                            defaultPort: dev.port.toString(),
+                          ),
+                          onRecentTap: (dev) =>
+                              _executeConnection(dev['host'], dev['port'], dev['pin']),
+                          onRecentRemove: _removeRecentDevice,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: DeviceLists(
-                  recentDevices: _recentDevices,
-                  onDiscoveredTap: (dev) => _showManualConnect(
-                    context,
-                    defaultIp: dev.ip,
-                    defaultPort: dev.port.toString(),
-                  ),
-                  onRecentTap: (dev) =>
-                      _executeConnection(dev['host'], dev['port'], dev['pin']),
-                  onRecentRemove: _removeRecentDevice,
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorBox extends StatelessWidget {
-  const _ErrorBox({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.danger.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        message,
-        style: const TextStyle(color: AppColors.danger, fontSize: 13),
-        textAlign: TextAlign.center,
       ),
     );
   }

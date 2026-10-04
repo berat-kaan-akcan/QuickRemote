@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 /// Step-by-step pairing guide for the computer, Windows or Linux.
 class BtPairingGuide extends StatefulWidget {
@@ -17,155 +16,118 @@ class _BtPairingGuideState extends State<BtPairingGuide> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final p = context.palette;
+    final steps = _linuxGuide
+        ? [
+            context.l10n.btLinuxStep1,
+            context.l10n.btLinuxStep2,
+            context.l10n.btLinuxStep3,
+            context.l10n.btStepPickPhone,
+            context.l10n.btStepConfirm,
+          ]
+        : [
+            context.l10n.btWindowsStep1,
+            context.l10n.btWindowsStep2,
+            context.l10n.btWindowsStep3,
+            context.l10n.btStepPickPhone,
+            context.l10n.btStepConfirm,
+          ];
+
+    return AppCard(
+      elevated: true,
+      radius: AppRadius.xl,
+      padding: const EdgeInsets.all(AppSpace.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.computer_rounded,
-                    color: Colors.white.withValues(alpha: 0.7),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      context.l10n.btOnYourComputer,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(
-                    value: false,
-                    label: Text('Windows'),
-                    icon: Icon(Icons.window_rounded, size: 16),
-                  ),
-                  ButtonSegment(
-                    value: true,
-                    label: Text('Linux'),
-                    icon: Icon(Icons.terminal_rounded, size: 16),
-                  ),
-                ],
-                selected: {_linuxGuide},
-                showSelectedIcon: false,
-                onSelectionChanged: (s) =>
-                    setState(() => _linuxGuide = s.first),
-                style: SegmentedButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                  selectedForegroundColor: Colors.white,
-                  selectedBackgroundColor: AppColors.bluetooth.withValues(
-                    alpha: 0.5,
-                  ),
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (_linuxGuide) ...[
-                _step(1, context.l10n.btLinuxStep1),
-                _step(2, context.l10n.btLinuxStep2),
-                _step(3, context.l10n.btLinuxStep3),
-                _step(4, context.l10n.btStepPickPhone),
-                _step(5, context.l10n.btStepConfirm),
-              ] else ...[
-                _step(1, context.l10n.btWindowsStep1),
-                _step(2, context.l10n.btWindowsStep2),
-                _step(3, context.l10n.btWindowsStep3),
-                _step(4, context.l10n.btStepPickPhone),
-                _step(5, context.l10n.btStepConfirm),
-              ],
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.bluetooth.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.bluetooth.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline_rounded,
-                      color: AppColors.bluetoothLight,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        context.l10n.btPairOnce,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
+              IconBadge(icon: Icons.computer_rounded, color: p.info, size: 36),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Text(
+                  context.l10n.btOnYourComputer,
+                  style: AppType.titleSmall.copyWith(color: p.textPrimary),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: AppSpace.md),
+          AppSegmented<bool>(
+            color: p.info,
+            segments: const [
+              AppSegment(value: false, label: 'Windows', icon: Icons.window_rounded),
+              AppSegment(value: true, label: 'Linux', icon: Icons.terminal_rounded),
+            ],
+            selected: _linuxGuide,
+            onChanged: (v) => setState(() => _linuxGuide = v),
+          ),
+          const SizedBox(height: AppSpace.lg),
+          AnimatedSwitcher(
+            duration: AppMotion.of(context, AppMotion.base),
+            child: Column(
+              key: ValueKey(_linuxGuide),
+              children: [
+                for (final (i, text) in steps.indexed)
+                  _step(context, i + 1, text, last: i == steps.length - 1),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          InlineAlert(
+            dense: true,
+            tone: AppTone.info,
+            icon: Icons.info_outline_rounded,
+            message: context.l10n.btPairOnce,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _step(int number, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+  Widget _step(BuildContext context, int number, String text, {required bool last}) {
+    final p = context.palette;
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: AppColors.bluetooth.withValues(alpha: 0.3),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.bluetoothLight.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '$number',
-                style: const TextStyle(
-                  color: AppColors.bluetoothLight,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+          Column(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: p.info.withValues(alpha: p.isDark ? 0.18 : 0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: p.info.withValues(alpha: 0.5)),
+                ),
+                child: Center(
+                  child: Text(
+                    '$number',
+                    style: AppType.labelSmall.copyWith(color: p.info, fontWeight: FontWeight.w800),
+                  ),
                 ),
               ),
-            ),
+              if (!last)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 3),
+                    decoration: BoxDecoration(
+                      color: p.info.withValues(alpha: 0.22),
+                      borderRadius: AppRadius.all(1),
+                    ),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpace.sm),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.75),
-                fontSize: 14,
-                height: 1.5,
+            child: Padding(
+              padding: EdgeInsets.only(top: 3, bottom: last ? AppSpace.xs : AppSpace.md),
+              child: Text(
+                text,
+                style: AppType.body.copyWith(color: p.textSecondary, fontSize: 14),
               ),
             ),
           ),

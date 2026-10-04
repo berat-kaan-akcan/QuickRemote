@@ -1,15 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/draw_tool.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 extension DrawToolStyle on DrawTool {
-  Color get color => switch (this) {
-        DrawTool.laser => AppColors.laser,
-        DrawTool.pen => AppColors.pen,
-        DrawTool.highlighter => AppColors.highlighter,
-        DrawTool.eraser => AppColors.warning,
+  Color colorIn(AppPalette p) => switch (this) {
+        DrawTool.laser => p.toolLaser,
+        DrawTool.pen => p.toolPen,
+        DrawTool.highlighter => p.toolHighlighter,
+        DrawTool.eraser => p.toolEraser,
       };
 
   IconData get icon => switch (this) {
@@ -21,13 +22,15 @@ extension DrawToolStyle on DrawTool {
 }
 
 /// The touchpad's look, shared by the Wi-Fi and Bluetooth remotes: a quiet
-/// panel with a hint, lit in the tool's color while a finger is down.
+/// dotted panel with a hint, lit in the tool's color while a finger is down,
+/// with a glow under the finger.
 class TouchpadSurface extends StatelessWidget {
   const TouchpadSurface({
     super.key,
     required this.isDrawActive,
     required this.activeTool,
     this.laserLabel,
+    this.touch,
   });
 
   final bool isDrawActive;
@@ -35,6 +38,10 @@ class TouchpadSurface extends StatelessWidget {
 
   /// Replaces "Laser" where the laser is just the mouse cursor.
   final String? laserLabel;
+
+  /// Where the finger is, in the surface's coordinates; repaints only the
+  /// glow layer.
+  final ValueListenable<Offset?>? touch;
 
   String _label(BuildContext context, DrawTool tool) => switch (tool) {
         DrawTool.laser => laserLabel ?? context.l10n.toolLaser,
@@ -45,68 +52,179 @@ class TouchpadSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final toolColor = activeTool.color;
-    final hintStyle = TextStyle(color: Colors.white.withValues(alpha: 0.15), fontSize: 12, fontWeight: FontWeight.w500);
+    final p = context.palette;
+    final toolColor = activeTool.colorIn(p);
+    final radius = AppRadius.all(AppRadius.xl);
 
     return Stack(
       fit: StackFit.expand,
       children: [
         RepaintBoundary(
-          child: _panel(
-            border: Border.all(color: primary.withValues(alpha: 0.2), width: 2),
-            shadow: primary.withValues(alpha: 0.05),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.surface,
+              borderRadius: radius,
+              border: Border.all(color: p.border, width: 1.5),
+              boxShadow: AppShadows.soft(p),
+            ),
+            child: ClipRRect(
+              borderRadius: radius,
+              child: CustomPaint(painter: _DotGridPainter(p.textMuted.withValues(alpha: p.isDark ? 0.22 : 0.20))),
+            ),
           ),
         ),
         // Fades in instead of animating the border, so a touch repaints
         // only this layer.
         AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
+          duration: AppMotion.of(context, const Duration(milliseconds: 180)),
           opacity: isDrawActive ? 1.0 : 0.0,
           child: RepaintBoundary(
-            child: _panel(
-              border: Border.all(color: toolColor, width: 2.5),
-              shadow: toolColor.withValues(alpha: 0.15),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                border: Border.all(color: toolColor, width: 2.5),
+                gradient: RadialGradient(
+                  radius: 1.2,
+                  colors: [
+                    toolColor.withValues(alpha: p.isDark ? 0.10 : 0.06),
+                    toolColor.withValues(alpha: p.isDark ? 0.02 : 0.01),
+                  ],
+                ),
+                boxShadow: [BoxShadow(color: toolColor.withValues(alpha: 0.22), blurRadius: 24, spreadRadius: -2)],
+              ),
             ),
           ),
         ),
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: isDrawActive
-                ? [
-                    Icon(activeTool.icon, color: toolColor.withValues(alpha: 0.3), size: 48),
-                    const SizedBox(height: 8),
-                    Text(
-                      _label(context, activeTool),
-                      style: TextStyle(
-                        color: toolColor.withValues(alpha: 0.4),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+        if (touch != null)
+          RepaintBoundary(
+            child: ClipRRect(
+              borderRadius: radius,
+              child: CustomPaint(painter: _TouchGlowPainter(touch!, toolColor)),
+            ),
+          ),
+        IgnorePointer(
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.fast),
+              child: isDrawActive
+                  ? Column(
+                      key: const ValueKey('active'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(activeTool.icon, color: toolColor.withValues(alpha: 0.4), size: 48),
+                        const SizedBox(height: AppSpace.xs),
+                        Text(
+                          _label(context, activeTool),
+                          style: AppType.titleSmall.copyWith(color: toolColor.withValues(alpha: 0.6)),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      key: const ValueKey('idle'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: p.surfaceSunken,
+                            border: Border.all(color: p.border),
+                          ),
+                          child: Icon(Icons.touch_app_rounded, color: p.textMuted, size: 30),
+                        ),
+                        const SizedBox(height: AppSpace.md),
+                        _HintRow(
+                          count: 1,
+                          text: context.l10n.tapForTool(_label(context, DrawTool.laser)),
+                        ),
+                        const SizedBox(height: 6),
+                        _HintRow(count: 2, text: context.l10n.doubleTapSelected),
+                      ],
                     ),
-                  ]
-                : [
-                    Icon(Icons.touch_app_rounded, color: Colors.white.withValues(alpha: 0.08), size: 48),
-                    const SizedBox(height: 12),
-                    Text(context.l10n.tapForTool(_label(context, DrawTool.laser)), style: hintStyle),
-                    const SizedBox(height: 4),
-                    Text(context.l10n.doubleTapSelected, style: hintStyle),
-                  ],
+            ),
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _panel({required Border border, required Color shadow}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: border,
-        boxShadow: [BoxShadow(color: shadow, blurRadius: 20, spreadRadius: 5)],
-      ),
+class _HintRow extends StatelessWidget {
+  const _HintRow({required this.count, required this.text});
+
+  final int count;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < count; i++)
+          Container(
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.only(right: 3),
+            decoration: BoxDecoration(color: p.textMuted, shape: BoxShape.circle),
+          ),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            text,
+            style: AppType.bodySmall.copyWith(color: p.textMuted, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
     );
   }
+}
+
+class _DotGridPainter extends CustomPainter {
+  _DotGridPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const gap = 22.0;
+    final paint = Paint()..color = color;
+    for (var y = gap; y < size.height; y += gap) {
+      for (var x = gap; x < size.width; x += gap) {
+        canvas.drawCircle(Offset(x, y), 1.1, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DotGridPainter old) => old.color != color;
+}
+
+class _TouchGlowPainter extends CustomPainter {
+  _TouchGlowPainter(this.touch, this.color) : super(repaint: touch);
+
+  final ValueListenable<Offset?> touch;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final at = touch.value;
+    if (at == null) return;
+    const r = 56.0;
+    final rect = Rect.fromCircle(center: at, radius: r);
+    canvas.drawCircle(
+      at,
+      r,
+      Paint()
+        ..shader = RadialGradient(colors: [
+          color.withValues(alpha: 0.32),
+          color.withValues(alpha: 0),
+        ]).createShader(rect),
+    );
+    canvas.drawCircle(at, 7, Paint()..color = color.withValues(alpha: 0.9));
+  }
+
+  @override
+  bool shouldRepaint(_TouchGlowPainter old) => old.touch != touch || old.color != color;
 }

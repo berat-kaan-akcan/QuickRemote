@@ -852,4 +852,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backgroundNotification => 'Arka planda bağlantı devam ediyor...';
+
+  @override
+  String get homeHeroSubtitle =>
+      'Bilgisayardaki QuickRemote PC\'nin QR kodunu tarayın ya da telefonu Bluetooth ile klavye ve fare olarak bağlayın.';
+
+  @override
+  String get slideLabel => 'Slayt';
+
+  @override
+  String get settingsSectionPresentation => 'Sunum';
+
+  @override
+  String get settingsSectionGeneral => 'Genel';
 }

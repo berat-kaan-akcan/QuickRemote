@@ -7,8 +7,8 @@ import '../services/presentation_timer_controller.dart';
 import '../utils/ui/app_bottom_sheet.dart';
 import '../utils/ui/app_snackbar.dart';
 import '../l10n/app_language.dart';
-import '../theme/app_colors.dart';
 import 'duration_picker.dart';
+import 'ui/ui.dart';
 
 /// Vibrates with one of the patterns chosen in the timer settings.
 void vibrateTimerPattern(String pattern) {
@@ -111,62 +111,92 @@ class PresentationTimer extends StatelessWidget {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
+        final p = context.palette;
         final isOvertime = controller.isOvertime;
         var timeStr = formatTimerSeconds(controller.displaySeconds);
         if (isOvertime) timeStr = '+$timeStr';
 
-        final primary = Theme.of(context).colorScheme.primary;
-        final textColor = isOvertime ? AppColors.danger : Colors.white;
-        final bgColor = isOvertime
-            ? AppColors.danger.withValues(alpha: 0.15)
-            : primary.withValues(alpha: 0.15);
-        final borderColor = isOvertime
-            ? AppColors.danger.withValues(alpha: 0.5)
-            : primary.withValues(alpha: 0.3);
+        final color = isOvertime
+            ? p.danger
+            : controller.isRunning
+                ? p.primaryText
+                : p.textSecondary;
         final canReset = controller.isRunning || controller.elapsedSeconds > 0;
+        final target = controller.targetSeconds;
+        final progress = isOvertime
+            ? 1.0
+            : target > 0
+                ? (controller.elapsedSeconds / target).clamp(0.0, 1.0)
+                : 0.0;
+        final ring = iconSize + 12;
 
-        return GestureDetector(
+        return Pressable(
           onTap: () => _toggle(context),
           onLongPress: () => showDurationPicker(context),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          semanticLabel: timeStr,
+          borderRadius: AppRadius.all(AppRadius.pill),
+          child: AnimatedContainer(
+            duration: AppMotion.of(context, AppMotion.base),
+            padding: EdgeInsets.fromLTRB(5, 5, canReset ? 5 : AppSpace.md, 5),
             decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor),
+              color: color.withValues(alpha: p.isDark ? 0.13 : 0.09),
+              borderRadius: AppRadius.all(AppRadius.pill),
+              border: Border.all(color: color.withValues(alpha: isOvertime ? 0.5 : 0.28)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  controller.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  color: textColor,
-                  size: iconSize,
+                SizedBox.square(
+                  dimension: ring,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(end: progress),
+                        duration: AppMotion.of(context, AppMotion.slow),
+                        builder: (context, value, _) => CircularProgressIndicator(
+                          value: value,
+                          strokeWidth: 2.5,
+                          strokeCap: StrokeCap.round,
+                          color: color,
+                          backgroundColor: color.withValues(alpha: 0.16),
+                        ),
+                      ),
+                      Icon(
+                        controller.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        color: color,
+                        size: iconSize,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpace.xs),
                 Text(
                   timeStr,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.bold,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                  style: AppType.numeric.copyWith(
+                    color: isOvertime ? p.danger : p.textPrimary,
+                    fontSize: fontSize + 1,
+                    letterSpacing: 0,
                   ),
                 ),
                 if (canReset) ...[
-                  const SizedBox(width: 12),
-                  GestureDetector(
+                  const SizedBox(width: AppSpace.xs),
+                  Pressable(
                     onTap: _reset,
+                    pressedScale: 0.85,
+                    semanticLabel: MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
+                    borderRadius: AppRadius.all(AppRadius.pill),
                     child: Container(
-                      padding: const EdgeInsets.all(2),
+                      width: ring,
+                      height: ring,
                       decoration: BoxDecoration(
-                        color: textColor.withValues(alpha: 0.15),
+                        color: color.withValues(alpha: 0.14),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
-                        color: textColor,
-                        size: iconSize * 0.8,
+                        color: color,
+                        size: iconSize * 0.85,
                       ),
                     ),
                   ),

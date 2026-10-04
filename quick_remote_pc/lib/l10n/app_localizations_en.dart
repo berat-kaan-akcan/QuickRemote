@@ -285,4 +285,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String tlsKeyReadable(String path) {
     return 'Other users can read the TLS key: $path';
   }
+
+  @override
+  String get startServer => 'Start Server';
 }

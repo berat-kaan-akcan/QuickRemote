@@ -11,7 +11,7 @@ import '../../remote/widgets/touchpad_surface.dart';
 import '../widgets/bt_target_selector.dart';
 import '../../../models/draw_tool.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 1: Touchpad View  (WiFi TouchpadView ile aynı tasarım)
@@ -61,6 +61,9 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   /// Son gönderilen mod — aynı modu tekrar göndermemek için.
   String? _lastSentMode;
 
+  /// Where the finger is, for the surface's glow only.
+  final _touch = ValueNotifier<Offset?>(null);
+
   /// Impress and WPS have no laser shortcut: the "laser" is the mouse cursor.
   bool get _cursorLaser => widget.target != BtTarget.powerpoint;
 
@@ -80,89 +83,98 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   @override
   void dispose() {
     _throttleTimer?.cancel();
+    _touch.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final connected = widget.isConnected;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: PillButton(
-                  icon: Icons.play_arrow_rounded,
-                  label: context.l10n.actionStart,
-                  color: AppColors.success,
-                  onTap: !connected ? null : () => widget.send(RemoteCommands.start),
+    final p = context.palette;
+    return ContentWidth(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, AppSpace.sm),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: PillButton(
+                    icon: Icons.play_arrow_rounded,
+                    label: context.l10n.actionStart,
+                    color: p.success,
+                    onTap: !connected ? null : () => widget.send(RemoteCommands.start),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              // Where the Wi-Fi remote shows the timer
-              const _BtBadge(),
-              const SizedBox(width: 8),
-              Expanded(
-                child: PillButton(
-                  icon: Icons.stop_rounded,
-                  label: context.l10n.actionEnd,
-                  color: AppColors.danger,
-                  onTap: !connected ? null : () => widget.send(RemoteCommands.end),
+                const SizedBox(width: AppSpace.xs),
+                // Where the Wi-Fi remote shows the timer
+                const _BtBadge(),
+                const SizedBox(width: AppSpace.xs),
+                Expanded(
+                  child: PillButton(
+                    icon: Icons.stop_rounded,
+                    label: context.l10n.actionEnd,
+                    color: p.danger,
+                    onTap: !connected ? null : () => widget.send(RemoteCommands.end),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Listener(
-              onPointerDown: _onPointerDown,
-              onPointerMove: _onPointerMove,
-              onPointerUp: _onPointerUp,
-              onPointerCancel: _onPointerCancel,
-              child: TouchpadSurface(
-                isDrawActive: _isDrawActive,
-                activeTool: _activeTool,
-                laserLabel: _laserLabel,
+              ],
+            ),
+            const SizedBox(height: AppSpace.sm),
+            Expanded(
+              child: Listener(
+                onPointerDown: _onPointerDown,
+                onPointerMove: _onPointerMove,
+                onPointerUp: _onPointerUp,
+                onPointerCancel: _onPointerCancel,
+                child: TouchpadSurface(
+                  isDrawActive: _isDrawActive,
+                  activeTool: _activeTool,
+                  laserLabel: _laserLabel,
+                  touch: _touch,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          DrawToolBar(
-            activeTool: _selectedTool,
-            tools: _availableTools,
-            laserLabel: _laserLabel,
-            onToolSelected: (tool) => setState(() => _drawTool = tool),
-            onClear: () {
-              HapticFeedback.mediumImpact();
-              widget.send(RemoteCommands.eraseAll);
-            },
-          ),
-          const SizedBox(height: 6),
-          BtTargetSelector(target: widget.target, onChanged: widget.onTargetChanged),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: SlideButton(
-                  icon: Icons.arrow_back_rounded,
-                  label: context.l10n.actionPrev,
-                  onTap: !connected ? null : () => widget.send(RemoteCommands.prev),
+            const SizedBox(height: AppSpace.sm),
+            DrawToolBar(
+              activeTool: _selectedTool,
+              tools: _availableTools,
+              laserLabel: _laserLabel,
+              onToolSelected: (tool) => setState(() => _drawTool = tool),
+              onClear: () {
+                HapticFeedback.mediumImpact();
+                widget.send(RemoteCommands.eraseAll);
+              },
+            ),
+            const SizedBox(height: AppSpace.xs),
+            BtTargetSelector(target: widget.target, onChanged: widget.onTargetChanged),
+            const SizedBox(height: AppSpace.sm),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: SlideButton(
+                    icon: Icons.arrow_back_rounded,
+                    label: context.l10n.actionPrev,
+                    height: 72,
+                    onTap: !connected ? null : () => widget.send(RemoteCommands.prev),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SlideButton(
-                  icon: Icons.arrow_forward_rounded,
-                  label: context.l10n.actionNext,
-                  isPrimary: true,
-                  onTap: !connected ? null : () => widget.send(RemoteCommands.next),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  flex: 3,
+                  child: SlideButton(
+                    icon: Icons.arrow_forward_rounded,
+                    label: context.l10n.actionNext,
+                    isPrimary: true,
+                    height: 72,
+                    onTap: !connected ? null : () => widget.send(RemoteCommands.next),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -186,6 +198,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
         (pos - _lastPointerUpPosition!).distance < 80;
 
     _isDrawActive = true;
+    _touch.value = pos;
     _activeTool = isDoubleTap ? _selectedTool : DrawTool.laser;
     final gesture = ++_gesture;
 
@@ -218,6 +231,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
 
   void _onPointerMove(PointerMoveEvent event) {
     if (!_isDrawActive) return;
+    _touch.value = event.localPosition;
 
     // Accumulate deltas
     _pendingDx += event.delta.dx * _sensitivity;
@@ -303,6 +317,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     }
 
     _isDrawActive = false;
+    _touch.value = null;
     setState(() {});
   }
 
@@ -326,19 +341,21 @@ class _BtBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
       decoration: BoxDecoration(
-        color: AppColors.bluetooth.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.bluetooth.withValues(alpha: 0.3)),
+        color: p.info.withValues(alpha: p.isDark ? 0.14 : 0.10),
+        borderRadius: AppRadius.all(AppRadius.pill),
+        border: Border.all(color: p.info.withValues(alpha: 0.3)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.bluetooth_rounded, color: AppColors.bluetoothLight, size: 14),
-          SizedBox(width: 4),
-          Text('BT', style: TextStyle(color: AppColors.bluetoothLight, fontSize: 12, fontWeight: FontWeight.w600)),
+          Icon(Icons.bluetooth_rounded, color: p.info, size: 16),
+          const SizedBox(width: 4),
+          Text('BT', style: AppType.labelSmall.copyWith(color: p.info)),
         ],
       ),
     );

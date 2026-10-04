@@ -6,7 +6,7 @@ import '../utils/ui/app_bottom_sheet.dart';
 import '../utils/ui/app_popup_theme.dart';
 import '../utils/ui/app_snackbar.dart';
 import '../l10n/app_language.dart';
-import '../theme/app_colors.dart';
+import 'ui/ui.dart';
 
 /// Preset minutes plus custom minute/second fields for the presentation timer.
 class DurationPicker extends StatefulWidget {
@@ -65,15 +65,16 @@ class DurationPickerState extends State<DurationPicker> {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final selected = widget.initialSeconds;
+    final p = context.palette;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         AppBottomSheet.buildTitle(context.l10n.setPresentationTime, icon: Icons.timer_outlined),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpace.lg),
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: AppSpace.xs,
+          runSpacing: AppSpace.xs,
           alignment: WrapAlignment.center,
           children: [
             _DurationChip(label: context.l10n.noTimeLimit, selected: selected == 0, onTap: () => _select(0)),
@@ -81,44 +82,35 @@ class DurationPickerState extends State<DurationPicker> {
               _DurationChip(label: context.l10n.durationMinutes(m), selected: selected == m * 60, onTap: () => _select(m * 60)),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpace.lg),
         Row(
           children: [
             Expanded(child: _numberField(_minutes, context.l10n.unitMinutes, TextInputAction.next)),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpace.xs),
             Expanded(child: _numberField(_seconds, context.l10n.unitSeconds, TextInputAction.done, maxValue: 59)),
-            const SizedBox(width: 12),
-            FilledButton(
+            const SizedBox(width: AppSpace.sm),
+            AppButton(
+              label: settings.timerAutoStart ? context.l10n.actionStart : context.l10n.actionSet,
+              icon: settings.timerAutoStart ? Icons.play_arrow_rounded : Icons.check_rounded,
+              expand: false,
               onPressed: _submitCustom,
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius)),
-              ),
-              child: Text(
-                settings.timerAutoStart ? context.l10n.actionStart : context.l10n.actionSet,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(
-            context.l10n.startWhenPicked,
-            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-          ),
+        const SizedBox(height: AppSpace.sm),
+        AppSwitchTile(
+          flat: true,
+          title: context.l10n.startWhenPicked,
           value: settings.timerAutoStart,
-          activeThumbColor: Theme.of(context).colorScheme.primary,
           onChanged: settings.setTimerAutoStart,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.xxs),
         Text(
           context.l10n.timerHelp,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white38, fontSize: 12),
+          style: AppType.bodySmall.copyWith(color: p.textMuted, fontSize: 12),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.xs),
       ],
     );
   }
@@ -126,7 +118,7 @@ class DurationPickerState extends State<DurationPicker> {
   Widget _numberField(TextEditingController controller, String unit, TextInputAction action, {int? maxValue}) {
     return TextField(
       controller: controller,
-      style: const TextStyle(color: Colors.white),
+      style: AppType.title.copyWith(color: context.palette.textPrimary),
       keyboardType: TextInputType.number,
       textInputAction: action,
       inputFormatters: [
@@ -152,12 +144,27 @@ class _DurationChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return ActionChip(
-      label: Text(label, style: TextStyle(color: selected ? primary : Colors.white)),
-      backgroundColor: selected ? primary.withValues(alpha: 0.2) : AppColors.surface,
-      side: selected ? BorderSide(color: primary) : BorderSide.none,
-      onPressed: onTap,
+    final p = context.palette;
+    return Pressable(
+      onTap: onTap,
+      selected: selected,
+      pressedScale: 0.92,
+      borderRadius: AppRadius.all(AppRadius.pill),
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.base),
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? p.primary : p.surfaceSunken,
+          borderRadius: AppRadius.all(AppRadius.pill),
+          border: Border.all(color: selected ? p.primary : p.border),
+        ),
+        child: Text(
+          label,
+          style: AppType.labelSmall.copyWith(color: selected ? p.onPrimary : p.textPrimary, fontSize: 13),
+        ),
+      ),
     );
   }
 }

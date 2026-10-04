@@ -43,6 +43,7 @@ flutter:
     - assets/images/
     - assets/linux/
     - assets/fonts/OFL.txt
+    - assets/fonts/OFL-SpaceGrotesk.txt
   fonts:
     # Inter (SIL OFL 1.1, assets/fonts/OFL.txt), bundled so the app never
     # downloads fonts at runtime.
@@ -57,7 +58,19 @@ flutter:
           weight: 700
         - asset: assets/fonts/Inter-800.ttf
           weight: 800
+    # Space Grotesk (SIL OFL 1.1, assets/fonts/OFL-SpaceGrotesk.txt): the brand's
+    # display face for headings, the wordmark and figures. Static instances of
+    # the variable font, so FontWeight picks them without font variations.
+    - family: SpaceGrotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-500.ttf
+          weight: 500
+        - asset: assets/fonts/SpaceGrotesk-600.ttf
+          weight: 600
+        - asset: assets/fonts/SpaceGrotesk-700.ttf
+          weight: 700
 
+# The Windows icon is exported by brand/tools/export_assets.sh.
 flutter_launcher_icons:
   windows:
     generate: true

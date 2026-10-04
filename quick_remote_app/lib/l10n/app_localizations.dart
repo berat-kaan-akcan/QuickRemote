@@ -1603,6 +1603,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arka planda bağlantı devam ediyor...'**
   String get backgroundNotification;
+
+  /// Home screen: how to connect, under the tagline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayardaki QuickRemote PC\'nin QR kodunu tarayın ya da telefonu Bluetooth ile klavye ve fare olarak bağlayın.'**
+  String get homeHeroSubtitle;
+
+  /// Label above the big slide number on the remote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt'**
+  String get slideLabel;
+
+  /// Settings section header.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum'**
+  String get settingsSectionPresentation;
+
+  /// Settings section header.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genel'**
+  String get settingsSectionGeneral;
 }
 
 class _AppLocalizationsDelegate

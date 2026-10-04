@@ -5,6 +5,7 @@ import '../../../providers/settings_provider.dart';
 import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../../../l10n/app_language.dart';
+import '../../../widgets/ui/ui.dart';
 
 
 String formatWarningTime(BuildContext context, int seconds) {
@@ -42,20 +43,19 @@ void showVibrationPatternSheet(BuildContext context, int? timeInSeconds, String 
               : context.l10n.endVibration,
             icon: Icons.vibration_rounded,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpace.xs),
           Text(
             context.l10n.tapToPreview,
-            style: TextStyle(color: Colors.white54, fontSize: 13),
+            style: AppType.bodySmall.copyWith(color: ctx.palette.textMuted),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.lg),
           _option(ctx, timeInSeconds, currentPattern, 'short', context.l10n.vibrationShort, Icons.short_text_rounded),
           _option(ctx, timeInSeconds, currentPattern, 'double', context.l10n.vibrationDouble, Icons.view_stream_rounded),
           _option(ctx, timeInSeconds, currentPattern, 'long', context.l10n.vibrationLong, Icons.horizontal_rule_rounded),
           _option(ctx, timeInSeconds, currentPattern, 'triple', context.l10n.vibrationTriple, Icons.dehaze_rounded),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.md),
           AppBottomSheet.buildCancelButton(ctx),
-          const SizedBox(height: 8),
         ],
       );
     },
@@ -64,45 +64,54 @@ void showVibrationPatternSheet(BuildContext context, int? timeInSeconds, String 
 
 Widget _option(BuildContext context, int? timeInSeconds, String currentPattern, String value, String label, IconData icon) {
   final isSelected = currentPattern == value;
-  final primaryColor = Theme.of(context).colorScheme.primary;
-  
-  return InkWell(
-    borderRadius: BorderRadius.circular(12),
-    onTap: () {
-      HapticFeedback.mediumImpact();
-      vibrateTimerPattern(value);
-      if (timeInSeconds != null) {
-        context.read<SettingsProvider>().updateWarningPattern(timeInSeconds, value);
-      } else {
-        context.read<SettingsProvider>().setTimeOutVibrationPattern(value);
-      }
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (!context.mounted) return;
-        if (Navigator.canPop(context)) Navigator.pop(context);
-      });
-    },
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        color: isSelected ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: isSelected ? primaryColor : Colors.white54, size: 24),
-          const SizedBox(width: 16),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? primaryColor : Colors.white,
-              fontSize: 16,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  final p = context.palette;
+  final primaryColor = p.primaryText;
+
+  return Padding(
+    padding: const EdgeInsets.only(bottom: AppSpace.xs),
+    child: Pressable(
+      selected: isSelected,
+      pressedScale: 0.98,
+      borderRadius: AppRadius.all(AppRadius.md),
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        vibrateTimerPattern(value);
+        if (timeInSeconds != null) {
+          context.read<SettingsProvider>().updateWarningPattern(timeInSeconds, value);
+        } else {
+          context.read<SettingsProvider>().setTimeOutVibrationPattern(value);
+        }
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (!context.mounted) return;
+          if (Navigator.canPop(context)) Navigator.pop(context);
+        });
+      },
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.base),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor.withValues(alpha: p.isDark ? 0.14 : 0.08) : p.surfaceSunken,
+          borderRadius: AppRadius.all(AppRadius.md),
+          border: Border.all(color: isSelected ? primaryColor.withValues(alpha: 0.5) : p.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? primaryColor : p.textSecondary, size: 22),
+            const SizedBox(width: AppSpace.md),
+            Expanded(
+              child: Text(
+                label,
+                style: AppType.titleSmall.copyWith(
+                  color: isSelected ? primaryColor : p.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
             ),
-          ),
-          const Spacer(),
-          if (isSelected)
-            Icon(Icons.check_circle_rounded, color: primaryColor, size: 20),
-        ],
+            if (isSelected)
+              Icon(Icons.check_circle_rounded, color: primaryColor, size: 22),
+          ],
+        ),
       ),
     ),
   );
@@ -118,26 +127,31 @@ class PatternChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return GestureDetector(
+    final p = context.palette;
+    final primary = p.primaryText;
+    return Pressable(
       onTap: onTap,
+      pressedScale: 0.94,
+      borderRadius: AppRadius.all(AppRadius.pill),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
         decoration: BoxDecoration(
-          color: primary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
+          color: primary.withValues(alpha: p.isDark ? 0.14 : 0.09),
+          borderRadius: AppRadius.all(AppRadius.pill),
+          border: Border.all(color: primary.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.vibration_rounded, size: 14, color: primary),
+            Icon(Icons.vibration_rounded, size: 15, color: primary),
             const SizedBox(width: 6),
             Text(
               vibrationPatternName(context, pattern),
-              style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold),
+              style: AppType.labelSmall.copyWith(color: primary),
             ),
             if (showArrow) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: primary),
             ],
           ],

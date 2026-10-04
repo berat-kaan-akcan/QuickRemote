@@ -250,5 +250,9 @@
   "reportSlide": "Slide {n}",
   "reportCopied": "Report copied to clipboard",
   "noSlideData": "No slide data",
-  "backgroundNotification": "Staying connected in the background..."
+  "backgroundNotification": "Staying connected in the background...",
+  "homeHeroSubtitle": "Scan the QR code shown by QuickRemote PC, or connect the phone over Bluetooth as a keyboard and mouse.",
+  "slideLabel": "Slide",
+  "settingsSectionPresentation": "Presentation",
+  "settingsSectionGeneral": "General"
 }

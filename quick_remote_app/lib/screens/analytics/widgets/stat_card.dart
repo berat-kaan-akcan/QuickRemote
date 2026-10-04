@@ -1,61 +1,55 @@
 import 'package:flutter/material.dart';
 
+import '../../../widgets/ui/ui.dart';
+
 class StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final List<Color> gradient;
+  final Color color;
 
   const StatCard({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
-    required this.gradient,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              gradient[0].withValues(alpha: 0.2),
-              gradient[1].withValues(alpha: 0.08),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: gradient[0].withValues(alpha: 0.3),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: gradient[0], size: 20),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
+      child: Semantics(
+        label: '$label: $value',
+        child: ExcludeSemantics(
+          child: AppCard(
+            tint: color,
+            padding: const EdgeInsets.all(AppSpace.sm + 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconBadge(icon: icon, color: color, size: 32),
+                const SizedBox(height: AppSpace.sm),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: AppType.numeric.copyWith(color: p.textPrimary, fontSize: 20, letterSpacing: -0.4),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 11.5),
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 11,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
