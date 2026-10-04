@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_colors.dart';
 
 class SpinningRefreshIcon extends StatefulWidget {
   final bool isSpinning;
@@ -45,7 +46,7 @@ class _SpinningRefreshIconState extends State<SpinningRefreshIcon> with SingleTi
       turns: _controller,
       child: Icon(
         Icons.refresh_rounded,
-        color: widget.isSpinning ? const Color(0xFF005B96) : Colors.white54,
+        color: widget.isSpinning ? AppColors.primary : Colors.white54,
         size: 20,
       ),
     );

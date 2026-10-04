@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_colors.dart';
 
 class SlideButton extends StatelessWidget {
   final IconData icon;
@@ -35,11 +36,11 @@ class SlideButton extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           Theme.of(context).colorScheme.primary,
-                          const Color(0xFF00BCD4),
+                          AppColors.accent,
                         ],
                       )
                     : null,
-                color: isPrimary ? null : const Color(0xFF1E293B),
+                color: isPrimary ? null : AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: isPrimary
                     ? null
@@ -138,6 +139,59 @@ class ActionButton extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The small Start / End buttons above the touchpad.
+class PillButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+
+  /// Hints that a long press opens more choices.
+  final bool showMenuHint;
+
+  const PillButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+    this.onLongPress,
+    this.showMenuHint = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            if (showMenuHint) ...[
+              const SizedBox(width: 2),
+              Icon(Icons.arrow_drop_down_rounded, color: color.withValues(alpha: 0.7), size: 16),
+            ],
+          ],
         ),
       ),
     );

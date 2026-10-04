@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../utils/throttler.dart';
+import '../../../utils/throttler.dart';
 import 'glass_panel.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class VolumePanel extends StatefulWidget {
   final bool isConnected;
@@ -81,7 +82,7 @@ class _VolumePanelState extends State<VolumePanel> {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF38BDF8); // Lighter blue
+    const accent = AppColors.mediaSkyLight; // Lighter blue
     final isMuted = widget.muted;
     final volStr = widget.volume >= 0 ? '%${_displayVolume.toInt()}' : '–';
 

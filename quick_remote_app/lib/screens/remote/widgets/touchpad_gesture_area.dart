@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
-import '../../../../models/draw_tool.dart';
-import '../../../../utils/delta_accumulator.dart';
-import '../../../l10n/app_language.dart';
+import '../../../models/draw_tool.dart';
+import '../../../utils/delta_accumulator.dart';
+import 'touchpad_surface.dart';
 
 class TouchpadGestureArea extends StatefulWidget {
   final double sensitivity;
@@ -138,170 +138,12 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
 
   @override
   Widget build(BuildContext context) {
-    Color borderColor;
-    double borderWidth;
-
-    if (_activeTool == DrawTool.pen) {
-      borderColor = const Color(0xFF00E676);
-      borderWidth = 2.5;
-    } else if (_activeTool == DrawTool.highlighter) {
-      borderColor = const Color(0xFFFFEA00);
-      borderWidth = 2.5;
-    } else if (_activeTool == DrawTool.eraser) {
-      borderColor = const Color(0xFFFF9800);
-      borderWidth = 2.5;
-    } else {
-      borderColor = const Color(0xFFFF1744); // Laser (Red)
-      borderWidth = 2.5;
-    }
-
-    final inactiveBorderColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.2);
-    final inactiveShadowColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.05);
-
     return Listener(
       onPointerDown: _onPointerDown,
       onPointerMove: _onPointerMove,
       onPointerUp: _onPointerUp,
       onPointerCancel: _onPointerCancel,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // INACTIVE BACKGROUND
-          RepaintBoundary(
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: inactiveBorderColor, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: inactiveShadowColor,
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          // ACTIVE BACKGROUND (Animated)
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: _isDrawActive ? 1.0 : 0.0,
-            child: RepaintBoundary(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: borderColor, width: borderWidth),
-                  boxShadow: [
-                    BoxShadow(
-                      color: borderColor.withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // CONTENT
-          Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_isDrawActive && _activeTool == DrawTool.pen) ...[
-                Icon(
-                  Icons.edit_rounded,
-                  color: const Color(0xFF00E676).withValues(alpha: 0.3),
-                  size: 48,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.l10n.toolPen,
-                  style: TextStyle(
-                    color: const Color(0xFF00E676).withValues(alpha: 0.4),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ] else if (_isDrawActive &&
-                  _activeTool == DrawTool.highlighter) ...[
-                Icon(
-                  Icons.border_color_rounded,
-                  color: const Color(0xFFFFEA00).withValues(alpha: 0.3),
-                  size: 48,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.l10n.toolHighlighter,
-                  style: TextStyle(
-                    color: const Color(0xFFFFEA00).withValues(alpha: 0.4),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ] else if (_isDrawActive && _activeTool == DrawTool.eraser) ...[
-                Icon(
-                  Icons.auto_fix_high_rounded,
-                  color: const Color(0xFFFF9800).withValues(alpha: 0.3),
-                  size: 48,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.l10n.toolEraser,
-                  style: TextStyle(
-                    color: const Color(0xFFFF9800).withValues(alpha: 0.4),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ] else if (_isDrawActive && _activeTool == DrawTool.laser) ...[
-                Icon(
-                  Icons.highlight_rounded,
-                  color: const Color(0xFFFF1744).withValues(alpha: 0.3),
-                  size: 48,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.l10n.toolLaser,
-                  style: TextStyle(
-                    color: const Color(0xFFFF1744).withValues(alpha: 0.4),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ] else ...[
-                Icon(
-                  Icons.touch_app_rounded,
-                  color: Colors.white.withValues(alpha: 0.08),
-                  size: 48,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  context.l10n.tapForTool(context.l10n.toolLaser),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.doubleTapSelected,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-      ),
+      child: TouchpadSurface(isDrawActive: _isDrawActive, activeTool: _activeTool),
     );
   }
 }

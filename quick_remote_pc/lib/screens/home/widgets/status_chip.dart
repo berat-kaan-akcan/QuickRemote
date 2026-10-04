@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class StatusChip extends StatelessWidget {
   final bool isRunning;
@@ -10,8 +11,8 @@ class StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = (!isRunning || clientCount == 0) 
-        ? const Color(0xFFFF5252) 
-        : const Color(0xFF4CAF50);
+        ? AppColors.danger 
+        : AppColors.success;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

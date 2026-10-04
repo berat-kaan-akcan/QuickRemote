@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class HoverGlowContainer extends StatefulWidget {
   final Widget child;
@@ -25,7 +26,7 @@ class _HoverGlowContainerState extends State<HoverGlowContainer> {
           boxShadow: [
             if (_isHovered)
               BoxShadow(
-                color: const Color(0xFF005B96).withValues(alpha: 0.4),
+                color: AppColors.primary.withValues(alpha: 0.4),
                 blurRadius: 30,
                 spreadRadius: 2,
               )

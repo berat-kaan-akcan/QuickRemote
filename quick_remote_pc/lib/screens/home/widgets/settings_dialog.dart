@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../l10n/app_language.dart';
 import '../../../providers/language_provider.dart';
+import '../../../theme/app_colors.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -41,7 +42,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
     final l10n = context.l10n;
     final languages = context.watch<LanguageProvider>();
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
@@ -66,8 +67,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
               style: const TextStyle(color: Colors.white54, fontSize: 13),
             ),
             value: _hideWarning,
-            activeTrackColor: const Color(0xFF00BCD4).withValues(alpha: 0.5),
-            activeThumbColor: const Color(0xFF00BCD4),
+            activeTrackColor: AppColors.accent.withValues(alpha: 0.5),
+            activeThumbColor: AppColors.accent,
             onChanged: _saveSettings,
             contentPadding: EdgeInsets.zero,
           ),
@@ -82,7 +83,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
               ),
               DropdownButton<AppLanguage>(
                 value: languages.language,
-                dropdownColor: const Color(0xFF1E293B),
+                dropdownColor: AppColors.surface,
                 underline: const SizedBox.shrink(),
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 items: [

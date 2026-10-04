@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import '../../../../providers/server_provider.dart';
-import '../../../../services/input/linux/wps_bridge.dart';
-import '../../../../services/linux/linux_setup.dart';
-import '../../../../services/server/network_manager.dart';
-import '../../../../widgets/hover_scale.dart';
-import '../../../../widgets/status_snack_bar.dart';
+import '../../../providers/server_provider.dart';
+import '../../../services/input/linux/wps_bridge.dart';
+import '../../../services/linux/linux_setup.dart';
+import '../../../services/server/network_manager.dart';
+import '../../../widgets/status_snack_bar.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
+import 'firewall_dialog.dart';
+import 'setup_status_row.dart';
 
 /// Linux-only status rows: input permission, Impress and WPS connections,
 /// mDNS and firewall. Each problem comes with a one-click fix where possible.
@@ -21,11 +23,11 @@ class LinuxSetupPanel extends StatefulWidget {
 }
 
 class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
-  static const _green = Color(0xFF4CAF50);
-  static const _orange = Color(0xFFFF9800);
-  static const _cyan = Color(0xFF00BCD4);
-  static const _red = Color(0xFFFF5252);
-  static const _grey = Color(0xFF90A4AE);
+  static const _green = AppColors.success;
+  static const _orange = AppColors.warning;
+  static const _cyan = AppColors.accent;
+  static const _red = AppColors.danger;
+  static const _grey = AppColors.muted;
 
   Timer? _timer;
   bool _uinputOk = true;
@@ -91,39 +93,7 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
       );
 
   Future<void> _showFirewallDialog() async {
-    final open = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        icon: const Icon(Icons.security_rounded, color: _orange, size: 48),
-        title: Text(
-          context.l10n.firewallDialogTitle,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          context.l10n.firewallDialogContent,
-          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.l10n.later, style: TextStyle(color: Colors.white54)),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: _orange,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(
-              context.l10n.openPortsButton,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
+    final open = await showFirewallDialog(context);
     if (open == true && mounted) await _openPorts();
   }
 
@@ -273,43 +243,13 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
   }
 
   Widget _row(IconData icon, Color color, String text, {String? action, VoidCallback? onTap}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ),
-          if (action != null && onTap != null) ...[
-            const SizedBox(width: 8),
-            HoverScale(
-              scale: 1.1,
-              onTap: _busy ? () {} : onTap,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _busy ? '...' : action,
-                  style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
+    return SetupStatusRow(
+      icon: icon,
+      color: color,
+      text: text,
+      action: action,
+      onTap: onTap,
+      busy: _busy,
     );
   }
 }

@@ -101,6 +101,10 @@ The Impress bridge can be exercised on its own: `echo '{"id":1,"cmd":"state"}' |
 - Code without a `BuildContext` takes an `AppLocalizations` (`Formatters.formatDuration`/`formatDate`) or gets its text from the UI: `BackgroundSession.notificationText` is set in `MaterialApp.builder`. On the PC, a server start failure is kept as an object (`startError`, e.g. `TlsSetupException`) and worded by `l10n/start_error_text.dart`.
 - The language is per device and never sent over the wire: `AppLanguage` (system, tr, en; system follows the OS, English is the fallback) is stored under the `language` preference by `SettingsProvider` (phone, Ayarlar screen) and `LanguageProvider` (PC, settings dialog). Android 13+ also lists the app's languages in its per-app language setting (`res/xml/locales_config.xml`); that reaches the app as the system language. A new language needs ARB files in both apps, `supportedAppLocales` and `AppLanguage`, and the `locales_config.xml` entry.
 
+### Colors (both apps)
+
+- Colors come from `lib/theme/app_colors.dart` (`AppColors`), not `Color(0x…)` literals anywhere else; a translucent shade is `AppColors.x.withValues(alpha: …)`. Both apps share the first seven (background, surface, primary, accent, success, warning, danger) and `caution`; keep the two copies identical. The phone's copy adds the drawing tool, Bluetooth, ink swatch, media card and analytics colors; the PC's adds `muted`, `stop` and `alert`.
+
 ### Mobile client (`quick_remote_app/lib`)
 
 - State uses Provider: `WebSocketService`, `SettingsProvider` and `DiscoveryService` are registered in `main.dart`. `WebSocketService` is a facade over `websocket/websocket_client.dart` (transport, TLS and pinning), `presentation_state.dart` (slide/media state) and `analytics_tracker.dart` (per-slide timing for analytics reports).

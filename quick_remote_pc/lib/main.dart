@@ -11,6 +11,7 @@ import 'screens/home/home_screen.dart';
 import 'providers/language_provider.dart';
 import 'providers/server_provider.dart';
 import 'services/linux/desktop_entry.dart';
+import 'theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,8 +63,8 @@ class QuickRemotePC extends StatelessWidget {
           themeMode: ThemeMode.dark,
           darkTheme: ThemeData(
             brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
-            colorSchemeSeed: const Color(0xFF005B96),
+            scaffoldBackgroundColor: AppColors.background, // Deep Space Black
+            colorSchemeSeed: AppColors.primary,
             useMaterial3: true,
             fontFamily: 'Inter',
           ),
