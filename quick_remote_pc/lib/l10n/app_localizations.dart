@@ -347,7 +347,7 @@ abstract class AppLocalizations {
   /// No description provided for @wpsNoRpc.
   ///
   /// In tr, this message translates to:
-  /// **'WPS yalnızca klavye ile kontrol ediliyor. Tam kontrol için WPS desteğini kurun (pywpsrpc, internet gerekir).'**
+  /// **'WPS şu an temel modda: slaytları ileri-geri alabilirsiniz ama telefonda slayt numarası ve notlar görünmez. Tam kontrol için \"Kur\"a basın (bir kez internet gerekir).'**
   String get wpsNoRpc;
 
   /// No description provided for @install.
