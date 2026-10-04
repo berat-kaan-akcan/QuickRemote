@@ -5,6 +5,7 @@ import '../../providers/settings_provider.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
 import 'timer_settings_screen.dart';
 import 'presentation_history_screen.dart';
+import '../../theme/app_colors.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,7 +14,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

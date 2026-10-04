@@ -8,6 +8,7 @@ import '../widgets/shared_buttons.dart';
 import '../utils/remote_dialogs.dart';
 import '../utils/slide_picker_sheet.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class MainControlsView extends StatefulWidget {
   final WebSocketService ws;
@@ -76,7 +77,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1F38),
+                        color: AppColors.slideInfo,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
@@ -177,7 +178,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                 child: ActionButton(
                                   icon: Icons.play_arrow_rounded,
                                   label: context.l10n.actionStart,
-                                  color: const Color(0xFF4CAF50),
+                                  color: AppColors.success,
                                   onTap: !ws.isConnected ? null : () {
                                     _send(RemoteCommands.start);
                                   },
@@ -192,7 +193,7 @@ class _MainControlsViewState extends State<MainControlsView> {
                                 child: ActionButton(
                                   icon: Icons.stop_rounded,
                                   label: context.l10n.actionEnd,
-                                  color: const Color(0xFFFF5252),
+                                  color: AppColors.danger,
                                   onTap: !ws.isConnected ? null : () => _send(RemoteCommands.end),
                                 ),
                               ),

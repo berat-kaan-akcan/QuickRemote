@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
-import '../utils/ui/app_snackbar.dart';
-import '../l10n/app_language.dart';
+import '../../utils/ui/app_snackbar.dart';
+import '../../l10n/app_language.dart';
 
 /// QR Code scanner screen to connect to PC companion app.
 class ScanScreen extends StatefulWidget {

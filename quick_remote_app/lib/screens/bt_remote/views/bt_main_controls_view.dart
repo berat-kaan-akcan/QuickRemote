@@ -3,6 +3,7 @@ import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../remote/widgets/shared_buttons.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 0: Main Controls View  (WiFi MainControlsView ile aynı tasarım)
@@ -36,10 +37,10 @@ class BtMainControlsView extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1565C0).withValues(alpha: 0.1),
+                        color: AppColors.bluetooth.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFF1565C0).withValues(alpha: 0.3),
+                          color: AppColors.bluetooth.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -47,7 +48,7 @@ class BtMainControlsView extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.bluetooth_connected_rounded,
-                            color: Color(0xFF64B5F6),
+                            color: AppColors.bluetoothLight,
                             size: 20,
                           ),
                           SizedBox(width: 8),
@@ -74,7 +75,7 @@ class BtMainControlsView extends StatelessWidget {
                                 child: ActionButton(
                                   icon: Icons.play_arrow_rounded,
                                   label: context.l10n.actionStart,
-                                  color: const Color(0xFF4CAF50),
+                                  color: AppColors.success,
                                   onTap: !isConnected ? null : () => send(RemoteCommands.start),
                                 ),
                               ),
@@ -83,7 +84,7 @@ class BtMainControlsView extends StatelessWidget {
                                 child: ActionButton(
                                   icon: Icons.stop_rounded,
                                   label: context.l10n.actionEnd,
-                                  color: const Color(0xFFFF5252),
+                                  color: AppColors.danger,
                                   onTap: !isConnected ? null : () => send(RemoteCommands.end),
                                 ),
                               ),

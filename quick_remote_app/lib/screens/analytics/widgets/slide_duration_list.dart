@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../models/presentation_analytics.dart';
-import '../../../../utils/formatters.dart';
+import '../../../models/presentation_analytics.dart';
+import '../../../utils/formatters.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class SlideDurationList extends StatelessWidget {
   final PresentationAnalytics analytics;
@@ -51,11 +52,11 @@ class SlideDurationList extends StatelessWidget {
 
           Color barColor;
           if (isLongest) {
-            barColor = const Color(0xFFFF6B6B);
+            barColor = AppColors.analyticsCoral;
           } else if (isShortest) {
-            barColor = const Color(0xFF4ECDC4);
+            barColor = AppColors.analyticsTeal;
           } else {
-            barColor = const Color(0xFF6C63FF);
+            barColor = AppColors.analyticsIndigo;
           }
 
           return Padding(

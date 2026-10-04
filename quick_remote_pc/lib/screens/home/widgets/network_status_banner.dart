@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../../../services/server/network_manager.dart';
-import '../../../../services/websocket_server.dart';
-import '../../../../widgets/hover_scale.dart';
+import '../../../services/server/network_manager.dart';
+import '../../../services/websocket_server.dart';
+import '../../../widgets/hover_scale.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class NetworkStatusBanner extends StatelessWidget {
   final NetworkTrust trust;
@@ -18,9 +19,9 @@ class NetworkStatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (trust) {
-      NetworkTrust.trusted => (const Color(0xFF4CAF50), Icons.shield_rounded),
-      NetworkTrust.untrusted => (const Color(0xFFFF9800), Icons.wifi_tethering_rounded),
-      NetworkTrust.unknown => (const Color(0xFF90A4AE), Icons.help_outline_rounded),
+      NetworkTrust.trusted => (AppColors.success, Icons.shield_rounded),
+      NetworkTrust.untrusted => (AppColors.warning, Icons.wifi_tethering_rounded),
+      NetworkTrust.unknown => (AppColors.muted, Icons.help_outline_rounded),
     };
     // Linux has no network profiles; the trust level is the firewalld zone.
     final text = Platform.isLinux

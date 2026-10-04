@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../utils/ui/app_dialog.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class RemoteDialogs {
   static Future<bool> showExitDialog(BuildContext context) async {
@@ -13,7 +14,7 @@ class RemoteDialogs {
       confirmText: context.l10n.disconnectTitle,
       confirmColor: AppPopupTheme.dangerColor,
       icon: Icons.warning_amber_rounded,
-      iconColor: const Color(0xFFFFB74D),
+      iconColor: AppColors.caution,
     );
     if (result) HapticFeedback.mediumImpact();
     return result;

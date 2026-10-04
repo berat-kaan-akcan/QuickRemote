@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/presentation_analytics.dart';
-import '../utils/formatters.dart';
-import 'analytics/utils/report_exporter.dart';
-import 'analytics/widgets/stat_card.dart';
-import 'analytics/widgets/slide_duration_list.dart';
-import '../l10n/app_language.dart';
+import '../../models/presentation_analytics.dart';
+import '../../utils/formatters.dart';
+import 'utils/report_exporter.dart';
+import 'widgets/stat_card.dart';
+import 'widgets/slide_duration_list.dart';
+import '../../l10n/app_language.dart';
+import '../../theme/app_colors.dart';
 
 /// A premium-looking analytics report screen that displays
 /// per-slide timing data and aggregate statistics.
@@ -34,7 +35,7 @@ class AnalyticsReportScreen extends StatelessWidget {
         maxChildSize: 0.95,
         builder: (_, scrollController) => Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF0D0D1A),
+            color: AppColors.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: AnalyticsReportScreen(
@@ -79,7 +80,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF6C63FF), Color(0xFF4ECDC4)],
+                      colors: [AppColors.analyticsIndigo, AppColors.analyticsTeal],
                     ),
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -124,21 +125,21 @@ class AnalyticsReportScreen extends StatelessWidget {
                   icon: Icons.timer_rounded,
                   label: context.l10n.totalTime,
                   value: Formatters.formatDuration(analytics.totalDuration, context.l10n),
-                  gradient: const [Color(0xFF6C63FF), Color(0xFF5A54E0)],
+                  gradient: const [AppColors.analyticsIndigo, AppColors.analyticsIndigoDark],
                 ),
                 const SizedBox(width: 10),
                 StatCard(
                   icon: Icons.layers_rounded,
                   label: context.l10n.slideCountLabel,
                   value: '${analytics.distinctSlideCount}',
-                  gradient: const [Color(0xFF4ECDC4), Color(0xFF3DBDB5)],
+                  gradient: const [AppColors.analyticsTeal, AppColors.analyticsTealDark],
                 ),
                 const SizedBox(width: 10),
                 StatCard(
                   icon: Icons.speed_rounded,
                   label: context.l10n.avgPerSlideShort,
                   value: Formatters.formatDurationShort(analytics.averageTimePerSlide),
-                  gradient: const [Color(0xFFFF6B6B), Color(0xFFE05555)],
+                  gradient: const [AppColors.analyticsCoral, AppColors.analyticsCoralDark],
                 ),
               ],
             ),
@@ -172,12 +173,12 @@ class AnalyticsReportScreen extends StatelessWidget {
                   const Spacer(),
                   if (longest != null) ...[
                     Icon(Icons.arrow_upward_rounded,
-                        color: const Color(0xFFFF6B6B), size: 16),
+                        color: AppColors.analyticsCoral, size: 16),
                     const SizedBox(width: 4),
                     Text(
                       'S${longest.key}: ${Formatters.formatDurationShort(longest.value)}',
                       style: const TextStyle(
-                        color: Color(0xFFFF6B6B),
+                        color: AppColors.analyticsCoral,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -186,12 +187,12 @@ class AnalyticsReportScreen extends StatelessWidget {
                   if (shortest != null && longest?.key != shortest.key) ...[
                     const SizedBox(width: 12),
                     Icon(Icons.arrow_downward_rounded,
-                        color: const Color(0xFF4ECDC4), size: 16),
+                        color: AppColors.analyticsTeal, size: 16),
                     const SizedBox(width: 4),
                     Text(
                       'S${shortest.key}: ${Formatters.formatDurationShort(shortest.value)}',
                       style: const TextStyle(
-                        color: Color(0xFF4ECDC4),
+                        color: AppColors.analyticsTeal,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -249,7 +250,7 @@ class AnalyticsReportScreen extends StatelessWidget {
                     icon: const Icon(Icons.check_rounded, size: 18),
                     label: Text(context.l10n.ok),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C63FF),
+                      backgroundColor: AppColors.analyticsIndigo,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -266,7 +267,7 @@ class AnalyticsReportScreen extends StatelessWidget {
 
     if (isFromHistory) {
       return Scaffold(
-        backgroundColor: const Color(0xFF0D0D1A),
+        backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

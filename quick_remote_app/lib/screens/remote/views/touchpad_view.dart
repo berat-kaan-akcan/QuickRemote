@@ -11,6 +11,7 @@ import '../widgets/color_picker_sheet.dart';
 import '../widgets/touchpad_gesture_area.dart';
 import '../widgets/draw_tool_bar.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 class TouchpadView extends StatefulWidget {
   final WebSocketService ws;
   final PresentationTimerController timer;
@@ -51,7 +52,11 @@ class _TouchpadViewState extends State<TouchpadView> {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
+                child: PillButton(
+                  icon: Icons.play_arrow_rounded,
+                  label: context.l10n.actionStart,
+                  color: AppColors.success,
+                  showMenuHint: true,
                   onTap: !widget.ws.isConnected
                       ? null
                       : () {
@@ -64,80 +69,17 @@ class _TouchpadViewState extends State<TouchpadView> {
                           HapticFeedback.heavyImpact();
                           _showStartSlideDialog(context);
                         },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.play_arrow_rounded,
-                          color: Color(0xFF4CAF50),
-                          size: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          context.l10n.actionStart,
-                          style: TextStyle(
-                            color: Color(0xFF4CAF50),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Icon(
-                          Icons.arrow_drop_down_rounded,
-                          color: const Color(
-                            0xFF4CAF50,
-                          ).withValues(alpha: 0.7),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(width: 8),
               PresentationTimer(controller: widget.timer),
               const SizedBox(width: 8),
               Expanded(
-                child: GestureDetector(
+                child: PillButton(
+                  icon: Icons.stop_rounded,
+                  label: context.l10n.actionEnd,
+                  color: AppColors.danger,
                   onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.end),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF5252).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFFFF5252).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.stop_rounded,
-                          color: Color(0xFFFF5252),
-                          size: 18,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          context.l10n.actionEnd,
-                          style: TextStyle(
-                            color: Color(0xFFFF5252),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             ],

@@ -4,23 +4,24 @@ import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
-import '../l10n/app_language.dart';
-import '../l10n/failure_text.dart';
-import '../services/background_session.dart';
-import '../services/presentation_timer_controller.dart';
-import '../services/wifi_low_latency.dart';
-import '../services/websocket_service.dart';
-import 'settings/settings_screen.dart';
-import 'analytics_report_screen.dart';
-import '../providers/settings_provider.dart';
+import '../../l10n/app_language.dart';
+import '../../l10n/failure_text.dart';
+import '../../services/background_session.dart';
+import '../../services/presentation_timer_controller.dart';
+import '../../services/wifi_low_latency.dart';
+import '../../services/websocket_service.dart';
+import '../analytics/analytics_report_screen.dart';
+import '../../providers/settings_provider.dart';
 
-import 'remote/utils/hardware_key_handler.dart';
-import 'remote/utils/remote_dialogs.dart';
-import '../utils/ui/app_snackbar.dart';
-import '../widgets/presentation_timer.dart';
-import 'remote/views/main_controls_view.dart';
-import 'remote/views/touchpad_view.dart';
-import 'remote/views/media_control_view.dart';
+import 'utils/hardware_key_handler.dart';
+import 'utils/remote_dialogs.dart';
+import '../../utils/ui/app_snackbar.dart';
+import '../../widgets/presentation_timer.dart';
+import 'views/main_controls_view.dart';
+import 'widgets/remote_chrome.dart';
+import 'views/touchpad_view.dart';
+import 'views/media_control_view.dart';
+import '../../theme/app_colors.dart';
 
 /// Main remote control screen for presentation control.
 /// Has three views: main controls, touchpad mode, and media controls.
@@ -194,7 +195,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
         await _performExit(skipDialog: false);
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: AppColors.background,
         resizeToAvoidBottomInset: false,
         appBar: _buildAppBar(ws),
         body: body,
@@ -204,49 +205,41 @@ class _RemoteScreenState extends State<RemoteScreen> {
   }
 
   PreferredSizeWidget _buildAppBar(WebSocketService ws) {
+    final connecting = ws.connectionState == AppConnectionState.reconnecting ||
+        ws.connectionState == AppConnectionState.connecting;
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
       automaticallyImplyLeading: false,
-      title: _buildHeader(context, ws),
+      title: RemoteHeader(
+        subtitle: Text(
+          ws.serverAddress,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontFamily: 'monospace',
+          ),
+        ),
+        isConnected: ws.isConnected,
+        isConnecting: connecting,
+        onReconnect: !ws.isConnected && ws.connectionState != AppConnectionState.failed
+            ? ws.manualReconnect
+            : null,
+        onClose: () => _performExit(skipDialog: false),
+      ),
     );
   }
 
   Widget _buildBottomNav(WebSocketService ws) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF0F172A),
-        selectedItemColor: Theme.of(context).colorScheme.secondary,
-        unselectedItemColor: Colors.white38,
-        currentIndex: _currentTab.clamp(0, 2),
-        onTap: (index) {
-          HapticFeedback.lightImpact();
-          if (_currentTab == 1 && index != 1 && ws.isConnected) {
-            ws.sendCommand(RemoteCommands.modeArrow);
-          }
-          setState(() => _currentTab = index);
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.gamepad_rounded),
-            label: context.l10n.remoteTabControls,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.touch_app_rounded),
-            label: context.l10n.remoteTabTouchpad,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.queue_music_rounded),
-            label: context.l10n.remoteTabMedia,
-          ),
-        ],
-      ),
+    return RemoteBottomNav(
+      currentTab: _currentTab,
+      onTap: (index) {
+        HapticFeedback.lightImpact();
+        if (_currentTab == 1 && index != 1 && ws.isConnected) {
+          ws.sendCommand(RemoteCommands.modeArrow);
+        }
+        setState(() => _currentTab = index);
+      },
     );
   }
 
@@ -290,157 +283,6 @@ class _RemoteScreenState extends State<RemoteScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, WebSocketService ws) {
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.2),
-                blurRadius: 8,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              'assets/images/logo.png',
-              width: 36,
-              height: 36,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'QuickRemote',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              Text(
-                ws.serverAddress,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 12,
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (!ws.isConnected && ws.connectionState != AppConnectionState.failed)
-          IconButton(
-            icon: const Icon(
-              Icons.refresh_rounded,
-              color: Colors.white70,
-              size: 22,
-            ),
-            onPressed: () {
-              ws.manualReconnect();
-            },
-            tooltip: context.l10n.remoteReconnect,
-          ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: ws.isConnected
-                ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
-                : const Color(0xFFFF5252).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: ws.isConnected
-                  ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
-                  : const Color(0xFFFF5252).withValues(alpha: 0.4),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (ws.connectionState == AppConnectionState.reconnecting ||
-                  ws.connectionState == AppConnectionState.connecting)
-                Container(
-                  width: 10,
-                  height: 10,
-                  margin: const EdgeInsets.only(right: 5),
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFFFF5252),
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  width: 7,
-                  height: 7,
-                  margin: const EdgeInsets.only(right: 5),
-                  decoration: BoxDecoration(
-                    color: ws.isConnected
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFFF5252),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              Text(
-                ws.isConnected
-                    ? context.l10n.statusConnected
-                    : (ws.connectionState == AppConnectionState.reconnecting ||
-                              ws.connectionState ==
-                                  AppConnectionState.connecting
-                          ? context.l10n.homeConnecting
-                          : context.l10n.statusDisconnected),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: ws.isConnected
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5252),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(
-            Icons.settings_rounded,
-            color: Colors.white54,
-            size: 22,
-          ),
-          tooltip: context.l10n.homeSettingsTooltip,
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(
-            Icons.close_rounded,
-            color: Colors.white54,
-            size: 22,
-          ),
-          tooltip: context.l10n.close,
-          onPressed: () => _performExit(skipDialog: false),
-        ),
-      ],
     );
   }
 }

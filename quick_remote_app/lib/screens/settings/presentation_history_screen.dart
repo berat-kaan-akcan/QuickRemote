@@ -5,8 +5,9 @@ import '../../models/presentation_analytics.dart';
 import '../../utils/formatters.dart';
 import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_snackbar.dart';
-import '../analytics_report_screen.dart';
+import '../analytics/analytics_report_screen.dart';
 import '../../l10n/app_language.dart';
+import '../../theme/app_colors.dart';
 
 class PresentationHistoryScreen extends StatelessWidget {
   const PresentationHistoryScreen({super.key});
@@ -16,7 +17,7 @@ class PresentationHistoryScreen extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -91,10 +92,10 @@ class PresentationHistoryScreen extends StatelessWidget {
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
-            color: const Color(0xFFFF5252).withValues(alpha: 0.2),
+            color: AppColors.danger.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(Icons.delete_rounded, color: Color(0xFFFF5252)),
+          child: const Icon(Icons.delete_rounded, color: AppColors.danger),
         ),
         onDismissed: (_) {
           settings.deletePresentationAnalytics(analytics.id);
@@ -134,13 +135,13 @@ class PresentationHistoryScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF6C63FF).withValues(alpha: 0.3),
-                          const Color(0xFF4ECDC4).withValues(alpha: 0.15),
+                          AppColors.analyticsIndigo.withValues(alpha: 0.3),
+                          AppColors.analyticsTeal.withValues(alpha: 0.15),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.slideshow_rounded, color: Color(0xFF6C63FF), size: 24),
+                    child: const Icon(Icons.slideshow_rounded, color: AppColors.analyticsIndigo, size: 24),
                   ),
                   const SizedBox(width: 16),
                   Expanded(

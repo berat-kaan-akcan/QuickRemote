@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
+import '../widgets/media_labels.dart';
 import '../widgets/now_playing_card.dart';
 import '../widgets/volume_panel.dart';
 import '../widgets/ppt_media_controls.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class MediaControlView extends StatefulWidget {
   final WebSocketService ws;
@@ -39,25 +41,7 @@ class _MediaControlViewState extends State<MediaControlView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Başlık
-            Row(
-              children: [
-                const Icon(
-                  Icons.queue_music_rounded,
-                  color: Colors.white70,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.mediaControlTitle,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
+            const MediaTitle(),
             const SizedBox(height: 16),
             Expanded(
               child: Center(
@@ -68,10 +52,10 @@ class _MediaControlViewState extends State<MediaControlView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Şu An Çalan (Now Playing) + Medya Kontrolleri
-                      _SectionLabel(
+                      SectionLabel(
                         icon: Icons.album_rounded,
                         label: context.l10n.nowPlaying,
-                        color: Color(0xFFF43F5E), // Rose color
+                        color: AppColors.mediaRose
                       ),
                       const SizedBox(height: 8),
                       NowPlayingCard(
@@ -90,12 +74,11 @@ class _MediaControlViewState extends State<MediaControlView> {
                       ),
                       const SizedBox(height: 24),
 
-
                       // Sistem Sesi
-                      _SectionLabel(
+                      SectionLabel(
                         icon: Icons.volume_up_rounded,
                         label: context.l10n.systemVolume,
-                        color: Color(0xFF0EA5E9),
+                        color: AppColors.mediaSky,
                       ),
                       const SizedBox(height: 8),
                       VolumePanel(
@@ -110,10 +93,10 @@ class _MediaControlViewState extends State<MediaControlView> {
                       const SizedBox(height: 20),
 
                       // PPT Video (Her zaman görünür)
-                      _SectionLabel(
+                      SectionLabel(
                         icon: Icons.smart_display_rounded,
                         label: context.l10n.slideMedia,
-                        color: Color(0xFF10B981),
+                        color: AppColors.mediaEmerald,
                       ),
                       const SizedBox(height: 8),
                       PptMediaControls(
@@ -134,36 +117,3 @@ class _MediaControlViewState extends State<MediaControlView> {
     );
   }
 }
-
-class _SectionLabel extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _SectionLabel({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 16),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-

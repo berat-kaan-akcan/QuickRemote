@@ -4,16 +4,17 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
-import '../services/background_session.dart';
-import '../services/bluetooth/bt_hid_service.dart';
-import '../services/bluetooth/bt_key_mapping.dart';
-import '../providers/settings_provider.dart';
-import '../utils/ui/app_snackbar.dart';
-import 'settings/settings_screen.dart';
-import 'bt_remote/views/bt_main_controls_view.dart';
-import 'bt_remote/views/bt_touchpad_view.dart';
-import 'bt_remote/views/bt_media_view.dart';
-import '../l10n/app_language.dart';
+import '../../services/background_session.dart';
+import '../../services/bluetooth/bt_hid_service.dart';
+import '../../services/bluetooth/bt_key_mapping.dart';
+import '../../providers/settings_provider.dart';
+import '../../utils/ui/app_snackbar.dart';
+import '../remote/widgets/remote_chrome.dart';
+import 'views/bt_main_controls_view.dart';
+import 'views/bt_touchpad_view.dart';
+import 'views/bt_media_view.dart';
+import '../../l10n/app_language.dart';
+import '../../theme/app_colors.dart';
 
 // ─── BT Remote Screen ────────────────────────────────────────────────────────
 // WiFi remote screen ile aynı tasarım; BT HID'de çalışmayan özellikler
@@ -155,7 +156,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: AppColors.background,
         resizeToAvoidBottomInset: false,
         appBar: _buildAppBar(isConnected),
         body: body,
@@ -169,171 +170,42 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       backgroundColor: Colors.transparent,
       elevation: 0,
       automaticallyImplyLeading: false,
-      title: _buildHeader(isConnected),
-    );
-  }
-
-  Widget _buildHeader(bool isConnected) {
-    return Row(
-      children: [
-        // Logo
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                blurRadius: 8,
-                spreadRadius: 1,
+      title: RemoteHeader(
+        subtitle: Row(
+          children: [
+            const Icon(Icons.bluetooth_rounded, color: AppColors.bluetoothLight, size: 12),
+            const SizedBox(width: 4),
+            Text(
+              _bt.connectedDeviceName ?? 'Bluetooth HID',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 12,
+                fontFamily: 'monospace',
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              'assets/images/logo.png',
-              width: 36,
-              height: 36,
-              fit: BoxFit.cover,
             ),
-          ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'QuickRemote',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.bluetooth_rounded, color: Color(0xFF64B5F6), size: 12),
-                  const SizedBox(width: 4),
-                  Text(
-                    _bt.connectedDeviceName ?? 'Bluetooth HID',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        // Connection status chip
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: (isConnected
-                    ? const Color(0xFF4CAF50)
-                    : const Color(0xFFFF5252))
-                .withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: (isConnected
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5252))
-                  .withValues(alpha: 0.4),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: isConnected
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5252),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 5),
-              Text(
-                isConnected ? context.l10n.statusConnected : context.l10n.statusDisconnected,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isConnected
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5252),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Settings button
-        IconButton(
-          icon: const Icon(Icons.settings_rounded, color: Colors.white54, size: 22),
-          tooltip: context.l10n.homeSettingsTooltip,
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            );
-          },
-        ),
-        // Close button
-        IconButton(
-          icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 22),
-          tooltip: context.l10n.close,
-          onPressed: () async {
-            final nav = Navigator.of(context);
-            final shouldPop = await _showExitDialog();
-            if (shouldPop && mounted) {
-              _isIntentionalDisconnect = true;
-              await _bt.stopAdvertising();
-              nav.pop();
-            }
-          },
-        ),
-      ],
+        isConnected: isConnected,
+        onClose: () async {
+          final nav = Navigator.of(context);
+          final shouldPop = await _showExitDialog();
+          if (shouldPop && mounted) {
+            _isIntentionalDisconnect = true;
+            await _bt.stopAdvertising();
+            nav.pop();
+          }
+        },
+      ),
     );
   }
 
   Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF0F172A),
-        selectedItemColor: Theme.of(context).colorScheme.secondary,
-        unselectedItemColor: Colors.white38,
-        currentIndex: _currentTab.clamp(0, 2),
-        onTap: (index) {
-          HapticFeedback.lightImpact();
-          setState(() => _currentTab = index);
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.gamepad_rounded),
-            label: context.l10n.remoteTabControls,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.touch_app_rounded),
-            label: context.l10n.remoteTabTouchpad,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.queue_music_rounded),
-            label: context.l10n.remoteTabMedia,
-          ),
-        ],
-      ),
+    return RemoteBottomNav(
+      currentTab: _currentTab,
+      onTap: (index) {
+        HapticFeedback.lightImpact();
+        setState(() => _currentTab = index);
+      },
     );
   }
 
@@ -341,9 +213,9 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF1E293B),
+            backgroundColor: AppColors.surface,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFFB74D), size: 40),
+            icon: const Icon(Icons.warning_amber_rounded, color: AppColors.caution, size: 40),
             title: Text(context.l10n.disconnectTitle,
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             content: Text(
@@ -361,7 +233,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
                   Navigator.of(ctx).pop(true);
                 },
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF5252),
+                  backgroundColor: AppColors.danger,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text(context.l10n.disconnectTitle, style: TextStyle(color: Colors.white)),
