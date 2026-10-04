@@ -8,7 +8,7 @@ import 'widgets/bt_pairing_guide.dart';
 import 'widgets/bt_status_views.dart';
 import 'widgets/glowing_dots.dart';
 import '../../l10n/app_language.dart';
-import '../../theme/app_colors.dart';
+import '../../widgets/ui/ui.dart';
 
 /// Bluetooth Classic HID connection screen.
 /// Registers the phone as a BT HID device and guides the user through
@@ -39,6 +39,18 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
     _sub = _bt.stateStream.listen(_onStateChanged);
     _startAdvertising();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The breathing texts hold still when the system asks for less motion.
+    if (AppMotion.reduced(context)) {
+      _pulseController.stop();
+      _pulseController.value = 1;
+    } else if (!_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    }
   }
 
   @override
@@ -104,197 +116,144 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          context.l10n.homeConnectBluetooth,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: Text(context.l10n.homeConnectBluetooth),
       ),
-      body: Stack(
-        children: [
-          // Background blobs
-          Positioned(
-            top: -60,
-            left: -60,
-            child: _buildBlob(AppColors.bluetooth, 280),
-          ),
-          Positioned(
-            bottom: -80,
-            right: -60,
-            child: _buildBlob(AppColors.bluetoothDark, 240),
-          ),
-          SafeArea(child: _buildBody()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBlob(Color color, double size) {
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, child) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color.withValues(alpha: 0.12 + _pulseController.value * 0.06),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.2),
-              blurRadius: 80 + _pulseController.value * 20,
-              spreadRadius: 20,
-            ),
-          ],
+      extendBodyBehindAppBar: true,
+      body: AmbientBackground(
+        accent: p.info,
+        child: SafeArea(
+          child: ContentWidth(child: _buildBody()),
         ),
       ),
     );
   }
 
   Widget _buildBody() {
-    return Padding(
-      padding: const EdgeInsets.all(28),
-      child: switch (_state) {
-        BtHidConnectionState.unsupported => BtUnsupportedView(
-          message: _errorMessage,
+    final body = switch (_state) {
+      BtHidConnectionState.unsupported => BtUnsupportedView(
+        message: _errorMessage,
+      ),
+      BtHidConnectionState.error => BtErrorView(
+        message: _errorMessage,
+        onRetry: _retry,
+      ),
+      BtHidConnectionState.connected => BtConnectedView(
+        deviceName: _bt.connectedDeviceName,
+      ),
+      _ => _buildWaiting(),
+    };
+    return AnimatedSwitcher(
+      duration: AppMotion.of(context, AppMotion.slow),
+      switchInCurve: AppMotion.enter,
+      switchOutCurve: AppMotion.exit,
+      child: KeyedSubtree(
+        key: ValueKey(switch (_state) {
+          BtHidConnectionState.unsupported || BtHidConnectionState.error || BtHidConnectionState.connected => _state,
+          _ => null,
+        }),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
+          child: body,
         ),
-        BtHidConnectionState.error => BtErrorView(
-          message: _errorMessage,
-          onRetry: _retry,
-        ),
-        BtHidConnectionState.connected => BtConnectedView(
-          deviceName: _bt.connectedDeviceName,
-        ),
-        _ => _buildWaiting(),
-      },
+      ),
     );
   }
 
   Widget _buildWaiting() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-
-        // Animated BT icon
-        Center(
-          child: AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) => Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [AppColors.bluetooth, AppColors.bluetoothDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.bluetooth.withValues(
-                      alpha: 0.3 + _pulseController.value * 0.3,
-                    ),
-                    blurRadius: 30 + _pulseController.value * 20,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.bluetooth_rounded,
-                color: Colors.white,
-                size: 60,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
-
-        // Status text
-        Center(
+    final p = context.palette;
+    final retrying = _state == BtHidConnectionState.disconnected;
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) => Opacity(
-                  opacity: 0.5 + (_pulseController.value * 0.5),
-                  child: Text(
-                    _state == BtHidConnectionState.advertising
-                        ? context.l10n.btWaitingPairing
-                        : _state == BtHidConnectionState.disconnected
-                        ? context.l10n.btWaitingConnection
-                        : context.l10n.btPreparing,
-                    style: TextStyle(
-                      color: _state == BtHidConnectionState.disconnected
-                          ? Colors.orangeAccent
-                          : Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+              // Animated BT icon
+              Center(
+                child: RadarPulse(
+                  color: p.info,
+                  size: 220,
+                  child: Container(
+                    width: 108,
+                    height: 108,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color.lerp(p.info, Colors.white, 0.15)!, p.primary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: AppShadows.glow(p.info),
+                    ),
+                    child: const Icon(
+                      Icons.bluetooth_rounded,
+                      color: Colors.white,
+                      size: 54,
                     ),
                   ),
                 ),
               ),
-              if (_state == BtHidConnectionState.advertising)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: GlowingDots(animation: _pulseController),
-                )
-              else if (_state == BtHidConnectionState.disconnected)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: AnimatedBuilder(
-                    animation: _pulseController,
-                    builder: (context, child) => Opacity(
-                      opacity: 0.4 + (_pulseController.value * 0.6),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.orangeAccent,
-                            size: 20,
+
+              // Status text
+              Center(
+                child: Column(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, child) => Opacity(
+                        opacity: 0.6 + (_pulseController.value * 0.4),
+                        child: Text(
+                          _state == BtHidConnectionState.advertising
+                              ? context.l10n.btWaitingPairing
+                              : retrying
+                              ? context.l10n.btWaitingConnection
+                              : context.l10n.btPreparing,
+                          textAlign: TextAlign.center,
+                          style: AppType.headline.copyWith(
+                            color: retrying ? p.warning : p.textPrimary,
+                            fontSize: 22,
                           ),
-                          SizedBox(width: 8),
-                          Text(
-                            context.l10n.btNotConnectedRetrying,
-                            style: TextStyle(color: Colors.orangeAccent),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: AppSpace.sm),
+                    if (_state == BtHidConnectionState.advertising)
+                      GlowingDots(animation: _pulseController)
+                    else if (retrying)
+                      StatusPill(
+                        color: p.warning,
+                        icon: Icons.warning_amber_rounded,
+                        label: context.l10n.btNotConnectedRetrying,
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 32),
-
-        // Step-by-step pairing guide card (Windows / Linux)
-        const BtPairingGuide(),
-
-        const Spacer(),
-
-        // Cancel button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white54,
-              side: const BorderSide(color: Colors.white24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: Text(context.l10n.cancel),
+              const SizedBox(height: AppSpace.xl),
+
+              // Step-by-step pairing guide card (Windows / Linux)
+              const FadeSlideIn(index: 1, child: BtPairingGuide()),
+
+              const Spacer(),
+              const SizedBox(height: AppSpace.lg),
+
+              // Cancel button
+              AppButton(
+                label: context.l10n.cancel,
+                variant: AppButtonVariant.outline,
+                tone: AppTone.neutral,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(height: AppSpace.md),
+            ],
           ),
         ),
       ],

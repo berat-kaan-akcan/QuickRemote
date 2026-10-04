@@ -453,5 +453,21 @@
   },
   "reportCopied": "Rapor panoya kopyalandı",
   "noSlideData": "Slayt verisi bulunamadı",
-  "backgroundNotification": "Arka planda bağlantı devam ediyor..."
+  "backgroundNotification": "Arka planda bağlantı devam ediyor...",
+  "homeHeroSubtitle": "Bilgisayardaki QuickRemote PC'nin QR kodunu tarayın ya da telefonu Bluetooth ile klavye ve fare olarak bağlayın.",
+  "@homeHeroSubtitle": {
+    "description": "Home screen: how to connect, under the tagline."
+  },
+  "slideLabel": "Slayt",
+  "@slideLabel": {
+    "description": "Label above the big slide number on the remote."
+  },
+  "settingsSectionPresentation": "Sunum",
+  "@settingsSectionPresentation": {
+    "description": "Settings section header."
+  },
+  "settingsSectionGeneral": "Genel",
+  "@settingsSectionGeneral": {
+    "description": "Settings section header."
+  }
 }

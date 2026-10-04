@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'app_popup_theme.dart';
+
 import '../../l10n/app_language.dart';
+import '../../widgets/ui/ui.dart';
+import 'app_popup_theme.dart';
 
 /// Ortak dialog wrapper fonksiyonları.
 /// Onay, uyarı ve bilgi dialogları için standart yapı sağlar.
@@ -15,57 +17,32 @@ class AppDialog {
     required String title,
     required String content,
     required String confirmText,
-    Color confirmColor = AppPopupTheme.dangerColor,
+    AppTone tone = AppTone.danger,
     String? cancelText,
     IconData? icon,
-    Color? iconColor,
+    AppTone? iconTone,
     bool barrierDismissible = true,
   }) async {
-    final result = await showDialog<bool>(
+    final result = await AppPopupTheme.showAppDialog<bool>(
       context: context,
       barrierDismissible: barrierDismissible,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppPopupTheme.dialogBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppPopupTheme.dialogRadius),
-        ),
-        icon: icon != null
-            ? Icon(icon, color: iconColor ?? confirmColor, size: 48)
-            : null,
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: AppPopupTheme.titleColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          content,
-          style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-        ),
+      builder: (ctx) => AppDialogFrame(
+        icon: icon,
+        iconTone: iconTone ?? tone,
+        title: title,
+        content: Text(content, textAlign: TextAlign.center),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              cancelText ?? context.l10n.cancel,
-              style: const TextStyle(
-                color: AppPopupTheme.cancelTextColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          FilledButton(
+          AppButton(
+            label: confirmText,
+            variant: AppButtonVariant.solid,
+            tone: tone,
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: confirmColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
-              ),
-            ),
-            child: Text(
-              confirmText,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+          ),
+          AppButton(
+            label: cancelText ?? context.l10n.cancel,
+            variant: AppButtonVariant.ghost,
+            tone: AppTone.neutral,
+            onPressed: () => Navigator.of(ctx).pop(false),
           ),
         ],
       ),
@@ -80,49 +57,89 @@ class AppDialog {
     required Widget content,
     String? closeText,
     IconData? icon,
-    Color? iconColor,
+    AppTone iconTone = AppTone.primary,
   }) {
-    return showDialog<void>(
+    return AppPopupTheme.showAppDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppPopupTheme.dialogBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppPopupTheme.dialogRadius),
-        ),
-        title: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: iconColor ?? AppPopupTheme.infoColor),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: AppPopupTheme.titleColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
+      builder: (ctx) => AppDialogFrame(
+        icon: icon,
+        iconTone: iconTone,
+        title: title,
+        alignStart: true,
         content: content,
         actions: [
-          FilledButton(
+          AppButton(
+            label: closeText ?? context.l10n.close,
+            variant: AppButtonVariant.tonal,
             onPressed: () => Navigator.pop(ctx),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppPopupTheme.infoColor.withValues(alpha: 0.2),
-              foregroundColor: AppPopupTheme.infoColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
-              ),
-            ),
-            child: Text(
-              closeText ?? context.l10n.close,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The body of every dialog: an icon badge, a title, the content and full
+/// width actions stacked under it (long labels never get cut).
+class AppDialogFrame extends StatelessWidget {
+  const AppDialogFrame({
+    super.key,
+    required this.title,
+    required this.content,
+    required this.actions,
+    this.icon,
+    this.iconTone = AppTone.primary,
+    this.alignStart = false,
+  });
+
+  final String title;
+  final Widget content;
+  final List<Widget> actions;
+  final IconData? icon;
+  final AppTone iconTone;
+
+  /// Left-aligns the title and content, for longer text.
+  final bool alignStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final cross = alignStart ? CrossAxisAlignment.start : CrossAxisAlignment.center;
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpace.xl, vertical: AppSpace.xl),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: AppPopupTheme.maxWidth),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.xl, AppSpace.xl, AppSpace.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: cross,
+            children: [
+              if (icon != null) ...[
+                IconBadge(icon: icon!, color: p.tone(iconTone), size: 56),
+                const SizedBox(height: AppSpace.md),
+              ],
+              Text(
+                title,
+                textAlign: alignStart ? TextAlign.start : TextAlign.center,
+                style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20),
+              ),
+              const SizedBox(height: AppSpace.sm),
+              Flexible(
+                child: DefaultTextStyle.merge(
+                  style: AppType.body.copyWith(color: p.textSecondary),
+                  textAlign: alignStart ? TextAlign.start : TextAlign.center,
+                  child: content,
+                ),
+              ),
+              const SizedBox(height: AppSpace.xl),
+              for (final (i, action) in actions.indexed) ...[
+                if (i > 0) const SizedBox(height: AppSpace.xs),
+                action,
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

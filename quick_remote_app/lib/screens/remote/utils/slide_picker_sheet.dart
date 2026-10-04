@@ -5,6 +5,7 @@ import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
 import '../../../l10n/app_language.dart';
+import '../../../widgets/ui/ui.dart';
 
 /// A8 ve A9'un birleştirilmiş hali.
 /// Belirli bir slayttan sunum başlatmak için bottom sheet açar.
@@ -29,7 +30,8 @@ class SlidePickerSheet {
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
+              textAlign: TextAlign.center,
+              style: AppType.numeric.copyWith(color: ctx.palette.textPrimary, fontSize: 34),
               autofocus: true,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: AppPopupTheme.inputDecoration(
@@ -40,56 +42,36 @@ class SlidePickerSheet {
                 helperText: totalSlides > 0
                     ? context.l10n.slidePickerMax(totalSlides)
                     : context.l10n.slidePickerEmpty,
+              ).copyWith(
+                hintStyle: AppType.body.copyWith(color: ctx.palette.textMuted),
+                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.lg),
               ),
               onSubmitted: (value) {
                 _handleSubmit(ctx, value, totalSlides, onSend);
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpace.lg),
             Row(
               children: [
                 Expanded(
-                  child: SizedBox(
-                    height: 52,
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.08),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        context.l10n.cancel,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                  child: AppButton(
+                    label: context.l10n.cancel,
+                    variant: AppButtonVariant.outline,
+                    tone: AppTone.neutral,
+                    onPressed: () => Navigator.pop(ctx),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpace.sm),
                 Expanded(
-                  child: SizedBox(
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        _handleSubmit(ctx, controller.text, totalSlides, onSend);
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppPopupTheme.successColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
-                        ),
-                      ),
-                      child: Text(
-                        context.l10n.actionStart,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ),
+                  child: AppButton(
+                    label: context.l10n.actionStart,
+                    icon: Icons.play_arrow_rounded,
+                    variant: AppButtonVariant.solid,
+                    tone: AppTone.success,
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      _handleSubmit(ctx, controller.text, totalSlides, onSend);
+                    },
                   ),
                 ),
               ],

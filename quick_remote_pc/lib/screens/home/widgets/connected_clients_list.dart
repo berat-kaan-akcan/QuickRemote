@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../services/websocket_server.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 /// Paired phones, each with a button that disconnects it.
 class ConnectedClientsList extends StatelessWidget {
@@ -15,63 +15,73 @@ class ConnectedClientsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 8, 6, 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-      ),
+    final p = context.palette;
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.xs, AppSpace.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             context.l10n.connectedDevices(clients.length),
-            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+            style: AppType.overline.copyWith(color: p.textSecondary),
           ),
+          const SizedBox(height: AppSpace.xxs),
           for (final client in clients)
-            Row(
-              children: [
-                const Icon(Icons.smartphone_rounded, color: Colors.white70, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpace.xxs),
+              child: Row(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      if (client.name != null)
-                        Text(
-                          client.name!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      // Two phones of the same model differ here.
-                      Text(
-                        '${client.address}  ·  ${_time(client.since)}',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: client.name == null ? Colors.white : Colors.white60,
-                          fontFamily: 'Consolas',
-                          fontSize: client.name == null ? 13 : 11,
+                      IconBadge(icon: Icons.smartphone_rounded, color: p.primaryText, size: 38),
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(color: p.surface, shape: BoxShape.circle),
+                          child: PulseDot(color: p.success, size: 8),
                         ),
                       ),
                     ],
                   ),
-                ),
-                Tooltip(
-                  message: context.l10n.removeDeviceTooltip,
-                  child: TextButton(
-                    onPressed: () => onKick(client.id),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.danger,
-                      visualDensity: VisualDensity.compact,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (client.name != null)
+                          Text(
+                            client.name!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14),
+                          ),
+                        // Two phones of the same model differ here.
+                        Text(
+                          '${client.address}  ·  ${_time(client.since)}',
+                          overflow: TextOverflow.ellipsis,
+                          style: AppType.mono.copyWith(
+                            color: client.name == null ? p.textPrimary : p.textSecondary,
+                            fontSize: client.name == null ? 13 : 11.5,
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Text(context.l10n.removeDevice),
                   ),
-                ),
-              ],
+                  AppButton(
+                    label: context.l10n.removeDevice,
+                    icon: Icons.link_off_rounded,
+                    tooltip: context.l10n.removeDeviceTooltip,
+                    variant: AppButtonVariant.ghost,
+                    tone: AppTone.danger,
+                    expand: false,
+                    height: 36,
+                    onPressed: () => onKick(client.id),
+                  ),
+                ],
+              ),
             ),
         ],
       ),

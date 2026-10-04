@@ -103,6 +103,9 @@ if uno is not None:
 PEN_WIDTH = 150.0
 HIGHLIGHTER_WIDTH = 600.0
 HIGHLIGHTER_COLOR = 0xFFE600
+# Half the side of the eraser's square, in slide units (1/100 mm). LibreOffice's
+# default is 100, a 2 mm square that barely covers a pen stroke.
+ERASER_SIZE = 600
 MEDIA_SHAPES = ("com.sun.star.presentation.MediaShape", "com.sun.star.drawing.MediaShape")
 # UserData entry marking the media triggers this bridge adds (see _prepare_pages).
 TRIGGER_MARK = "quickremote-media"
@@ -551,6 +554,10 @@ class Impress:
             ctrl.PenWidth = width
         self._set(show, "SwitchEraserMode", eraser)
         self._set(show, "SwitchPenMode", not eraser)
+        if eraser:
+            # Also switches to erase mode, so it comes after PenWidth, which
+            # switches erase mode off.
+            self._set(show, "EraseInk", ERASER_SIZE)
 
     def arrow(self, _args):
         doc, _pres, ctrl = self._require_running()

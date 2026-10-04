@@ -7,7 +7,7 @@ import '../../../services/linux/linux_setup.dart';
 import '../../../services/server/network_manager.dart';
 import '../../../widgets/status_snack_bar.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 import 'firewall_dialog.dart';
 import 'setup_status_row.dart';
 
@@ -23,11 +23,12 @@ class LinuxSetupPanel extends StatefulWidget {
 }
 
 class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
-  static const _green = AppColors.success;
-  static const _orange = AppColors.warning;
-  static const _cyan = AppColors.accent;
-  static const _red = AppColors.danger;
-  static const _grey = AppColors.muted;
+  // Status colors of the current theme.
+  Color get _green => context.palette.success;
+  Color get _orange => context.palette.warning;
+  Color get _cyan => context.palette.info;
+  Color get _red => context.palette.danger;
+  Color get _grey => context.palette.textMuted;
 
   Timer? _timer;
   bool _uinputOk = true;
@@ -147,14 +148,20 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
           onTap: _openPorts,
         ),
     ];
-    if (rows.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        children: [
-          for (final row in rows) ...[row, const SizedBox(height: 6)],
-        ],
-      ),
+    return Reveal(
+      child: rows.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.sm),
+              child: Column(
+                children: [
+                  for (final (i, row) in rows.indexed) ...[
+                    if (i > 0) const SizedBox(height: 6),
+                    row,
+                  ],
+                ],
+              ),
+            ),
     );
   }
 

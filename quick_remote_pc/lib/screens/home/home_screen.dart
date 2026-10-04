@@ -8,7 +8,7 @@ import 'widgets/running_dashboard.dart';
 import 'widgets/stopped_dashboard.dart';
 import 'widgets/linux_setup_panel.dart';
 import '../../l10n/app_language.dart';
-import '../../theme/app_colors.dart';
+import '../../widgets/ui/ui.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,140 +21,98 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<WebSocketServerProvider>();
+    final p = context.palette;
+    final running = provider.isRunning || provider.isStarting;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Static glow; an endless animation would cost GPU for nothing.
-          Positioned(
-            top: -35,
-            left: -90,
-            child: _glow(AppColors.primary, 300, 0.15),
-          ),
-          Positioned(
-            bottom: -120,
-            right: -40,
-            child: _glow(AppColors.accent, 250, 0.1),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-              child: Column(
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.accent.withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            width: 44,
-                            height: 44,
-                            fit: BoxFit.cover,
+      // Static light pools; an endless animation would cost GPU for nothing.
+      body: AmbientBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.md, AppSpace.lg, AppSpace.md),
+            child: Column(
+              children: [
+                // Header
+                Row(
+                  children: [
+                    const BrandTile(size: 44),
+                    const SizedBox(width: AppSpace.sm),
+                    // One line each: wrapped header text took the room
+                    // the QR card needs.
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: BrandWordmark(fontSize: 21, suffix: 'PC'),
                           ),
-                        ),
+                          const SizedBox(height: 2),
+                          Text(
+                            context.l10n.homeTagline,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppType.bodySmall.copyWith(color: p.textSecondary),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      // One line each: wrapped header text took the room
-                      // the QR card needs.
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'QuickRemote PC',
-                                maxLines: 1,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              context.l10n.homeTagline,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.5),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (provider.isRunning)
-                        IconButton(
-                          icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
-                          onPressed: () {
-                            provider.triggerSlideStateUpdate();
-                          },
-                          tooltip: context.l10n.refreshSlideState,
-                        ),
-                      StatusChip(
-                        isRunning: provider.isRunning,
-                        clientCount: provider.clientCount,
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.settings_rounded, color: Colors.white70),
+                    ),
+                    if (provider.isRunning)
+                      AppIconButton(
+                        icon: Icons.refresh_rounded,
+                        size: 40,
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => const SettingsDialog(),
-                          );
+                          provider.triggerSlideStateUpdate();
                         },
-                        tooltip: context.l10n.settingsTitle,
+                        tooltip: context.l10n.refreshSlideState,
                       ),
-                    ],
+                    StatusChip(
+                      isRunning: provider.isRunning,
+                      clientCount: provider.clientCount,
+                    ),
+                    const SizedBox(width: AppSpace.xxs),
+                    AppIconButton(
+                      icon: Icons.settings_rounded,
+                      size: 40,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => const SettingsDialog(),
+                        );
+                      },
+                      tooltip: context.l10n.settingsTitle,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: AppSpace.md),
+
+                if (Platform.isLinux) LinuxSetupPanel(provider: provider),
+
+                // Main Content
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: AppMotion.of(context, AppMotion.slow),
+                    switchInCurve: AppMotion.enter,
+                    switchOutCurve: AppMotion.exit,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.97, end: 1).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: running
+                        ? RunningDashboard(key: const ValueKey('running'), provider: provider)
+                        : const StoppedDashboard(key: ValueKey('stopped')),
                   ),
-
-                  const SizedBox(height: 12),
-
-                  if (Platform.isLinux) LinuxSetupPanel(provider: provider),
-
-                  // Main Content
-                  Expanded(
-                    child: (provider.isRunning || provider.isStarting)
-                        ? RunningDashboard(provider: provider)
-                        : const StoppedDashboard(),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
-
-Widget _glow(Color color, double size, double alpha) => RepaintBoundary(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color.withValues(alpha: alpha),
-          boxShadow: [
-            BoxShadow(color: color.withValues(alpha: alpha * 2), blurRadius: 100, spreadRadius: 40),
-          ],
-        ),
-      ),
-    );

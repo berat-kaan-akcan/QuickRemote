@@ -1,7 +1,10 @@
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
-import 'app_popup_theme.dart';
+
 import '../../l10n/app_language.dart';
+import '../../widgets/ui/ui.dart';
+import 'app_popup_theme.dart';
 
 /// Ortak bottom sheet wrapper.
 /// Tüm bottom sheet'ler bu fonksiyon üzerinden açılarak
@@ -24,111 +27,95 @@ class AppBottomSheet {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       isDismissible: isDismissible,
-      builder: (ctx) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppPopupTheme.bottomSheetRadius),
-          ),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(
-              sigmaX: AppPopupTheme.blurSigma,
-              sigmaY: AppPopupTheme.blurSigma,
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppPopupTheme.bottomSheetBg.withValues(
-                  alpha: AppPopupTheme.bottomSheetBgAlpha,
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(AppPopupTheme.bottomSheetRadius),
-                ),
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.white.withValues(
-                      alpha: AppPopupTheme.borderAlpha,
-                    ),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  16,
-                  24,
-                  MediaQuery.of(ctx).viewInsets.bottom + 24,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Handle bar
-                    Container(
-                      width: AppPopupTheme.handleWidth,
-                      height: AppPopupTheme.handleHeight,
-                      decoration: BoxDecoration(
-                        color: AppPopupTheme.handleColor,
-                        borderRadius: BorderRadius.circular(
-                          AppPopupTheme.handleRadius,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // İçerik
-                    builder(ctx),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+      constraints: const BoxConstraints(maxWidth: AppSpace.contentMaxWidth),
+      sheetAnimationStyle: AppMotion.reduced(context)
+          ? AnimationStyle.noAnimation
+          : AnimationStyle(duration: AppMotion.slow, reverseDuration: AppMotion.base),
+      builder: (ctx) => SheetFrame(child: builder(ctx)),
     );
   }
 
   /// Bottom sheet başlığı oluşturur (ikon + metin).
   static Widget buildTitle(String title, {IconData? icon}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (icon != null) ...[
-          Icon(icon, color: Colors.white.withValues(alpha: 0.9), size: 20),
-          const SizedBox(width: 8),
-        ],
-        Flexible(
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
+    return Builder(
+      builder: (context) {
+        final p = context.palette;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              IconBadge(icon: icon, color: p.primaryText, size: 38),
+              const SizedBox(width: AppSpace.sm),
+            ],
+            Flexible(
+              child: Text(
+                title,
+                style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
   /// Bottom sheet'te kullanılan standart "İptal" butonu.
   static Widget buildCancelButton(BuildContext context, {String? text}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: TextButton(
-        onPressed: () => Navigator.pop(context),
-        style: TextButton.styleFrom(
-          backgroundColor: Colors.white.withValues(alpha: 0.08),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    return AppButton(
+      label: text ?? context.l10n.cancel,
+      variant: AppButtonVariant.outline,
+      tone: AppTone.neutral,
+      onPressed: () => Navigator.pop(context),
+    );
+  }
+}
+
+/// The frosted panel, handle and insets of every bottom sheet.
+class SheetFrame extends StatelessWidget {
+  const SheetFrame({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    const radius = BorderRadius.vertical(top: Radius.circular(AppPopupTheme.bottomSheetRadius));
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: p.surfaceRaised.withValues(alpha: p.isDark ? 0.9 : 0.94),
+            borderRadius: radius,
+            border: Border(top: BorderSide(color: p.glassBorder)),
           ),
-        ),
-        child: Text(
-          text ?? context.l10n.cancel,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpace.xl,
+                AppSpace.sm,
+                AppSpace.xl,
+                MediaQuery.viewInsetsOf(context).bottom + AppSpace.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: AppPopupTheme.handleWidth,
+                    height: AppPopupTheme.handleHeight,
+                    decoration: BoxDecoration(
+                      color: p.borderStrong,
+                      borderRadius: AppRadius.all(AppRadius.pill),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.lg),
+                  Flexible(child: child),
+                ],
+              ),
+            ),
           ),
         ),
       ),

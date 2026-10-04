@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'glass_panel.dart';
 import 'media_transport_row.dart';
 import '../../../l10n/app_language.dart';
 import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class NowPlayingCard extends StatefulWidget {
   final bool hasMedia;
@@ -117,53 +119,43 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
 
   @override
   Widget build(BuildContext context) {
-    const accent = AppColors.mediaRose; // Rose
-    
+    final p = context.palette;
+    final accent = p.accent;
+
     final thumbnail = _thumbnail;
     final placeholderIcon = Icon(
       widget.hasMedia ? Icons.music_note_rounded : Icons.music_off_rounded,
-      color: Colors.white,
-      size: 20,
+      color: AppColors.white,
+      size: 26,
     );
     final displayTitle = widget.hasMedia ? (widget.title?.isNotEmpty == true ? widget.title! : context.l10n.unknownMedia) : context.l10n.noMedia;
     final displayArtist = widget.hasMedia ? (widget.artist?.isNotEmpty == true ? widget.artist! : context.l10n.unknownArtist) : context.l10n.nothingPlaying;
 
     return GlassPanel(
-      borderColor: accent.withValues(alpha: 0.3),
-      gradientColors: [
-        accent.withValues(alpha: 0.15),
-        accent.withValues(alpha: 0.05),
-      ],
+      accent: accent,
       child: Column(
         children: [
-          // ── Medya Bilgileri ──
           Row(
             children: [
-              // Albüm Kapağı Placeholder (Küçültülmüş)
+              // Album art, or a gradient tile in the brand colors.
               Container(
-                width: 40,
-                height: 40,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  gradient: LinearGradient(
-                    colors: widget.hasMedia
-                        ? const [AppColors.mediaViolet, AppColors.mediaPink]
-                        : const [Colors.white24, Colors.white10],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: widget.hasMedia ? [
-                    BoxShadow(
-                      color: AppColors.mediaPink.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 2),
-                    ),
-                  ] : null,
+                  borderRadius: AppRadius.all(AppRadius.md),
+                  gradient: widget.hasMedia
+                      ? const LinearGradient(
+                          colors: [AppColors.cobaltBright, AppColors.laser],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: widget.hasMedia ? null : p.textMuted.withValues(alpha: 0.35),
+                  boxShadow: widget.hasMedia ? AppShadows.glow(accent, strength: 0.5) : null,
                 ),
                 child: thumbnail != null
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppRadius.all(AppRadius.md),
                         child: Image.memory(
                           thumbnail,
                           fit: BoxFit.cover,
@@ -173,19 +165,14 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
                       )
                     : placeholderIcon,
               ),
-              const SizedBox(width: 20),
-              // Şarkı Bilgileri
+              const SizedBox(width: AppSpace.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextScroll(
-                      '  $displayTitle  ',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      '$displayTitle    ',
+                      style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 16.5),
                       velocity: const Velocity(pixelsPerSecond: Offset(40, 0)),
                       delayBefore: const Duration(milliseconds: 2000),
                       pauseBetween: const Duration(milliseconds: 2000),
@@ -195,12 +182,8 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
                     ),
                     const SizedBox(height: 4),
                     TextScroll(
-                      '  $displayArtist  ',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      '$displayArtist    ',
+                      style: AppType.bodySmall.copyWith(color: p.textSecondary, fontWeight: FontWeight.w500),
                       velocity: const Velocity(pixelsPerSecond: Offset(30, 0)),
                       delayBefore: const Duration(milliseconds: 2000),
                       pauseBetween: const Duration(milliseconds: 2000),
@@ -211,14 +194,15 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
                   ],
                 ),
               ),
-
+              const SizedBox(width: AppSpace.xs),
+              _EqualizerBars(playing: widget.hasMedia && widget.isPlaying, color: accent),
             ],
           ),
           if (widget.hasMedia && widget.durationMs > 0) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpace.md),
             _ProgressRow(positionMs: _localPositionMs, durationMs: widget.durationMs, color: accent),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.md),
           MediaTransportRow(
             playIcon: widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
             playLabel: widget.isPlaying ? context.l10n.mediaPause : context.l10n.mediaPlay,
@@ -230,6 +214,100 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
       ),
     );
   }
+}
+
+/// Three bars that dance while something plays and rest when it stops.
+class _EqualizerBars extends StatefulWidget {
+  const _EqualizerBars({required this.playing, required this.color});
+
+  final bool playing;
+  final Color color;
+
+  @override
+  State<_EqualizerBars> createState() => _EqualizerBarsState();
+}
+
+class _EqualizerBarsState extends State<_EqualizerBars> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_EqualizerBars oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  void _sync() {
+    final run = widget.playing && !AppMotion.reduced(context);
+    if (run && !_c.isAnimating) {
+      _c.repeat();
+    } else if (!run && _c.isAnimating) {
+      _c.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: RepaintBoundary(
+        child: SizedBox(
+          width: 20,
+          height: 18,
+          child: AnimatedBuilder(
+            animation: _c,
+            builder: (context, _) => CustomPaint(
+              painter: _EqualizerPainter(
+                t: _c.value,
+                color: widget.color.withValues(alpha: widget.playing ? 1 : 0.35),
+                still: !widget.playing,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EqualizerPainter extends CustomPainter {
+  _EqualizerPainter({required this.t, required this.color, required this.still});
+
+  final double t;
+  final Color color;
+  final bool still;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    const phases = [0.0, 0.33, 0.66];
+    final bw = size.width / 5;
+    for (var i = 0; i < 3; i++) {
+      final wave = still ? 0.3 : 0.35 + 0.65 * (0.5 + 0.5 * math.sin((t + phases[i]) * 2 * math.pi)).abs();
+      final h = size.height * wave;
+      final x = i * bw * 2;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(x, size.height - h, bw, h), Radius.circular(bw / 2)),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_EqualizerPainter old) => old.t != t || old.color != color || old.still != still;
 }
 
 class _ProgressRow extends StatelessWidget {
@@ -248,23 +326,24 @@ class _ProgressRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const timeStyle = TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w600);
+    final p = context.palette;
+    final timeStyle = AppType.mono.copyWith(color: p.textMuted, fontSize: 11.5);
     return Row(
       children: [
         Text(_formatDuration(positionMs), style: timeStyle),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpace.sm - 2),
         Expanded(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: AppRadius.all(AppRadius.pill),
             child: LinearProgressIndicator(
               value: (positionMs / durationMs).clamp(0.0, 1.0),
-              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              backgroundColor: p.surfaceSunken,
               valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 4,
+              minHeight: 5,
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpace.sm - 2),
         Text(_formatDuration(durationMs), style: timeStyle),
       ],
     );

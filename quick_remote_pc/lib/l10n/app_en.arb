@@ -79,5 +79,6 @@
   "serverStopped": "Server Stopped",
   "serverStoppedHint": "Start the server to connect from your phone\nand control your presentation.",
   "opensslMissing": "openssl was not found. Install the openssl package for the TLS certificate.",
-  "tlsKeyReadable": "Other users can read the TLS key: {path}"
+  "tlsKeyReadable": "Other users can read the TLS key: {path}",
+  "startServer": "Start Server"
 }

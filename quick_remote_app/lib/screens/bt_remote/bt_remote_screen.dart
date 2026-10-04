@@ -8,13 +8,14 @@ import '../../services/background_session.dart';
 import '../../services/bluetooth/bt_hid_service.dart';
 import '../../services/bluetooth/bt_key_mapping.dart';
 import '../../providers/settings_provider.dart';
+import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../remote/widgets/remote_chrome.dart';
 import 'views/bt_main_controls_view.dart';
 import 'views/bt_touchpad_view.dart';
 import 'views/bt_media_view.dart';
 import '../../l10n/app_language.dart';
-import '../../theme/app_colors.dart';
+import '../../widgets/ui/ui.dart';
 
 // ─── BT Remote Screen ────────────────────────────────────────────────────────
 // WiFi remote screen ile aynı tasarım; BT HID'de çalışmayan özellikler
@@ -156,10 +157,15 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
         resizeToAvoidBottomInset: false,
         appBar: _buildAppBar(isConnected),
-        body: body,
+        // Only the new tab fades in; the old one leaves at once.
+        body: AnimatedSwitcher(
+          duration: AppMotion.of(context, AppMotion.base),
+          switchInCurve: AppMotion.enter,
+          layoutBuilder: (current, _) => current ?? const SizedBox.shrink(),
+          child: KeyedSubtree(key: ValueKey(_currentTab), child: body),
+        ),
         bottomNavigationBar: _buildBottomNav(),
       ),
     );
@@ -167,20 +173,19 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
 
   PreferredSizeWidget _buildAppBar(bool isConnected) {
     return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
       automaticallyImplyLeading: false,
+      toolbarHeight: 64,
+      titleSpacing: AppSpace.md,
       title: RemoteHeader(
         subtitle: Row(
           children: [
-            const Icon(Icons.bluetooth_rounded, color: AppColors.bluetoothLight, size: 12),
+            Icon(Icons.bluetooth_rounded, color: context.palette.info, size: 12),
             const SizedBox(width: 4),
-            Text(
-              _bt.connectedDeviceName ?? 'Bluetooth HID',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 12,
-                fontFamily: 'monospace',
+            Flexible(
+              child: Text(
+                _bt.connectedDeviceName ?? 'Bluetooth HID',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -210,37 +215,16 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
   }
 
   Future<bool> _showExitDialog() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: AppColors.surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            icon: const Icon(Icons.warning_amber_rounded, color: AppColors.caution, size: 40),
-            title: Text(context.l10n.disconnectTitle,
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            content: Text(
-              context.l10n.btDisconnectContent,
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(context.l10n.cancel, style: TextStyle(color: Colors.white54)),
-              ),
-              FilledButton(
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  Navigator.of(ctx).pop(true);
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.danger,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text(context.l10n.disconnectTitle, style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    final confirmed = await AppDialog.showConfirm(
+      context: context,
+      title: context.l10n.disconnectTitle,
+      content: context.l10n.btDisconnectContent,
+      confirmText: context.l10n.disconnectTitle,
+      tone: AppTone.danger,
+      icon: Icons.bluetooth_disabled_rounded,
+      iconTone: AppTone.warning,
+    );
+    if (confirmed) HapticFeedback.mediumImpact();
+    return confirmed;
   }
 }

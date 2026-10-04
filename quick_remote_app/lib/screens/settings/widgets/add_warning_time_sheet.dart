@@ -6,6 +6,7 @@ import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
 import '../../../l10n/app_language.dart';
+import '../../../widgets/ui/ui.dart';
 
 /// Asks for a new warning time in seconds or minutes.
 void showAddWarningTimeSheet(BuildContext context) {
@@ -24,86 +25,58 @@ void showAddWarningTimeSheet(BuildContext context) {
               const SizedBox(height: 24),
               TextField(
                 controller: controller,
-                style: const TextStyle(color: Colors.white),
+                autofocus: true,
+                textAlign: TextAlign.center,
+                style: AppType.numeric.copyWith(color: context.palette.textPrimary, fontSize: 32),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: AppPopupTheme.inputDecoration(
                   context: context,
                   hintText: context.l10n.enterTime,
+                ).copyWith(
+                  hintStyle: AppType.body.copyWith(color: context.palette.textMuted),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.lg),
                 ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _TypeChip(
-                      label: context.l10n.unitSecondsLong,
-                      isSelected: !isMinutes,
-                      onTap: () => setState(() => isMinutes = false),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _TypeChip(
-                      label: context.l10n.unitMinutesLong,
-                      isSelected: isMinutes,
-                      onTap: () => setState(() => isMinutes = true),
-                    ),
-                  ),
+              const SizedBox(height: AppSpace.md),
+              AppSegmented<bool>(
+                segments: [
+                  AppSegment(value: false, label: context.l10n.unitSecondsLong),
+                  AppSegment(value: true, label: context.l10n.unitMinutesLong),
                 ],
+                selected: isMinutes,
+                onChanged: (value) => setState(() => isMinutes = value),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpace.lg),
               Row(
                 children: [
                   Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          context.l10n.cancel,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                    child: AppButton(
+                      label: context.l10n.cancel,
+                      variant: AppButtonVariant.outline,
+                      tone: AppTone.neutral,
+                      onPressed: () => Navigator.of(ctx).pop(),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpace.sm),
                   Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: () {
-                          final val = int.tryParse(controller.text);
-                          if (val != null && val > 0) {
-                            final seconds = isMinutes ? val * 60 : val;
-                            context.read<SettingsProvider>().addWarningTime(seconds);
-                            Navigator.of(ctx).pop();
-                          } else {
-                            AppSnackbar.show(
-                              ctx,
-                              message: context.l10n.enterValidNumber,
-                              type: SnackbarType.error,
-                            );
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppPopupTheme.buttonRadius),
-                          ),
-                        ),
-                        child: Text(context.l10n.add, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                      ),
+                    child: AppButton(
+                      label: context.l10n.add,
+                      icon: Icons.add_rounded,
+                      onPressed: () {
+                        final val = int.tryParse(controller.text);
+                        if (val != null && val > 0) {
+                          final seconds = isMinutes ? val * 60 : val;
+                          context.read<SettingsProvider>().addWarningTime(seconds);
+                          Navigator.of(ctx).pop();
+                        } else {
+                          AppSnackbar.show(
+                            ctx,
+                            message: context.l10n.enterValidNumber,
+                            type: SnackbarType.error,
+                          );
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -115,42 +88,4 @@ void showAddWarningTimeSheet(BuildContext context) {
       );
     },
   );
-}
-
-class _TypeChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _TypeChip({required this.label, required this.isSelected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.05),
-          border: Border.all(
-            color: isSelected 
-                ? Theme.of(context).colorScheme.primary
-                : Colors.transparent,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white70,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-        ),
-      ),
-    );
-  }
 }

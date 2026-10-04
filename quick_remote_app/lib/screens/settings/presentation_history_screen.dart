@@ -7,7 +7,7 @@ import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../analytics/analytics_report_screen.dart';
 import '../../l10n/app_language.dart';
-import '../../theme/app_colors.dart';
+import '../../widgets/ui/ui.dart';
 
 class PresentationHistoryScreen extends StatelessWidget {
   const PresentationHistoryScreen({super.key});
@@ -17,85 +17,81 @@ class PresentationHistoryScreen extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(context.l10n.settingsHistoryTitle, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(context.l10n.settingsHistoryTitle),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           if (settings.presentationHistory.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: Colors.white70),
+              icon: const Icon(Icons.delete_sweep_rounded),
               tooltip: context.l10n.clearHistory,
               onPressed: () => _showClearHistoryDialog(context),
             ),
+          const SizedBox(width: AppSpace.xxs),
         ],
       ),
-      body: settings.presentationHistory.isEmpty
-          ? Center(
-              child: Container(
-                padding: const EdgeInsets.all(32),
-                margin: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.analytics_outlined, size: 48, color: Colors.white.withValues(alpha: 0.2)),
-                    const SizedBox(height: 16),
-                    Text(
-                      context.l10n.noHistory,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+      body: ContentWidth(
+        child: AnimatedSwitcher(
+          duration: AppMotion.of(context, AppMotion.base),
+          child: settings.presentationHistory.isEmpty
+              ? Center(
+                  key: const ValueKey('empty'),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpace.xl),
+                    child: FadeSlideIn(
+                      child: EmptyState(
+                        icon: Icons.insights_rounded,
+                        tone: AppTone.accent,
+                        title: context.l10n.noHistory,
+                        message: context.l10n.noHistoryHint,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n.noHistoryHint,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                  ),
+                )
+              : ListView.builder(
+                  key: const ValueKey('list'),
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpace.page,
+                    AppSpace.sm,
+                    AppSpace.page,
+                    MediaQuery.paddingOf(context).bottom + AppSpace.xl,
+                  ),
+                  itemCount: settings.presentationHistory.length,
+                  itemBuilder: (context, index) {
+                    final analytics = settings.presentationHistory[index];
+                    return FadeSlideIn(
+                      key: Key(analytics.id),
+                      index: index,
+                      child: _buildHistoryTile(context, analytics, settings),
+                    );
+                  },
                 ),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: settings.presentationHistory.length,
-              itemBuilder: (context, index) {
-                final analytics = settings.presentationHistory[index];
-                return _buildHistoryTile(context, analytics, settings);
-              },
-            ),
+        ),
+      ),
     );
   }
 
   Widget _buildHistoryTile(BuildContext context, PresentationAnalytics analytics, SettingsProvider settings) {
+    final p = context.palette;
+    final meta = AppType.bodySmall.copyWith(color: p.textSecondary);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpace.sm),
       child: Dismissible(
         key: Key(analytics.id),
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
+          padding: const EdgeInsets.only(right: AppSpace.lg),
           decoration: BoxDecoration(
-            color: AppColors.danger.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
+            color: p.danger.withValues(alpha: p.isDark ? 0.18 : 0.12),
+            borderRadius: AppRadius.all(AppRadius.lg),
+            border: Border.all(color: p.danger.withValues(alpha: 0.35)),
           ),
-          child: const Icon(Icons.delete_rounded, color: AppColors.danger),
+          child: Icon(Icons.delete_rounded, color: p.danger),
         ),
         onDismissed: (_) {
           settings.deletePresentationAnalytics(analytics.id);
@@ -106,77 +102,59 @@ class PresentationHistoryScreen extends StatelessWidget {
             duration: const Duration(seconds: 2),
           );
         },
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AnalyticsReportScreen(
-                    analytics: analytics,
-                    isFromHistory: true,
-                  ),
+        child: AppCard(
+          padding: const EdgeInsets.all(AppSpace.md),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AnalyticsReportScreen(
+                  analytics: analytics,
+                  isFromHistory: true,
                 ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.analyticsIndigo.withValues(alpha: 0.3),
-                          AppColors.analyticsTeal.withValues(alpha: 0.15),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
+            );
+          },
+          child: Row(
+            children: [
+              IconBadge(icon: Icons.slideshow_rounded, color: p.primaryText, size: 48),
+              const SizedBox(width: AppSpace.md - 2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      Formatters.formatDate(analytics.startTime, context.l10n),
+                      style: AppType.titleSmall.copyWith(color: p.textPrimary),
                     ),
-                    child: const Icon(Icons.slideshow_rounded, color: AppColors.analyticsIndigo, size: 24),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: AppSpace.md,
+                      runSpacing: AppSpace.xxs,
                       children: [
-                        Text(
-                          Formatters.formatDate(analytics.startTime, context.l10n),
-                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 6),
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.timer_outlined, size: 14, color: Colors.white.withValues(alpha: 0.4)),
-                            const SizedBox(width: 4),
-                            Text(
-                              Formatters.formatDuration(analytics.totalDuration, context.l10n),
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
-                            ),
-                            const SizedBox(width: 16),
-                            Icon(Icons.layers_outlined, size: 14, color: Colors.white.withValues(alpha: 0.4)),
-                            const SizedBox(width: 4),
-                            Text(
-                              context.l10n.slideCount(analytics.distinctSlideCount),
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
-                            ),
+                            Icon(Icons.timer_outlined, size: 15, color: p.textMuted),
+                            const SizedBox(width: AppSpace.xxs),
+                            Text(Formatters.formatDuration(analytics.totalDuration, context.l10n), style: meta),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.layers_outlined, size: 15, color: p.textMuted),
+                            const SizedBox(width: AppSpace.xxs),
+                            Text(context.l10n.slideCount(analytics.distinctSlideCount), style: meta),
                           ],
                         ),
                       ],
                     ),
-                  ),
-                  Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.3)),
-                ],
+                  ],
+                ),
               ),
-            ),
+              Icon(Icons.chevron_right_rounded, color: p.textMuted),
+            ],
           ),
         ),
       ),

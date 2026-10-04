@@ -5,7 +5,8 @@ import 'utils/report_exporter.dart';
 import 'widgets/stat_card.dart';
 import 'widgets/slide_duration_list.dart';
 import '../../l10n/app_language.dart';
-import '../../theme/app_colors.dart';
+import '../../utils/ui/app_popup_theme.dart';
+import '../../widgets/ui/ui.dart';
 
 /// A premium-looking analytics report screen that displays
 /// per-slide timing data and aggregate statistics.
@@ -29,14 +30,16 @@ class AnalyticsReportScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      constraints: const BoxConstraints(maxWidth: AppSpace.contentMaxWidth),
       builder: (ctx) => DraggableScrollableSheet(
         initialChildSize: 0.85,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (_, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          decoration: BoxDecoration(
+            color: ctx.palette.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+            border: Border(top: BorderSide(color: ctx.palette.glassBorder)),
           ),
           child: AnalyticsReportScreen(
             analytics: analytics,
@@ -49,6 +52,7 @@ class AnalyticsReportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final longest = analytics.longestSlide;
     final shortest = analytics.shortestSlide;
 
@@ -59,12 +63,12 @@ class AnalyticsReportScreen extends StatelessWidget {
           SliverToBoxAdapter(
             child: Center(
               child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
+                margin: const EdgeInsets.only(top: AppSpace.sm, bottom: AppSpace.xs),
+                width: AppPopupTheme.handleWidth,
+                height: AppPopupTheme.handleHeight,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
+                  color: p.borderStrong,
+                  borderRadius: AppRadius.all(AppRadius.pill),
                 ),
               ),
             ),
@@ -73,44 +77,30 @@ class AnalyticsReportScreen extends StatelessWidget {
         // Title
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.analyticsIndigo, AppColors.analyticsTeal],
+            padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.md, AppSpace.page, AppSpace.xs),
+            child: FadeSlideIn(
+              child: Row(
+                children: [
+                  IconBadge(icon: Icons.insights_rounded, color: p.primary, size: 48, filled: true),
+                  const SizedBox(width: AppSpace.md - 2),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.reportTitle,
+                          style: AppType.headline.copyWith(color: p.textPrimary, fontSize: 22),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          Formatters.formatDate(analytics.startTime, context.l10n),
+                          style: AppType.bodySmall.copyWith(color: p.textSecondary),
+                        ),
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.analytics_rounded, color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.reportTitle,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        Formatters.formatDate(analytics.startTime, context.l10n),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -118,30 +108,36 @@ class AnalyticsReportScreen extends StatelessWidget {
         // Stats cards
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Row(
-              children: [
-                StatCard(
-                  icon: Icons.timer_rounded,
-                  label: context.l10n.totalTime,
-                  value: Formatters.formatDuration(analytics.totalDuration, context.l10n),
-                  gradient: const [AppColors.analyticsIndigo, AppColors.analyticsIndigoDark],
+            padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.md, AppSpace.page, AppSpace.xs),
+            child: FadeSlideIn(
+              index: 1,
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    StatCard(
+                      icon: Icons.timer_rounded,
+                      label: context.l10n.totalTime,
+                      value: Formatters.formatDuration(analytics.totalDuration, context.l10n),
+                      color: p.primaryText,
+                    ),
+                    const SizedBox(width: AppSpace.xs + 2),
+                    StatCard(
+                      icon: Icons.layers_rounded,
+                      label: context.l10n.slideCountLabel,
+                      value: '${analytics.distinctSlideCount}',
+                      color: p.info,
+                    ),
+                    const SizedBox(width: AppSpace.xs + 2),
+                    StatCard(
+                      icon: Icons.speed_rounded,
+                      label: context.l10n.avgPerSlideShort,
+                      value: Formatters.formatDurationShort(analytics.averageTimePerSlide),
+                      color: p.accentText,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                StatCard(
-                  icon: Icons.layers_rounded,
-                  label: context.l10n.slideCountLabel,
-                  value: '${analytics.distinctSlideCount}',
-                  gradient: const [AppColors.analyticsTeal, AppColors.analyticsTealDark],
-                ),
-                const SizedBox(width: 10),
-                StatCard(
-                  icon: Icons.speed_rounded,
-                  label: context.l10n.avgPerSlideShort,
-                  value: Formatters.formatDurationShort(analytics.averageTimePerSlide),
-                  gradient: const [AppColors.analyticsCoral, AppColors.analyticsCoralDark],
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -149,56 +145,41 @@ class AnalyticsReportScreen extends StatelessWidget {
         // Transition count
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.swap_horiz_rounded,
-                      color: Colors.white.withValues(alpha: 0.6), size: 20),
-                  const SizedBox(width: 10),
-                  Text(
-                    context.l10n.totalTransitions(analytics.transitionCount),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+            padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, AppSpace.md),
+            child: FadeSlideIn(
+              index: 2,
+              child: AppCard(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm),
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppSpace.md,
+                  runSpacing: AppSpace.xs,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.swap_horiz_rounded, color: p.textSecondary, size: 20),
+                        const SizedBox(width: AppSpace.xs),
+                        Text(
+                          context.l10n.totalTransitions(analytics.transitionCount),
+                          style: AppType.body.copyWith(color: p.textPrimary, fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
-                  ),
-                  const Spacer(),
-                  if (longest != null) ...[
-                    Icon(Icons.arrow_upward_rounded,
-                        color: AppColors.analyticsCoral, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      'S${longest.key}: ${Formatters.formatDurationShort(longest.value)}',
-                      style: const TextStyle(
-                        color: AppColors.analyticsCoral,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    if (longest != null)
+                      _ExtremeChip(
+                        icon: Icons.arrow_upward_rounded,
+                        color: p.accentText,
+                        text: 'S${longest.key}: ${Formatters.formatDurationShort(longest.value)}',
                       ),
-                    ),
-                  ],
-                  if (shortest != null && longest?.key != shortest.key) ...[
-                    const SizedBox(width: 12),
-                    Icon(Icons.arrow_downward_rounded,
-                        color: AppColors.analyticsTeal, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      'S${shortest.key}: ${Formatters.formatDurationShort(shortest.value)}',
-                      style: const TextStyle(
-                        color: AppColors.analyticsTeal,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    if (shortest != null && longest?.key != shortest.key)
+                      _ExtremeChip(
+                        icon: Icons.arrow_downward_rounded,
+                        color: p.success,
+                        text: 'S${shortest.key}: ${Formatters.formatDurationShort(shortest.value)}',
                       ),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -207,15 +188,8 @@ class AnalyticsReportScreen extends StatelessWidget {
         // Section header
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-            child: Text(
-              context.l10n.timePerSlide,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, AppSpace.xxs),
+            child: SectionHeader(title: context.l10n.timePerSlide, icon: Icons.bar_chart_rounded),
           ),
         ),
 
@@ -225,38 +199,26 @@ class AnalyticsReportScreen extends StatelessWidget {
         // Bottom actions
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-            child: Row(
+            padding: EdgeInsets.fromLTRB(
+              AppSpace.page,
+              AppSpace.xl,
+              AppSpace.page,
+              MediaQuery.paddingOf(context).bottom + AppSpace.xl,
+            ),
+            child: Column(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => ReportExporter.copyToClipboard(context, analytics),
-                    icon: const Icon(Icons.copy_rounded, size: 18),
-                    label: Text(context.l10n.copyToClipboard),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white70,
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
+                AppButton(
+                  label: context.l10n.ok,
+                  icon: Icons.check_rounded,
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.check_rounded, size: 18),
-                    label: Text(context.l10n.ok),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.analyticsIndigo,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: AppSpace.xs),
+                AppButton(
+                  label: context.l10n.copyToClipboard,
+                  icon: Icons.copy_rounded,
+                  variant: AppButtonVariant.outline,
+                  tone: AppTone.neutral,
+                  onPressed: () => ReportExporter.copyToClipboard(context, analytics),
                 ),
               ],
             ),
@@ -267,23 +229,47 @@ class AnalyticsReportScreen extends StatelessWidget {
 
     if (isFromHistory) {
       return Scaffold(
-        backgroundColor: AppColors.background,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(
-            context.l10n.presentationDetails,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
+          title: Text(context.l10n.presentationDetails),
         ),
-        body: content,
+        body: ContentWidth(child: content),
       );
     }
 
     return content;
+  }
+}
+
+/// The longest or shortest slide in the summary row.
+class _ExtremeChip extends StatelessWidget {
+  const _ExtremeChip({required this.icon, required this.color, required this.text});
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: p.isDark ? 0.14 : 0.10),
+        borderRadius: AppRadius.all(AppRadius.pill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 4),
+          Text(text, style: AppType.mono.copyWith(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+        ],
+      ),
+    );
   }
 }

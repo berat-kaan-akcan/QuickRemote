@@ -577,6 +577,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'TLS anahtarı başka kullanıcılar tarafından okunabiliyor: {path}'**
   String tlsKeyReadable(String path);
+
+  /// Button and tooltip that starts the server.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucuyu Başlat'**
+  String get startServer;
 }
 
 class _AppLocalizationsDelegate

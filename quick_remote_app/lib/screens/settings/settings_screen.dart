@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_language.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
+import '../../widgets/ui/ui.dart';
 import 'timer_settings_screen.dart';
 import 'presentation_history_screen.dart';
-import '../../theme/app_colors.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,57 +13,93 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(l10n.settingsTitle, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(l10n.settingsTitle),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          _buildMenuTile(
-            context,
-            icon: Icons.timer_outlined,
-            title: l10n.settingsTimerTitle,
-            subtitle: l10n.settingsTimerSubtitle,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimerSettingsScreen())),
+      body: ContentWidth(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            AppSpace.page,
+            AppSpace.sm,
+            AppSpace.page,
+            MediaQuery.paddingOf(context).bottom + AppSpace.xl,
           ),
-          const SizedBox(height: 12),
-          _buildMenuTile(
-            context,
-            icon: Icons.history_rounded,
-            title: l10n.settingsHistoryTitle,
-            subtitle: l10n.settingsHistorySubtitle,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PresentationHistoryScreen())),
-          ),
-          const SizedBox(height: 12),
-          Consumer<SettingsProvider>(
-            builder: (context, settings, _) => _buildSwitchTile(
-              context,
-              icon: Icons.draw_outlined,
-              title: l10n.settingsKeepInkTitle,
-              subtitle: l10n.settingsKeepInkSubtitle,
-              value: settings.keepInkOnSlideChange,
-              onChanged: settings.setKeepInkOnSlideChange,
+          children: [
+            FadeSlideIn(child: SectionHeader(title: l10n.settingsSectionPresentation)),
+            FadeSlideIn(
+              index: 1,
+              child: AppListTile(
+                icon: Icons.timer_outlined,
+                title: l10n.settingsTimerTitle,
+                subtitle: l10n.settingsTimerSubtitle,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimerSettingsScreen())),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Consumer<SettingsProvider>(
-            builder: (context, settings, _) => _buildMenuTile(
-              context,
-              icon: Icons.language_rounded,
-              title: l10n.settingsLanguageTitle,
-              subtitle: _languageName(context, settings.language),
-              onTap: () => _showLanguagePicker(context, settings),
+            const SizedBox(height: AppSpace.sm),
+            FadeSlideIn(
+              index: 2,
+              child: AppListTile(
+                icon: Icons.insights_rounded,
+                iconColor: p.accentText,
+                title: l10n.settingsHistoryTitle,
+                subtitle: l10n.settingsHistorySubtitle,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PresentationHistoryScreen())),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpace.sm),
+            FadeSlideIn(
+              index: 3,
+              child: Consumer<SettingsProvider>(
+                builder: (context, settings, _) => AppSwitchTile(
+                  icon: Icons.draw_outlined,
+                  iconColor: p.success,
+                  title: l10n.settingsKeepInkTitle,
+                  subtitle: l10n.settingsKeepInkSubtitle,
+                  value: settings.keepInkOnSlideChange,
+                  onChanged: settings.setKeepInkOnSlideChange,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpace.xl),
+            FadeSlideIn(index: 4, child: SectionHeader(title: l10n.settingsSectionGeneral)),
+            FadeSlideIn(
+              index: 5,
+              child: Consumer<SettingsProvider>(
+                builder: (context, settings, _) => AppListTile(
+                  icon: Icons.language_rounded,
+                  iconColor: p.info,
+                  title: l10n.settingsLanguageTitle,
+                  subtitle: _languageName(context, settings.language),
+                  onTap: () => _showLanguagePicker(context, settings),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpace.xxxl),
+            FadeSlideIn(
+              index: 6,
+              child: Column(
+                children: [
+                  const BrandTile(size: 52),
+                  const SizedBox(height: AppSpace.sm),
+                  const BrandWordmark(fontSize: 20),
+                  const SizedBox(height: AppSpace.xxs),
+                  Text(
+                    l10n.homeTagline,
+                    textAlign: TextAlign.center,
+                    style: AppType.bodySmall.copyWith(color: p.textMuted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -74,97 +110,73 @@ class SettingsScreen extends StatelessWidget {
   void _showLanguagePicker(BuildContext context, SettingsProvider settings) {
     AppBottomSheet.show<void>(
       context: context,
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppBottomSheet.buildTitle(ctx.l10n.settingsLanguageTitle, icon: Icons.language_rounded),
-          const SizedBox(height: 16),
-          for (final language in AppLanguage.values)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(_languageName(ctx, language), style: const TextStyle(color: Colors.white, fontSize: 16)),
-              trailing: language == settings.language
-                  ? Icon(Icons.check_rounded, color: Theme.of(ctx).colorScheme.primary)
-                  : null,
-              onTap: () {
-                settings.setLanguage(language);
-                Navigator.pop(ctx);
-              },
-            ),
-        ],
-      ),
+      builder: (ctx) {
+        final p = ctx.palette;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBottomSheet.buildTitle(ctx.l10n.settingsLanguageTitle, icon: Icons.language_rounded),
+            const SizedBox(height: AppSpace.lg),
+            for (final language in AppLanguage.values) ...[
+              _LanguageOption(
+                label: _languageName(ctx, language),
+                selected: language == settings.language,
+                onTap: () {
+                  settings.setLanguage(language);
+                  Navigator.pop(ctx);
+                },
+                checkColor: p.primaryText,
+              ),
+              const SizedBox(height: AppSpace.xs),
+            ],
+          ],
+        );
+      },
     );
   }
+}
 
-  Widget _buildSwitchTile(BuildContext context, {required IconData icon, required String title, required String subtitle, required bool value, required ValueChanged<bool> onChanged}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Switch(value: value, onChanged: onChanged),
-        ],
-      ),
-    );
-  }
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.checkColor,
+  });
 
-  Widget _buildMenuTile(BuildContext context, {required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
-    return InkWell(
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color checkColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Pressable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
+      selected: selected,
+      pressedScale: 0.98,
+      borderRadius: AppRadius.all(AppRadius.md),
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.base),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          color: selected ? checkColor.withValues(alpha: p.isDark ? 0.14 : 0.08) : p.surfaceSunken,
+          borderRadius: AppRadius.all(AppRadius.md),
+          border: Border.all(color: selected ? checkColor.withValues(alpha: 0.5) : p.border),
         ),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-            ),
-            const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
-                ],
-              ),
+              child: Text(label, style: AppType.titleSmall.copyWith(color: p.textPrimary)),
             ),
-            Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.3)),
+            AnimatedScale(
+              scale: selected ? 1 : 0,
+              duration: AppMotion.of(context, AppMotion.base),
+              curve: Curves.easeOutBack,
+              child: Icon(Icons.check_circle_rounded, color: checkColor),
+            ),
           ],
         ),
       ),

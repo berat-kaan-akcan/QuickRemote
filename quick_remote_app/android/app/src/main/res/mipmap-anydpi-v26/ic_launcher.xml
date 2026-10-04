@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Generated layers: brand/tools/export_assets.sh. The monochrome layer is
+     the themed icon of Android 13+. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-  <background android:drawable="@color/ic_launcher_background"/>
+  <background android:drawable="@drawable/ic_launcher_background"/>
   <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+  <monochrome android:drawable="@drawable/ic_launcher_monochrome"/>
 </adaptive-icon>

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../l10n/app_language.dart';
 import '../../../providers/language_provider.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -41,70 +41,85 @@ class _SettingsDialogState extends State<SettingsDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final languages = context.watch<LanguageProvider>();
+    final p = context.palette;
     return AlertDialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
-          const Icon(Icons.settings_rounded, color: Colors.white, size: 28),
-          const SizedBox(width: 12),
+          IconBadge(icon: Icons.settings_rounded, color: p.primaryText, size: 40),
+          const SizedBox(width: AppSpace.sm),
           Text(
             l10n.settingsTitle,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20),
           ),
         ],
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SwitchListTile(
-            title: Text(
-              l10n.settingsHidePublicNetworkWarning,
-              style: const TextStyle(color: Colors.white70, fontSize: 15),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SwitchListTile(
+              title: Text(
+                l10n.settingsHidePublicNetworkWarning,
+                style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
+              ),
+              subtitle: Text(
+                l10n.settingsHidePublicNetworkWarningSubtitle,
+                style: AppType.bodySmall.copyWith(color: p.textSecondary),
+              ),
+              value: _hideWarning,
+              onChanged: _saveSettings,
+              contentPadding: EdgeInsets.zero,
             ),
-            subtitle: Text(
-              l10n.settingsHidePublicNetworkWarningSubtitle,
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
-            ),
-            value: _hideWarning,
-            activeTrackColor: AppColors.accent.withValues(alpha: 0.5),
-            activeThumbColor: AppColors.accent,
-            onChanged: _saveSettings,
-            contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.settingsLanguageTitle,
-                  style: const TextStyle(color: Colors.white70, fontSize: 15),
+            Divider(color: p.border, height: AppSpace.lg),
+            Row(
+              children: [
+                Icon(Icons.language_rounded, size: 20, color: p.textSecondary),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  child: Text(
+                    l10n.settingsLanguageTitle,
+                    style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
+                  ),
                 ),
-              ),
-              DropdownButton<AppLanguage>(
-                value: languages.language,
-                dropdownColor: AppColors.surface,
-                underline: const SizedBox.shrink(),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                items: [
-                  for (final language in AppLanguage.values)
-                    DropdownMenuItem(
-                      value: language,
-                      child: Text(language == AppLanguage.system ? l10n.languageSystem : language.nativeName),
-                    ),
-                ],
-                onChanged: (language) {
-                  if (language != null) languages.setLanguage(language);
-                },
-              ),
-            ],
-          ),
-        ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                  decoration: BoxDecoration(
+                    color: p.surfaceSunken,
+                    borderRadius: AppRadius.all(AppRadius.sm),
+                    border: Border.all(color: p.border),
+                  ),
+                  child: DropdownButton<AppLanguage>(
+                    value: languages.language,
+                    dropdownColor: p.surfaceRaised,
+                    borderRadius: AppRadius.all(AppRadius.md),
+                    underline: const SizedBox.shrink(),
+                    icon: Icon(Icons.expand_more_rounded, color: p.textSecondary),
+                    style: AppType.body.copyWith(color: p.textPrimary, fontSize: 14),
+                    items: [
+                      for (final language in AppLanguage.values)
+                        DropdownMenuItem(
+                          value: language,
+                          child: Text(language == AppLanguage.system ? l10n.languageSystem : language.nativeName),
+                        ),
+                    ],
+                    onChanged: (language) {
+                      if (language != null) languages.setLanguage(language);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
       actions: [
-        TextButton(
+        AppButton(
+          label: l10n.close,
+          variant: AppButtonVariant.tonal,
+          expand: false,
+          height: 44,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.close, style: const TextStyle(color: Colors.white54)),
         ),
       ],
     );

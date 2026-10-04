@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../services/bluetooth/bt_key_mapping.dart';
 import '../../../l10n/app_language.dart';
-import '../../../theme/app_colors.dart';
+import '../../../widgets/ui/ui.dart';
 
 class BtTargetSelector extends StatelessWidget {
   const BtTargetSelector({super.key, required this.target, required this.onChanged});
@@ -15,34 +15,28 @@ class BtTargetSelector extends StatelessWidget {
   /// presentation program, so the user picks the target.
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Row(
       children: [
         Text(
           context.l10n.btTarget,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
+          style: AppType.labelSmall.copyWith(color: p.textMuted),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpace.xs),
         Expanded(
-          child: SegmentedButton<BtTarget>(
+          child: AppSegmented<BtTarget>(
+            height: 40,
+            color: p.info,
             segments: const [
-              ButtonSegment(value: BtTarget.powerpoint, label: Text('PowerPoint')),
-              ButtonSegment(value: BtTarget.impress, label: Text('Impress')),
-              ButtonSegment(value: BtTarget.wps, label: Text('WPS')),
+              AppSegment(value: BtTarget.powerpoint, label: 'PowerPoint'),
+              AppSegment(value: BtTarget.impress, label: 'Impress'),
+              AppSegment(value: BtTarget.wps, label: 'WPS'),
             ],
-            selected: {target},
-            showSelectedIcon: false,
-            onSelectionChanged: (s) {
+            selected: target,
+            onChanged: (value) {
               HapticFeedback.selectionClick();
-              onChanged(s.first);
+              onChanged(value);
             },
-            style: SegmentedButton.styleFrom(
-              foregroundColor: Colors.white54,
-              selectedForegroundColor: Colors.white,
-              selectedBackgroundColor: AppColors.bluetooth.withValues(alpha: 0.5),
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-              visualDensity: VisualDensity.compact,
-              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-            ),
           ),
         ),
       ],

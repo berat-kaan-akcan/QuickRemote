@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class PremiumMediaBtn extends StatefulWidget {
+import '../../../widgets/ui/ui.dart';
+
+/// A media button tinted in [color]: a square icon button, or with [large]
+/// a wide pill with its label. [glow] fills it in the color.
+class PremiumMediaBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
@@ -20,78 +24,53 @@ class PremiumMediaBtn extends StatefulWidget {
   });
 
   @override
-  State<PremiumMediaBtn> createState() => _PremiumMediaBtnState();
-}
-
-class _PremiumMediaBtnState extends State<PremiumMediaBtn>
-    with SingleTickerProviderStateMixin {
-  bool _isPressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    final enabled = widget.onTap != null;
-    return GestureDetector(
-      onTapDown: enabled ? (_) => setState(() => _isPressed = true) : null,
-      onTapUp: enabled
-          ? (_) {
-              setState(() => _isPressed = false);
+    final p = context.palette;
+    final enabled = onTap != null;
+    final filled = glow && enabled;
+    final onColor = readableOn(color);
+    final fg = filled ? onColor : color;
+    final radius = AppRadius.all(AppRadius.lg);
+
+    return Pressable(
+      onTap: enabled
+          ? () {
               HapticFeedback.lightImpact();
-              widget.onTap!();
+              onTap!();
             }
           : null,
-      onTapCancel: enabled ? () => setState(() => _isPressed = false) : null,
-      child: AnimatedScale(
-        scale: _isPressed ? 0.92 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: AnimatedOpacity(
-          opacity: enabled ? 1.0 : 0.45,
-          duration: const Duration(milliseconds: 200),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.large ? 16 : 14,
-              vertical: widget.large ? 12 : 10,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  widget.color.withValues(alpha: 0.2),
-                  widget.color.withValues(alpha: 0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: widget.color.withValues(alpha: 0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.color.withValues(alpha: widget.glow ? 0.4 : 0.1),
-                  blurRadius: widget.glow ? 16 : 8,
-                  spreadRadius: widget.glow ? 2 : 0,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  widget.icon,
-                  color: widget.color,
-                  size: widget.large ? 24 : 20,
-                ),
-                if (widget.large) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      color: widget.color,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+      semanticLabel: label.isEmpty ? null : label,
+      pressedScale: 0.92,
+      borderRadius: radius,
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.base),
+        height: 56,
+        width: large ? null : 56,
+        padding: EdgeInsets.symmetric(horizontal: large ? AppSpace.lg : 0),
+        decoration: BoxDecoration(
+          color: filled ? color : color.withValues(alpha: p.isDark ? 0.14 : 0.10),
+          borderRadius: radius,
+          border: Border.all(color: color.withValues(alpha: filled ? 0 : 0.28)),
+          boxShadow: filled ? AppShadows.glow(color, strength: 0.6) : null,
+        ),
+        child: ExcludeSemantics(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: fg, size: large ? 26 : 24),
+              if (large) ...[
+                const SizedBox(width: AppSpace.xs),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppType.label.copyWith(color: fg),
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),

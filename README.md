@@ -6,7 +6,7 @@
 
 *Sunum yönetimi, fare kontrolü ve çizim araçları — hepsi avucunuzun içinde.*
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.11+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Flutter](https://img.shields.io/badge/Flutter-3.47+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.11+-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20Android-brightgreen)](#)
 [![License](https://img.shields.io/badge/License-Personal_Use-blue)](#-lisans)
@@ -21,11 +21,14 @@
 | Özellik | Açıklama |
 |---------|----------|
 | **Slayt İleri / Geri** | Sunumu tek dokunuşla ilerletin veya geri alın |
-| **Sunumu Başlat / Bitir** | PowerPoint veya WPS sunumunu uzaktan başlatın (F5) veya sonlandırın (ESC) |
+| **Sunumu Başlat / Bitir** | PowerPoint, WPS veya LibreOffice Impress sunumunu uzaktan başlatın (F5) veya sonlandırın (ESC) |
 | **Belirli Slayta Git** | İstediğiniz slayt numarasına doğrudan atlayın (`START_AT`) |
 | **Slayt Durumu Senkronizasyonu** | Mevcut slayt numarası, toplam slayt sayısı ve konuşmacı notları gerçek zamanlı olarak telefonunuza aktarılır |
+| **Siyah / Beyaz Ekran** | Gösteriyi geçici olarak siyah veya beyaz ekranla kapatın |
+| **PDF Sunumları** | PDF görüntüleyicilerde ve tarayıcılarda sunum/tam ekran modunu açın, sayfaları çevirin (ayrıntılar aşağıda) |
 | **Sunum Zamanlayıcı** | Sunumunuzun ne kadar sürdüğünü takip edin |
 | **Protected View Desteği** | PowerPoint Korumalı Görünüm otomatik olarak düzenleme moduna geçirilir |
+| **WPS Office** | Windows'ta WPS Presentation, PowerPoint ile aynı COM arayüzünden (`KWPP.Application`) kontrol edilir; Linux'ta RPC ve kısayollarla (aşağıya bakın). WPS'te lazer yoktur, yerine görünür fare imleci kullanılır. Windows'ta WPS 12.2 ile denendi: gezinme, siyah/beyaz ekran, kalem, fosforlu kalem, silgi, renkler, tümünü sil. Video oynat/duraklat videoya tıklanarak yapılır; WPS'te başa sarma yoktur |
 
 ### 🖱️ Fare & Touchpad
 | Özellik | Açıklama |
@@ -35,11 +38,13 @@
 ### 🎨 Çizim Araçları
 | Araç | Açıklama |
 |------|----------|
-| **Lazer İşaretçi** | PowerPoint'in yerel lazer modunu uzaktan kontrol edin (Ctrl+L) |
+| **Lazer İşaretçi** | PowerPoint'in yerel lazer modunu uzaktan kontrol edin (Ctrl+L); Impress'te UNO ile, WPS'te görünür fare imleciyle |
 | **Kalem** | Sunum üzerine serbest çizim yapın (Ctrl+P) |
 | **Vurgulayıcı** | Önemli alanları fosforlu kalemle işaretleyin (Ctrl+I) |
-| **Silgi** | Çizimleri temizleyin (Ctrl+E) |
-| **Kalem Rengi Değiştirme** | COM otomasyonu ile kalem rengini dinamik olarak değiştirin |
+| **Silgi / Tümünü Sil** | Çizimleri tek tek silin (Ctrl+E) veya slayttaki tüm çizimleri temizleyin |
+| **Kalem ve Vurgulayıcı Rengi** | Kalem ve vurgulayıcı rengini telefondan seçin |
+| **Çizimleri Koru** | Ayarlar'dan açılır: kapalıyken (varsayılan) slayt değişince çizimler silinir, açıkken slayta dönünce yeniden görünür |
+| **Birden Fazla Telefon** | Bir çizimi/lazeri başlatan telefon işaretçiyi o hareket bitene kadar tutar; aynı anda basılan İleri/Geri tek slayt ilerletir |
 
 ### 🎵 Medya & Ses Kontrolü
 | Özellik | Açıklama |
@@ -64,6 +69,15 @@
 | **Son Cihazlar** | Daha önce bağlandığınız cihazlara hızla yeniden bağlanın (son 5 cihaz saklanır) |
 | **Otomatik Yeniden Bağlanma** | Bağlantı koptuğunda otomatik olarak yeniden bağlanma desteği |
 | **Arka Plan Desteği** | Uygulama arka plandayken veya telefon kilitliyken dahi bağlantıyı koruyun ve kontrol etmeye devam edin |
+| **Telefon Adı** | PC'nin bağlı cihazlar listesinde telefonunuzun adı (veya modeli) görünür |
+
+### 🌍 Arayüz
+| Özellik | Açıklama |
+|---------|----------|
+| **Türkçe / İngilizce** | Her iki uygulama da Türkçe ve İngilizce; dil sistemi takip eder veya ayarlardan seçilir (Android 13+ uygulama dili ayarı da desteklenir) |
+| **Açık / Koyu Tema** | Sistemin açık/koyu modunu takip eder |
+| **Azaltılmış Hareket** | Sistem daha az animasyon istediğinde animasyonlar kapanır |
+| **Ortak Tasarım Sistemi** | Telefon ve PC uygulaması aynı renk, yazı tipi (Space Grotesk, Inter) ve bileşenleri kullanır; bkz. [`brand/BRAND.md`](brand/BRAND.md) |
 
 ### 🔒 Güvenlik
 | Özellik | Açıklama |
@@ -76,7 +90,6 @@
 | **Bağlı Cihazlar** | PC bağlı telefonları listeler; "Çıkar" o telefonun bağlantısını keser ve PIN'i yeniler |
 | **Kimlik Doğrulama Zaman Aşımı** | Bağlanan istemci 5 saniye içinde doğrulanmazsa bağlantı kapatılır |
 | **Odak Kontrolü** | Windows'ta çizim/siyah ekran kısayolları yalnızca slayt gösterisi penceresine gönderilir; gösteri başka bir pencerenin (Word, sunumun kendi düzenleyicisi) arkasındaysa önce öne getirilir, kısayollar başka bir pencereye yazılmaz |
-| **WPS Office** | Windows'ta WPS Presentation, PowerPoint ile aynı COM arayüzünden (`KWPP.Application`) kontrol edilir; Linux'ta RPC ve kısayollarla (aşağıya bakın). WPS'te lazer yoktur, yerine görünür fare imleci kullanılır. Windows'ta WPS 12.2 ile denendi: gezinme, siyah/beyaz ekran, kalem, fosforlu kalem, silgi, renkler, tümünü sil. Video oynat/duraklat videoya tıklanarak yapılır; WPS'te başa sarma yoktur |
 | **Canlı Ağ İzleme** | Ağ profiliniz sürekli izlenir; herkese açık ağ tespit edilirse uyarılır ve ağ ayarlarını açabilirsiniz |
 
 ---
@@ -86,12 +99,12 @@
 ```text
 ┌─────────────────────────┐                            ┌─────────────────────────┐
 │     📱 Mobile Client    │      Wi-Fi (WSS/TLS)       │    🖥️ PC Server App     │
-│     (Flutter App)       │◄──────────────────────────►│  (Flutter Windows/Linux) │
-│  Android                │       Local Network         │                         │
+│     (Flutter App)       │◄──────────────────────────►│ (Flutter Windows/Linux) │
+│  Android                │       Local Network        │                         │
 ├─────────────────────────┤                            ├─────────────────────────┤
 │ • QR Tarama             │      ◄── PIN Auth ──►      │ • WebSocket Server      │
-│ • mDNS Keşfi            │      ◄── Commands ──►      │ • Win32 Input Simulator │
-│ • Touchpad Girişi       │      ◄── SlideState ►      │ • PowerShell COM Bridge │
+│ • mDNS Keşfi            │      ◄── Commands ──►      │ • SendInput / uinput    │
+│ • Touchpad Girişi       │      ◄── SlideState ►      │ • COM / UNO / WPS köprü │
 │ • Çizim Araçları        │      ◄── Mouse Data ►      │ • mDNS Advertisement    │
 │ • Sunum Zamanlayıcı     │                            │ • QR Kod Oluşturucu     │
 │ • Haptic Feedback       │                            │                         │
@@ -113,22 +126,27 @@ QuickRemote/
 ├── quick_remote_app/              # 📱 Flutter Mobil Uygulaması (Android)
 │   ├── lib/
 │   │   ├── main.dart              # Uygulama giriş noktası & tema yapılandırması
+│   │   ├── l10n/                  # Arayüz metinleri (app_tr.arb, app_en.arb) ve hata metinleri
 │   │   ├── models/                # Veri modelleri (presentation_analytics, draw_tool vb.)
 │   │   ├── providers/             # Ayar durumu ve state yönetimi
 │   │   ├── repositories/          # Veri tabanı ve geçmiş kayıt işlemleri
 │   │   ├── screens/               # Uygulama arayüzleri (Modüler Yapı)
 │   │   │   ├── analytics/         # Sunum analitiği ve rapor ekranları
-│   │   │   ├── bt_remote/         # Bluetooth kontrol ekranları (Yeni)
+│   │   │   ├── bt_connect/        # Bluetooth eşleştirme ekranı
+│   │   │   ├── bt_remote/         # Bluetooth kontrol ekranları
 │   │   │   ├── home/              # Ana ekran – bağlantı yönetimi
 │   │   │   ├── remote/            # Uzaktan kumanda ekranı (kontroller + touchpad)
+│   │   │   ├── scan/              # QR kod tarama
 │   │   │   └── settings/          # Ayarlar ve geçmiş
 │   │   ├── services/              # Arka plan servisleri
-│   │   │   ├── bluetooth/         # Bluetooth HID servisleri (Yeni)
+│   │   │   ├── bluetooth/         # Bluetooth HID servisleri
 │   │   │   ├── websocket/         # WebSocket istemcisi, analitik ve state takibi
 │   │   │   └── discovery_service.dart
-│   │   ├── utils/                 # Yardımcı fonksiyonlar, UI bileşenleri (app_dialog vb.)
-│   │   └── widgets/               # Ortak kullanılan widgetlar (presentation_timer vb.)
-│   └── test/                      # 🧪 Birim ve widget testleri (ayarlar, BT tuş eşlemesi, hareket biriktirici)
+│   │   ├── theme/                 # Tasarım sistemi: renkler, palet (açık/koyu), tipografi, token'lar, tema
+│   │   ├── utils/                 # Yardımcı fonksiyonlar, popup'lar (app_dialog, app_bottom_sheet vb.)
+│   │   └── widgets/               # Ortak widget'lar: ui/ (buton, kart, uyarı…), brand/ (logo, açılış), presentation_timer
+│   ├── assets/fonts/              # Space Grotesk ve Inter (uygulamaya gömülü)
+│   └── test/                      # 🧪 Birim ve widget testleri (ayarlar, BT tuş eşlemesi, çeviriler, hata metinleri)
 │
 ├── quick_remote_pc/               # 🖥️ Flutter Masaüstü Uygulaması (Windows / Linux)
 │   ├── assets/linux/              # LibreOffice Impress ve WPS köprüleri (impress_bridge.py, wps_bridge.py)
@@ -136,13 +154,15 @@ QuickRemote/
 │   │   └── python/                # Impress ve WPS köprüsü testleri (unittest)
 │   └── lib/
 │       ├── main.dart              # Uygulama giriş noktası & Provider yapılandırması
-│       ├── providers/             # State yönetimi (server_provider vb.)
+│       ├── l10n/                  # Arayüz metinleri (app_tr.arb, app_en.arb)
+│       ├── providers/             # State yönetimi (server_provider, language_provider vb.)
 │       ├── screens/
 │       │   └── home/              # Ana ekran – ağ durumu, public network uyarıları, ayarlar
 │       ├── services/              # Arka plan servisleri
 │       │   ├── input/             # Girdi: windows/ (SendInput, PowerPoint/WPS COM, SMTC), linux/ (uinput, Impress, WPS, pactl, MPRIS)
 │       │   └── server/            # Sunucu yönetimi (Auth, Network, State)
-│       └── widgets/               # Ortak kullanılan widgetlar (hover efektleri vb.)
+│       ├── theme/                 # Tasarım sistemi (telefon uygulamasıyla aynı token'lar)
+│       └── widgets/               # Ortak widget'lar: ui/ (buton, kart, durum çipi…), brand/ (logo)
 │
 ├── packages/
 │   └── quick_remote_shared/       # 📦 Paylaşılan Dart Paketi
@@ -152,13 +172,20 @@ QuickRemote/
 │       └── test/
 │
 ├── landing-page/                  # 🌐 Tanıtım Web Sitesi
-│   ├── index.html
+│   ├── index.html                 # Türkçe
+│   ├── en/index.html              # İngilizce
 │   ├── style.css
 │   └── assets/
 │       ├── hero-mockup.jpg
 │       └── logo.png
 │
-├── logo/                          # 🎨 Logo ve Konsept Görselleri
+├── brand/                         # 🎨 Marka kimliği
+│   ├── BRAND.md                   # Stil rehberi: logo, renkler, tipografi, hareket, bileşenler
+│   ├── logo/                      # Logo kaynakları (SVG): ikon, işaret, wordmark, favicon
+│   ├── export/                    # Hazır PNG/ICO çıktıları
+│   └── tools/export_assets.sh     # SVG'lerden uygulama ikonlarını üretir
+│
+├── logo/                          # Eski logo ve konsept görselleri
 │   ├── quick_remote_icon.jpg
 │   ├── quick_remote_concept_b.jpg
 │   └── quick_remote_concept_c.jpg
@@ -185,7 +212,8 @@ QuickRemote/
 | **permission_handler** | Gerekli sistem izinlerinin yönetimi |
 | **crypto** | Sertifika parmak izi (SHA-256) |
 | **provider** | Durum yönetimi |
-| **google_fonts** | Modern UI tasarımı |
+| **shared_preferences** | Ayarlar, son cihazlar ve sabitlenen sertifikalar |
+| **flutter_localizations & intl** | Türkçe / İngilizce arayüz |
 
 ### Masaüstü Uygulama (Server)
 | Teknoloji | Kullanım |
@@ -193,11 +221,16 @@ QuickRemote/
 | **Flutter & Dart** | Windows ve Linux masaüstü uygulaması |
 | **dart:io HttpServer** | TLS destekli WebSocket sunucusu |
 | **win32 & ffi** | Windows SendInput API ile tuş/fare simülasyonu |
-| **PowerShell COM & Scripts** | PowerPoint COM otomasyonu, Sistem Ses Seviyesi ve Medya (SMTC) kontrolü |
+| **PowerShell COM & Scripts** | PowerPoint/WPS COM otomasyonu, Sistem Ses Seviyesi ve Medya (SMTC) kontrolü |
+| **uinput (FFI)** | Linux'ta sanal klavye/fare (X11 ve Wayland) |
+| **Python köprüleri** | LibreOffice Impress (UNO) ve WPS (`pywpsrpc`) kontrolü |
+| **dbus** | Linux'ta MPRIS medya kontrolü |
 | **nsd / Avahi** | mDNS servis kaydı (Windows / Linux) |
 | **qr_flutter** | QR kod oluşturma |
 | **window_manager** | Pencere yönetimi |
 | **screen_retriever** | Ekran bilgileri |
+| **file_selector** | Linux'ta WPS ile açılacak sunumu seçme |
+| **flutter_localizations & intl** | Türkçe / İngilizce arayüz |
 
 ### İletişim
 | Protokol | Açıklama |
@@ -214,7 +247,8 @@ QuickRemote/
 
 ### Gereksinimler
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.11+)
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.47+ (Dart 3.11+)
+- Android derlemesi için JDK 17–25 (Android Studio'nun JBR'si yeterli; daha yeni bir JDK sistem varsayılanıysa `flutter config --jdk-dir <yol>` ile 17–25 arası bir JDK gösterin)
 - PC uygulaması için Windows 10/11 **veya** Linux (X11 ya da Wayland; KDE, GNOME vb.)
 - Aynı Wi-Fi ağına bağlı cihazlar (PC ve Telefon)
 
@@ -312,6 +346,19 @@ flutter run
 
 ---
 
+### 4. Testler
+
+```bash
+(cd quick_remote_app && flutter test)            # telefon uygulaması
+(cd quick_remote_pc && flutter test)             # PC sunucusu
+(cd packages/quick_remote_shared && dart test)   # paylaşılan paket
+python3 -m unittest discover -s quick_remote_pc/test/python   # Impress/WPS köprüleri (repo kökünden; LibreOffice veya WPS gerekmez)
+```
+
+> **Not:** Repo yolu ASCII olmayan karakter içeriyorsa (ör. `Masaüstü`) `flutter analyze` çöker; yerine `dart analyze` kullanın.
+
+---
+
 ## 📡 Komut Protokolü
 
 Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
@@ -327,13 +374,20 @@ Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
 | `MODE_PEN` | Kalem modu (Ctrl+P) |
 | `MODE_HIGHLIGHTER` | Vurgulayıcı modu (Ctrl+I) |
 | `MODE_ERASER` | Silgi modu (Ctrl+E) |
+| `LASER_OFF` | Lazeri kapat |
+| `ERASE_ALL` | Slayttaki tüm çizimleri sil |
+| `BLACK_SCREEN` / `WHITE_SCREEN` | Siyah / beyaz ekran (B / W) |
 | `SET_PEN_COLOR:<bgr>` | Kalem rengini BGR değeri ile değiştir |
+| `SET_HIGHLIGHTER_COLOR:<bgr>` | Vurgulayıcı rengini BGR değeri ile değiştir |
+| `SET_KEEP_INK:0/1` | Slayt değişince çizimleri koru / sil (telefonun ayarı) |
 | `LEFT_CLICK` / `RIGHT_CLICK` | Sol / sağ fare tıklaması |
 | `LEFT_DOWN` / `LEFT_UP` | Fare sürükleme (basılı tut / bırak) |
 | `REFRESH_STATE` | Slayt durumunu yenile |
 | `MEDIA_PLAY_PAUSE` / `MEDIA_REWIND` | PPT gömülü video oynat/duraklat ve geri sar |
 | `VOLUME_UP` / `VOLUME_DOWN` / `VOLUME_MUTE` / `VOLUME_SET:<n>` | Sistem ses seviyesi kontrolleri |
 | `SYSTEM_MEDIA_PLAY_PAUSE` vb. | Sistem medya kontrolleri (Sonraki, Önceki, Durdur) |
+
+Çizim modları, `ERASE_ALL` ve siyah/beyaz ekran yalnızca bir slayt gösterisi açıkken uygulanır. Yüksek frekanslı fare/lazer hareketi JSON yerine 9 baytlık ikili çerçevelerle gönderilir. Başarısız bir komut `STATUS` `COMMAND_FAILED` ve bir hata koduyla bildirilir; metni telefon kendi dilinde gösterir.
 
 ---
 
@@ -343,14 +397,14 @@ Tüm komutlar `quick_remote_shared` paketi üzerinden paylaşılır:
  İstemci                                      Sunucu
     │                                            │
     │──── TLS Handshake ────────────────────────►│
-    │◄─── Self-Signed Cert ─────────────────────│
+    │◄─── Self-Signed Cert ──────────────────────│
     │                                            │
-    │──── WebSocket Upgrade ───────────────────►│
-    │──── {"auth": PIN} (TLS içinde) ─────────►│
-    │◄─── AUTH_OK / AUTH_FAIL ──────────────────│
+    │──── WebSocket Upgrade ────────────────────►│
+    │──── {"auth": PIN, "name": …} (TLS) ───────►│
+    │◄─── AUTH_OK / AUTH_FAIL ───────────────────│
     │                                            │
-    │──── Komutlar (şifreli kanal) ────────────►│
-    │◄─── Slayt durumu (şifreli kanal) ────────│
+    │──── Komutlar (şifreli kanal) ─────────────►│
+    │◄─── Slayt durumu (şifreli kanal) ──────────│
 ```
 
 - Tüm trafik **TLS ile şifrelenir**

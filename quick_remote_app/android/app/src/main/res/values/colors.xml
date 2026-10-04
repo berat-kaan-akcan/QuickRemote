@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="splash_background">#0F172A</color>
-	<color name="ic_launcher_background">#0F172A</color>
+    <!-- Brand colors (brand/BRAND.md): Paper in light mode, Ink in dark mode. -->
+    <color name="splash_background">#F4F5FA</color>
+    <color name="ic_launcher_background">#2F4BE0</color>
 </resources>
