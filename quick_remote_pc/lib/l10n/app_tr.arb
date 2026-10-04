@@ -44,7 +44,7 @@
   "wpsConnected": "WPS bağlı: buradan açılan sunum tam kontrol edilir",
   "openPresentation": "Sunum aç",
   "wpsReady": "WPS: slayt numarası, notlar ve kalem rengi için sunumu buradan açın",
-  "wpsNoRpc": "WPS yalnızca klavye ile kontrol ediliyor. Tam kontrol için WPS desteğini kurun (pywpsrpc, internet gerekir).",
+  "wpsNoRpc": "WPS şu an temel modda: slaytları ileri-geri alabilirsiniz ama telefonda slayt numarası ve notlar görünmez. Tam kontrol için \"Kur\"a basın (bir kez internet gerekir).",
   "install": "Kur",
   "wpsInstalled": "WPS desteği kuruldu.",
   "wpsInstallFailed": "WPS desteği kurulamadı (python3-venv ve internet gerekir).",

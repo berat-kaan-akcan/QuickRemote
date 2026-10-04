@@ -231,7 +231,10 @@ udevadm settle
         debugPrint('pip install pywpsrpc failed: ${pip.stderr}');
         return false;
       }
-      final check = await Process.run(python, ['-c', 'import pywpsrpc.rpcwppapi']);
+      // pywpsrpc's sip modules segfault at interpreter shutdown (exit 139),
+      // so the check leaves through os._exit, as wps_bridge.py does.
+      final check =
+          await Process.run(python, ['-c', 'import os, pywpsrpc.rpcwppapi; os._exit(0)']);
       if (check.exitCode != 0) {
         debugPrint('pywpsrpc does not load: ${check.stderr}');
         return false;
