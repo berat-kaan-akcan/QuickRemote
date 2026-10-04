@@ -149,7 +149,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wpsNoRpc =>
-      'WPS is controlled with keys only. Install WPS support for full control (pywpsrpc, needs internet).';
+      'WPS is in basic mode: you can move between slides, but the phone can\'t show slide numbers or notes. Press \"Install\" for full control (needs internet once).';
 
   @override
   String get install => 'Install';

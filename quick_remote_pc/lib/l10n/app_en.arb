@@ -41,7 +41,7 @@
   "wpsConnected": "WPS connected: a presentation opened here is fully controlled",
   "openPresentation": "Open presentation",
   "wpsReady": "WPS: open the presentation here for slide numbers, notes and pen colors",
-  "wpsNoRpc": "WPS is controlled with keys only. Install WPS support for full control (pywpsrpc, needs internet).",
+  "wpsNoRpc": "WPS is in basic mode: you can move between slides, but the phone can't show slide numbers or notes. Press \"Install\" for full control (needs internet once).",
   "install": "Install",
   "wpsInstalled": "WPS support installed.",
   "wpsInstallFailed": "Couldn't install WPS support (needs python3-venv and internet).",
