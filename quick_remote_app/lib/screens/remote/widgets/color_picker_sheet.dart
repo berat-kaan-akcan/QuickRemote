@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../models/draw_tool.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class ColorPickerSheet {
   static void show(BuildContext context, DrawTool tool, void Function(String) onSend) {
@@ -15,32 +16,32 @@ class ColorPickerSheet {
         final colors = [
           {
             'name': context.l10n.colorRed,
-            'color': const Color(0xFFFF1744),
+            'color': AppColors.inkRed,
             'bgr': 255,
           },
           {
             'name': context.l10n.colorBlue,
-            'color': const Color(0xFF2979FF),
+            'color': AppColors.inkBlue,
             'bgr': 16711680,
           },
           {
             'name': context.l10n.colorGreen,
-            'color': const Color(0xFF00E676),
+            'color': AppColors.inkGreen,
             'bgr': 65280,
           },
           {
             'name': context.l10n.colorYellow,
-            'color': const Color(0xFFFFEA00),
+            'color': AppColors.inkYellow,
             'bgr': 65535,
           },
           {
             'name': context.l10n.colorWhite,
-            'color': const Color(0xFFFFFFFF),
+            'color': AppColors.inkWhite,
             'bgr': 16777215,
           },
           {
             'name': context.l10n.colorPurple,
-            'color': const Color(0xFFD500F9),
+            'color': AppColors.inkPurple,
             'bgr': 8388736,
           },
         ];
@@ -52,7 +53,7 @@ class ColorPickerSheet {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B).withValues(alpha: 0.85),
+                color: AppColors.surface.withValues(alpha: 0.85),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(32),
                 ),

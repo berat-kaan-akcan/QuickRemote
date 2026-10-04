@@ -4,11 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'l10n/app_language.dart';
-import 'screens/home_screen.dart';
+import 'screens/home/home_screen.dart';
 import 'services/background_session.dart';
 import 'services/websocket_service.dart';
 import 'providers/settings_provider.dart';
 import 'services/discovery_service.dart';
+import 'theme/app_colors.dart';
 
 // Background execution starts with a remote screen (services/background_session.dart).
 void main() {
@@ -47,8 +48,8 @@ class QuickRemoteApp extends StatelessWidget {
           themeMode: ThemeMode.dark,
           darkTheme: ThemeData(
             brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Space Black
-            colorSchemeSeed: const Color(0xFF005B96),
+            scaffoldBackgroundColor: AppColors.background, // Deep Space Black
+            colorSchemeSeed: AppColors.primary,
             useMaterial3: true,
             fontFamily: 'Inter',
           ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
-import '../../../../services/websocket_service.dart';
+import '../../../services/websocket_service.dart';
 import '../../../l10n/app_language.dart';
 import '../../../l10n/failure_text.dart';
 import '../../../utils/ui/app_dialog.dart';

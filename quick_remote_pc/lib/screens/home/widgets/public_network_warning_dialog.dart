@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../services/websocket_server.dart';
+import '../../../services/websocket_server.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class PublicNetworkWarningDialog extends StatefulWidget {
   final WebSocketServer server;
@@ -19,9 +20,9 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      icon: const Icon(Icons.wifi_tethering_rounded, color: Color(0xFFFF9800), size: 48),
+      icon: const Icon(Icons.wifi_tethering_rounded, color: AppColors.warning, size: 48),
       title: Text(
         context.l10n.publicNetworkTitle,
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -43,8 +44,8 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
               icon: const Icon(Icons.settings_rounded, size: 16),
               label: Text(context.l10n.openNetworkSettings, style: TextStyle(fontSize: 13)),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF00BCD4),
-                side: const BorderSide(color: Color(0xFF00BCD4), width: 1),
+                foregroundColor: AppColors.accent,
+                side: const BorderSide(color: AppColors.accent, width: 1),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -58,7 +59,7 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
                 height: 24,
                 child: Checkbox(
                   value: _dontShowAgain,
-                  activeColor: const Color(0xFFFF9800),
+                  activeColor: AppColors.warning,
                   side: const BorderSide(color: Colors.white54),
                   onChanged: (val) {
                     setState(() => _dontShowAgain = val ?? false);
@@ -95,7 +96,7 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
             if (context.mounted) Navigator.of(context).pop(true);
           },
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFFF9800),
+            backgroundColor: AppColors.warning,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: Text(context.l10n.continueAction, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),

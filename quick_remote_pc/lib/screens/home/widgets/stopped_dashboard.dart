@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/start_error_text.dart';
-import '../../../../providers/server_provider.dart';
-import '../../../../widgets/hover_scale.dart';
-import '../../../../widgets/status_snack_bar.dart';
+import '../../../providers/server_provider.dart';
+import '../../../widgets/hover_scale.dart';
+import '../../../widgets/status_snack_bar.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class StoppedDashboard extends StatelessWidget {
   const StoppedDashboard({super.key});
@@ -60,12 +61,12 @@ class StoppedDashboard extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF005B96), Color(0xFF00BCD4)],
+                  colors: [AppColors.primary, AppColors.accent],
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF005B96).withValues(alpha: 0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 30,
                     spreadRadius: 2,
                   ),

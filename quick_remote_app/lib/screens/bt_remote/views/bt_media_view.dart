@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../remote/widgets/glass_panel.dart';
-import '../../remote/widgets/premium_media_btn.dart';
+import '../../remote/widgets/media_labels.dart';
+import '../widgets/volume_pill_button.dart';
+import '../../remote/widgets/media_transport_row.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Tab 2: Media View  (WiFi MediaControlView ile aynı tasarım)
@@ -28,21 +30,7 @@ class BtMediaView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Başlık — WiFi ile aynı
-            Row(
-              children: [
-                Icon(Icons.queue_music_rounded, color: Colors.white70, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  context.l10n.mediaControlTitle,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
+            const MediaTitle(),
             const SizedBox(height: 16),
             Expanded(
               child: Center(
@@ -53,20 +41,20 @@ class BtMediaView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Sistem Medya Kontrolleri
-                      _buildSectionLabel(
+                      SectionLabel(
                         icon: Icons.album_rounded,
                         label: context.l10n.systemMedia,
-                        color: const Color(0xFFF43F5E),
+                        color: AppColors.mediaRose,
                       ),
                       const SizedBox(height: 8),
                       _buildSystemMediaPanel(context),
                       const SizedBox(height: 24),
 
                       // Sistem Sesi
-                      _buildSectionLabel(
+                      SectionLabel(
                         icon: Icons.volume_up_rounded,
                         label: context.l10n.systemVolume,
-                        color: const Color(0xFF0EA5E9),
+                        color: AppColors.mediaSky,
                       ),
                       const SizedBox(height: 8),
                       _buildVolumePanel(context),
@@ -76,13 +64,13 @@ class BtMediaView extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1565C0).withValues(alpha: 0.08),
+                          color: AppColors.bluetooth.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFF1565C0).withValues(alpha: 0.2)),
+                          border: Border.all(color: AppColors.bluetooth.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.info_outline_rounded, color: Color(0xFF64B5F6), size: 16),
+                            const Icon(Icons.info_outline_rounded, color: AppColors.bluetoothLight, size: 16),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -109,30 +97,8 @@ class BtMediaView extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionLabel({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 16),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSystemMediaPanel(BuildContext context) {
-    const accent = Color(0xFFF43F5E);
+    const accent = AppColors.mediaRose;
     return GlassPanel(
       borderColor: accent.withValues(alpha: 0.3),
       gradientColors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
@@ -182,41 +148,12 @@ class BtMediaView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.only(top: 12),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-              ),
-            ),
-            child: Row(
-              children: [
-                PremiumMediaBtn(
-                  icon: Icons.skip_previous_rounded,
-                  label: '',
-                  color: Colors.white,
-                  onTap: isConnected ? () => send(RemoteCommands.sysMediaPrev) : null,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: PremiumMediaBtn(
-                    icon: Icons.play_arrow_rounded,
-                    label: context.l10n.mediaPlayPause,
-                    color: Colors.white,
-                    large: true,
-                    glow: true,
-                    onTap: isConnected ? () => send(RemoteCommands.sysMediaPlayPause) : null,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PremiumMediaBtn(
-                  icon: Icons.skip_next_rounded,
-                  label: '',
-                  color: Colors.white,
-                  onTap: isConnected ? () => send(RemoteCommands.sysMediaNext) : null,
-                ),
-              ],
-            ),
+          MediaTransportRow(
+            playIcon: Icons.play_arrow_rounded,
+            playLabel: context.l10n.mediaPlayPause,
+            onPrev: isConnected ? () => send(RemoteCommands.sysMediaPrev) : null,
+            onPlayPause: isConnected ? () => send(RemoteCommands.sysMediaPlayPause) : null,
+            onNext: isConnected ? () => send(RemoteCommands.sysMediaNext) : null,
           ),
         ],
       ),
@@ -224,7 +161,7 @@ class BtMediaView extends StatelessWidget {
   }
 
   Widget _buildVolumePanel(BuildContext context) {
-    const accent = Color(0xFF38BDF8);
+    const accent = AppColors.mediaSkyLight;
     return GlassPanel(
       borderColor: accent.withValues(alpha: 0.3),
       gradientColors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
@@ -245,84 +182,26 @@ class BtMediaView extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _PillBtn(
+              VolumePillButton(
                 icon: Icons.remove_rounded,
                 color: accent,
                 isLeft: true,
                 onTap: isConnected ? () => send(RemoteCommands.volumeDown) : null,
               ),
               Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
-              _PillBtn(
+              VolumePillButton(
                 icon: Icons.volume_off_rounded,
                 color: accent,
                 onTap: isConnected ? () => send(RemoteCommands.volumeMute) : null,
               ),
               Container(width: 1, height: 28, color: accent.withValues(alpha: 0.2)),
-              _PillBtn(
+              VolumePillButton(
                 icon: Icons.add_rounded,
                 color: accent,
                 isRight: true,
                 onTap: isConnected ? () => send(RemoteCommands.volumeUp) : null,
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Premium Pill Button Segment ──────────────────────────────────────────────
-class _PillBtn extends StatefulWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-  final bool isLeft;
-  final bool isRight;
-
-  const _PillBtn({
-    required this.icon,
-    required this.color,
-    this.onTap,
-    this.isLeft = false,
-    this.isRight = false,
-  });
-
-  @override
-  State<_PillBtn> createState() => _PillBtnState();
-}
-
-class _PillBtnState extends State<_PillBtn> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = widget.onTap != null;
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: enabled ? (_) => setState(() => _isPressed = true) : null,
-        onTapUp: enabled
-            ? (_) {
-                setState(() => _isPressed = false);
-                HapticFeedback.lightImpact();
-                widget.onTap!();
-              }
-            : null,
-        onTapCancel: enabled ? () => setState(() => _isPressed = false) : null,
-        child: AnimatedOpacity(
-          opacity: enabled ? (_isPressed ? 0.7 : 1.0) : 0.45,
-          duration: const Duration(milliseconds: 100),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: _isPressed ? widget.color.withValues(alpha: 0.15) : Colors.transparent,
-              borderRadius: BorderRadius.horizontal(
-                left: widget.isLeft ? const Radius.circular(40) : Radius.zero,
-                right: widget.isRight ? const Radius.circular(40) : Radius.zero,
-              ),
-            ),
-            child: Icon(widget.icon, color: widget.color, size: 24),
           ),
         ),
       ),

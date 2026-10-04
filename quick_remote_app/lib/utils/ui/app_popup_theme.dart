@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 
 /// Tüm popup'lar (Dialog ve BottomSheet) için ortak tema sabitleri.
 class AppPopupTheme {
   AppPopupTheme._();
 
   // ── Arkaplan Renkleri ──
-  static const Color dialogBg = Color(0xFF1E293B);
-  static const Color bottomSheetBg = Color(0xFF1E293B);
+  static const Color dialogBg = AppColors.surface;
+  static const Color bottomSheetBg = AppColors.surface;
   static const double bottomSheetBgAlpha = 0.85;
-  static const Color fullScreenBg = Color(0xFF0D0D1A);
+  static const Color fullScreenBg = AppColors.background;
 
   // ── Köşe Yuvarlama ──
   static const double dialogRadius = 24.0;
@@ -31,13 +32,13 @@ class AppPopupTheme {
   // ── Metin Renkleri ──
   static const Color titleColor = Colors.white;
   static const Color cancelTextColor = Colors.white70;
-  static const Color hintTextColor = Color(0x66FFFFFF); // white.α0.4
+  static final Color hintTextColor = Colors.white.withValues(alpha: 0.4);
 
   // ── Aksiyon Buton Renkleri (amaca göre) ──
-  static const Color dangerColor = Color(0xFFFF5252);
-  static const Color warningColor = Color(0xFFFF9800);
-  static const Color successColor = Color(0xFF4CAF50);
-  static const Color infoColor = Color(0xFF64FFDA);
+  static const Color dangerColor = AppColors.danger;
+  static const Color warningColor = AppColors.warning;
+  static const Color successColor = AppColors.success;
+  static const Color infoColor = AppColors.info;
 
   // ── Input Field ──
   static InputDecoration inputDecoration({
@@ -51,7 +52,7 @@ class AppPopupTheme {
       hintText: hintText,
       labelText: labelText,
       helperText: helperText,
-      hintStyle: const TextStyle(color: hintTextColor),
+      hintStyle: TextStyle(color: hintTextColor),
       labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
       helperStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
       prefixIcon: prefixIcon,

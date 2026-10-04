@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'glass_panel.dart';
 import 'premium_media_btn.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class PptMediaControls extends StatelessWidget {
   final bool isConnected;
@@ -19,7 +20,7 @@ class PptMediaControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF34D399); // Lighter emerald for glassmorphism
+    const accent = AppColors.mediaEmeraldLight; // Lighter emerald for glassmorphism
 
     return GlassPanel(
       borderColor: accent.withValues(alpha: 0.3),

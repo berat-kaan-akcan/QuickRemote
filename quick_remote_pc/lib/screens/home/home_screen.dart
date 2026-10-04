@@ -8,6 +8,7 @@ import 'widgets/running_dashboard.dart';
 import 'widgets/stopped_dashboard.dart';
 import 'widgets/linux_setup_panel.dart';
 import '../../l10n/app_language.dart';
+import '../../theme/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,78 +17,26 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _bgAnimController;
-
-  @override
-  void initState() {
-    super.initState();
-    _bgAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 15),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _bgAnimController.dispose();
-    super.dispose();
-  }
-
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<WebSocketServerProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Background Blobs
-          AnimatedBuilder(
-            animation: _bgAnimController,
-            builder: (context, child) {
-              return Positioned(
-                top: -50 + (_bgAnimController.value * 30),
-                left: -100 + (_bgAnimController.value * 20),
-                child: RepaintBoundary(
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF005B96).withValues(alpha: 0.15),
-                      boxShadow: [
-                        BoxShadow(color: const Color(0xFF005B96).withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 40)
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+          // Static glow; an endless animation would cost GPU for nothing.
+          Positioned(
+            top: -35,
+            left: -90,
+            child: _glow(AppColors.primary, 300, 0.15),
           ),
-          AnimatedBuilder(
-            animation: _bgAnimController,
-            builder: (context, child) {
-              return Positioned(
-                bottom: -100 - (_bgAnimController.value * 40),
-                right: -50 + (_bgAnimController.value * 20),
-                child: RepaintBoundary(
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF00BCD4).withValues(alpha: 0.1),
-                      boxShadow: [
-                        BoxShadow(color: const Color(0xFF00BCD4).withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 40)
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+          Positioned(
+            bottom: -120,
+            right: -40,
+            child: _glow(AppColors.accent, 250, 0.1),
           ),
-          
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -101,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
+                              color: AppColors.accent.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 4),
                             ),
@@ -195,3 +144,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 }
+
+Widget _glow(Color color, double size, double alpha) => RepaintBoundary(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: alpha),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: alpha * 2), blurRadius: 100, spreadRadius: 40),
+          ],
+        ),
+      ),
+    );

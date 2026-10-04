@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/draw_tool.dart';
 import '../../../l10n/app_language.dart';
+import '../../../theme/app_colors.dart';
 
 class DrawToolBar extends StatelessWidget {
   final DrawTool activeTool;
@@ -39,7 +40,7 @@ class DrawToolBar extends StatelessWidget {
             tool: DrawTool.laser,
             icon: Icons.highlight_rounded,
             label: laserLabel ?? context.l10n.toolLaser,
-            activeColor: const Color(0xFFFF1744),
+            activeColor: AppColors.laser,
           ),
           const SizedBox(width: 4),
         ],
@@ -49,7 +50,7 @@ class DrawToolBar extends StatelessWidget {
             tool: DrawTool.pen,
             icon: Icons.edit_rounded,
             label: context.l10n.toolPen,
-            activeColor: const Color(0xFF00E676),
+            activeColor: AppColors.pen,
             supportsColorPicker: true,
           ),
           const SizedBox(width: 4),
@@ -60,7 +61,7 @@ class DrawToolBar extends StatelessWidget {
             tool: DrawTool.highlighter,
             icon: Icons.border_color_rounded,
             label: context.l10n.toolHighlight,
-            activeColor: const Color(0xFFFFEA00),
+            activeColor: AppColors.highlighter,
             supportsColorPicker: true,
           ),
           const SizedBox(width: 4),
@@ -71,7 +72,7 @@ class DrawToolBar extends StatelessWidget {
             tool: DrawTool.eraser,
             icon: Icons.auto_fix_high_rounded,
             label: context.l10n.toolEraser,
-            activeColor: const Color(0xFFFF9800),
+            activeColor: AppColors.warning,
           ),
           const SizedBox(width: 4),
         ],
