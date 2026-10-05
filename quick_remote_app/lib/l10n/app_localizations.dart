@@ -986,6 +986,90 @@ abstract class AppLocalizations {
   /// **'Bluetooth izni reddedildi. Ayarlardan izin vermelisiniz.'**
   String get btPermissionDenied;
 
+  /// No description provided for @btDisabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth kapalı. Açıp tekrar deneyin.'**
+  String get btDisabled;
+
+  /// No description provided for @btConnectingTo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{device} ile bağlantı kuruluyor...'**
+  String btConnectingTo(String device);
+
+  /// No description provided for @btMakeVisible.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonu görünür yap'**
+  String get btMakeVisible;
+
+  /// No description provided for @btMakeVisibleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayar telefonu ancak görünürken listesinde bulur.'**
+  String get btMakeVisibleHint;
+
+  /// No description provided for @btVisibleFor.
+  ///
+  /// In tr, this message translates to:
+  /// **'{minutes, plural, other{Telefon {minutes} dakika boyunca görünür.}}'**
+  String btVisibleFor(int minutes);
+
+  /// No description provided for @btVisibleRefused.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon görünür yapılmadı.'**
+  String get btVisibleRefused;
+
+  /// No description provided for @btHidUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon klavye olarak kaydedilemedi. Başka bir Bluetooth klavye uygulaması açıksa kapatıp tekrar deneyin.'**
+  String get btHidUnavailable;
+
+  /// No description provided for @btHostRefreshing.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote PC bağlantıyı hazırlıyor...'**
+  String get btHostRefreshing;
+
+  /// No description provided for @btHostUnawareTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayar telefonu klavye olarak tanımıyor'**
+  String get btHostUnawareTitle;
+
+  /// No description provided for @btHostUnawareBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon bu bilgisayarla QuickRemote açık değilken eşleştirilmiş. Bilgisayarda bir kez şunu yapın:'**
+  String get btHostUnawareBody;
+
+  /// No description provided for @btHostUnawareWindows.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarlar → Bluetooth ve cihazlar\'da telefonu kaldırın, sonra bu ekran açıkken yeniden ekleyin.'**
+  String get btHostUnawareWindows;
+
+  /// No description provided for @btHostUnawareLinux.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth ayarlarında telefonun bağlantısını kesip yeniden bağlayın. Olmazsa telefonu kaldırıp bu ekran açıkken yeniden eşleştirin.'**
+  String get btHostUnawareLinux;
+
+  /// No description provided for @btHostUnawareAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayarda QuickRemote PC açıksa bunu kendisi yapar.'**
+  String get btHostUnawareAuto;
+
+  /// No description provided for @btHostUnawareWaiting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayar kabul edince kumanda kendiliğinden açılır.'**
+  String get btHostUnawareWaiting;
+
   /// No description provided for @btErrorRetry.
   ///
   /// In tr, this message translates to:
@@ -1073,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @btPairOnce.
   ///
   /// In tr, this message translates to:
-  /// **'İlk bağlantıda yalnızca bir kez eşleştirme gerekir. Sonraki bağlantılarda otomatik bağlanır.'**
+  /// **'Bu ekran açıkken bir kez eşleştirmeniz yeterli; sonraki bağlantılar otomatiktir.'**
   String get btPairOnce;
 
   /// No description provided for @btConnected.

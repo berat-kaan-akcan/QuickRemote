@@ -10,8 +10,10 @@ import 'l10n/app_language.dart';
 import 'screens/home/home_screen.dart';
 import 'providers/language_provider.dart';
 import 'providers/server_provider.dart';
+import 'services/linux/bluez_hid_repair.dart';
 import 'services/linux/desktop_entry.dart';
 import 'theme/app_theme.dart';
+import 'widgets/min_size.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +38,8 @@ void main() async {
 
   // Gives the window its icon in the taskbar (Wayland finds it by app id).
   if (Platform.isLinux) DesktopEntry.ensureInstalled();
+  // Lets the phone's Bluetooth remote fix a computer that refuses it.
+  if (Platform.isLinux) BluezHidRepair.instance.start();
 }
 
 class QuickRemotePC extends StatelessWidget {
@@ -64,6 +68,7 @@ class QuickRemotePC extends StatelessWidget {
           themeMode: ThemeMode.system,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
+          builder: (context, child) => MinSize(child: child!),
           home: const HomeScreen(),
         ),
       ),

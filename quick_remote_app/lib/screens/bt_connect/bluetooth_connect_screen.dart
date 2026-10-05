@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../services/background_session.dart';
 import '../../services/bluetooth/bt_hid_service.dart';
 import '../bt_remote/bt_remote_screen.dart';
 import 'widgets/bt_pairing_guide.dart';
@@ -12,7 +13,12 @@ import '../../widgets/ui/ui.dart';
 
 /// Bluetooth Classic HID connection screen.
 /// Registers the phone as a BT HID device and guides the user through
-/// Windows-side pairing, then navigates to [BtRemoteScreen] on success.
+/// pairing on the computer, then navigates to [BtRemoteScreen] on success.
+///
+/// Android drops the HID registration of an app that leaves the foreground
+/// without a foreground service, e.g. for its own Bluetooth settings while the
+/// computer pairs, which would then pair without our record. So this screen
+/// holds a [BackgroundSession] too, and registers again when the app returns.
 class BluetoothConnectScreen extends StatefulWidget {
   const BluetoothConnectScreen({super.key});
 
@@ -21,13 +27,14 @@ class BluetoothConnectScreen extends StatefulWidget {
 }
 
 class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _bt = BtHidService.instance;
   StreamSubscription<BtHidConnectionState>? _sub;
   late AnimationController _pulseController;
 
   BtHidConnectionState _state = BtHidConnectionState.disconnected;
   String? _errorMessage;
+  bool _holdsBackground = false;
 
   @override
   void initState() {
@@ -37,8 +44,14 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
+    WidgetsBinding.instance.addObserver(this);
     _sub = _bt.stateStream.listen(_onStateChanged);
     _startAdvertising();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _bt.ensureConnected();
   }
 
   @override
@@ -55,8 +68,10 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
     _pulseController.dispose();
+    if (_holdsBackground) BackgroundSession.release();
     // Don't stop advertising if we successfully connected (screen popped but BT still active)
     if (_state != BtHidConnectionState.connected) {
       _bt.stopAdvertising();
@@ -76,8 +91,9 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       return;
     }
 
-    // Only CONNECT is needed: the PC finds and pairs the phone. Below
-    // Android 12 permission_handler reports it as granted.
+    // CONNECT for the HID profile; ADVERTISE is asked for only when the user
+    // makes the phone visible. Below Android 12 permission_handler reports it
+    // as granted.
     final statuses = await [Permission.bluetoothConnect].request();
 
     final connectStatus = statuses[Permission.bluetoothConnect];
@@ -91,6 +107,14 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       return;
     }
 
+    // Before registering: the dialogs it may open (notifications, battery
+    // optimization) would put the app in the background and drop the
+    // registration.
+    if (!_holdsBackground) {
+      _holdsBackground = true;
+      await BackgroundSession.acquire();
+      if (!mounted) return;
+    }
     await _bt.startAdvertising();
   }
 
@@ -99,7 +123,11 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
     setState(() {
       _state = state;
       if (state == BtHidConnectionState.error) {
-        _errorMessage = context.l10n.btErrorRetry;
+        _errorMessage = switch (_bt.errorReason) {
+          'bluetooth_disabled' => context.l10n.btDisabled,
+          'hid_unavailable' => context.l10n.btHidUnavailable,
+          _ => context.l10n.btErrorRetry,
+        };
       }
     });
     if (state == BtHidConnectionState.connected) {
@@ -148,6 +176,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       BtHidConnectionState.connected => BtConnectedView(
         deviceName: _bt.connectedDeviceName,
       ),
+      BtHidConnectionState.hostUnaware => const BtHostSetupView(),
       _ => _buildWaiting(),
     };
     return AnimatedSwitcher(
@@ -156,7 +185,10 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       switchOutCurve: AppMotion.exit,
       child: KeyedSubtree(
         key: ValueKey(switch (_state) {
-          BtHidConnectionState.unsupported || BtHidConnectionState.error || BtHidConnectionState.connected => _state,
+          BtHidConnectionState.unsupported ||
+          BtHidConnectionState.error ||
+          BtHidConnectionState.connected ||
+          BtHidConnectionState.hostUnaware => _state,
           _ => null,
         }),
         child: Padding(
@@ -213,7 +245,11 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                         opacity: 0.6 + (_pulseController.value * 0.4),
                         child: Text(
                           _state == BtHidConnectionState.advertising
-                              ? context.l10n.btWaitingPairing
+                              ? (_bt.targetName != null
+                                  ? context.l10n.btConnectingTo(_bt.targetName!)
+                                  : context.l10n.btWaitingPairing)
+                              : _state == BtHidConnectionState.refreshing
+                              ? context.l10n.btHostRefreshing
                               : retrying
                               ? context.l10n.btWaitingConnection
                               : context.l10n.btPreparing,
@@ -226,7 +262,8 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                       ),
                     ),
                     const SizedBox(height: AppSpace.sm),
-                    if (_state == BtHidConnectionState.advertising)
+                    if (_state == BtHidConnectionState.advertising ||
+                        _state == BtHidConnectionState.refreshing)
                       GlowingDots(animation: _pulseController)
                     else if (retrying)
                       StatusPill(
