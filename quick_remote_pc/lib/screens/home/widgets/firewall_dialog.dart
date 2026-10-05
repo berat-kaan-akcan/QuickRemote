@@ -10,6 +10,8 @@ Future<bool?> showFirewallDialog(BuildContext context) {
     builder: (ctx) {
       final p = ctx.palette;
       return AlertDialog(
+        // A short window scrolls the content instead of cutting it off.
+        scrollable: true,
         icon: Center(child: IconBadge(icon: Icons.security_rounded, color: p.warning, size: 56)),
         title: Text(
           context.l10n.firewallDialogTitle,

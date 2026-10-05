@@ -18,6 +18,10 @@ class FakeInputService implements InputService {
   bool get handlesLaserPointer => false;
   @override
   void laserPointerMoved(double relX, double relY) => calls.add('laserPointerMoved');
+  @override
+  bool handlesDrawPointer = false;
+  @override
+  void drawPointerMoved(double relX, double relY) => calls.add('drawPointerMoved');
 
   @override
   Future<Map<String, dynamic>?> getSlideState() async => slideState;

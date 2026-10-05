@@ -1,15 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 /// Flutter ↔ Android Kotlin bridge for Bluetooth Classic HID.
 ///
 /// Allows the phone to act as a Bluetooth keyboard + mouse + consumer device.
 /// Only available on Android (API 28+). Use [isSupported()] to check before calling.
 ///
-/// Includes auto-reconnect: when connection drops, the native side will
-/// automatically attempt to reconnect to the last known device. The Flutter
-/// side also schedules a re-advertising call as a fallback.
+/// Includes auto-reconnect: the native side keeps trying the last known
+/// device while advertising is requested. When the computer refuses the
+/// keyboard it asks QuickRemote PC to fix that ([BtHidConnectionState.refreshing])
+/// or reports that the user has to ([BtHidConnectionState.hostUnaware]).
 ///
 /// iOS: BluetoothHidDevice is not available via public API on iOS — this class
 ///      will always return false for [isSupported()] on iOS.
@@ -31,6 +33,15 @@ class BtHidService {
   String? _connectedDeviceName;
   String? get connectedDeviceName => _connectedDeviceName;
 
+  /// The known computer the phone is trying to connect to, if any.
+  String? _targetName;
+  String? get targetName => _targetName;
+
+  /// The native reason of the last [BtHidConnectionState.error], e.g.
+  /// `bluetooth_disabled`.
+  String? _errorReason;
+  String? get errorReason => _errorReason;
+
   StreamSubscription<dynamic>? _eventSubscription;
   final _stateController = StreamController<BtHidConnectionState>.broadcast();
   Stream<BtHidConnectionState> get stateStream => _stateController.stream;
@@ -38,9 +49,6 @@ class BtHidService {
   /// Whether the user has explicitly started advertising (wants BT active).
   bool _advertisingRequested = false;
   bool get isAdvertisingRequested => _advertisingRequested;
-
-  /// Timer for Flutter-side reconnect fallback.
-  Timer? _reconnectTimer;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -55,23 +63,28 @@ class BtHidService {
     }
   }
 
-  /// Register the phone as a BT HID device and become discoverable.
+  /// Register the phone as a BT HID device and connect to the last computer.
   /// Listen to [stateStream] for connection state changes.
   Future<void> startAdvertising() async {
     _advertisingRequested = true;
-    _cancelReconnectTimer();
+    _errorReason = null;
+    _targetName = null;
     _setState(BtHidConnectionState.advertising);
     _eventSubscription ??= _eventChannel.receiveBroadcastStream().listen(
       _onNativeEvent,
       onError: (e) => _setState(BtHidConnectionState.error),
     );
-    await _methodChannel.invokeMethod('startAdvertising');
+    try {
+      await _methodChannel.invokeMethod('startAdvertising', _startArgs);
+    } on PlatformException catch (e) {
+      _errorReason = e.code;
+      _setState(BtHidConnectionState.error);
+    }
   }
 
   /// Stop advertising and disconnect. Cancels auto-reconnect.
   Future<void> stopAdvertising() async {
     _advertisingRequested = false;
-    _cancelReconnectTimer();
     await _methodChannel.invokeMethod('stopAdvertising');
     _eventSubscription?.cancel();
     _eventSubscription = null;
@@ -86,12 +99,26 @@ class BtHidService {
     if (_state == BtHidConnectionState.connected) return;
 
     // Re-start advertising — native side will try reconnecting
-    // to the last known device automatically.
-    _setState(BtHidConnectionState.advertising);
+    // to the last known device automatically. A refusal stays on screen
+    // until the computer accepts the keyboard.
+    if (_state != BtHidConnectionState.refreshing &&
+        _state != BtHidConnectionState.hostUnaware) {
+      _setState(BtHidConnectionState.advertising);
+    }
     try {
-      await _methodChannel.invokeMethod('startAdvertising');
+      await _methodChannel.invokeMethod('startAdvertising', _startArgs);
     } catch (_) {
       // Ignore — native side might already be advertising
+    }
+  }
+
+  /// Asks Android to make the phone visible to computers searching for
+  /// devices (a system dialog). Returns the seconds granted, 0 if refused.
+  Future<int> requestDiscoverable() async {
+    try {
+      return await _methodChannel.invokeMethod<int>('requestDiscoverable') ?? 0;
+    } on PlatformException {
+      return 0;
     }
   }
 
@@ -150,20 +177,30 @@ class BtHidService {
 
   // ── Internals ──────────────────────────────────────────────────────────────
 
+  static const _startArgs = {'repairUuid': BtHidRepair.serviceUuid};
+
   void _onNativeEvent(dynamic raw) {
     final event = raw as String;
     if (event.startsWith('connected:')) {
       _connectedDeviceName = event.substring('connected:'.length);
-      _cancelReconnectTimer();
       _setState(BtHidConnectionState.connected);
     } else if (event == 'disconnected') {
       _connectedDeviceName = null;
       _setState(BtHidConnectionState.disconnected);
-      // Schedule Flutter-side reconnect fallback
-      _scheduleReconnect();
+    } else if (event.startsWith('target:')) {
+      _targetName = event.substring('target:'.length);
+      // The state stays; listeners redraw for the new name.
+      _stateController.add(_state);
+    } else if (event == 'refreshing') {
+      _setState(BtHidConnectionState.refreshing);
+    } else if (event == 'host_unaware') {
+      _setState(BtHidConnectionState.hostUnaware);
     } else if (event == 'unsupported') {
       _setState(BtHidConnectionState.unsupported);
     } else if (event.startsWith('error:')) {
+      _errorReason = event.substring('error:'.length);
+      // The native side gave up; only the user's retry starts again.
+      _advertisingRequested = false;
       _setState(BtHidConnectionState.error);
     }
   }
@@ -175,26 +212,7 @@ class BtHidService {
     }
   }
 
-  /// Schedule a reconnect attempt from Flutter side as a fallback.
-  /// The native side also has its own reconnect logic.
-  void _scheduleReconnect() {
-    if (!_advertisingRequested) return;
-    _cancelReconnectTimer();
-    _reconnectTimer = Timer(const Duration(seconds: 3), () {
-      if (_advertisingRequested &&
-          _state != BtHidConnectionState.connected) {
-        ensureConnected();
-      }
-    });
-  }
-
-  void _cancelReconnectTimer() {
-    _reconnectTimer?.cancel();
-    _reconnectTimer = null;
-  }
-
   void dispose() {
-    _cancelReconnectTimer();
     _eventSubscription?.cancel();
     _stateController.close();
   }
@@ -210,6 +228,15 @@ enum BtHidConnectionState {
 
   /// Connected to a host device (PC).
   connected,
+
+  /// The computer refused the keyboard; QuickRemote PC is making it read the
+  /// phone's records again.
+  refreshing,
+
+  /// The computer refused the keyboard and only the user can make it read the
+  /// phone's records again. Advertising goes on, so the remote opens as soon
+  /// as the computer accepts it.
+  hostUnaware,
 
   /// Device does not support BluetoothHidDevice (or non-Android).
   unsupported,

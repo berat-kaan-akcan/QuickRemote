@@ -42,6 +42,9 @@ class FakeImpress:
     def reset(self):
         self.resets += 1
 
+    def settle(self):
+        self.called.append("settle")
+
     def next(self, _request):
         if self.error:
             raise self.error
@@ -79,7 +82,8 @@ class HandleTest(unittest.TestCase):
     def test_runs_an_allowed_command(self):
         impress = FakeImpress()
         self.assertEqual(bridge.handle(impress, {"cmd": "next"}), {"ok": True})
-        self.assertEqual(impress.called, ["next"])
+        # A move first waits for a redraw of the slide (Impress.settle).
+        self.assertEqual(impress.called, ["settle", "next"])
 
     def test_the_slow_commands_get_a_longer_timeout(self):
         impress = FakeImpress()
@@ -241,6 +245,137 @@ class NavigationDropsInkTest(unittest.TestCase):
         impress._require_running = lambda: ("doc", "pres", ctrl)
         impress.next({"clearInk": False})
         self.assertEqual(ctrl.calls, ["next"])
+
+
+class HighlightTest(unittest.TestCase):
+    class Slide:
+        def __init__(self, transition=0, animated=False):
+            self.TransitionType = transition
+            self.TransitionSubtype = 2 if transition else 0
+            self.removed = []
+            self.animated = animated
+
+        def remove(self, shape):
+            self.removed.append(shape)
+
+        def getAnimationNode(self):
+            return HighlightTest.Node([HighlightTest.Node(["effect"] if self.animated else [])])
+
+    class Node:
+        def __init__(self, children):
+            self.children = children
+
+        def createEnumeration(self):
+            items = iter(self.children)
+            outer = self
+
+            class Enum:
+                def hasMoreElements(self):
+                    return bool(outer._rest)
+
+                def nextElement(self):
+                    return outer._rest.pop(0)
+
+            self._rest = list(items)
+            return Enum()
+
+    class Undo:
+        def lock(self):
+            pass
+
+        def unlock(self):
+            pass
+
+    class Document:
+        def __init__(self, modified):
+            self.modified = modified
+
+        def getUndoManager(self):
+            return HighlightTest.Undo()
+
+        def isModified(self):
+            return self.modified
+
+        def setModified(self, value):
+            self.modified = value
+
+    class Ctrl:
+        def __init__(self, slide):
+            self.slide = slide
+
+        def getCurrentSlide(self):
+            return self.slide
+
+        def setEraseAllInk(self, _value):
+            pass
+
+        def gotoNextEffect(self):
+            pass  # LibreOffice moves a moment later
+
+        def gotoPreviousEffect(self):
+            pass
+
+    def make(self, slide, doc=None):
+        impress = bridge.Impress()
+        ctrl = self.Ctrl(slide)
+        impress._require_running = lambda: (doc, "pres", ctrl)
+        impress.highlights = {"doc": doc or self.Document(False), "shapes": [(slide, "stroke")],
+                              "transitions": [], "leaving": [], "modified": False}
+        return impress, ctrl
+
+    def test_the_shapes_go_once_the_show_left_their_slide(self):
+        first, second = self.Slide(), self.Slide()
+        impress, ctrl = self.make(first)
+        impress.next({})
+        # Removing them while the slide is on screen would redraw it and lose the move.
+        impress._erase_left(ctrl)
+        self.assertEqual(first.removed, [])
+        ctrl.slide = second
+        impress._erase_left(ctrl)
+        self.assertEqual(first.removed, ["stroke"])
+        self.assertEqual(impress.highlights["shapes"], [])
+
+    def test_a_slide_that_stayed_loses_its_shapes_after_a_while(self):
+        first = self.Slide()
+        impress, ctrl = self.make(first)
+        impress.prev({})  # on the first slide: the show stays
+        entry = impress.highlights["leaving"][0]
+        impress.highlights["leaving"] = [(entry[0], entry[1], entry[2] - bridge.LEAVE_SECONDS)]
+        impress._erase_left(ctrl)
+        self.assertEqual(first.removed, ["stroke"])
+        # The slide on screen is drawn again; a move waits for that.
+        self.assertGreater(impress.redraw_until, 0)
+
+    def test_the_setting_keeps_the_shapes(self):
+        first, second = self.Slide(), self.Slide()
+        impress, ctrl = self.make(first)
+        impress.next({"clearInk": False})
+        ctrl.slide = second
+        impress._erase_left(ctrl)
+        self.assertEqual(first.removed, [])
+
+    def test_the_end_of_the_show_restores_the_slides(self):
+        slide = self.Slide(transition=37)
+        doc = self.Document(False)
+        impress, _ctrl = self.make(slide, doc)
+        impress._hold_transition(impress.highlights, slide)
+        self.assertEqual(slide.TransitionType, 0)
+        doc.modified = True
+        impress._release_highlights()
+        self.assertEqual(slide.removed, ["stroke"])
+        self.assertEqual((slide.TransitionType, slide.TransitionSubtype), (37, 2))
+        self.assertFalse(doc.modified)
+        self.assertIsNone(impress.highlights)
+
+    def test_strokes_need_a_new_libreoffice_and_a_still_slide(self):
+        impress = bridge.Impress()
+        impress._has_media = lambda _doc, _slide: False
+        impress.version = (26, 2)
+        self.assertFalse(impress._strokes_possible("doc", self.Ctrl(self.Slide())))
+        impress.version = bridge.STROKE_MIN_VERSION
+        self.assertTrue(impress._strokes_possible("doc", self.Ctrl(self.Slide())))
+        # Every stroke update would start the slide's animations over.
+        self.assertFalse(impress._strokes_possible("doc", self.Ctrl(self.Slide(animated=True))))
 
 
 class Doc:

@@ -10,7 +10,10 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
+import java.io.IOException
+import java.util.UUID
 import java.util.concurrent.Executor
 
 /**
@@ -160,7 +163,11 @@ class BluetoothHidService(private val context: Context) {
     /** True while the user explicitly wants BT HID active. */
     private var isAdvertisingRequested = false
 
-    /** Callback to Flutter: "connected" | "disconnected" | "unsupported" | "error:<msg>" */
+    /**
+     * Callback to Flutter: "connected:<name>" | "disconnected" | "unsupported" |
+     * "target:<name>" (the computer being tried) | "refreshing" |
+     * "host_unaware" | "error:<msg>"
+     */
     var onStateChanged: ((String) -> Unit)? = null
 
     // ── Auto-reconnect ───────────────────────────────────────────────────────
@@ -168,8 +175,29 @@ class BluetoothHidService(private val context: Context) {
     private var lastConnectedAddress: String? = null
     private var reconnectHandler: android.os.Handler? = null
     private var reconnectAttempt = 0
-    private val maxReconnectAttempts = 5
     private val baseReconnectDelayMs = 2000L
+
+    // ── Refused by the host ──────────────────────────────────────────────────
+    // A computer paired while our HID record was not registered refuses the
+    // keyboard: BlueZ drops it at once ("Could not parse HID SDP record") or
+    // refuses it ("unknown device"), and only the computer can read our SDP
+    // records again. QuickRemote PC does that when we connect to its repair
+    // service (BtHidRepair in the shared package); without it the user has to,
+    // and Flutter shows how ("host_unaware").
+    private var repairUuid: UUID? = null
+    private var connectAttemptAtMs = 0L
+    private var connectedAtMs = 0L
+    private var repairRequestedAtMs = 0L
+    /** QuickRemote PC took the repair request; it is not sent again this session. */
+    private var repairDelivered = false
+    /** Paging a computer that is off or away takes 5 s or more; a refusal comes at once. */
+    private val refusedWithinMs = 3000L
+    /** An attempt older than this is taken as lost (no state callback came). */
+    private val attemptTimeoutMs = 15000L
+    /** Refusals this soon after a delivered request mean the PC is still reading our records. */
+    private val repairGraceMs = 15000L
+    /** Without QuickRemote PC the request is repeated this often, in case it gets started. */
+    private val repairRetryMs = 30000L
 
     private val prefs by lazy {
         context.getSharedPreferences("bt_hid_prefs", Context.MODE_PRIVATE)
@@ -195,14 +223,26 @@ class BluetoothHidService(private val context: Context) {
         return mgr.adapter != null
     }
 
-    /** Start HID registration and become discoverable. */
-    fun startAdvertising() {
+    /**
+     * Registers the phone as a HID device (which publishes our SDP record) and
+     * connects to the last host. Making the phone visible to a computer that
+     * searches for devices is a separate request (MainActivity). [repairUuid]
+     * is the service QuickRemote PC offers to read our records again.
+     */
+    fun startAdvertising(repairUuid: String?) {
         if (!isSupported()) {
             onStateChanged?.invoke("unsupported")
             return
         }
+        // A repeat call (app resume) keeps the counters: one repair request
+        // per session.
+        if (!isAdvertisingRequested) {
+            reconnectAttempt = 0
+            repairRequestedAtMs = 0L
+            repairDelivered = false
+        }
+        this.repairUuid = repairUuid?.let { UUID.fromString(it) }
         isAdvertisingRequested = true
-        reconnectAttempt = 0
         loadLastDevice()
 
         val mgr = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -217,10 +257,15 @@ class BluetoothHidService(private val context: Context) {
             reconnectHandler = android.os.Handler(android.os.Looper.getMainLooper())
         }
 
-        // If we already have a HID proxy and it's registered, try to reconnect
-        if (hidDevice != null && isRegistered) {
-            Log.d(TAG, "HID already registered, attempting reconnect")
-            tryReconnectToLastDevice()
+        if (hidDevice != null) {
+            if (isRegistered) {
+                Log.d(TAG, "HID already registered, attempting reconnect")
+                tryReconnectToLastDevice()
+            } else {
+                // Android dropped the registration while the app was in the
+                // background (see onAppStatusChanged).
+                registerOrReport()
+            }
             return
         }
 
@@ -294,11 +339,9 @@ class BluetoothHidService(private val context: Context) {
     private fun scheduleReconnect() {
         if (!isAdvertisingRequested) return
         if (connectedHost != null) return
-        if (reconnectAttempt >= maxReconnectAttempts) {
-            Log.d(TAG, "Max reconnect attempts reached ($maxReconnectAttempts)")
-            return
-        }
-
+        // No attempt limit: the connect screen keeps saying it is waiting,
+        // so it has to keep trying (every 32 s at most). A host that refused
+        // us connects on the next attempt once it has read our records again.
         val delay = baseReconnectDelayMs * (1L shl reconnectAttempt.coerceAtMost(4))
         reconnectAttempt++
         Log.d(TAG, "Scheduling reconnect attempt $reconnectAttempt in ${delay}ms")
@@ -313,6 +356,12 @@ class BluetoothHidService(private val context: Context) {
     private fun tryReconnectToLastDevice() {
         val hid = hidDevice ?: return
         if (connectedHost != null) return
+        // Unregistered, connect() fails; registering again tries anew.
+        if (!isRegistered) return
+        // An attempt is still running (e.g. the app came back meanwhile); its
+        // result schedules the next one. Paging gives up within ~10 s.
+        if (connectAttemptAtMs != 0L &&
+            SystemClock.elapsedRealtime() - connectAttemptAtMs < attemptTimeoutMs) return
 
         // First check if already connected (e.g. OS reconnected in background)
         val connectedDevices = hid.connectedDevices
@@ -333,7 +382,7 @@ class BluetoothHidService(private val context: Context) {
             val target = bonded.find { it.address == targetAddress }
             if (target != null) {
                 Log.d(TAG, "Attempting reconnect to ${target.name ?: target.address}")
-                val result = hid.connect(target)
+                val result = connectHost(hid, target)
                 Log.d(TAG, "Reconnect attempt result: $result")
                 if (!result) {
                     // connect() failed immediately — schedule another try
@@ -351,7 +400,7 @@ class BluetoothHidService(private val context: Context) {
         for (device in bonded) {
             if (device.bluetoothClass?.majorDeviceClass != BluetoothClass.Device.Major.COMPUTER) continue
             Log.d(TAG, "Trying bonded device: ${device.name ?: device.address}")
-            val result = hid.connect(device)
+            val result = connectHost(hid, device)
             if (result) {
                 Log.d(TAG, "Connect initiated to ${device.name}")
                 return
@@ -360,6 +409,64 @@ class BluetoothHidService(private val context: Context) {
 
         // Nothing worked — schedule another attempt
         scheduleReconnect()
+    }
+
+    private fun connectHost(hid: BluetoothHidDevice, host: BluetoothDevice): Boolean {
+        connectAttemptAtMs = SystemClock.elapsedRealtime()
+        val result = hid.connect(host)
+        if (result) {
+            onStateChanged?.invoke("target:${host.name ?: host.address}")
+        } else {
+            connectAttemptAtMs = 0L
+        }
+        return result
+    }
+
+    /** [host] refused the keyboard: has QuickRemote PC read our records again. */
+    private fun onHostRefused(host: BluetoothDevice) {
+        Log.d(TAG, "${host.name ?: host.address} refused the HID link")
+        // Retry every 8 s at most, so the remote opens soon after the fix.
+        reconnectAttempt = reconnectAttempt.coerceAtMost(2)
+        val uuid = repairUuid
+        val sinceRequest = SystemClock.elapsedRealtime() - repairRequestedAtMs
+        if (repairRequestedAtMs != 0L) {
+            if (repairDelivered) {
+                // Within the grace period the PC is still at it; after it,
+                // the request did not help.
+                if (sinceRequest >= repairGraceMs) onStateChanged?.invoke("host_unaware")
+                return
+            }
+            if (sinceRequest < repairRetryMs) return
+        }
+        if (uuid == null) {
+            onStateChanged?.invoke("host_unaware")
+            return
+        }
+        repairRequestedAtMs = SystemClock.elapsedRealtime()
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        Thread {
+            // Connecting is the whole request (nothing is sent). It fails at
+            // once when the computer does not offer the service.
+            val delivered = try {
+                host.createRfcommSocketToServiceRecord(uuid).use { it.connect() }
+                true
+            } catch (e: IOException) {
+                Log.d(TAG, "No QuickRemote PC repair service: ${e.message}")
+                false
+            }
+            mainHandler.post {
+                if (!isAdvertisingRequested || connectedHost != null) return@post
+                if (delivered) {
+                    Log.d(TAG, "QuickRemote PC reads our records again")
+                    repairDelivered = true
+                    repairRequestedAtMs = SystemClock.elapsedRealtime()
+                    reconnectAttempt = 0
+                    onStateChanged?.invoke("refreshing")
+                } else {
+                    onStateChanged?.invoke("host_unaware")
+                }
+            }
+        }.start()
     }
 
     private fun cancelReconnect() {
@@ -386,7 +493,7 @@ class BluetoothHidService(private val context: Context) {
                 onStateChanged?.invoke("connected:${device.name ?: device.address}")
             }
 
-            registerHidApp()
+            registerOrReport()
         }
 
         override fun onServiceDisconnected(profile: Int) {
@@ -406,7 +513,7 @@ class BluetoothHidService(private val context: Context) {
                 Log.d(TAG, "HID app registered")
                 if (pluggedDevice != null && connectedHost == null) {
                     Log.d(TAG, "Connecting to plugged device: ${pluggedDevice.name ?: pluggedDevice.address}")
-                    val connectResult = hidDevice?.connect(pluggedDevice)
+                    val connectResult = hidDevice?.let { connectHost(it, pluggedDevice) }
                     Log.d(TAG, "Connect result: $connectResult")
                 } else if (connectedHost == null) {
                     // Try to reconnect to last known device first
@@ -414,6 +521,13 @@ class BluetoothHidService(private val context: Context) {
                 }
             } else {
                 Log.d(TAG, "HID app unregistered")
+                // Android drops the registration of an app that leaves the
+                // foreground without a foreground service. Registering again
+                // works only in the foreground; otherwise startAdvertising
+                // does it when the app comes back (BtHidService.ensureConnected).
+                if (isAdvertisingRequested && hidDevice != null && registerHidApp()) {
+                    Log.d(TAG, "Registering the HID app again")
+                }
             }
         }
 
@@ -421,24 +535,34 @@ class BluetoothHidService(private val context: Context) {
             when (state) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     connectedHost = device
+                    connectAttemptAtMs = 0L
+                    connectedAtMs = SystemClock.elapsedRealtime()
                     saveLastDevice(device.address)
-                    cancelReconnect()
+                    // Keep reconnectAttempt: it is reset only once the link
+                    // has held (see STATE_DISCONNECTED).
+                    reconnectHandler?.removeCallbacksAndMessages(null)
                     Log.d(TAG, "HID connected to ${device.name}")
                     onStateChanged?.invoke("connected:${device.name ?: device.address}")
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     val wasConnected = connectedHost?.address == device.address
+                    // Android reports a failed attempt more than once.
+                    if (!wasConnected && connectAttemptAtMs == 0L) return
+                    val since = if (wasConnected) connectedAtMs else connectAttemptAtMs
+                    val refused = SystemClock.elapsedRealtime() - since < refusedWithinMs
+                    connectAttemptAtMs = 0L
+                    Log.d(TAG, "HID disconnected from ${device.name}")
                     if (wasConnected) {
                         connectedHost = null
+                        if (!refused) reconnectAttempt = 0
                     }
-                    Log.d(TAG, "HID disconnected from ${device.name}")
-                    onStateChanged?.invoke("disconnected")
-
-                    // Auto-reconnect if still requested
-                    if (wasConnected && isAdvertisingRequested) {
-                        Log.d(TAG, "Connection lost, will attempt auto-reconnect")
-                        scheduleReconnect()
+                    // A failed attempt changes nothing the user sees.
+                    if (refused) {
+                        onHostRefused(device)
+                    } else if (wasConnected) {
+                        onStateChanged?.invoke("disconnected")
                     }
+                    scheduleReconnect()
                 }
             }
         }
@@ -448,12 +572,24 @@ class BluetoothHidService(private val context: Context) {
         }
     }
 
+    /**
+     * Registers, or tells Flutter it cannot: Android lets one app at a time
+     * be a HID device, and only one in the foreground.
+     */
+    private fun registerOrReport() {
+        if (registerHidApp()) return
+        Log.d(TAG, "HID app registration refused")
+        isAdvertisingRequested = false
+        cancelReconnect()
+        onStateChanged?.invoke("error:hid_unavailable")
+    }
+
     @SuppressLint("MissingPermission")
-    private fun registerHidApp() {
+    private fun registerHidApp(): Boolean {
         // Run the callbacks on the main thread, like every other access to
         // connectedHost / isRegistered, instead of on a binder thread.
         val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
         val executor = Executor { mainHandler.post(it) }
-        hidDevice?.registerApp(SDP_SETTINGS, null, null, executor, hidCallback)
+        return hidDevice?.registerApp(SDP_SETTINGS, null, null, executor, hidCallback) ?: false
     }
 }

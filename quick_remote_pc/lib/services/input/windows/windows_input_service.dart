@@ -110,6 +110,10 @@ class WindowsInputService implements InputService {
   bool get handlesLaserPointer => false;
   @override
   void laserPointerMoved(double relX, double relY) {}
+  @override
+  bool get handlesDrawPointer => false;
+  @override
+  void drawPointerMoved(double relX, double relY) {}
 
   @override
   void leftClick() => MouseSimulator.leftClick();

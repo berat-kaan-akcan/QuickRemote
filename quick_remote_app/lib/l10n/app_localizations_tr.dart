@@ -503,6 +503,65 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bluetooth izni reddedildi. Ayarlardan izin vermelisiniz.';
 
   @override
+  String get btDisabled => 'Bluetooth kapalı. Açıp tekrar deneyin.';
+
+  @override
+  String btConnectingTo(String device) {
+    return '$device ile bağlantı kuruluyor...';
+  }
+
+  @override
+  String get btMakeVisible => 'Telefonu görünür yap';
+
+  @override
+  String get btMakeVisibleHint =>
+      'Bilgisayar telefonu ancak görünürken listesinde bulur.';
+
+  @override
+  String btVisibleFor(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'Telefon $minutes dakika boyunca görünür.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get btVisibleRefused => 'Telefon görünür yapılmadı.';
+
+  @override
+  String get btHidUnavailable =>
+      'Telefon klavye olarak kaydedilemedi. Başka bir Bluetooth klavye uygulaması açıksa kapatıp tekrar deneyin.';
+
+  @override
+  String get btHostRefreshing => 'QuickRemote PC bağlantıyı hazırlıyor...';
+
+  @override
+  String get btHostUnawareTitle =>
+      'Bilgisayar telefonu klavye olarak tanımıyor';
+
+  @override
+  String get btHostUnawareBody =>
+      'Telefon bu bilgisayarla QuickRemote açık değilken eşleştirilmiş. Bilgisayarda bir kez şunu yapın:';
+
+  @override
+  String get btHostUnawareWindows =>
+      'Ayarlar → Bluetooth ve cihazlar\'da telefonu kaldırın, sonra bu ekran açıkken yeniden ekleyin.';
+
+  @override
+  String get btHostUnawareLinux =>
+      'Bluetooth ayarlarında telefonun bağlantısını kesip yeniden bağlayın. Olmazsa telefonu kaldırıp bu ekran açıkken yeniden eşleştirin.';
+
+  @override
+  String get btHostUnawareAuto =>
+      'Bilgisayarda QuickRemote PC açıksa bunu kendisi yapar.';
+
+  @override
+  String get btHostUnawareWaiting =>
+      'Bilgisayar kabul edince kumanda kendiliğinden açılır.';
+
+  @override
   String get btErrorRetry => 'Bluetooth hatası. Tekrar deneyin.';
 
   @override
@@ -547,7 +606,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get btPairOnce =>
-      'İlk bağlantıda yalnızca bir kez eşleştirme gerekir. Sonraki bağlantılarda otomatik bağlanır.';
+      'Bu ekran açıkken bir kez eşleştirmeniz yeterli; sonraki bağlantılar otomatiktir.';
 
   @override
   String get btConnected => 'Bağlandı!';

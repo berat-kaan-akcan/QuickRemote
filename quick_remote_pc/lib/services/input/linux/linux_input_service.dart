@@ -60,6 +60,15 @@ class LinuxInputService implements InputService {
   bool _laserViaImpress = false;
   bool _laserOn = false;
 
+  /// Impress draws the highlighter as see-through strokes (its bridge's
+  /// strokeBegin/strokeEnd) instead of the ink the mouse button would draw.
+  bool _strokesViaImpress = false;
+  bool _stroking = false;
+
+  /// The highlighter mode being chosen; the button waits for it, since it
+  /// either draws ink or starts a stroke.
+  Future<void>? _highlighterMode;
+
   /// pid of the WPS the bridge controls, from its last reply.
   int? _wpsRpcPid;
 
@@ -173,6 +182,7 @@ class LinuxInputService implements InputService {
       return _slideState(impress, 'impress');
     }
     _laserViaImpress = false;
+    _endStrokes();
     final wps = await _wpsRequest('state');
     if (wps['ok'] == true && wps['state'] == 'RUNNING') return _slideState(wps, 'wps');
     if (_wpsShowOnScreen()) {
@@ -271,6 +281,7 @@ class LinuxInputService implements InputService {
   @override
   Future<void> slideEnd() async {
     _laserViaImpress = false;
+    _endStrokes();
     _laserOn = false;
     final toggled = _toggled;
     _toggled = null;
@@ -342,10 +353,15 @@ class LinuxInputService implements InputService {
   void laserOff() => _setMode('laserOff', wpsKeys: const []);
 
   @override
-  Future<void> modeHighlighter() async {
+  Future<void> modeHighlighter() => _highlighterMode = _modeHighlighter();
+
+  Future<void> _modeHighlighter() async {
     _laserViaImpress = false;
     _laserOn = false;
+    // Like the laser, the motion goes to Impress before its reply.
+    _strokesViaImpress = true;
     final reply = await _impress.request('highlighter');
+    _strokesViaImpress = reply['ok'] == true && reply['strokes'] == true;
     if (reply['ok'] == true) return;
     // WPS's object model has no highlighter: only its Ctrl+I reaches it.
     final focused = _focusedWps();
@@ -371,6 +387,7 @@ class LinuxInputService implements InputService {
     // real cursor meanwhile.
     _laserViaImpress = true;
     _wpsHighlighter = false;
+    _endStrokes();
     // Created ahead of the first video: a new device misses its first events.
     UinputDevice.pointer.ensureOpen();
     final reply = await _impress.request('laserOn');
@@ -397,6 +414,7 @@ class LinuxInputService implements InputService {
     _laserViaImpress = false;
     _laserOn = false;
     _wpsHighlighter = false;
+    _endStrokes();
     final failed = await _showCommand(cmd, const {}, wpsArgs);
     if (failed == null) return;
     if (_focusedWps() != null) {
@@ -410,6 +428,11 @@ class LinuxInputService implements InputService {
     _report(_describeFailure(failed.$1, failed.$2));
   }
 
+  void _endStrokes() {
+    _strokesViaImpress = false;
+    _highlighterMode = null;
+  }
+
   @override
   bool get handlesLaserPointer => _laserViaImpress;
 
@@ -420,15 +443,47 @@ class LinuxInputService implements InputService {
     _impress.send('pointer', {'x': relX, 'y': relY});
   }
 
+  @override
+  bool get handlesDrawPointer => _strokesViaImpress;
+
+  // The bridge draws the stroke through every position it is sent.
+  @override
+  void drawPointerMoved(double relX, double relY) => _impress.send('pointer', {'x': relX, 'y': relY});
+
   // ── Mouse & keyboard ──
   @override
   void leftClick() => _device.click(Evdev.btnLeft);
   @override
   void rightClick() => _device.click(Evdev.btnRight);
   @override
-  void leftDown() => _device.button(Evdev.btnLeft, down: true);
+  void leftDown() => _afterHighlighterMode(() {
+        if (_strokesViaImpress) {
+          _stroking = true;
+          _impress.send('strokeBegin', const {});
+        } else {
+          _device.button(Evdev.btnLeft, down: true);
+        }
+      });
   @override
-  void leftUp() => _device.button(Evdev.btnLeft, down: false);
+  void leftUp() => _afterHighlighterMode(() {
+        if (_stroking) {
+          _stroking = false;
+          _impress.send('strokeEnd', const {});
+        } else {
+          _device.button(Evdev.btnLeft, down: false);
+        }
+      });
+
+  /// Runs [action] once the highlighter mode being chosen is known; in
+  /// order, so the button never goes up before it went down.
+  void _afterHighlighterMode(void Function() action) {
+    final mode = _highlighterMode;
+    if (mode == null) {
+      action();
+    } else {
+      mode.catchError((_) {}).then((_) => action());
+    }
+  }
 
   // ── System ──
   @override

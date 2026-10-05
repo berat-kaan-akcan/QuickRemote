@@ -1,6 +1,8 @@
 package com.quickremote.quick_remote_app
 
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.content.Intent
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
@@ -21,6 +23,11 @@ class MainActivity : FlutterActivity() {
     private val BT_HID_EVENT_CHANNEL  = "com.quickremote.quick_remote_app/bt_hid_events"
 
     private lateinit var btHidService: BluetoothHidService
+
+    /** Answer to the pending "requestDiscoverable" call. */
+    private var pendingDiscoverable: MethodChannel.Result? = null
+    private val REQUEST_DISCOVERABLE = 4711
+    private val DISCOVERABLE_SECONDS = 300
 
     // ── Wi-Fi low latency channel ─────────────────────────────────────────
     private val WIFI_LOCK_CHANNEL = "com.quickremote.quick_remote_app/wifi_lock"
@@ -87,12 +94,37 @@ class MainActivity : FlutterActivity() {
                 "isSupported" -> result.success(btHidService.isSupported())
 
                 "startAdvertising" -> {
-                    btHidService.startAdvertising()
+                    // A state from an earlier session must not be replayed:
+                    // a stale "error:bluetooth_disabled" or "connected:…"
+                    // would show an error or open the remote at once.
+                    lastState = null
+                    btHidService.startAdvertising(call.argument<String>("repairUuid"))
                     result.success(null)
+                }
+
+                // The system dialog that makes the phone visible to computers
+                // searching for devices. Answers the seconds granted, 0 if refused.
+                "requestDiscoverable" -> {
+                    if (pendingDiscoverable != null) {
+                        result.success(0)
+                        return@setMethodCallHandler
+                    }
+                    val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+                        .putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_SECONDS)
+                    try {
+                        pendingDiscoverable = result
+                        startActivityForResult(intent, REQUEST_DISCOVERABLE)
+                    } catch (e: Exception) {
+                        // ActivityNotFoundException, or SecurityException
+                        // without BLUETOOTH_ADVERTISE.
+                        pendingDiscoverable = null
+                        result.success(0)
+                    }
                 }
 
                 "stopAdvertising" -> {
                     btHidService.stopAdvertising()
+                    lastState = null
                     result.success(null)
                 }
 
@@ -159,6 +191,15 @@ class MainActivity : FlutterActivity() {
                 btEventSink = null
             }
         })
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_DISCOVERABLE) {
+            // The result code is the granted duration; RESULT_CANCELED (0) if refused.
+            pendingDiscoverable?.success(if (resultCode > 0) resultCode else 0)
+            pendingDiscoverable = null
+        }
     }
 
     // ── Volume key handling (unchanged) ────────────────────────────────────

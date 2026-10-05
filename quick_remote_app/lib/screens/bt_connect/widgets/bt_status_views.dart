@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
+import 'bt_make_visible_button.dart';
 
 /// Shown for a moment before the remote opens.
 class BtConnectedView extends StatelessWidget {
@@ -120,6 +121,99 @@ class BtErrorView extends StatelessWidget {
               expand: false,
               onPressed: onRetry,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The computer refused the phone as a keyboard: it was paired with the phone
+/// while QuickRemote was not open. The phone keeps trying, so the remote opens
+/// by itself once the user has done this on the computer.
+class BtHostSetupView extends StatefulWidget {
+  const BtHostSetupView({super.key});
+
+  @override
+  State<BtHostSetupView> createState() => _BtHostSetupViewState();
+}
+
+class _BtHostSetupViewState extends State<BtHostSetupView> {
+  bool _linux = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: AppSpace.lg),
+        child: FadeSlideIn(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              EmptyState(
+                icon: Icons.keyboard_rounded,
+                tone: AppTone.warning,
+                compact: true,
+                title: context.l10n.btHostUnawareTitle,
+                message: context.l10n.btHostUnawareBody,
+              ),
+              const SizedBox(height: AppSpace.lg),
+              AppCard(
+                elevated: true,
+                radius: AppRadius.xl,
+                padding: const EdgeInsets.all(AppSpace.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSegmented<bool>(
+                      color: p.info,
+                      segments: const [
+                        AppSegment(value: false, label: 'Windows', icon: Icons.window_rounded),
+                        AppSegment(value: true, label: 'Linux', icon: Icons.terminal_rounded),
+                      ],
+                      selected: _linux,
+                      onChanged: (v) => setState(() => _linux = v),
+                    ),
+                    const SizedBox(height: AppSpace.md),
+                    Text(
+                      _linux ? context.l10n.btHostUnawareLinux : context.l10n.btHostUnawareWindows,
+                      style: AppType.body.copyWith(color: p.textSecondary, fontSize: 14),
+                    ),
+                    // Adding the phone again needs it visible.
+                    const SizedBox(height: AppSpace.md),
+                    const BtMakeVisibleButton(),
+                    if (_linux) ...[
+                      const SizedBox(height: AppSpace.md),
+                      InlineAlert(
+                        dense: true,
+                        tone: AppTone.info,
+                        icon: Icons.auto_fix_high_rounded,
+                        message: context.l10n.btHostUnawareAuto,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpace.lg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox.square(
+                    dimension: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: p.textMuted),
+                  ),
+                  const SizedBox(width: AppSpace.xs),
+                  Flexible(
+                    child: Text(
+                      context.l10n.btHostUnawareWaiting,
+                      style: AppType.bodySmall.copyWith(color: p.textMuted),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
