@@ -506,6 +506,67 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bluetooth permission was denied. Allow it in Settings.';
 
   @override
+  String get btDisabled => 'Bluetooth is off. Turn it on and try again.';
+
+  @override
+  String btConnectingTo(String device) {
+    return 'Connecting to $device...';
+  }
+
+  @override
+  String get btMakeVisible => 'Make the phone visible';
+
+  @override
+  String get btMakeVisibleHint =>
+      'The computer finds the phone in its list only while the phone is visible.';
+
+  @override
+  String btVisibleFor(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'The phone is visible for $minutes minutes.',
+      one: 'The phone is visible for 1 minute.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get btVisibleRefused => 'The phone was not made visible.';
+
+  @override
+  String get btHidUnavailable =>
+      'The phone could not register as a keyboard. If another Bluetooth keyboard app is open, close it and try again.';
+
+  @override
+  String get btHostRefreshing =>
+      'QuickRemote PC is preparing the connection...';
+
+  @override
+  String get btHostUnawareTitle =>
+      'The computer doesn\'t know the phone as a keyboard';
+
+  @override
+  String get btHostUnawareBody =>
+      'The phone was paired with this computer while QuickRemote was not open. Do this once on the computer:';
+
+  @override
+  String get btHostUnawareWindows =>
+      'In Settings → Bluetooth & devices, remove the phone, then add it again while this screen is open.';
+
+  @override
+  String get btHostUnawareLinux =>
+      'In the Bluetooth settings, disconnect the phone and connect it again. If that doesn\'t help, remove the phone and pair it again while this screen is open.';
+
+  @override
+  String get btHostUnawareAuto =>
+      'If QuickRemote PC is open on the computer, it does this by itself.';
+
+  @override
+  String get btHostUnawareWaiting =>
+      'The remote opens by itself once the computer accepts it.';
+
+  @override
   String get btErrorRetry => 'Bluetooth error. Try again.';
 
   @override
@@ -550,7 +611,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get btPairOnce =>
-      'Pairing is needed only once, the first time. Later it connects automatically.';
+      'Pair once while this screen is open; later connections are automatic.';
 
   @override
   String get btConnected => 'Connected!';

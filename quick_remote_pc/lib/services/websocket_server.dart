@@ -599,15 +599,20 @@ class WebSocketServer {
       if (InputSimulator.handlesLaserPointer) {
         // The presenter draws the laser itself (Impress): keep the OS cursor still.
         mouseController.trackDelta(dx, dy);
-        InputSimulator.laserPointerMoved(
-          mouseController.currentX / mouseController.screenWidth,
-          mouseController.currentY / mouseController.screenHeight,
-        );
+        InputSimulator.laserPointerMoved(_relX, _relY);
         return;
       }
+    } else if (InputSimulator.handlesDrawPointer) {
+      // The presenter draws the stroke itself (Impress's highlighter).
+      mouseController.trackDelta(dx, dy);
+      InputSimulator.drawPointerMoved(_relX, _relY);
+      return;
     }
     mouseController.moveDelta(dx, dy);
   }
+
+  double get _relX => mouseController.currentX / mouseController.screenWidth;
+  double get _relY => mouseController.currentY / mouseController.screenHeight;
 
   /// Concurrent callers share one check.
   Future<void> _checkSlideshow() =>
@@ -707,8 +712,14 @@ class WebSocketServer {
       return;
     }
 
+    if (command == RemoteCommands.leftDown || command == RemoteCommands.leftUp) {
+      // The motion the phone sent before the button comes first.
+      _moves[ws]?.flush();
+    }
     if (command == RemoteCommands.leftDown) {
       _leftButtonHeld.add(ws);
+      // A stroke starts where the pointer is.
+      if (InputSimulator.handlesDrawPointer) InputSimulator.drawPointerMoved(_relX, _relY);
     } else if (command == RemoteCommands.leftUp) {
       _leftButtonHeld.remove(ws);
     }

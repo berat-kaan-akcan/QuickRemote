@@ -59,6 +59,15 @@ abstract class InputService {
   /// Laser position relative to the screen (0..1 on both axes).
   void laserPointerMoved(double relX, double relY);
 
+  /// True while the service draws the touch gesture itself (Impress's
+  /// highlighter strokes); the server then feeds TOUCH motion, and the
+  /// position before LEFT_DOWN, to [drawPointerMoved] instead of moving the
+  /// OS cursor.
+  bool get handlesDrawPointer;
+
+  /// Drawing position relative to the screen (0..1 on both axes).
+  void drawPointerMoved(double relX, double relY);
+
   // Mouse & Keyboard
   void leftClick();
   void rightClick();

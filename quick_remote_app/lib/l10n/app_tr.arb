@@ -248,6 +248,34 @@
   "volumeOn": "Açık",
   "btUnsupportedLong": "Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.",
   "btPermissionDenied": "Bluetooth izni reddedildi. Ayarlardan izin vermelisiniz.",
+  "btDisabled": "Bluetooth kapalı. Açıp tekrar deneyin.",
+  "btConnectingTo": "{device} ile bağlantı kuruluyor...",
+  "@btConnectingTo": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "btMakeVisible": "Telefonu görünür yap",
+  "btMakeVisibleHint": "Bilgisayar telefonu ancak görünürken listesinde bulur.",
+  "btVisibleFor": "{minutes, plural, other{Telefon {minutes} dakika boyunca görünür.}}",
+  "@btVisibleFor": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "btVisibleRefused": "Telefon görünür yapılmadı.",
+  "btHidUnavailable": "Telefon klavye olarak kaydedilemedi. Başka bir Bluetooth klavye uygulaması açıksa kapatıp tekrar deneyin.",
+  "btHostRefreshing": "QuickRemote PC bağlantıyı hazırlıyor...",
+  "btHostUnawareTitle": "Bilgisayar telefonu klavye olarak tanımıyor",
+  "btHostUnawareBody": "Telefon bu bilgisayarla QuickRemote açık değilken eşleştirilmiş. Bilgisayarda bir kez şunu yapın:",
+  "btHostUnawareWindows": "Ayarlar → Bluetooth ve cihazlar'da telefonu kaldırın, sonra bu ekran açıkken yeniden ekleyin.",
+  "btHostUnawareLinux": "Bluetooth ayarlarında telefonun bağlantısını kesip yeniden bağlayın. Olmazsa telefonu kaldırıp bu ekran açıkken yeniden eşleştirin.",
+  "btHostUnawareAuto": "Bilgisayarda QuickRemote PC açıksa bunu kendisi yapar.",
+  "btHostUnawareWaiting": "Bilgisayar kabul edince kumanda kendiliğinden açılır.",
   "btErrorRetry": "Bluetooth hatası. Tekrar deneyin.",
   "btWaitingPairing": "Eşleştirme bekleniyor...",
   "btWaitingConnection": "Bağlantı bekleniyor...",
@@ -262,7 +290,7 @@
   "btWindowsStep1": "Windows Ayarlar'ı açın",
   "btWindowsStep2": "Bluetooth ve diğer cihazlar'a gidin",
   "btWindowsStep3": "\"Cihaz ekle\" butonuna basın",
-  "btPairOnce": "İlk bağlantıda yalnızca bir kez eşleştirme gerekir. Sonraki bağlantılarda otomatik bağlanır.",
+  "btPairOnce": "Bu ekran açıkken bir kez eşleştirmeniz yeterli; sonraki bağlantılar otomatiktir.",
   "btConnected": "Bağlandı!",
   "unknownDevice": "Bilinmeyen cihaz",
   "btOpeningRemote": "Uzaktan kontrol açılıyor...",

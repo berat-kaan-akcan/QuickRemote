@@ -5,7 +5,8 @@ Reads one JSON request per line from stdin and writes one JSON reply per line
 to stdout:  {"id": 1, "cmd": "next"}  ->  {"id": 1, "ok": true}
 Requests with "noreply": true get no answer (used for high-frequency pointer
 updates). Of those pointer updates only the newest waiting one is applied, so
-a busy LibreOffice never falls behind the laser.
+a busy LibreOffice never falls behind the laser; it carries the positions of
+the ones it stands for, which a highlighter stroke draws.
 
 The argument is the name of the UNO pipe LibreOffice accepts connections on
 (ooSetupConnectionURL or `soffice --accept=pipe,name=NAME;urp;`). A pipe is a
@@ -13,12 +14,14 @@ Unix socket only its owner can connect to; a TCP listener would let every
 local user and sandboxed app run code through LibreOffice. A numeric argument
 selects a localhost TCP port instead, for manual testing only.
 """
+import contextlib
 import json
 import os
 import queue
 import stat
 import sys
 import threading
+import time
 
 TARGET = sys.argv[1] if len(sys.argv) > 1 else "quickremote"
 if TARGET.isdigit():
@@ -99,10 +102,27 @@ if uno is not None:
     NODE_INTERACTIVE_SEQUENCE = _const("presentation.EffectNodeType.INTERACTIVE_SEQUENCE")
     PRESET_MEDIA_CALL = _const("presentation.EffectPresetClass.MEDIACALL")
     MOUSE_LEFT = _const("awt.MouseButton.LEFT")
+    ROUND_CAP = uno.Enum("com.sun.star.drawing.LineCap", "ROUND")
+    ROUND_JOINT = uno.Enum("com.sun.star.drawing.LineJoint", "ROUND")
 
 PEN_WIDTH = 150.0
 HIGHLIGHTER_WIDTH = 600.0
 HIGHLIGHTER_COLOR = 0xFFE600
+# Highlighter strokes drawn as shapes (see _strokes_possible): see-through in
+# percent, the shapes' Name (tells a stroke left behind by a crash from the
+# author's shapes), and the version from which a running show draws a shape
+# added to its slide (measured on 26.8; older versions keep the ink).
+HIGHLIGHT_TRANSPARENCE = 50
+HIGHLIGHT_NAME = "quickremote-highlight"
+STROKE_MIN_VERSION = (26, 8)
+# A stroke point closer than this to the previous one (1/100 mm) is skipped.
+STROKE_MIN_STEP = 30
+# A change to the slide on screen makes the show draw the slide again, which
+# takes ~150 ms (measured on 26.8); a move it gets meanwhile is lost.
+REDRAW_SECONDS = 0.3
+# The show changes slides a moment after gotoNextEffect returns; the shapes of
+# the slide it left wait this long for it (see _erase_left).
+LEAVE_SECONDS = 1.0
 # Half the side of the eraser's square, in slide units (1/100 mm). LibreOffice's
 # default is 100, a 2 mm square that barely covers a pen stroke.
 ERASER_SIZE = 600
@@ -206,6 +226,15 @@ class Impress:
         self.highlighter_color = HIGHLIGHTER_COLOR
         # "pen" or "highlighter" while one of them draws, for the color commands.
         self.ink_tool = None
+        # The highlighter draws shapes instead of ink, see _strokes_possible.
+        self.strokes_on = False
+        # The stroke being drawn: {"doc", "shape", "points", "size"}.
+        self.stroke = None
+        # Highlighter shapes in the document being shown, see _highlights_of.
+        self.highlights = None
+        # time.monotonic() until which the show redraws a slide the bridge
+        # changed, see settle().
+        self.redraw_until = 0.0
         self.blank_color = None
         # (document, presentation, controller) of the running slideshow.
         self.show = None
@@ -268,6 +297,9 @@ class Impress:
         self.media_rects = None
         self.geometry = None
         self.pdf_imports = {}
+        self.strokes_on = False
+        self.stroke = None
+        self.highlights = None
 
     def on_main_thread(self, fn, timeout=5.0):
         call = MainThreadCall(fn)
@@ -376,8 +408,10 @@ class Impress:
         running = self._running()
         if running is None:
             self._release_media()
+            self._release_highlights()
             return {"state": "NOT_RUNNING"}
         doc, pres, ctrl = running
+        self._erase_left(ctrl)
         total = ctrl.getSlideCount()
         index = ctrl.getCurrentSlideIndex()
         # Past the last slide LibreOffice shows its "click to exit" screen.
@@ -448,21 +482,42 @@ class Impress:
     # ── Navigation ──
     def next(self, args):
         ctrl = self._require_running()[2]
-        self._drop_ink(ctrl, args)
-        ctrl.gotoNextEffect()
+        with self._dropping_ink(ctrl, args):
+            ctrl.gotoNextEffect()
 
     def prev(self, args):
         ctrl = self._require_running()[2]
-        self._drop_ink(ctrl, args)
-        ctrl.gotoPreviousEffect()
+        with self._dropping_ink(ctrl, args):
+            ctrl.gotoPreviousEffect()
 
     @staticmethod
-    def _drop_ink(ctrl, args=None):
-        """Erases the ink before the show moves on, unless the request says
+    def _drop_ink(ctrl):
+        ctrl.setEraseAllInk(True)
+
+    @contextlib.contextmanager
+    def _dropping_ink(self, ctrl, args):
+        """Erases the ink before the show moves on, and the highlighter
+        shapes of the slide it left after, unless the request says
         "clearInk": false. LibreOffice keeps a slide's ink and shows it again
-        when the show comes back, and an animation step leaves it on screen."""
-        if args is None or args.get("clearInk", True):
-            ctrl.setEraseAllInk(True)
+        when the show comes back, and an animation step leaves it on screen.
+        Removing the shapes before that would redraw the slide, which loses
+        the move, so they go once the show is elsewhere (_erase_left)."""
+        clear = args.get("clearInk", True)
+        if clear:
+            self._drop_ink(ctrl)
+        highlights = self.highlights
+        left = ctrl.getCurrentSlide() if clear and highlights is not None else None
+        yield
+        if left is not None:
+            shapes = [shape for page, shape in highlights["shapes"] if page == left]
+            if shapes:
+                highlights["leaving"].append((left, shapes, time.monotonic()))
+
+    def settle(self):
+        """Waits until the show has drawn a slide the bridge changed again."""
+        wait = self.redraw_until - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
 
     def start(self, args):
         running = self._running()
@@ -504,24 +559,28 @@ class Impress:
     def _start(self, doc, pres, arguments, first_pages):
         self._reset_show_state()
         self._release_media()
+        self._release_highlights()
         # The slideshow reads a slide's animations when it loads the slide.
         self._try_prepare(doc, pres, first_pages)
         pres.startWithArguments(arguments)
 
     def _goto(self, running, index, args):
         doc, pres, ctrl = running
-        self._drop_ink(ctrl, args)
-        self._try_prepare(doc, pres, lambda: self._upcoming(ctrl, index, ctrl.getSlideCount()), ctrl)
-        ctrl.gotoSlideIndex(index)
+        with self._dropping_ink(ctrl, args):
+            self._try_prepare(doc, pres, lambda: self._upcoming(ctrl, index, ctrl.getSlideCount()), ctrl)
+            ctrl.gotoSlideIndex(index)
 
     def end(self, _args):
         self._require_running()[1].end()
         self._reset_show_state()
         self._release_media()
+        self._release_highlights()
 
     def _reset_show_state(self):
         self.blank_color = None
         self.ink_tool = None
+        self.strokes_on = False
+        self.stroke = None
         self.slide_info = None
         self.media_state = None
         self.laser_on = False
@@ -545,6 +604,8 @@ class Impress:
     def _ink(self, ctrl, pen, eraser=False, color=None, width=PEN_WIDTH, tool=None):
         self.ink_tool = tool
         self.laser_on = False
+        self.strokes_on = False
+        self.stroke = None
         self._hide_cursor(ctrl)
         show = self._engine(ctrl)
         self._set(show, "PointerVisible", False)
@@ -569,8 +630,15 @@ class Impress:
         self._ink(self._require_running()[2], pen=True, tool="pen")
 
     def highlighter(self, _args):
-        self._ink(self._require_running()[2], pen=True, tool="highlighter",
+        doc, _pres, ctrl = self._require_running()
+        if self._strokes_possible(doc, ctrl):
+            # The pointer stays still; strokeBegin, pointer and strokeEnd draw.
+            self._ink(ctrl, pen=False, tool="highlighter")
+            self.strokes_on = True
+            return {"strokes": True}
+        self._ink(ctrl, pen=True, tool="highlighter",
                   color=self.highlighter_color, width=HIGHLIGHTER_WIDTH)
+        return None
 
     def eraser(self, _args):
         self._ink(self._require_running()[2], pen=True, eraser=True)
@@ -578,6 +646,10 @@ class Impress:
     def eraseAll(self, _args):
         ctrl = self._require_running()[2]
         self._drop_ink(ctrl)
+        if self.highlights is not None:
+            slide = ctrl.getCurrentSlide()
+            self._erase_highlights(slide, ctrl, [shape for page, shape in self.highlights["shapes"]
+                                                 if page == slide])
         # The ink is gone from the canvas, but the screen shows that only on
         # the show's next update, which an idle show may never run.
         # LibreOffice's own E key runs one at once, as this does.
@@ -600,6 +672,8 @@ class Impress:
 
     def laserOn(self, _args):
         ctrl = self._require_running()[2]
+        self.strokes_on = False
+        self.stroke = None
         ctrl.UsePen = False
         self._set(self._engine(ctrl), "PointerVisible", True)
         self.laser_on = True
@@ -610,6 +684,8 @@ class Impress:
         doc, _pres, ctrl = self._require_running()
         park = self._park(doc, ctrl)
         self.laser_on = False
+        self.strokes_on = False
+        self.stroke = None
         self._hide_cursor(ctrl)
         self._set(self._engine(ctrl), "PointerVisible", False)
         return park
@@ -617,6 +693,10 @@ class Impress:
     def pointer(self, args):
         x, y = float(args["x"]), float(args["y"])
         self.laser_pos = (x, y)
+        if self.stroke is not None:
+            # Every position since the last update, not only the newest one.
+            self._extend_stroke(args.get("trail") or [(x, y)])
+            return None
         pos = uno.createUnoStruct("com.sun.star.geometry.RealPoint2D", x, y)
         # One call on the cached engine; it answers False once its show is over.
         if self.pointer_engine is None or not self._set(self.pointer_engine, "PointerPosition", pos):
@@ -625,6 +705,175 @@ class Impress:
         if self.laser_on:
             return self._follow_laser(x, y)
         return None
+
+    # ── Highlighter strokes ──
+    # LibreOffice's ink is opaque (PenColor has no alpha), so a highlighter
+    # stroke hides the text under it. Where the show allows it, the
+    # highlighter draws a semi-transparent line shape on the slide instead.
+    # A running show draws a changed slide again from its start (measured on
+    # 26.8): the slide's transition plays again, so it is switched off until
+    # the show ends, and its animations start over, so slides with animations
+    # or media keep the ink. The shapes go like the ink (_dropping_ink), and
+    # _release_highlights takes them and the transitions back when the show
+    # ends, so they never reach the saved file.
+    def _strokes_possible(self, doc, ctrl):
+        if self._version() < STROKE_MIN_VERSION:
+            return False
+        slide = ctrl.getCurrentSlide()
+        return (slide is not None and not self._has_animations(slide)
+                and not self._has_media(doc, slide))
+
+    @classmethod
+    def _has_animations(cls, slide):
+        """Whether any sequence of the slide (the main one, triggers) has an effect."""
+        root = slide.getAnimationNode()
+        return root is not None and any(cls._children(seq) for seq in cls._children(root))
+
+    def strokeBegin(self, _args):
+        if not self.strokes_on:
+            return
+        doc, _pres, ctrl = self._require_running()
+        slide = ctrl.getCurrentSlide()
+        if slide is None:
+            return
+        highlights = self._highlights_of(doc)
+        self._erase_left(ctrl)
+        with self._no_undo(doc):
+            self._hold_transition(highlights, slide)
+            shape = doc.createInstance("com.sun.star.drawing.PolyLineShape")
+            slide.add(shape)
+            shape.Name = HIGHLIGHT_NAME
+            shape.LineColor = self.highlighter_color
+            shape.LineWidth = int(HIGHLIGHTER_WIDTH)
+            shape.LineTransparence = HIGHLIGHT_TRANSPARENCE
+            shape.LineCap = ROUND_CAP
+            shape.LineJoint = ROUND_JOINT
+        highlights["shapes"].append((slide, shape))
+        self.stroke = {"doc": doc, "shape": shape, "points": [],
+                       "size": (slide.Width, slide.Height)}
+        self._extend_stroke([self.laser_pos])
+
+    def strokeEnd(self, _args):
+        self.stroke = None
+
+    def _extend_stroke(self, positions):
+        """Adds positions (fractions of the slide) to the stroke's line."""
+        stroke = self.stroke
+        points = stroke["points"]
+        width, height = stroke["size"]
+        added = False
+        for x, y in positions:
+            point = (round(float(x) * width), round(float(y) * height))
+            if points and (abs(point[0] - points[-1][0]) < STROKE_MIN_STEP
+                           and abs(point[1] - points[-1][1]) < STROKE_MIN_STEP):
+                continue
+            points.append(point)
+            added = True
+        if not added:
+            return
+        line = [uno.createUnoStruct("com.sun.star.awt.Point", x, y) for x, y in points]
+        if len(line) == 1:
+            # A line of one point draws nothing; a tap leaves a dot.
+            line.append(uno.createUnoStruct("com.sun.star.awt.Point", points[0][0] + 1, points[0][1]))
+        with self._no_undo(stroke["doc"]):
+            stroke["shape"].PolyPolygon = (tuple(line),)
+        self._redrawn()
+
+    def _redrawn(self):
+        """Notes a change to the slide on screen, see settle()."""
+        self.redraw_until = time.monotonic() + REDRAW_SECONDS
+
+    def _highlights_of(self, doc):
+        highlights = self.highlights
+        if highlights is not None and not highlights["doc"] == doc:
+            self._release_highlights()
+            highlights = None
+        if highlights is None:
+            highlights = self.highlights = {
+                "doc": doc,
+                "shapes": [],       # (slide, shape) pairs
+                "transitions": [],  # (slide, TransitionType, TransitionSubtype) held off
+                "leaving": [],      # (slide, shapes, time) to erase, see _erase_left
+                "modified": bool(doc.isModified()),
+            }
+        return highlights
+
+    @staticmethod
+    def _hold_transition(highlights, slide):
+        """Switches the slide's transition off, which every stroke update
+        would otherwise play again."""
+        if any(held[0] == slide for held in highlights["transitions"]):
+            return
+        kind = slide.TransitionType
+        highlights["transitions"].append((slide, kind, slide.TransitionSubtype))
+        if kind:
+            slide.TransitionType = 0
+            slide.TransitionSubtype = 0
+
+    @staticmethod
+    @contextlib.contextmanager
+    def _no_undo(doc):
+        """Keeps the bridge's changes off the document's undo stack."""
+        manager = doc.getUndoManager()
+        manager.lock()
+        try:
+            yield
+        finally:
+            manager.unlock()
+
+    def _erase_left(self, ctrl):
+        """Erases the shapes of the slides the show moved away from, see
+        _dropping_ink. A slide still on screen after LEAVE_SECONDS stayed
+        (PREV on the first slide), and its shapes go all the same."""
+        highlights = self.highlights
+        if highlights is None or not highlights["leaving"]:
+            return
+        current = ctrl.getCurrentSlide()
+        now = time.monotonic()
+        waiting = []
+        for entry in highlights["leaving"]:
+            slide, shapes, since = entry
+            if slide == current and now - since < LEAVE_SECONDS:
+                waiting.append(entry)
+            else:
+                self._erase_highlights(slide, ctrl, shapes)
+        highlights["leaving"] = waiting
+
+    def _erase_highlights(self, slide, ctrl, shapes):
+        """Removes the given highlighter shapes from slide."""
+        highlights = self.highlights
+        if self.stroke is not None and self.stroke["shape"] in shapes:
+            self.stroke = None
+        with self._no_undo(highlights["doc"]):
+            for shape in shapes:
+                try:
+                    slide.remove(shape)
+                except Exception:  # noqa: BLE001 - deleted meanwhile
+                    pass
+        highlights["shapes"] = [entry for entry in highlights["shapes"] if entry[1] not in shapes]
+        if shapes and slide == ctrl.getCurrentSlide():
+            self._redrawn()
+
+    def _release_highlights(self):
+        highlights, self.highlights, self.stroke = self.highlights, None, None
+        if highlights is None:
+            return
+        doc = highlights["doc"]
+        try:
+            with self._no_undo(doc):
+                for page, shape in highlights["shapes"]:
+                    try:
+                        page.remove(shape)
+                    except Exception:  # noqa: BLE001 - deleted meanwhile
+                        pass
+                for page, kind, subtype in highlights["transitions"]:
+                    if kind:
+                        page.TransitionType = kind
+                        page.TransitionSubtype = subtype
+            if not highlights["modified"] and doc.isModified():
+                doc.setModified(False)
+        except Exception:  # noqa: BLE001 - the document was closed meanwhile
+            pass
 
     # ── Laser over videos ──
     # A video plays in a window of its own above the slide, so the laser and
@@ -831,13 +1080,17 @@ class Impress:
                 self.version = (0, 0)
         return self.version
 
+    def needs_release(self):
+        return self.media is not None or self.highlights is not None
+
     def release_if_ended(self):
-        """Removes the media triggers once the show has ended. The server
-        stops polling state() when no phone is connected, so without this a
-        show ended later would leave them in the document, where saving
-        would keep them."""
-        if self.media is not None and self._running() is None:
+        """Removes the media triggers and highlighter shapes once the show
+        has ended. The server stops polling state() when no phone is
+        connected, so without this a show ended later would leave them in
+        the document, where saving would keep them."""
+        if self.needs_release() and self._running() is None:
             self._release_media()
+            self._release_highlights()
 
     def _release_media(self):
         media, self.media, self.media_state = self.media, None, None
@@ -1002,11 +1255,14 @@ class Impress:
 COMMANDS = {
     "state", "next", "prev", "start", "startAt", "end", "blank",
     "arrow", "pen", "highlighter", "eraser", "eraseAll", "penColor", "highlighterColor",
-    "laserOn", "laserOff", "pointer", "mediaToggle", "mediaRewind", "ping",
+    "laserOn", "laserOff", "pointer", "strokeBegin", "strokeEnd", "mediaToggle", "mediaRewind",
+    "ping",
 }
 
 
 SLOW_COMMANDS = {"start", "startAt"}
+# Commands that move the show, which a redraw of the slide would swallow.
+MOVES = {"next", "prev", "start", "startAt"}
 
 
 def handle(impress, request):
@@ -1017,6 +1273,8 @@ def handle(impress, request):
         return {"ok": False, "error": "UNKNOWN_COMMAND"}
     try:
         impress.connect()
+        if cmd in MOVES:
+            impress.settle()
         # Starting may first import a PDF, which takes a while for long ones.
         timeout = 60.0 if cmd in SLOW_COMMANDS else 5.0
         result = impress.on_main_thread(lambda: getattr(impress, cmd)(request), timeout) or {}
@@ -1058,6 +1316,9 @@ def main():
             if request.get("cmd") == "pointer" and request.get("noreply"):
                 with lock:
                     waiting = newest_pointer[0] is not None
+                    # A stroke needs every position the update stands for.
+                    request["trail"] = newest_pointer[0]["trail"] if waiting else []
+                    request["trail"].append((request.get("x"), request.get("y")))
                     newest_pointer[0] = request
                 if not waiting:
                     work.put(_POINTER)
@@ -1065,8 +1326,8 @@ def main():
                 work.put(request)
         work.put(None)
 
-    def release_media_if_ended():
-        if impress.media is None or impress.async_callback is None:
+    def release_if_ended():
+        if not impress.needs_release() or impress.async_callback is None:
             return
         try:
             impress.on_main_thread(impress.release_if_ended)
@@ -1078,10 +1339,10 @@ def main():
         try:
             request = work.get(timeout=5)
         except queue.Empty:
-            release_media_if_ended()
+            release_if_ended()
             continue
         if request is None:
-            release_media_if_ended()  # the server quit
+            release_if_ended()  # the server quit
             break
         if request is _POINTER:
             with lock:

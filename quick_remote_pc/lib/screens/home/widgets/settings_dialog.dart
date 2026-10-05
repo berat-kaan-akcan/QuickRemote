@@ -43,6 +43,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
     final languages = context.watch<LanguageProvider>();
     final p = context.palette;
     return AlertDialog(
+      // A short window scrolls the content instead of cutting it off.
+      scrollable: true,
       title: Row(
         children: [
           IconBadge(icon: Icons.settings_rounded, color: p.primaryText, size: 40),

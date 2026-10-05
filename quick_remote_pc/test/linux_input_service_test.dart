@@ -13,6 +13,9 @@ class FakeBridge extends ScriptBridge {
 
   final Map<String, Map<String, dynamic>> replies;
   final List<(String, Map<String, Object?>)> requests = [];
+
+  /// Commands sent without waiting for a reply.
+  final List<String> sent = [];
   final List<Duration> timeouts = [];
 
   List<String> get commands => [for (final r in requests) r.$1];
@@ -30,6 +33,9 @@ class FakeBridge extends ScriptBridge {
     timeouts.add(timeout);
     return replies[cmd] ?? {'ok': false, 'error': 'NOT_RUNNING'};
   }
+
+  @override
+  void send(String cmd, Map<String, Object?> args) => sent.add(cmd);
 }
 
 const _ok = {'ok': true};
@@ -185,6 +191,31 @@ void main() {
       ]);
       expect(wps.commands.last, 'pointerColor');
       expect(wps.requests.last.$2, {'bgr': 0x00FFFF});
+    });
+
+    test('Impress\'s see-through highlighter draws strokes, not ink', () async {
+      impress.replies['highlighter'] = {'ok': true, 'strokes': true};
+      final s = service();
+      s.modeHighlighter();
+      // The button waits for the mode: it either draws ink or starts a stroke.
+      s.leftDown();
+      expect(impress.sent, isEmpty);
+      await pumpEventQueue();
+      expect(s.handlesDrawPointer, isTrue);
+      s.drawPointerMoved(0.5, 0.5);
+      s.leftUp();
+      await pumpEventQueue();
+      expect(impress.sent, ['strokeBegin', 'pointer', 'strokeEnd']);
+
+      s.modeArrow();
+      expect(s.handlesDrawPointer, isFalse);
+    });
+
+    test('the highlighter stays ink where Impress cannot draw strokes', () async {
+      impress.replies['highlighter'] = _ok;
+      final s = service();
+      await s.modeHighlighter();
+      expect(s.handlesDrawPointer, isFalse);
     });
 
     test('pen colors go to Impress as RGB and to WPS as BGR', () async {

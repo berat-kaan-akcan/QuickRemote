@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
+import 'bt_make_visible_button.dart';
 
 /// Step-by-step pairing guide for the computer, Windows or Linux.
 class BtPairingGuide extends StatefulWidget {
@@ -62,6 +63,9 @@ class _BtPairingGuideState extends State<BtPairingGuide> {
             selected: _linuxGuide,
             onChanged: (v) => setState(() => _linuxGuide = v),
           ),
+          const SizedBox(height: AppSpace.md),
+          // Before the steps: the computer lists the phone only while visible.
+          const BtMakeVisibleButton(),
           const SizedBox(height: AppSpace.lg),
           AnimatedSwitcher(
             duration: AppMotion.of(context, AppMotion.base),

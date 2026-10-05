@@ -6,8 +6,10 @@ import 'package:permission_handler/permission_handler.dart';
 
 /// Keeps the app running while the phone is locked or the app is in the
 /// background (an Android foreground service holding a wake lock), but only
-/// while a remote screen is open. Enabled at launch, it would hold the locks
-/// and show its notification for as long as the app runs, connected or not.
+/// while a remote screen or the Bluetooth connect screen is open (Android
+/// drops the Bluetooth keyboard registration of a background app without
+/// one). Enabled at launch, it would hold the locks and show its notification
+/// for as long as the app runs, connected or not.
 ///
 /// Every [acquire] must be paired with one [release].
 class BackgroundSession {
@@ -33,9 +35,10 @@ class BackgroundSession {
 
   static Future<void> _queue = Future.value();
 
-  static void acquire() {
+  /// Completes once the service runs (or could not be started).
+  static Future<void> acquire() {
     _holders++;
-    _sync();
+    return _sync();
   }
 
   static void release() {
@@ -44,9 +47,9 @@ class BackgroundSession {
   }
 
   // Serialized, because screens open and close faster than the plugin answers.
-  static void _sync() {
-    if (!Platform.isAndroid) return;
-    _queue = _queue.then((_) => _apply()).catchError((Object e) {
+  static Future<void> _sync() {
+    if (!Platform.isAndroid) return Future.value();
+    return _queue = _queue.then((_) => _apply()).catchError((Object e) {
       debugPrint('Background execution error: $e');
     });
   }

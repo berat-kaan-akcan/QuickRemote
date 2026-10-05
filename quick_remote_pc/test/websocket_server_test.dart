@@ -247,6 +247,18 @@ void main() {
       expect(mouse.moves.single, (12.5, -4.0));
     });
 
+    test('TOUCH frames draw the stroke when the presenter draws it', () async {
+      input.handlesDrawPointer = true;
+      final client = await authed();
+      client.command('LEFT_DOWN');
+      await client.next('ack');
+      client.ws.add(moveFrame(0, 12.5, -4));
+      await eventually(() => input.calls.where((c) => c == 'drawPointerMoved').length == 2);
+      // The start position before LEFT_DOWN, then the motion; the OS cursor stays.
+      expect(input.calls.indexOf('drawPointerMoved'), lessThan(input.calls.indexOf('leftDown')));
+      expect(mouse.moves, isEmpty);
+    });
+
     test('ignores malformed frames', () async {
       final client = await authed();
       client.ws.add(moveFrame(0, 501, 0)); // over the per-frame limit

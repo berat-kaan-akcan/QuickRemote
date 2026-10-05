@@ -40,6 +40,8 @@ class InputSimulator {
   // Laser
   static bool get handlesLaserPointer => _instance.handlesLaserPointer;
   static void laserPointerMoved(double relX, double relY) => _instance.laserPointerMoved(relX, relY);
+  static bool get handlesDrawPointer => _instance.handlesDrawPointer;
+  static void drawPointerMoved(double relX, double relY) => _instance.drawPointerMoved(relX, relY);
 
   // States
   static Future<Map<String, dynamic>?> getSmtcState() => _instance.getSmtcState();

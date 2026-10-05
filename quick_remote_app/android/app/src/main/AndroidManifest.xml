@@ -10,11 +10,13 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Bluetooth Classic HID (phone-as-keyboard/mouse, API 28+). The PC
-         finds and pairs the phone; the app never scans or advertises, so
-         Android 12+ needs only BLUETOOTH_CONNECT (HID profile, bonded devices). -->
+         finds and pairs the phone; the app never scans. Android 12+ needs
+         BLUETOOTH_CONNECT (HID profile, bonded devices) and, to ask for the
+         phone to be made visible (ACTION_REQUEST_DISCOVERABLE), BLUETOOTH_ADVERTISE. -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
     <uses-feature
         android:name="android.hardware.bluetooth"

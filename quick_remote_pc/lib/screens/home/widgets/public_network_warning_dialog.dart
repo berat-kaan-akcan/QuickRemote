@@ -21,6 +21,8 @@ class _PublicNetworkWarningDialogState extends State<PublicNetworkWarningDialog>
   Widget build(BuildContext context) {
     final p = context.palette;
     return AlertDialog(
+      // A short window scrolls the content instead of cutting it off.
+      scrollable: true,
       icon: Center(child: IconBadge(icon: Icons.wifi_tethering_rounded, color: p.warning, size: 56)),
       title: Text(
         context.l10n.publicNetworkTitle,
