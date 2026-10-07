@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_title">Yakındaki cihazlar</string>
+    <string name="permission_text">Saat bilgisayarına Bluetooth klavye olarak bağlanır. Bunun için yakındaki cihazlar izni gerekir.</string>
+    <string name="permission_grant">İzin ver</string>
+    <string name="permission_settings">Ayarları aç</string>
+
+    <string name="state_starting">Bluetooth hazırlanıyor</string>
+    <string name="state_unsupported_title">Desteklenmiyor</string>
+    <string name="state_unsupported">Bu saat Bluetooth klavye olarak çalışamıyor.</string>
+    <string name="state_bluetooth_off_title">Bluetooth kapalı</string>
+    <string name="state_bluetooth_off">Saatin ayarlarından aç.</string>
+    <string name="state_unavailable_title">Klavye kullanımda</string>
+    <string name="state_unavailable">Bluetooth klavyeyi başka bir uygulama kullanıyor.</string>
+    <string name="state_waiting">Bilgisayar bekleniyor</string>
+    <string name="state_waiting_none">Başlamak için bir bilgisayar ekle.</string>
+    <string name="state_connecting">Bağlanıyor</string>
+    <string name="state_refused_title">Kabul edilmedi</string>
+    <string name="state_refused">%1$s saati klavye olarak kabul etmiyor. Bilgisayarın Bluetooth ayarlarında saati kaldır, sonra bilgisayarı yeniden ekle.</string>
+    <string name="state_connected">Bağlı</string>
+    <string name="retry">Tekrar dene</string>
+
+    <string name="computers_title">Bilgisayarlar</string>
+    <string name="computer_connected">Bağlı</string>
+    <string name="add_computer">Bilgisayar ekle</string>
+
+    <string name="pair_from_computer">Bilgisayardan</string>
+    <string name="pair_from_computer_hint">Saati görünür yap</string>
+    <string name="pair_visible">Saat 2 dakika görünür. Bilgisayarda Bluetooth ayarlarını aç, cihaz ekle ve “%1$s” seç.</string>
+    <string name="pair_visible_denied">Saat görünür yapılmadı.</string>
+    <string name="pair_visible_unsupported">Bu saat görünür yapılamıyor. Bunun yerine saatten ara.</string>
+    <string name="pair_from_watch">Saatten</string>
+    <string name="pair_from_watch_hint">Önce bilgisayarda Bluetooth ayarlarını aç</string>
+    <string name="pair_searching">Aranıyor…</string>
+    <string name="pair_none_found">Bilgisayar bulunamadı. Bilgisayarda Bluetooth ayarlarını açıp yeniden ara.</string>
+    <string name="pair_bonding">Eşleşiyor. Kodu iki cihazda da onayla.</string>
+    <string name="pair_failed">Eşleşme başarısız.</string>
+    <string name="pair_connecting">Eşleşti. Bağlanıyor…</string>
+
+    <string name="action_next">Sonraki slayt</string>
+    <string name="action_prev">Önceki slayt</string>
+    <string name="action_start">Gösteriyi başlat</string>
+    <string name="action_black_screen">Siyah ekran</string>
+    <string name="action_white_screen">Beyaz ekran</string>
+    <string name="action_end">Gösteriyi bitir</string>
+    <string name="presenter_title">Sunum programı</string>
+    <string name="action_laser">Lazer imleci</string>
+    <string name="laser_close">Lazeri kapat</string>
+    <string name="laser_hint">Lazer: imleci sürükleyerek taşı</string>
+
+    <string name="notification_channel">Bilgisayar bağlantısı</string>
+    <string name="notification_text">Saati bilgisayara bağlı tutar</string>
+</resources>
