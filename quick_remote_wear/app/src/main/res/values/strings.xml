@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English is the fallback; Turkish is in values-tr. Keep both in step. -->
+<resources>
+    <string name="app_name" translatable="false">QuickRemote</string>
+
+    <string name="permission_title">Nearby devices</string>
+    <string name="permission_text">The watch connects to your computer as a Bluetooth keyboard. That needs the nearby devices permission.</string>
+    <string name="permission_grant">Allow</string>
+    <string name="permission_settings">Open settings</string>
+
+    <!-- Short titles go in the list header; the text below them. -->
+    <string name="state_starting">Preparing Bluetooth</string>
+    <string name="state_unsupported_title">Not supported</string>
+    <string name="state_unsupported">This watch cannot act as a Bluetooth keyboard.</string>
+    <string name="state_bluetooth_off_title">Bluetooth is off</string>
+    <string name="state_bluetooth_off">Turn it on in the watch settings.</string>
+    <string name="state_unavailable_title">Keyboard in use</string>
+    <string name="state_unavailable">Another app is using the Bluetooth keyboard.</string>
+    <string name="state_waiting">Waiting for a computer</string>
+    <string name="state_waiting_none">Add a computer to begin.</string>
+    <string name="state_connecting">Connecting</string>
+    <string name="state_refused_title">Not accepted</string>
+    <string name="state_refused">%1$s does not accept the watch as a keyboard. Remove the watch in the computer’s Bluetooth settings, then add the computer again.</string>
+    <string name="state_connected">Connected</string>
+    <string name="retry">Try again</string>
+
+    <string name="computers_title">Computers</string>
+    <string name="computer_connected">Connected</string>
+    <string name="add_computer">Add computer</string>
+
+    <string name="pair_from_computer">From the computer</string>
+    <string name="pair_from_computer_hint">Make the watch visible</string>
+    <string name="pair_visible">The watch is visible for 2 minutes. On the computer, open the Bluetooth settings, add a device and pick “%1$s”.</string>
+    <string name="pair_visible_denied">The watch was not made visible.</string>
+    <string name="pair_visible_unsupported">This watch cannot be made visible. Search from the watch instead.</string>
+    <string name="pair_from_watch">From the watch</string>
+    <string name="pair_from_watch_hint">Open Bluetooth settings on the computer first</string>
+    <string name="pair_searching">Searching…</string>
+    <string name="pair_none_found">No computer found. Open the Bluetooth settings on the computer and search again.</string>
+    <string name="pair_bonding">Pairing. Confirm the code on both devices.</string>
+    <string name="pair_failed">Pairing failed.</string>
+    <string name="pair_connecting">Paired. Connecting…</string>
+
+    <string name="action_next">Next slide</string>
+    <string name="action_prev">Previous slide</string>
+    <string name="action_start">Start slideshow</string>
+    <string name="action_black_screen">Black screen</string>
+    <string name="action_white_screen">White screen</string>
+    <string name="action_end">End slideshow</string>
+    <string name="presenter_title">Presentation app</string>
+    <string name="presenter_powerpoint" translatable="false">PowerPoint</string>
+    <string name="presenter_impress" translatable="false">Impress</string>
+    <string name="presenter_wps" translatable="false">WPS</string>
+    <string name="action_laser">Laser pointer</string>
+    <string name="laser_close">Close laser</string>
+    <string name="laser_hint">Laser: drag to move the pointer</string>
+
+    <string name="notification_channel">Computer connection</string>
+    <string name="notification_text">Keeps the watch connected to the computer</string>
+</resources>
