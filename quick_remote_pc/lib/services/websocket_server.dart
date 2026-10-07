@@ -8,10 +8,12 @@ import 'mouse_controller.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import 'server/auth_manager.dart';
+import 'server/local_network.dart';
 import 'server/move_coalescer.dart';
 import 'server/network_manager.dart';
 import 'server/pre_auth_byte_limit.dart';
 import 'server/state_broadcaster.dart';
+import 'server/tls_handshake_gate.dart';
 
 /// An authenticated phone, as listed on the PC.
 class ConnectedClient {
@@ -45,6 +47,9 @@ class ConnectedClient {
 /// WebSocket server that listens for commands from mobile clients.
 class WebSocketServer {
   HttpServer? _server;
+  /// The TLS listener under [_server]; HttpServer.listenOn leaves it open.
+  TlsHandshakeGate? _gate;
+  final LocalNetwork _localNetwork = LocalNetwork();
   final List<WebSocket> _clients = [];
   final ValueNotifier<bool> isRunning = ValueNotifier(false);
   final ValueNotifier<int> clientCount = ValueNotifier(0);
@@ -92,6 +97,8 @@ class WebSocketServer {
   final Map<WebSocket, int> _invalidMessageCount = {};
   final Map<WebSocket, MoveCoalescer> _moves = {};
   final Map<WebSocket, PreAuthByteLimit> _byteLimits = {};
+  /// Start and count of each client's current one-second command window.
+  final Map<WebSocket, (Duration, int)> _commandWindows = {};
   /// Clients that sent LEFT_DOWN without a LEFT_UP yet.
   final Set<WebSocket> _leftButtonHeld = {};
 
@@ -124,6 +131,18 @@ class WebSocketServer {
   /// Per-frame limit for every client. UTF-8 needs at most 4 bytes per char.
   static const _maxFramePayload = _maxTextMessageLength * 4;
   static const _moveInterval = Duration(milliseconds: 8); // ~125 Hz
+
+  /// Text commands a phone may send per second. The app sends a few at most
+  /// (the volume slider one per 150 ms); more would only fill the PowerShell
+  /// and bridge queues. Motion goes in binary frames and is not counted.
+  static const _maxCommandsPerSecond = 30;
+
+  /// Never dropped by the rate limit: they release a button or end a mode.
+  static const _releaseCommands = {
+    RemoteCommands.leftUp,
+    RemoteCommands.modeArrow,
+    RemoteCommands.laserOff,
+  };
 
   /// Only meaningful inside a running slideshow. Outside one they would type
   /// shortcuts (Ctrl+P, Ctrl+A, E, ...) into whatever window has the focus.
@@ -245,12 +264,21 @@ class WebSocketServer {
 
     try {
       final ctx = await NetworkManager.loadOrGenerateCert();
+      await _localNetwork.refresh();
 
       const maxRetries = 10;
       for (var i = 0; i < maxRetries; i++) {
         try {
           _port = port + i;
-          _server = await HttpServer.bindSecure(InternetAddress.anyIPv6, _port, ctx);
+          final gate = await TlsHandshakeGate.bind(
+            InternetAddress.anyIPv6,
+            _port,
+            ctx,
+            accepts: _localNetwork.allows,
+            clientKey: AuthManager.clientKey,
+          );
+          _gate = gate;
+          _server = HttpServer.listenOn(gate);
           break;
         } on SocketException catch (e) {
           debugPrint('Port $_port is in use, trying next port... ($e)');
@@ -276,6 +304,8 @@ class WebSocketServer {
       _stopNetworkMonitor();
       await _server?.close(force: true);
       _server = null;
+      await _gate?.close();
+      _gate = null;
     }
   }
 
@@ -310,7 +340,15 @@ class WebSocketServer {
       return;
     }
 
-    final remoteIP = AuthManager.clientKey(request.connectionInfo?.remoteAddress);
+    final remoteAddress = request.connectionInfo?.remoteAddress;
+    // Also checked before the TLS handshake (TlsHandshakeGate); this covers
+    // servers handed in through serveForTesting.
+    if (remoteAddress == null || !_localNetwork.allows(remoteAddress)) {
+      _reject(request, HttpStatus.forbidden);
+      return;
+    }
+
+    final remoteIP = AuthManager.clientKey(remoteAddress);
     if (!_authManager.tryReservePending(remoteIP)) {
       debugPrint('Refused connection from $remoteIP (rate limit)');
       _reject(request, HttpStatus.tooManyRequests);
@@ -324,6 +362,7 @@ class WebSocketServer {
         request,
         budget: _preAuthByteBudget,
         maxFramePayload: _maxFramePayload,
+        maxMessage: _maxFramePayload,
       );
     } catch (e) {
       _authManager.releasePending(remoteIP);
@@ -332,7 +371,7 @@ class WebSocketServer {
     }
     ws.pingInterval = const Duration(seconds: 30);
     _byteLimits[ws] = limited;
-    _handleClient(ws, remoteIP, request.connectionInfo?.remoteAddress);
+    _handleClient(ws, remoteIP, remoteAddress);
   }
 
   static void _reject(HttpRequest request, int status) {
@@ -380,6 +419,7 @@ class WebSocketServer {
     _authTimers.remove(ws)?.cancel();
     _releasePending(ws);
     _invalidMessageCount.remove(ws);
+    _commandWindows.remove(ws);
     _moves.remove(ws)?.dispose();
     _byteLimits.remove(ws);
     if (_leftButtonHeld.remove(ws)) {
@@ -664,6 +704,20 @@ class WebSocketServer {
     return _gestureOwner;
   }
 
+  /// Counts a command of [ws]; false once it sent [_maxCommandsPerSecond]
+  /// this second.
+  bool _withinCommandRate(WebSocket ws) {
+    final now = _clock.elapsed;
+    final (start, count) = _commandWindows[ws] ?? (now, 0);
+    if (now - start >= const Duration(seconds: 1)) {
+      _commandWindows[ws] = (now, 1);
+      return true;
+    }
+    if (count >= _maxCommandsPerSecond) return false;
+    _commandWindows[ws] = (start, count + 1);
+    return true;
+  }
+
   /// Whether [command] repeats what another phone sent a moment ago. The
   /// same phone pressing twice is meant, and runs twice.
   bool _isEchoOfOtherPhone(WebSocket ws, String command) {
@@ -683,6 +737,11 @@ class WebSocketServer {
     if (!RemoteCommands.allowedCommands.contains(command) &&
         !RemoteCommands.allowedPrefixes.contains(baseCommand)) {
       debugPrint('Rejected unknown command: $command');
+      return;
+    }
+
+    if (!_releaseCommands.contains(command) && !_withinCommandRate(ws)) {
+      debugPrint('Ignored $command: more than $_maxCommandsPerSecond commands per second');
       return;
     }
 
@@ -785,6 +844,7 @@ class WebSocketServer {
     }
     _pendingAuth.clear();
     _invalidMessageCount.clear();
+    _commandWindows.clear();
     _gestureOwner = null;
     _gestureBlocked.clear();
     _lastPressBy = null;
@@ -815,10 +875,12 @@ class WebSocketServer {
 
     try {
       await _server?.close(force: true);
+      await _gate?.close();
     } catch (e) {
       debugPrint('Error closing server: $e');
     }
     _server = null;
+    _gate = null;
     isRunning.value = false;
     debugPrint('Server stopped');
   }
@@ -846,6 +908,7 @@ class WebSocketServer {
       (_) async {
         final oldIP = localIP.value;
         final currentIP = await getLocalIP(force: true);
+        await _localNetwork.refresh();
 
         if (oldIP != currentIP) {
           debugPrint('IP changed: $oldIP -> $currentIP');

@@ -230,6 +230,17 @@ void main() {
       await eventually(() => input.calls.contains('leftUp'));
     });
 
+    test('drops commands beyond 30 per second, but never a button release', () async {
+      final client = await authed();
+      for (var i = 1; i <= 50; i++) {
+        client.command('VOLUME_SET:$i');
+      }
+      client.command('LEFT_UP');
+      await eventually(() => input.calls.contains('leftUp'));
+      await settle();
+      expect(input.calls.where((c) => c.startsWith('setVolume')).length, 30);
+    });
+
     test('closes after three malformed messages', () async {
       final client = await authed();
       for (var i = 0; i < 3; i++) {
