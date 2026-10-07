@@ -195,8 +195,20 @@ udevadm settle
 
   // ── WPS Office ──
 
-  /// pywpsrpc versions with wheels for current Pythons (2.4.0 has 3.7-3.14).
-  static const _pywpsrpc = 'pywpsrpc>=2.4,<3';
+  /// pywpsrpc 2.4.0 (wheels for Python 3.7-3.14, no dependencies), pinned
+  /// to the hashes PyPI lists for its wheels: pip refuses any other file, so
+  /// a changed or replaced upload never runs here. Update the version and
+  /// every hash together (https://pypi.org/pypi/pywpsrpc/json).
+  @visibleForTesting
+  static const pywpsrpcRequirement = 'pywpsrpc==2.4.0 \\\n'
+      '    --hash=sha256:5be044643c12a1a44be12ff9eba5895685195df9fe298b18ba06a2e74ddc780f \\\n' // cp37
+      '    --hash=sha256:a2e78c05f8a4882358ea85795c62fd54163732537f9718aa55781be2e725e2d2 \\\n' // cp38
+      '    --hash=sha256:0fe4e996ae6632dc819c3113cace0804beeee2db92a393cc19b0317bd456d7aa \\\n' // cp39
+      '    --hash=sha256:7f6d84fee2f65c73ab015d314431dd9d34c33c3c62c57471586a138ebf339618 \\\n' // cp310
+      '    --hash=sha256:88c1a09c1a6a3274735b389982c50486b9b610ccb8dc6cb262c78bbb7e13d94a \\\n' // cp311
+      '    --hash=sha256:4bb25edb4e33a1175701c71bbf0e8bf3a00f09e7cfbc85f0b7ccd9ebe24402e0 \\\n' // cp312
+      '    --hash=sha256:49bfbfcbbef59b7ec6c0c2aa36f96588a3d13a09c4d37c5acfdd50cc7758ed66 \\\n' // cp313
+      '    --hash=sha256:0bfe103d7c8523d4b568f97990563ffaecb3f2b19d95470c2d926838e1296975\n'; // cp314
 
   static Future<bool> wpsInstalled() async {
     for (final path in const ['/usr/bin/wpp', '/opt/kingsoft/wps-office/office6/wpp', '/usr/lib/office6/wpp']) {
@@ -225,8 +237,14 @@ udevadm settle
           return false;
         }
       }
-      final pip = await Process.run(
-          python, ['-m', 'pip', 'install', '--disable-pip-version-check', '--quiet', _pywpsrpc]);
+      // --require-hashes (implied by the hashes) refuses any file not pinned
+      // above; --only-binary keeps an sdist's setup.py from running.
+      final requirements = File(p.join(dir.path, 'requirements.txt'));
+      await requirements.writeAsString(pywpsrpcRequirement);
+      final pip = await Process.run(python, [
+        '-m', 'pip', 'install', '--disable-pip-version-check', '--quiet',
+        '--only-binary', ':all:', '--require-hashes', '-r', requirements.path,
+      ]);
       if (pip.exitCode != 0) {
         debugPrint('pip install pywpsrpc failed: ${pip.stderr}');
         return false;

@@ -32,10 +32,12 @@ else:
     URL = "uno:pipe,name=%s;urp;StarOffice.ComponentContext" % TARGET
 
 
-def pipe_is_trusted():
+def pipe_is_trusted(must_exist=False):
     """LibreOffice creates the pipe as /tmp/OSL_PIPE_<uid>_<name> (or under
     /var/tmp). Refuse a socket at that path that another user created first:
-    it would impersonate LibreOffice."""
+    it would impersonate LibreOffice. Checked again with must_exist after
+    connecting, since a socket created between the check and the connection
+    would otherwise get through."""
     uid = os.getuid()
     for base in ("/tmp", "/var/tmp"):
         try:
@@ -43,7 +45,8 @@ def pipe_is_trusted():
         except FileNotFoundError:
             continue
         return stat.S_ISSOCK(st.st_mode) and st.st_uid == uid
-    return True  # not there yet: resolve() fails with NO_CONNECTION
+    # Not there yet: resolve() fails with NO_CONNECTION.
+    return not must_exist
 
 try:
     import uno
@@ -271,9 +274,13 @@ class Impress:
         resolver = local.ServiceManager.createInstanceWithContext(
             "com.sun.star.bridge.UnoUrlResolver", local)
         try:
-            self.ctx = resolver.resolve(URL)
+            ctx = resolver.resolve(URL)
         except Exception:
             raise BridgeError("NO_CONNECTION")
+        # A pipe that is gone or someone else's now was not LibreOffice's.
+        if PIPE_NAME is not None and not pipe_is_trusted(must_exist=True):
+            raise BridgeError("UNTRUSTED_PIPE")
+        self.ctx = ctx
         smgr = self.ctx.ServiceManager
         self.desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", self.ctx)
         self.async_callback = smgr.createInstanceWithContext(

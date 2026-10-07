@@ -448,11 +448,15 @@ class PipeIsTrustedTest(unittest.TestCase):
     def test_missing_pipe_is_allowed(self):
         self.assertTrue(bridge.pipe_is_trusted())
 
+    def test_missing_pipe_is_refused_after_connecting(self):
+        self.assertFalse(bridge.pipe_is_trusted(must_exist=True))
+
     def test_own_socket_is_trusted(self):
         sock = socket.socket(socket.AF_UNIX)
         sock.bind(self.path)
         try:
             self.assertTrue(bridge.pipe_is_trusted())
+            self.assertTrue(bridge.pipe_is_trusted(must_exist=True))
         finally:
             sock.close()
 
