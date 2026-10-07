@@ -14,7 +14,7 @@ void main() {
     accepted = StreamController();
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) async {
-      accepted.add(await PreAuthByteLimit.upgrade(request, budget: 256, maxFramePayload: 128));
+      accepted.add(await PreAuthByteLimit.upgrade(request, budget: 256, maxFramePayload: 128, maxMessage: 300));
     });
   });
 
@@ -70,6 +70,60 @@ void main() {
     await done.timeout(const Duration(seconds: 5));
     expect(messages, isEmpty);
     await client.close();
+  });
+
+  /// A raw WebSocket client: the handshake by hand, so frames can be built.
+  Future<(Socket, Future<void>)> rawClient() async {
+    final socket = await Socket.connect(InternetAddress.loopbackIPv4, server.port);
+    final key = base64.encode(List.filled(16, 1));
+    socket.write('GET / HTTP/1.1\r\n'
+        'Host: 127.0.0.1\r\n'
+        'Upgrade: websocket\r\n'
+        'Connection: Upgrade\r\n'
+        'Sec-WebSocket-Key: $key\r\n'
+        'Sec-WebSocket-Version: 13\r\n\r\n');
+    // Writing after the server cut the connection fails with a broken pipe.
+    socket.done.catchError((_) {});
+    // Writing after the server cut the connection fails with a broken pipe.
+    socket.done.catchError((_) {});
+    final closed = Completer<void>();
+    socket.listen((_) {}, onDone: closed.complete, onError: (_) {
+      if (!closed.isCompleted) closed.complete();
+    });
+    return (socket, closed.future);
+  }
+
+  /// A masked frame with a 100-byte payload of 'a' (mask 0).
+  Uint8List frame100(int firstByte) =>
+      Uint8List.fromList([firstByte, 0x80 | 100, 0, 0, 0, 0, ...List.filled(100, 0x61)]);
+
+  test('passes a fragmented message within maxMessage once lifted', () async {
+    final (socket, _) = await rawClient();
+    final (ws, limit) = await accepted.stream.first;
+    limit.lift();
+    final received = ws.first;
+    socket.add(frame100(0x01)); // text, not final
+    socket.add(frame100(0x80)); // final continuation: 200 bytes in all
+    expect(await received.timeout(const Duration(seconds: 5)), 'a' * 200);
+    socket.destroy();
+  });
+
+  test('cuts off a fragmented message larger than maxMessage once lifted', () async {
+    final (socket, closed) = await rawClient();
+    final (ws, limit) = await accepted.stream.first;
+    limit.lift();
+    final messages = <dynamic>[];
+    ws.listen(messages.add, onError: (_) {});
+    var isClosed = false;
+    unawaited(closed.then((_) => isClosed = true));
+    socket.add(frame100(0x01));
+    for (var i = 0; i < 10 && !isClosed; i++) {
+      socket.add(frame100(0x00)); // continuations, none final
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    await closed.timeout(const Duration(seconds: 5));
+    expect(messages, isEmpty);
+    socket.destroy();
   });
 
   test('cuts off an endless fragmented message', () async {

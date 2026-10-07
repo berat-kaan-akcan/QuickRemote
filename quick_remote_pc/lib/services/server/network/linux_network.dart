@@ -59,39 +59,49 @@ class LinuxNetwork implements PlatformNetwork {
     await dir.create(recursive: true);
     final certPath = p.join(dir.path, 'server_cert.pem');
     final keyPath = p.join(dir.path, 'server_key.pem');
-    final cert = File(certPath);
-    final key = File(keyPath);
 
-    final fresh = cert.existsSync() &&
-        key.existsSync() &&
-        DateTime.now().difference(cert.statSync().modified).inDays < 365;
-
-    if (!fresh) {
-      debugPrint('Generating new self-signed TLS certificate with openssl...');
-      final result = await _run('openssl', [
-        'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
-        '-keyout', keyPath, '-out', certPath,
-        '-days', '825', '-subj', '/CN=QuickRemote',
-      ]);
-      if (result == null) {
-        throw const TlsSetupException(TlsSetupError.opensslMissing);
-      }
-      if (result.exitCode != 0 || !cert.existsSync()) {
-        throw Exception('Failed to generate TLS certificate via openssl: ${result.stderr}');
+    // Never renewed: phones pin the fingerprint and do not look at the
+    // dates, and a new certificate makes every phone ask the user again.
+    if (File(certPath).existsSync() && File(keyPath).existsSync()) {
+      await _restrictKey(keyPath);
+      try {
+        return _context(certPath, keyPath);
+      } on TlsException catch (e) {
+        debugPrint('Stored TLS certificate unusable, generating a new one: $e');
       }
     }
+    await _generateCert(certPath, keyPath);
+    await _restrictKey(keyPath);
+    return _context(certPath, keyPath);
+  }
 
-    // openssl already creates the key as 0600; this also fixes a key left
-    // readable by an older version, and refuses to serve with one that stays so.
+  Future<void> _generateCert(String certPath, String keyPath) async {
+    debugPrint('Generating new self-signed TLS certificate with openssl...');
+    final result = await _run('openssl', [
+      'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
+      '-keyout', keyPath, '-out', certPath,
+      '-days', '3650', '-subj', '/CN=QuickRemote',
+    ]);
+    if (result == null) {
+      throw const TlsSetupException(TlsSetupError.opensslMissing);
+    }
+    if (result.exitCode != 0 || !File(certPath).existsSync()) {
+      throw Exception('Failed to generate TLS certificate via openssl: ${result.stderr}');
+    }
+  }
+
+  /// openssl already creates the key as 0600; this also fixes a key left
+  /// readable by an older version, and refuses to serve with one that stays so.
+  Future<void> _restrictKey(String keyPath) async {
     await _run('chmod', ['600', keyPath]);
-    if (key.statSync().mode & 0x3F != 0) {
+    if (File(keyPath).statSync().mode & 0x3F != 0) {
       throw TlsSetupException(TlsSetupError.keyReadable, keyPath);
     }
-
-    return SecurityContext()
-      ..useCertificateChain(certPath)
-      ..usePrivateKey(keyPath);
   }
+
+  static SecurityContext _context(String certPath, String keyPath) => SecurityContext()
+    ..useCertificateChain(certPath)
+    ..usePrivateKey(keyPath);
 
   // ── firewalld / ufw ──
 
@@ -247,24 +257,25 @@ class LinuxNetwork implements PlatformNetwork {
     // would otherwise also face whatever else the PC is connected to.
     // The subnet is built from integers and the zone matched a strict regex,
     // so nothing user-controlled reaches the shell.
+    final String script;
+    final firewalld = await _firewalldActive();
+    final ufw = !firewalld && await _ufwActive();
+    if (!firewalld && !ufw) return true;
+    // Without a known local network nothing is opened: a rule for every
+    // source would face the internet too (a public IPv6 address, a hotspot).
     final subnet = await _localSubnet();
-    String? script;
-    if (await _firewalldActive()) {
+    if (subnet == null) return false;
+    if (firewalld) {
       final zone = await _activeZone();
       if (zone == null) return false;
-      final ports = subnet == null
-          ? '--add-port=$first-$last/tcp'
-          : "--add-rich-rule='rule family=ipv4 source address=$subnet port port=$first-$last protocol=tcp accept'";
-      script = 'firewall-cmd --permanent --zone=$zone $ports && '
+      script = 'firewall-cmd --permanent --zone=$zone '
+          "--add-rich-rule='rule family=ipv4 source address=$subnet port port=$first-$last protocol=tcp accept' && "
           'firewall-cmd --permanent --zone=$zone --add-service=mdns && '
           'firewall-cmd --reload';
-    } else if (await _ufwActive()) {
-      script = subnet == null
-          ? 'ufw allow $first:$last/tcp && ufw allow 5353/udp'
-          : 'ufw allow from $subnet to any port $first:$last proto tcp && '
-              'ufw allow from $subnet to any port 5353 proto udp';
+    } else {
+      script = 'ufw allow from $subnet to any port $first:$last proto tcp && '
+          'ufw allow from $subnet to any port 5353 proto udp';
     }
-    if (script == null) return true;
     final result = await _run('pkexec', ['sh', '-c', script]);
     return result != null && result.exitCode == 0;
   }
