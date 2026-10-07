@@ -1,805 +1,731 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="no-js">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="QuickRemote — Akıllı telefonunuzdan PowerPoint sunumlarınızı kontrol edin. Slayt yönetimi, lazer işaretçi, çizim araçları ve touchpad desteği.">
-  <meta name="keywords" content="sunum kumandası, PowerPoint uzaktan kontrol, presentation remote, QuickRemote, kablosuz sunum, slayt kontrolü">
-  <meta name="author" content="QuickRemote">
-  <meta name="theme-color" content="#06080f">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickRemote | Sunumunu telefonundan ya da saatinden yönet</title>
+  <meta name="description" content="PowerPoint, LibreOffice Impress ve WPS sunumlarını Android telefonundan ya da Wear OS saatinden yönet. Lazer, kalem, siyah ekran, slayt notları ve sayaç. Ücretsiz.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#F4F5FA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A0D18" media="(prefers-color-scheme: dark)">
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="QuickRemote — Sunumlarınızı Telefonunuzdan Yönetin">
-  <meta property="og:description" content="PowerPoint sunumlarınızı akıllı telefonunuzdan kontrol edin. Slayt geçişleri, lazer işaretçi, çizim araçları, touchpad ve sunum zamanlayıcı — hepsi avucunuzun içinde.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="assets/hero-mockup.jpg">
+  <meta property="og:locale" content="tr_TR">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:title" content="QuickRemote: sunumunu telefonundan ya da saatinden yönet">
+  <meta property="og:description" content="Telefonun kumanda, touchpad ve lazer olur. Wear OS saatte çerçeveyi çevirince slayt ilerler. PowerPoint, Impress ve WPS ile çalışır.">
+  <meta property="og:image" content="assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
 
-  <title>QuickRemote — Sunumlarınızı Telefonunuzdan Yönetin</title>
+  <link rel="alternate" hreflang="tr" href="./">
+  <link rel="alternate" hreflang="en" href="en/">
+  <link rel="alternate" hreflang="x-default" href="./">
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 
-  <!-- Styles -->
+  <link rel="preload" href="assets/fonts/SpaceGrotesk-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Inter-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
-
-  <!-- Languages -->
-  <link rel="alternate" hreflang="tr" href="index.html">
-  <link rel="alternate" hreflang="en" href="en/index.html">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%23a855f7'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><path d='M30 55 L45 70 L70 35' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
-  <!-- Without JavaScript the scroll animations never run: show everything. -->
-  <noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
+  <script>document.documentElement.classList.replace('no-js', 'js');</script>
+  <script src="main.js" defer></script>
 </head>
 <body>
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+<defs><radialGradient id="laser-glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FF6A3D" stop-opacity=".85"/><stop offset=".45" stop-color="#FF6A3D" stop-opacity=".28"/><stop offset="1" stop-color="#FF6A3D" stop-opacity="0"/></radialGradient></defs>
+<symbol id="mark" viewBox="-181 -181 368 368"><rect x="-118" y="-118" width="200" height="200" rx="70" fill="none" stroke="currentColor" stroke-width="38"/><line x1="16" y1="16" x2="74" y2="74" stroke="currentColor" stroke-width="38" stroke-linecap="round"/><circle cx="120" cy="120" r="64" fill="url(#laser-glow)"/><circle cx="120" cy="120" r="23" fill="#FF6A3D"/></symbol>
+<symbol id="i-add" viewBox="0 -960 960 960"><path d="M450-450H230q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h220v-220q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v220h220q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H510v220q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37v-220Z"/></symbol>
+<symbol id="i-arrow-back" viewBox="0 -960 960 960"><path d="m274-450 227 227q9 9 9 21t-9 21q-9 9-21 9t-21-9L181-459q-5-5-7-10t-2-11q0-6 2-11t7-10l278-278q9-9 21-9t21 9q9 9 9 21t-9 21L274-510h496q13 0 21.5 8.5T800-480q0 13-8.5 21.5T770-450H274Z"/></symbol>
+<symbol id="i-arrow-forward" viewBox="0 -960 960 960"><path d="M686-450H190q-13 0-21.5-8.5T160-480q0-13 8.5-21.5T190-510h496L459-737q-9-9-9-21t9-21q9-9 21-9t21 9l278 278q5 5 7 10t2 11q0 6-2 11t-7 10L501-181q-9 9-21 9t-21-9q-9-9-9-21t9-21l227-227Z"/></symbol>
+<symbol id="i-block" viewBox="0 -960 960 960"><path d="M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM480-140q61.01 0 117.51-20.5Q654-181 699-220L220-699q-38 46-59 102.17T140-480q0 142.37 98.81 241.19Q337.63-140 480-140Zm259-121q37-45 59-101.49 22-56.5 22-117.51 0-142.38-98.81-241.19T480-820q-60.66 0-116.83 21T261-739l478 478ZM480-480Z"/></symbol>
+<symbol id="i-bluetooth" viewBox="0 -960 960 960"><path d="M450-136v-272L277-235q-9 9-21 9t-21-9q-9-9-9-21t9-21l203-203-203-203q-9-9-9-21t9-21q9-9 21-9t21 9l173 173v-272q0-14 9.5-22t20.5-8q5 0 10.5 2t10.5 7l172 172q5 5 7 10t2 11q0 6-2 11t-7 10L522-480l151 151q5 5 7 10t2 11q0 6-2 11t-7 10L501-115q-5 5-10.5 7t-10.5 2q-11 0-20.5-8t-9.5-22Zm60-416 100-100-100-98v198Zm0 342 100-98-100-100v198Z"/></symbol>
+<symbol id="i-check" viewBox="0 -960 960 960"><path d="m378-332 363-363q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L399-267q-9 9-21 9t-21-9L175-449q-9-9-8.5-21.5T176-492q9-9 21.5-9t21.5 9l159 160Z"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 -960 960 960"><path d="M469-358q-5-2-10-7L261-563q-9-9-8.5-21.5T262-606q9-9 21.5-9t21.5 9l175 176 176-176q9-9 21-8.5t21 9.5q9 9 9 21.5t-9 21.5L501-365q-5 5-10 7t-11 2q-6 0-11-2Z"/></symbol>
+<symbol id="i-chevron-left" viewBox="0 -960 960 960"><path d="m406-481 177 177q9 9 8.5 21t-9.5 21q-9 9-21.5 9t-21.5-9L341-460q-5-5-7-10t-2-11q0-6 2-11t7-10l199-199q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L406-481Z"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 -960 960 960"><path d="M530-481 353-658q-9-9-8.5-21t9.5-21q9-9 21.5-9t21.5 9l198 198q5 5 7 10t2 11q0 6-2 11t-7 10L396-261q-9 9-21 8.5t-21-9.5q-9-9-9-21.5t9-21.5l176-176Z"/></symbol>
+<symbol id="i-clear" viewBox="0 -960 960 960"><path d="M180-40q-24.75 0-42.37-17.63Q120-75.25 120-100v-230q0-78.85 55.57-134.42Q231.15-520 310-520h60v-340q0-24.75 17.63-42.38Q405.25-920 430-920h100q24.75 0 42.38 17.62Q590-884.75 590-860v340h60q78.85 0 134.42 55.58Q840-408.85 840-330v230q0 24.75-17.62 42.37Q804.75-40 780-40H180Zm0-60h105v-130q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v130h105v-130q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v130h105v-130q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v130h105v-230q0-54.17-37.92-92.08Q704.17-460 650-460H310q-54.17 0-92.08 37.92Q180-384.17 180-330v230Zm350-420v-340H430v340h100Zm0 0H430h100Z"/></symbol>
+<symbol id="i-close" viewBox="0 -960 960 960"><path d="M480-438 270-228q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522-480l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480-438Z"/></symbol>
+<symbol id="i-computer" viewBox="0 -960 960 960"><path d="M70-120q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32Q57.25-180 70-180h820q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H70Zm70-120q-24 0-42-18t-18-42v-480q0-24 18-42t42-18h680q24 0 42 18t18 42v480q0 24-18 42t-42 18H140Zm0-60h680v-480H140v480Zm0 0v-480 480Z"/></symbol>
+<symbol id="i-desktop" viewBox="0 -960 960 960"><path d="M420-180v-100H140q-24 0-42-18t-18-42v-440q0-24 18-42t42-18h680q24 0 42 18t18 42v440q0 24-18 42t-42 18H540v100h56q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H364q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h56ZM140-340h680v-440H140v440Zm0 0v-440 440Z"/></symbol>
+<symbol id="i-devices" viewBox="0 -960 960 960"><path d="M501-540Zm-30 380H110q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32Q97.25-220 110-220h361q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5ZM180-280q-24 0-42-18t-18-42v-400q0-24 18-42t42-18h630q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H180v400h291q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H180Zm640 60v-400H621v400h199Zm-214 60q-18 0-31.5-13.5T561-205v-430q0-18 13.5-31.5T606-680h229q18 0 31.5 13.5T880-635v430q0 18-13.5 31.5T835-160H606Zm115-360q12 0 21-9t9-21q0-12-9-21t-21.48-9Q709-580 700-571t-9 21.48q0 11.52 9 20.52t21 9Zm0 100Z"/></symbol>
+<symbol id="i-dialpad" viewBox="0 -960 960 960"><path d="M479.91-40Q451-40 430.5-60.59 410-81.18 410-110.09t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5T529.41-60.5Q508.82-40 479.91-40Zm-250-740q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm0 246q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm0 247q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm500-493q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm-250 493q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm250 0q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm0-247q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm-250 0q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Zm0-246q-28.91 0-49.41-20.59-20.5-20.59-20.5-49.5t20.59-49.41q20.59-20.5 49.5-20.5t49.41 20.59q20.5 20.59 20.5 49.5t-20.59 49.41q-20.59 20.5-49.5 20.5Z"/></symbol>
+<symbol id="i-download" viewBox="0 -960 960 960"><path d="M469-327q-5-2-10-7L308-485q-9-9.27-8.5-21.64.5-12.36 9.11-21.36 9.39-9 21.89-9t21.5 9l98 99v-341q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v341l99-99q8.8-9 20.9-8.5 12.1.5 21.49 9.5 8.61 9 8.61 21.5t-9 21.5L501-334q-5 5-10.13 7-5.14 2-11 2-5.87 0-10.87-2ZM220-160q-24 0-42-18t-18-42v-113q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v113h520v-113q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v113q0 24-18 42t-42 18H220Z"/></symbol>
+<symbol id="i-eraser" viewBox="0 -960 960 960"><path d="m654-454-91 147q-8 13-22.5 10T522-314l-33-133-306 305q-9 9-21 9t-21-9q-9-9-9-21t9-21l305-305-133-33q-14-4-17-18.5t10-22.5l147-92-12-172q-1-15 12.5-22t24.5 3l132 111 160-64q14-5 24 5t5 24l-65 160 111 132q10 11 3.5 24.5T827-441l-173-13ZM131-721q-5-5-5-11t5-11l46-46q5-5 11-5t11 5l45 45q5 5 5 11t-5 11l-46 46q-5 5-11 5t-11-5l-45-45Zm428 307 63-102 120 9-78-92 45-111-111 45-92-78 9 120-102 64 117 29 29 116Zm163 283-46-46q-5-5-4.5-11t5.5-11l45-45q5-5 11-5t11 5l46 46q5 5 4.5 11t-5.5 11l-45 45q-5 5-11 5t-11-5ZM578-579Z"/></symbol>
+<symbol id="i-gamepad" viewBox="0 -960 960 960"><path d="M480-634Zm154 154Zm-307 0Zm153 153Zm-21-245-81-82q-5-5-7-10t-2-11v-175q0-13 8.5-21.5T399-880h163q13 0 21.5 8.5T592-850v175q0 6-2 11t-7 10l-82 82q-5 5-10 6.5t-11 1.5q-6 0-11-1.5t-10-6.5Zm113 113q-5-5-6.5-10t-1.5-11q0-6 1.5-11t6.5-10l82-82q5-5 10-7t11-2h175q13 0 21.5 8.5T880-562v163q0 13-8.5 21.5T850-369H675q-6 0-11-2t-10-7l-82-81ZM80-399v-163q0-13 8.5-21.5T110-592h175q6 0 11 2t10 7l82 82q5 5 6.5 10t1.5 11q0 6-1.5 11t-6.5 10l-82 81q-5 5-10 7t-11 2H110q-13 0-21.5-8.5T80-399Zm289 289v-175q0-6 2-11t7-10l81-82q5-5 10-6.5t11-1.5q6 0 11 1.5t10 6.5l82 82q5 5 7 10t2 11v175q0 13-8.5 21.5T562-80H399q-13 0-21.5-8.5T369-110Zm111-524 52-52v-134H429v134l51 52ZM140-429h135l52-51-52-52H140v103Zm289 289h103v-135l-52-52-51 52v135Zm257-289h134v-103H686l-52 52 52 51Z"/></symbol>
+<symbol id="i-hidden" viewBox="0 -960 960 960"><path d="M600-620q29 29 42.5 71.5T647-464q0 13-8.5 21.5T617-434q-13 0-21.5-8.5T587-464q11-34 2.5-64.5T559-580q-21-22-52-30t-64 3q-13 0-21.5-8.5T413-637q0-13 8.5-21.5T443-667q42-9 85 4.5t72 42.5ZM490-740q-32 0-64 3t-63 13q-12 4-24-1t-17-16q-5-11 0-22.5t16-15.5q35-11 72-16t75-5q137 0 249.5 75.5T907-526q3 6 5 12.5t2 13.5q0 7-1.5 13.5T908-474q-23 49-55 90.5T779-307q-9 8-20 5.5T741-313q-7-9-5.5-20t10.5-19q36-30 65-66.5t46-81.5q-49-109-148-174.5T490-740Zm-10 540q-136 0-247.5-76T55-472q-4-7-5.5-13.5T48-500q0-8 2-14.5t5-13.5q24-48 55.5-90.5T182-696L77-801q-9-9-8.5-21t8.5-21q9-9 21.5-9t21.5 9l716 716q8 8 8 19.5T836-87q-8 10-20.5 10T794-86L648-229q-41 15-83 22t-85 7ZM223-654q-41 29-72 68t-49 86q52 112 156.5 176T488-260q29 0 58-1.5t55-14.5l-64-64q-14 6-28.5 8t-28.5 2q-71 0-120.5-49.5T310-500q0-14 2.5-28.5T320-557l-97-97Zm305 142Zm-116 58Z"/></symbol>
+<symbol id="i-highlighter" viewBox="0 -960 960 960"><path d="M140 0q-24.75 0-42.37-17.88Q80-35.77 80-60.88 80-86 97.92-103.5 115.84-121 141-121h679q24.75 0 42.38 17.68Q880-85.65 880-60.82 880-36 862.08-18T819 0H140Zm80-301h44l391-391-22-22-22-22-391 391v44Zm-60 29.94v-84.93q0-6.01 2-11.51t7-10.5l485-485q9-9 20-13t22-4q11 0 22.5 4t19.5 13l44 44q9 8 13.5 19.5t4.5 22.85q0 10.65-4.3 21.61-4.31 10.97-13.7 20.04L297-250q-5 5-10.22 7-5.21 2-10.78 2h-85.67q-12.89 0-21.61-8.64-8.72-8.65-8.72-21.42ZM736-778l-41-41 41 41Zm-81 86-22-22-22-22 44 44Z"/></symbol>
+<symbol id="i-laser" viewBox="0 -960 960 960"><path d="m204-676-43-42q-9-9-9-21t8.61-21q9.39-9 21.89-9t21.5 9l42 42q8 9 8.5 21.1.5 12.1-8.5 20.9-9 9-21 8.5t-21-8.5Zm246-114v-60q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v60q0 12.75-8.68 21.37-8.67 8.63-21.5 8.63-12.82 0-21.32-8.63-8.5-8.62-8.5-21.37Zm264 73 43-43q9-8 21.1-8 12.1 0 20.9 9 9 9 9 21t-9 21l-43 43q-9 9-21 9t-21-8.61q-9-9.39-9-21.96 0-12.56 9-21.43ZM360-140v-140L258-382q-8-8-13-19.28-5-11.28-5-23.72v-115q0-24.75 17.63-42.38Q275.25-600 300-600h360q24.75 0 42.38 17.62Q720-564.75 720-540v115q0 12.44-5 23.72T702-382L600-280v140q0 24.75-17.62 42.37Q564.75-80 540-80H420q-24.75 0-42.37-17.63Q360-115.25 360-140Zm60 0h120v-165l120-120v-115H300v115l120 120v165Zm60-200Z"/></symbol>
+<symbol id="i-lock" viewBox="0 -960 960 960"><path d="M220-80q-24.75 0-42.37-17.63Q160-115.25 160-140v-434q0-24.75 17.63-42.38Q195.25-634 220-634h70v-96q0-78.85 55.61-134.42Q401.21-920 480.11-920q78.89 0 134.39 55.58Q670-808.85 670-730v96h70q24.75 0 42.38 17.62Q800-598.75 800-574v434q0 24.75-17.62 42.37Q764.75-80 740-80H220Zm0-60h520v-434H220v434Zm314.5-162.03Q557-324.06 557-355q0-30-22.67-54.5t-54.5-24.5q-31.83 0-54.33 24.5t-22.5 55q0 30.5 22.67 52.5t54.5 22q31.83 0 54.33-22.03ZM350-634h260v-96q0-54.17-37.88-92.08-37.88-37.92-92-37.92T388-822.08q-38 37.91-38 92.08v96ZM220-140v-434 434Z"/></symbol>
+<symbol id="i-menu" viewBox="0 -960 960 960"><path d="M150-240q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z"/></symbol>
+<symbol id="i-more" viewBox="0 -960 960 960"><path d="M207.86-432Q188-432 174-446.14t-14-34Q160-500 174.14-514t34-14Q228-528 242-513.86t14 34Q256-460 241.86-446t-34 14Zm272 0Q460-432 446-446.14t-14-34Q432-500 446.14-514t34-14Q500-528 514-513.86t14 34Q528-460 513.86-446t-34 14Zm272 0Q732-432 718-446.14t-14-34Q704-500 718.14-514t34-14Q772-528 786-513.86t14 34Q800-460 785.86-446t-34 14Z"/></symbol>
+<symbol id="i-music" viewBox="0 -960 960 960"><path d="M642.94-160q-47.94 0-81.44-33.56t-33.5-81.5q0-47.94 32.67-81.44Q593.33-390 640-390q15.97 0 30.48 3Q685-384 698-377v-308q0-14.88 10.35-24.94T734-720h111q14.88 0 24.94 10.29t10.06 25.5Q880-669 869.94-659T845-649h-87v375q0 47.5-33.56 80.75T642.94-160ZM150-320q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h246q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-170q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h413q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-170q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h413q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z"/></symbol>
+<symbol id="i-notes" viewBox="0 -960 960 960"><path d="M150-240q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h420q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z"/></symbol>
+<symbol id="i-pause" viewBox="0 -960 960 960"><path d="M615-200q-24.75 0-42.37-17.63Q555-235.25 555-260v-440q0-24.75 17.63-42.38Q590.25-760 615-760h55q24.75 0 42.38 17.62Q730-724.75 730-700v440q0 24.75-17.62 42.37Q694.75-200 670-200h-55Zm-325 0q-24.75 0-42.37-17.63Q230-235.25 230-260v-440q0-24.75 17.63-42.38Q265.25-760 290-760h55q24.75 0 42.38 17.62Q405-724.75 405-700v440q0 24.75-17.62 42.37Q369.75-200 345-200h-55Z"/></symbol>
+<symbol id="i-pen" viewBox="0 -960 960 960"><path d="M180-180h44l472-471-44-44-472 471v44Zm-30 60q-13 0-21.5-8.5T120-150v-73q0-12 5-23.5t13-19.5l557-556q8-8 19-12.5t23-4.5q11 0 22 4.5t20 12.5l44 44q9 9 13 20t4 22q0 11-4.5 22.5T823-694L266-138q-8 8-19.5 13t-23.5 5h-73Zm629-617-41-41 41 41Zm-105 64-22-22 44 44-22-22Z"/></symbol>
+<symbol id="i-phone" viewBox="0 -960 960 960"><path d="M260-40q-24.75 0-42.37-17.63Q200-75.25 200-100v-760q0-24 18-42t42-18h438q24.75 0 42.38 17.62Q758-884.75 758-860v150q18 3 30 16.95 12 13.96 12 31.63V-587q0 19-12 33t-30 17v437q0 24.75-17.62 42.37Q722.75-40 698-40H260Zm0-60h438v-760H260v760Zm0 0v-760 760Zm240-89q9-9 9-21t-9-21q-9-9-21-9t-21 9q-9 9-9 21t9 21q9 9 21 9t21-9Z"/></symbol>
+<symbol id="i-play" viewBox="0 -960 960 960"><path d="M320-258v-450q0-14 9-22t21-8q4 0 8 1t8 3l354 226q7 5 10.5 11t3.5 14q0 8-3.5 14T720-458L366-232q-4 2-8 3t-8 1q-12 0-21-8t-9-22Z"/></symbol>
+<symbol id="i-qr" viewBox="0 -960 960 960"><path d="M520-120v-80h80v80h-80Zm-80-80v-200h80v200h-80Zm320-120v-160h80v160h-80Zm-80-160v-80h80v80h-80Zm-480 80v-80h80v80h-80Zm-80-80v-80h80v80h-80Zm360-280v-80h80v80h-80ZM170-650h140v-140H170v140Zm-50 20v-180q0-12.75 8.63-21.38Q137.25-840 150-840h180q12.75 0 21.38 8.62Q360-822.75 360-810v180q0 12.75-8.62 21.37Q342.75-600 330-600H150q-12.75 0-21.37-8.63Q120-617.25 120-630Zm50 460h140v-140H170v140Zm-50 20v-180q0-12.75 8.63-21.38Q137.25-360 150-360h180q12.75 0 21.38 8.62Q360-342.75 360-330v180q0 12.75-8.62 21.37Q342.75-120 330-120H150q-12.75 0-21.37-8.63Q120-137.25 120-150Zm530-500h140v-140H650v140Zm-50 20v-180q0-12.75 8.63-21.38Q617.25-840 630-840h180q12.75 0 21.38 8.62Q840-822.75 840-810v180q0 12.75-8.62 21.37Q822.75-600 810-600H630q-12.75 0-21.37-8.63Q600-617.25 600-630Zm80 510v-120h-80v-80h160v120h80v80H680ZM520-400v-80h160v80H520Zm-160 0v-80h-80v-80h240v80h-80v80h-80Zm40-200v-160h80v80h80v80H400Zm-190-90v-60h60v60h-60Zm0 480v-60h60v60h-60Zm480-480v-60h60v60h-60Z"/></symbol>
+<symbol id="i-replay" viewBox="0 -960 960 960"><path d="M339.5-108Q274-136 225-185t-77-114.5Q120-365 120-440q0-13 8.5-21.5T150-470q13 0 21.5 8.5T180-440q0 125 87.5 212.5T480-140q125 0 212.5-87.5T780-440q0-125-85-212.5T485-740h-22l52 52q9 9 9 21t-9 21q-9 9-21 9t-21-9L368-751q-9-9-9-21t9-21l106-106q8-8 20.5-8t20.5 8q8 8 8 20.5t-8 20.5l-58 58h23q75 0 140.5 28T735-695q49 49 77 114.5T840-440q0 75-28 140.5T735-185q-49 49-114.5 77T480-80q-75 0-140.5-28Z"/></symbol>
+<symbol id="i-settings" viewBox="0 -960 960 960"><path d="M421-80q-14 0-25-9t-13-23l-15-94q-19-7-40-19t-37-25l-86 40q-14 6-28 1.5T155-226L97-330q-8-13-4.5-27t15.5-23l80-59q-2-9-2.5-20.5T185-480q0-9 .5-20.5T188-521l-80-59q-12-9-15.5-23t4.5-27l58-104q8-13 22-17.5t28 1.5l86 40q16-13 37-25t40-18l15-95q2-14 13-23t25-9h118q14 0 25 9t13 23l15 94q19 7 40.5 18.5T669-710l86-40q14-6 27.5-1.5T804-734l59 104q8 13 4.5 27.5T852-580l-80 57q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l80 58q12 8 15.5 22.5T863-330l-58 104q-8 13-22 17.5t-28-1.5l-86-40q-16 13-36.5 25.5T592-206l-15 94q-2 14-13 23t-25 9H421Zm15-60h88l14-112q33-8 62.5-25t53.5-41l106 46 40-72-94-69q4-17 6.5-33.5T715-480q0-17-2-33.5t-7-33.5l94-69-40-72-106 46q-23-26-52-43.5T538-708l-14-112h-88l-14 112q-34 7-63.5 24T306-642l-106-46-40 72 94 69q-4 17-6.5 33.5T245-480q0 17 2.5 33.5T254-413l-94 69 40 72 106-46q24 24 53.5 41t62.5 25l14 112Zm44-210q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Zm0-130Z"/></symbol>
+<symbol id="i-skip-next" viewBox="0 -960 960 960"><path d="M680-270v-420q0-13 8.5-21.5T710-720q13 0 21.5 8.5T740-690v420q0 13-8.5 21.5T710-240q-13 0-21.5-8.5T680-270Zm-460-27v-366q0-14 9-22t21-8q5 0 9 1.5t8 4.5l263 182q7 5 10 11.5t3 13.5q0 7-3 13.5T530-455L267-273q-4 3-8 4.5t-9 1.5q-12 0-21-8t-9-22Z"/></symbol>
+<symbol id="i-skip-prev" viewBox="0 -960 960 960"><path d="M220-270v-420q0-13 8.5-21.5T250-720q13 0 21.5 8.5T280-690v420q0 13-8.5 21.5T250-240q-13 0-21.5-8.5T220-270Zm473-3L430-455q-7-5-10-11.5t-3-13.5q0-7 3-13.5t10-11.5l263-182q4-3 8-4.5t9-1.5q12 0 21 8t9 22v366q0 14-9 22t-21 8q-5 0-9-1.5t-8-4.5Z"/></symbol>
+<symbol id="i-slideshow" viewBox="0 -960 960 960"><path d="M629-467q7-4.5 7-12.75T629-493L410-634q-8-5-15.5-.5T387-621v282q0 9 7.5 13.5t15.5-.5l219-141ZM180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0-600v600-600Z"/></symbol>
+<symbol id="i-stop" viewBox="0 -960 960 960"><path d="M240-300v-360q0-24.75 17.63-42.38Q275.25-720 300-720h360q24.75 0 42.38 17.62Q720-684.75 720-660v360q0 24.75-17.62 42.37Q684.75-240 660-240H300q-24.75 0-42.37-17.63Q240-275.25 240-300Z"/></symbol>
+<symbol id="i-terminal" viewBox="0 -960 960 960"><path d="M140-160q-24 0-42-18t-18-42v-520q0-24 18-42t42-18h680q24 0 42 18t18 42v520q0 24-18 42t-42 18H140Zm0-60h680v-436H140v436Zm221-218-83-83q-9-9-8.5-21t9.5-21q9-9 21-9t21 9l104 104q9 9 9 21t-9 21L321-313q-9 9-21 9t-21-9q-9-9-9-21t9-21l82-83Zm159 150q-13 0-21.5-8.5T490-318q0-13 8.5-21.5T520-348h160q13 0 21.5 8.5T710-318q0 13-8.5 21.5T680-288H520Z"/></symbol>
+<symbol id="i-timer" viewBox="0 -960 960 960"><path d="M390-860q-13 0-21.5-8.5T360-890q0-13 8.5-21.5T390-920h180q13 0 21.5 8.5T600-890q0 13-8.5 21.5T570-860H390Zm111.5 438.5Q510-430 510-443v-170q0-13-8.5-21.5T480-643q-13 0-21.5 8.5T450-613v170q0 13 8.5 21.5T480-413q13 0 21.5-8.5Zm-161 312Q275-138 226-187t-77.5-114.5Q120-367 120-441t28.5-139.5Q177-646 226-695t114.5-77.5Q406-801 480-801q67 0 126 22.5T711-716l30-30q9-9 21-9t21 9q9 9 9 21t-9 21l-30 30q36 40 61.5 97T840-441q0 74-28.5 139.5T734-187q-49 49-114.5 77.5T480-81q-74 0-139.5-28.5Zm352-119Q780-316 780-441t-87.5-212.5Q605-741 480-741t-212.5 87.5Q180-566 180-441t87.5 212.5Q355-141 480-141t212.5-87.5ZM480-440Z"/></symbol>
+<symbol id="i-touch" viewBox="0 -960 960 960"><path d="M445-80q-29 0-56-12t-45-35L143-383q-7-9-7-20t8-19l4-4q14-15 34.5-18.5T221-438l99 53v-365q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v415q0 17-14.5 25.5t-29.5.5l-100-53 156 198q10 12 23.76 18 13.76 6 29.24 6h205q38 0 64-26t26-64v-170q0-25.5-17.25-42.75T680-460H490q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h190q50 0 85 35t35 85v170q0 63-43.5 106.5T650-80H445Zm43-250Zm-16.7-320q-13.3 0-21.8-8.63-8.5-8.62-8.5-21.37 0-1.5 4-15 7-12 11-26t4-29.48Q460-796 427.88-828q-32.12-32-78-32T272-827.92q-32 32.09-32 77.92 0 15 4 29t11 26q2 3 3 6.5t1 8.5q0 12.75-8.58 21.37-8.58 8.63-21.84 8.63-8.58 0-15.58-4t-11.17-11.84Q191-685 185.5-706.25q-5.5-21.25-5.5-44.2 0-70.55 49.5-120.05T350-920q71 0 120.5 49.5T520-750.31q0 22.99-5.7 44.28-5.71 21.29-16.3 40.03-4 8-11.04 12-7.05 4-15.66 4Z"/></symbol>
+<symbol id="i-video" viewBox="0 -960 960 960"><path d="m415-328 218-141q7-4.5 7-12.75T633-495L415-636q-8-5-15.5-.5T392-623v282q0 9 7.5 13.5t15.5-.5ZM140-160q-24 0-42-18t-18-42v-520q0-24 18-42t42-18h680q24 0 42 18t18 42v520q0 24-18 42t-42 18H140Zm0-60h680v-520H140v520Zm0 0v-520 520Z"/></symbol>
+<symbol id="i-volume" viewBox="0 -960 960 960"><path d="M780-481q0-94-52.5-169T590-759q-12-5-17-16t0-22q5-12 17.5-16.5t25.5.5q101 41 162.5 131T840-481q0 111-61.5 201T616-149q-13 5-25.5.5T573-165q-5-11 0-22t17-16q85-34 137.5-109T780-481ZM280-360H150q-13 0-21.5-8.5T120-390v-180q0-13 8.5-21.5T150-600h130l149-149q14-14 32.5-6.5T480-728v496q0 20-18.5 27.5T429-211L280-360Zm380-120q0 52-26 94t-73 64q-8 4-14.5-1t-6.5-13v-289q0-8 6.5-13t14.5-1q47 22 73 65t26 94ZM420-648 307-540H180v120h127l113 109v-337ZM298-480Z"/></symbol>
+<symbol id="i-watch" viewBox="0 -960 960 960"><path d="M411-820h138-138Zm0 680h138-138Zm1 60q-20 0-36.5-12T354-124l-25-91q-5-16-14.5-30.5T289-274q-42-37-65.5-90T200-480q0-62 23-115.5t65-90.5q16-14 26-29t15-30l25-91q5-20 21.5-32t36.5-12h136q20 0 36.5 12t21.5 32l25 91q5 16 15 30.5t26 28.5q42 36 65 89.5T760-480q0 62-23.5 115T671-274q-16 14-25.5 28.5T631-215l-25 91q-5 20-21.5 32T548-80H412Zm224-244q64-64 64-156t-64-156q-64-64-156-64t-156 64q-64 64-64 156t64 156q64 64 156 64t156-64ZM393-744q23-7 44.5-10.5T480-758q21 0 42.5 3.5T567-744l-18-76H411l-18 76Zm18 604h138l18-76q-23 6-44.5 9.5T480-203q-21 0-42.5-3.5T393-216l18 76Z"/></symbol>
+<symbol id="i-watch-vibrate" viewBox="0 -960 960 960"><path d="M60-480q0-50 11-95.5t31-87.5q5-11 17-14.5t23 2.5q11 6 14 18.5t-2 23.5q-17 35-25.5 73t-8.5 80q0 42 8.5 80t25.5 73q5 11 2 23t-14 18q-11 6-23 3t-17-14q-20-42-31-88t-11-95Zm840 0q0 49-11 95t-31 88q-5 11-17 14t-23-3q-11-6-14-18t2-23q17-35 25.5-73t8.5-80q0-42-8.5-80T806-633q-5-11-2-23.5t14-18.5q11-6 23-2.5t17 14.5q20 42 31 87.5t11 95.5ZM411-820h138-138Zm0 680h138-138Zm1 60q-20 0-36.5-12T354-124l-25-91q-5-16-14.5-30.5T289-274q-42-37-65.5-90T200-480q0-62 23-115.5t65-90.5q16-14 26-29t15-30l25-91q5-20 21.5-32t36.5-12h136q20 0 36.5 12t21.5 32l25 91q5 16 15 30.5t26 28.5q42 36 65 89.5T760-480q0 62-23.5 115T671-274q-16 14-25.5 28.5T631-215l-25 91q-5 20-21.5 32T548-80H412Zm224-244q64-64 64-156t-64-156q-64-64-156-64t-156 64q-64 64-64 156t64 156q64 64 156 64t156-64ZM393-744q23-7 44.5-10.5T480-758q21 0 42.5 3.5T567-744l-18-76H411l-18 76Zm18 604h138l18-76q-23 6-44.5 9.5T480-203q-21 0-42.5-3.5T393-216l18 76Z"/></symbol>
+<symbol id="i-wifi" viewBox="0 -960 960 960"><path d="M417-154q-27-27-27-63t27-63q27-27 63-27t63 27q27 27 27 63t-27 63q-27 27-63 27t-63-27Zm209-378.5Q694-505 757-451q14 12 15 30.5T759-388q-14 14-32 13t-33-13q-53-44-106.5-63T480-470q-54 0-107.5 19T266-388q-15 12-33 13t-32-13q-14-14-13-32.5t15-30.5q63-54 131-81.5T480-560q78 0 146 27.5Zm95.5-219Q835-703 926-622q14 13 15.5 31.5T929-558q-14 14-33.5 13.5T861-558q-83-70-178-111t-203-41q-108 0-203 41T99-558q-15 13-34 13.5T32-558q-14-14-13-32.5T34-622q91-81 204.5-129.5T480-800q128 0 241.5 48.5Z"/></symbol>
+</svg>
 
-  <!-- ===================== HEADER ===================== -->
-  <header class="site-header" id="site-header">
-    <div class="header-inner">
-      <!-- Logo -->
-      <a href="#" class="logo" aria-label="QuickRemote Ana Sayfa">
-        <div class="logo-icon">
-          <img src="assets/logo.png" alt="QuickRemote Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+<a class="skip" href="#main">İçeriğe geç</a>
+
+<header class="top" data-top>
+  <div class="wrap top-row">
+    <a class="brand" href="#top" aria-label="QuickRemote, sayfanın başı">
+      <svg class="brand-mark" aria-hidden="true"><use href="#mark"/></svg>
+      <span class="brand-word" translate="no"><b>Quick</b>Remote</span>
+    </a>
+    <nav class="nav" aria-label="Sayfa bölümleri">
+      <a href="#watch">Saat</a>
+      <a href="#how-it-works">Nasıl çalışır</a>
+      <a href="#features">Özellikler</a>
+      <a href="#faq">SSS</a>
+    </nav>
+    <a class="lang" href="en/" hreflang="en" lang="en"><span aria-hidden="true">EN</span><span class="sr">English</span></a>
+    <a class="btn btn-primary btn-sm" href="#download"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>İndir</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" data-menu-btn>
+      <svg class="i" aria-hidden="true"><use href="#i-menu"/></svg>
+      <span class="sr">Menü</span>
+    </button>
+  </div>
+  <nav class="menu wrap" id="menu" aria-label="Menü" data-menu hidden>
+    <a href="#watch">Saat</a>
+    <a href="#how-it-works">Nasıl çalışır</a>
+    <a href="#features">Özellikler</a>
+    <a href="#faq">SSS</a>
+    <a href="en/" hreflang="en" lang="en">English</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- Hero: a sample talk on a screen, driven by a copy of the phone remote. -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap">
+      <h1 class="hero-title" id="hero-title">Sunumunu telefonundan ya da saatinden yönet.</h1>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="lede">Telefonun kumanda, touchpad ve lazer olur. Galaxy&nbsp;Watch’ta çerçeveyi çevirince slayt ilerler. PowerPoint, Impress ve WPS ile çalışır.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#download"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>İndir</a>
+            <a class="btn btn-line" href="#how-it-works">Nasıl çalışır</a>
+          </div>
         </div>
-        <span class="logo-text">Quick<span>Remote</span></span>
-      </a>
 
-      <!-- Navigation -->
-      <nav class="main-nav" aria-label="Ana gezinme">
-        <a href="#features">Özellikler</a>
-        <a href="#how-it-works">Nasıl Çalışır?</a>
-        <a href="#faq">SSS</a>
-        <a href="#contact">İletişim</a>
-      </nav>
+        <div class="stage" data-stage>
+          <div class="screen" tabindex="0" role="group" aria-roledescription="sunum ekranı" aria-label="Örnek sunum: Kahvenin kısa tarihi. Tıklayınca ya da sağ ok tuşuyla slayt ilerler.">
+            <div class="screen-glass" data-show>
+              <div class="rail" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="deck">
+                <div class="slide s-title is-on" data-note="Kendini tanıt. Konuşma on dakika sürecek.">
+                  <p class="s-kicker">Kahve Kulübü, Ekim buluşması</p>
+                  <p class="s-h">Kahvenin kısa tarihi</p>
+                  <p class="s-sub">Yemen’den İstanbul’a, oradan dünyaya</p>
+                </div>
+                <div class="slide" data-note="Hakem ile Şems’in hikâyesini anlat.">
+                  <p class="s-big">1554</p>
+                  <p class="s-text">İstanbul’un ilk kahvehanesi Tahtakale’de açıldı.</p>
+                  <p class="s-foot">Kahve Kulübü</p>
+                </div>
+                <div class="slide" data-note="Salondan bir örnek iste.">
+                  <p class="s-q">“Bir fincan kahvenin kırk yıl hatırı vardır.”</p>
+                  <p class="s-cite">Atasözü</p>
+                  <p class="s-foot">Kahve Kulübü</p>
+                </div>
+                <div class="slide" data-note="Köpüğün neden önemli olduğundan bahset.">
+                  <p class="s-big">2013</p>
+                  <p class="s-text">Türk kahvesi kültürü ve geleneği UNESCO listesine girdi.</p>
+                  <p class="s-foot">Kahve Kulübü</p>
+                </div>
+                <div class="slide s-end" data-note="Bir sonraki buluşmanın tarihini duyur.">
+                  <p class="s-h">Sorular?</p>
+                  <p class="s-sub">Teşekkürler.</p>
+                </div>
+              </div>
+              <div class="blank" aria-hidden="true"></div>
+              <div class="laser" aria-hidden="true"></div>
+            </div>
+          </div>
 
-      <!-- Header CTA -->
-      <div class="header-cta">
-        <a href="en/index.html" class="lang-switch" lang="en" hreflang="en">English</a>
-        <a href="#download" class="btn btn-primary btn-sm">
-          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Hemen İndir
+          <div class="phone" role="group" aria-label="QuickRemote kumandası, örnek" data-phone>
+            <div class="phone-scale">
+              <div class="phone-body">
+                <div class="ph">
+                  <div class="ph-status" aria-hidden="true">
+                    <span>14:32</span>
+                    <span class="ph-sys"><svg class="i"><use href="#i-wifi"/></svg><i class="ph-batt"></i></span>
+                  </div>
+                  <div class="ph-head" aria-hidden="true">
+                    <span class="ph-tile"><svg><use href="#mark"/></svg></span>
+                    <span class="ph-id"><span class="ph-word" translate="no"><b>Quick</b>Remote</span><span class="ph-sub">Ofis-PC · 192.168.1.24</span></span>
+                    <span class="ph-chip">Bağlı</span>
+                    <svg class="i"><use href="#i-settings"/></svg>
+                  </div>
+                  <div class="ph-timer" aria-hidden="true"><svg class="i"><use href="#i-timer"/></svg><span data-timer>00:00</span></div>
+
+                  <div class="ph-card">
+                    <div class="ph-card-top">
+                      <svg class="i" aria-hidden="true"><use href="#i-slideshow"/></svg>
+                      <span class="ph-over">Slayt</span>
+                      <i class="ph-pulse" aria-hidden="true"></i>
+                      <button class="ph-notes" type="button" data-cmd="notes" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#i-notes"/></svg>Notlar</button>
+                    </div>
+                    <p class="ph-count" aria-hidden="true"><span class="ph-cur" data-cur>1</span><span class="ph-tot">  /  5</span></p>
+                    <div class="ph-track" aria-hidden="true" data-track><i class="is-on"></i><i></i><i></i><i></i><i></i></div>
+                  </div>
+
+                  <div class="ph-fill"></div>
+                  <div class="ph-row">
+                    <button class="ph-act" type="button" data-cmd="start"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Başlat</button>
+                    <button class="ph-act ph-end" type="button" data-cmd="end"><svg class="i" aria-hidden="true"><use href="#i-stop"/></svg>Bitir</button>
+                  </div>
+                  <div class="ph-row">
+                    <button class="ph-scr" type="button" data-cmd="black" aria-pressed="false"><i class="sw sw-black"></i>Siyah Ekran</button>
+                    <button class="ph-scr" type="button" data-cmd="white" aria-pressed="false"><i class="sw sw-white"></i>Beyaz Ekran</button>
+                  </div>
+                  <div class="ph-row ph-slides">
+                    <button class="ph-slide" type="button" data-cmd="prev"><span class="ph-circ"><svg class="i" aria-hidden="true"><use href="#i-arrow-back"/></svg></span>Geri</button>
+                    <button class="ph-slide ph-next is-hint" type="button" data-cmd="next"><span class="ph-circ"><svg class="i" aria-hidden="true"><use href="#i-arrow-forward"/></svg></span>İleri</button>
+                  </div>
+                  <div class="ph-nav" aria-hidden="true">
+                    <span class="is-on"><svg class="i"><use href="#i-gamepad"/></svg>Kontroller</span>
+                    <span><svg class="i"><use href="#i-touch"/></svg>Touchpad</span>
+                    <span><svg class="i"><use href="#i-music"/></svg>Medya</span>
+                  </div>
+
+                  <div class="ph-sheet" data-sheet hidden>
+                    <p class="ph-sheet-title">Slayt Notları</p>
+                    <p class="ph-sheet-text" data-note-text></p>
+                    <button class="ph-sheet-close" type="button" data-cmd="notes">Kapat</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="stage-hint">Telefondaki düğmeleri dene.<span class="hint-keys"> Ekrana tıklayınca <kbd>←</kbd> <kbd>→</kbd> tuşları da çalışır.</span></p>
+          <p class="sr" aria-live="polite" data-live="Slayt {n} / {t}"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Watch: the Wear OS remote, bezel and all. -->
+  <section class="watch-sec section" id="watch" aria-labelledby="watch-title">
+    <div class="wrap watch-grid">
+      <div class="watch-copy">
+        <p class="new-tag">Yeni</p>
+        <h2 class="h2" id="watch-title">Çerçeveyi çevir, slayt ilerlesin.</h2>
+        <p class="lede">QuickRemote artık Wear&nbsp;OS saatlerde. Saat bilgisayara Bluetooth klavye olarak bağlanır; telefona da PC uygulamasına da gerek kalmaz.</p>
+        <dl class="facts">
+          <div>
+            <dt>Çerçeve ya da kuron</dt>
+            <dd>Galaxy&nbsp;Watch’ta çerçeveyi, Pixel&nbsp;Watch’ta kuronu çevir. Her tık bir slayt.</dd>
+          </div>
+          <div>
+            <dt>Bakmadan sun</dt>
+            <dd>Tuş gidince saat bir kez titrer. Bilgisayar bağlı değilse iki kez titrer.</dd>
+          </div>
+          <div>
+            <dt>Bitir bir adım ötede</dt>
+            <dd>Başlat, siyah ekran, beyaz ekran ve bitir alttaki menüde durur. Gösteriyi yanlışlıkla bitirmezsin.</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="watch-demo" data-watch-demo>
+        <div class="watch" tabindex="0" role="group" aria-roledescription="saat" aria-label="Saat kumandası, örnek. Ok tuşları da çalışır." data-watch>
+          <div class="watch-case" aria-hidden="true"></div>
+          <div class="watch-bezel" aria-hidden="true" data-bezel></div>
+          <div class="watch-glass" aria-hidden="true"></div>
+          <div class="watch-screen">
+            <svg class="watch-time" viewBox="0 0 100 100" aria-hidden="true">
+              <path id="watch-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none"/>
+              <text><textPath href="#watch-arc" startOffset="50%" text-anchor="middle"><tspan data-clock>10:09</tspan><tspan class="host"> · Ofis-PC</tspan></textPath></text>
+            </svg>
+            <button class="wh wh-prev" type="button" data-cmd="prev" aria-label="Önceki slayt"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+            <button class="wh wh-next" type="button" data-cmd="next" aria-label="Sonraki slayt"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+            <button class="w-edge" type="button" aria-label="Diğer işlemler" aria-expanded="false" aria-controls="watch-menu" data-wmenu><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
+            <div class="watch-menu" id="watch-menu" data-wmenu-panel hidden>
+              <p class="wm-title">Sunum</p>
+              <button type="button" data-cmd="start"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Gösteriyi başlat</button>
+              <button type="button" data-cmd="black"><i class="sw sw-black"></i>Siyah ekran</button>
+              <button type="button" data-cmd="white"><i class="sw sw-white"></i>Beyaz ekran</button>
+              <button class="wm-danger" type="button" data-cmd="end"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg>Gösteriyi bitir</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini" aria-hidden="true">
+          <div class="screen-glass" data-show data-mirror>
+            <div class="rail"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="deck"></div>
+            <div class="blank"></div>
+          </div>
+        </div>
+
+        <div class="keys" aria-hidden="true" translate="no">
+          <span class="keys-k">Bilgisayara giden tuş</span>
+          <span class="key" data-key="prev">Page&nbsp;Up</span>
+          <span class="key" data-key="next">Page&nbsp;Down</span>
+          <span class="key" data-key="start">F5</span>
+          <span class="key" data-key="black">B</span>
+          <span class="key" data-key="white">W</span>
+          <span class="key" data-key="end">Esc</span>
+        </div>
+        <p class="sr" aria-live="polite" data-live="Slayt {n} / {t}"></p>
+        <p class="demo-hint">Çerçeveyi sürükleyerek çevir ya da ekranın yarılarına dokun.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works: Wi-Fi with the PC app, Bluetooth, or the watch. -->
+  <section class="modes section" id="how-it-works" aria-labelledby="modes-title">
+    <div class="wrap">
+      <h2 class="h2" id="modes-title">Üç yoldan biriyle bağlan.</h2>
+      <p class="lede">PC uygulamasıyla her özellik açılır. Bilgisayara bir şey kurmak istemiyorsan telefon ya da saat bilgisayara klavye gibi bağlanır.</p>
+
+      <div class="seg" role="tablist" aria-label="Bağlantı yolu" data-tabs>
+        <button type="button" role="tab" id="tab-wifi" aria-controls="panel-wifi" aria-selected="true"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>Wi-Fi</button>
+        <button type="button" role="tab" id="tab-bt" aria-controls="panel-bt" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-bluetooth"/></svg>Bluetooth</button>
+        <button type="button" role="tab" id="tab-watch" aria-controls="panel-watch" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-watch"/></svg>Saat</button>
+        <span class="seg-thumb" aria-hidden="true"></span>
+      </div>
+
+      <div class="mode" role="tabpanel" id="panel-wifi" aria-labelledby="tab-wifi" tabindex="0">
+        <div class="mode-text">
+          <h3>Telefon ve QuickRemote&nbsp;PC</h3>
+          <p class="mode-intro">En çok özellik bu yolda. Telefonla bilgisayar aynı Wi-Fi ağında olmalı; internet gerekmez.</p>
+          <ol class="steps">
+            <li>Bilgisayarda QuickRemote&nbsp;PC’yi aç.</li>
+            <li>Telefonda QR kodu okut. Aynı ağdaki bilgisayarlar listede de görünür.</li>
+            <li>Sunumunu aç, telefonda Başlat’a dokun.</li>
+          </ol>
+          <ul class="caps" aria-label="Bu yolla">
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Slayt numarası ve notlar</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Lazer, kalem, vurgulayıcı</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Touchpad</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Video ve ses</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Sunum raporu</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Birden fazla telefon</li>
+          </ul>
+        </div>
+        <figure class="pc-card" aria-hidden="true">
+          <div class="pc-bar">
+            <svg><use href="#mark"/></svg>QuickRemote <b>PC</b>
+            <span class="pc-win"><i>−</i><i>□</i><i>×</i></span>
+          </div>
+          <div class="pc-body">
+            <div class="pc-qr"><svg viewBox="0 0 33 33" shape-rendering="crispEdges" aria-hidden="true"><path stroke="#0E1224" d="M0 0.5h7m1 0h1m2 0h1m7 0h2m2 0h1m2 0h7M0 1.5h1m5 0h1m1 0h2m1 0h2m1 0h1m2 0h1m3 0h4m1 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m3 0h6m2 0h3m3 0h1m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h3m1 0h1m5 0h1m3 0h1m1 0h1m1 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m3 0h1m2 0h3m3 0h1m1 0h1m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h8m3 0h2m1 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m1 0h2m2 0h3m1 0h1m3 0h2M0 8.5h1m1 0h2m1 0h3m1 0h2m3 0h5m2 0h4m1 0h1m2 0h1m1 0h2M1 9.5h1m1 0h1m1 0h1m1 0h1m2 0h1m2 0h1m2 0h6m1 0h1m2 0h2m1 0h2m1 0h1M0 10.5h1m1 0h1m3 0h1m1 0h1m2 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h2m3 0h3m1 0h2M0 11.5h5m6 0h2m3 0h2m4 0h1m4 0h1m1 0h1m2 0h1M1 12.5h3m2 0h2m1 0h2m3 0h3m3 0h1m1 0h4m1 0h3M2 13.5h2m3 0h2m5 0h1m2 0h1m2 0h2m2 0h1m2 0h1m1 0h1m1 0h1M0 14.5h2m2 0h1m1 0h1m1 0h1m1 0h2m2 0h1m4 0h3m2 0h1m1 0h4M0 15.5h1m1 0h1m4 0h4m2 0h3m5 0h1m3 0h2m2 0h2M0 16.5h2m4 0h1m1 0h4m1 0h2m3 0h1m1 0h4m1 0h2m1 0h3M1 17.5h1m1 0h1m1 0h1m4 0h1m2 0h1m1 0h1m2 0h1m1 0h1m1 0h5m1 0h2m1 0h2M2 18.5h2m2 0h2m4 0h1m1 0h3m1 0h1m1 0h3m1 0h1m2 0h2m1 0h2M3 19.5h3m1 0h1m2 0h3m4 0h3m2 0h4m2 0h1m2 0h1M0 20.5h1m1 0h2m2 0h2m4 0h3m1 0h1m5 0h1m4 0h1m1 0h4M0 21.5h3m2 0h1m2 0h6m1 0h2m3 0h2m1 0h1m2 0h1m2 0h1m2 0h1M2 22.5h1m2 0h3m2 0h1m1 0h2m1 0h1m1 0h5m1 0h1m1 0h3m1 0h4M1 23.5h1m3 0h1m2 0h3m1 0h1m2 0h1m4 0h1m2 0h1m2 0h1m1 0h1m3 0h1M0 24.5h1m1 0h3m1 0h2m6 0h1m2 0h3m2 0h1m1 0h5m2 0h2M8 25.5h1m2 0h1m2 0h3m2 0h3m2 0h1m3 0h2M0 26.5h7m1 0h2m4 0h1m2 0h5m1 0h2m1 0h1m1 0h1M0 27.5h1m5 0h1m1 0h2m2 0h1m1 0h1m2 0h2m1 0h1m2 0h2m3 0h4M0 28.5h1m1 0h3m1 0h1m4 0h1m1 0h1m1 0h5m2 0h7m1 0h1m1 0h1M0 29.5h1m1 0h3m1 0h1m1 0h1m2 0h4m1 0h2m1 0h1m1 0h3m3 0h1m1 0h4M0 30.5h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2m3 0h1m1 0h1m3 0h2m1 0h1M0 31.5h1m5 0h1m6 0h2m2 0h2m1 0h1m1 0h1m4 0h2m3 0h1M0 32.5h7m1 0h1m1 0h1m3 0h1m1 0h4m1 0h1m1 0h1m2 0h1m1 0h2"/></svg></div>
+            <div>
+              <p class="pc-label">Bağlanmak için QR kodu tarayın</p>
+              <p class="pc-pin-k">PIN</p>
+              <p class="pc-pin">482 913</p>
+              <p class="pc-code">Güvenlik kodu: 4F2A-91C3-0B7E-D58A</p>
+            </div>
+          </div>
+        </figure>
+      </div>
+
+      <div class="mode" role="tabpanel" id="panel-bt" aria-labelledby="tab-bt" tabindex="0">
+        <div class="mode-text">
+          <h3>Yalnızca telefon</h3>
+          <p class="mode-intro">Bilgisayara bir şey kurman gerekmez. Telefon bilgisayara Bluetooth klavye ve fare olarak bağlanır.</p>
+          <ol class="steps">
+            <li>Uygulamada Bluetooth ile Bağlan’a dokun.</li>
+            <li>Bilgisayarın Bluetooth ayarlarında telefonunu ekle. Bunu bir kez yaparsın.</li>
+            <li>Sunum programını seç: PowerPoint, Impress ya da WPS.</li>
+          </ol>
+          <ul class="caps" aria-label="Bu yolla">
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>İleri, geri, başlat, bitir</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Siyah ve beyaz ekran</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Kalem ve vurgulayıcı</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Touchpad</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Medya tuşları ve ses</li>
+          </ul>
+          <p class="caps-note">Bilgisayar klavyeye cevap vermediği için slayt numarası ve notlar bu yolda telefona gelmez.</p>
+        </div>
+        <figure class="keymap" aria-label="Telefonun bastığı tuşlar">
+          <div><span>İleri</span><kbd>Page&nbsp;Down</kbd></div>
+          <div><span>Geri</span><kbd>Page&nbsp;Up</kbd></div>
+          <div><span>Başlat</span><kbd>F5</kbd></div>
+          <div><span>Bitir</span><kbd>Esc</kbd></div>
+          <div><span>Siyah ekran</span><kbd>B</kbd></div>
+          <div><span>Kalem</span><span><kbd>Ctrl</kbd><kbd>P</kbd></span></div>
+        </figure>
+      </div>
+
+      <div class="mode" role="tabpanel" id="panel-watch" aria-labelledby="tab-watch" tabindex="0">
+        <div class="mode-text">
+          <h3>Yalnızca saat</h3>
+          <p class="mode-intro">Telefon cebinde kalabilir. Saat bilgisayara doğrudan Bluetooth klavye olarak bağlanır.</p>
+          <ol class="steps">
+            <li>Saatte QuickRemote’u aç, Bilgisayar ekle’ye dokun.</li>
+            <li>Bilgisayarın Bluetooth ayarlarında saati seç, kodu iki cihazda da onayla.</li>
+            <li>Çerçeveyi çevir ya da ekrana dokun.</li>
+          </ol>
+          <ul class="caps" aria-label="Bu yolla">
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>İleri ve geri</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Başlat ve bitir</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Siyah ve beyaz ekran</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Titreşimle onay</li>
+          </ul>
+        </div>
+        <figure class="w-mini" aria-hidden="true">
+          <div class="w-mini-face">
+            <p class="w-mini-time" data-clock>10:09</p>
+            <p class="w-mini-h">Bilgisayarlar</p>
+            <p class="w-mini-item"><svg class="i"><use href="#i-computer"/></svg><span>Ofis-PC<small>Bağlı</small></span></p>
+            <p class="w-mini-add"><svg class="i"><use href="#i-add"/></svg>Bilgisayar ekle</p>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features of the Wi-Fi mode, each shown with the app's own component. -->
+  <section class="features section" id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <h2 class="h2" id="features-title">Telefon, kumandadan fazlasını yapar.</h2>
+      <p class="lede">Bunlar Wi-Fi modunda, QuickRemote&nbsp;PC ile gelir.</p>
+
+      <div class="bento">
+        <article class="tile t-draw">
+          <div class="tile-vis">
+            <div class="draw has-pen has-hl" data-draw>
+              <div class="draw-slide">
+                <div class="slide">
+                  <p class="s-big"><span class="ink">1554<svg class="ink-pen" viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 118 9 C 70 -2 18 8 8 42 C 0 74 52 96 108 92 C 166 88 196 66 192 38 C 188 14 150 4 104 7"/></svg></span></p>
+                  <p class="s-text">İstanbul’un ilk kahvehanesi <span class="ink-hl">Tahtakale’de</span> açıldı.</p>
+                  <p class="s-foot">Kahve Kulübü</p>
+                </div>
+                <div class="draw-laser" aria-hidden="true"></div>
+                <div class="draw-eraser" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="tools" role="toolbar" aria-label="Çizim araçları" data-tools>
+              <button class="tool" type="button" data-tool="laser" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-laser"/></svg>Lazer</button>
+              <button class="tool" type="button" data-tool="pen" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-pen"/></svg>Kalem</button>
+              <button class="tool" type="button" data-tool="highlighter" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-highlighter"/></svg>Vurgulayıcı</button>
+              <button class="tool" type="button" data-tool="eraser" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-eraser"/></svg>Silgi</button>
+              <button class="tool tool-clear" type="button" data-tool="clear"><svg class="i" aria-hidden="true"><use href="#i-clear"/></svg>Temizle</button>
+            </div>
+            <div class="swatches" role="radiogroup" aria-label="Kalem Rengi" data-swatches data-label-pen="Kalem Rengi" data-label-highlighter="Vurgulayıcı Rengi">
+              <span class="swatches-k" aria-hidden="true" data-swatch-label>Kalem Rengi</span>
+              <button class="swatch" type="button" role="radio" aria-checked="true" aria-label="Kırmızı" style="--c:#FF1744" data-ink="#FF1744"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="Mavi" style="--c:#2979FF" data-ink="#2979FF"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="Yeşil" style="--c:#00E676" data-ink="#00E676"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="Sarı" style="--c:#FFEA00" data-ink="#FFEA00"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="Beyaz" style="--c:#FFFFFF" data-ink="#FFFFFF"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="Mor" style="--c:#D500F9" data-ink="#D500F9"></button>
+            </div>
+          </div>
+          <div class="tile-text">
+            <h3>Slayta telefondan çiz.</h3>
+            <p>Lazer, kalem, vurgulayıcı ve silgi. Kalemin ve vurgulayıcının rengini telefondan seçersin; çizimler slayt değişince silinir ya da istersen kalır.</p>
+          </div>
+        </article>
+
+        <article class="tile t-status">
+          <div class="tile-vis">
+            <div class="status-demo" aria-hidden="true">
+              <div class="ph-card">
+                <div class="ph-card-top">
+                  <svg class="i"><use href="#i-slideshow"/></svg>
+                  <span class="ph-over">Slayt</span>
+                  <i class="ph-pulse"></i>
+                  <span class="ph-notes"><svg class="i"><use href="#i-notes"/></svg>Notlar</span>
+                </div>
+                <p class="ph-count"><span class="ph-cur">12</span><span class="ph-tot">  /  34</span></p>
+                <div class="ph-track"><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-past"></i><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              </div>
+              <div class="note-card">
+                <p>Slayt Notları</p>
+                <p>Grafiği açıkla, sonra soruları al.</p>
+              </div>
+            </div>
+          </div>
+          <div class="tile-text">
+            <h3>Hangi slayttasın, telefonda gör.</h3>
+            <p>Slayt numarası, toplam slayt sayısı ve konuşmacı notları anında telefona gelir.</p>
+          </div>
+        </article>
+
+        <article class="tile t-timer">
+          <div class="tile-vis">
+            <div class="timer-demo" data-timer-demo>
+              <button class="timer-face" type="button" aria-pressed="false" aria-label="Sunum sayacı" data-t-btn><svg class="i" aria-hidden="true"><use href="#i-timer"/></svg><span data-t>05:09</span></button>
+              <p class="snack" aria-hidden="true" data-snack><svg class="i"><use href="#i-watch-vibrate"/></svg>Sürenin bitimine 05:00 kaldı!</p>
+              <p class="timer-help" aria-hidden="true">Dokun: başlat/duraklat</p>
+            </div>
+          </div>
+          <div class="tile-text">
+            <h3>Süreyi telefon tutar.</h3>
+            <p>Sunum süresini belirle. Bitmesine seçtiğin süreler kala telefon titrer.</p>
+          </div>
+        </article>
+
+        <article class="tile t-touch">
+          <div class="tile-vis">
+            <div class="pad" aria-hidden="true" data-pad>
+              <svg class="pad-trail" viewBox="0 0 100 80" preserveAspectRatio="none">
+                <defs><linearGradient id="pad-fade" x1="0" x2="1"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".55"/></linearGradient></defs>
+                <path pathLength="1" d="M 10 64 C 22 28 38 72 54 42 S 78 18 86 30"/>
+              </svg>
+              <i class="pad-glow"></i>
+              <p class="pad-hints">
+                <span><i class="one"></i>Tek dokunuş → Lazer</span>
+                <span><i></i>Çift dokunuş → Seçili Araç</span>
+              </p>
+            </div>
+          </div>
+          <div class="tile-text">
+            <h3>Telefon touchpad olur.</h3>
+            <p>Parmağını gezdir, perdede lazer dolaşsın. Çift dokunup seçtiğin araçla çiz.</p>
+          </div>
+        </article>
+
+        <article class="tile t-report">
+          <div class="tile-vis">
+            <div class="report" aria-hidden="true" data-report>
+              <div class="rep-stats">
+                <div><p class="rep-k">Toplam Süre</p><p class="rep-v">14&nbsp;dk 48&nbsp;sn</p></div>
+                <div><p class="rep-k">Slayt Sayısı</p><p class="rep-v">8</p></div>
+                <div><p class="rep-k">Ort/Slayt</p><p class="rep-v">1&nbsp;dk 51&nbsp;sn</p></div>
+              </div>
+              <ol class="rep-bars">
+                <li style="--v:.19;--n:0"><span>Slayt&nbsp;1</span><i></i><b>48&nbsp;sn</b></li>
+                <li style="--v:.75;--n:1"><span>Slayt&nbsp;2</span><i></i><b>3&nbsp;dk 12&nbsp;sn</b></li>
+                <li style="--v:.25;--n:2"><span>Slayt&nbsp;3</span><i></i><b>1&nbsp;dk 5&nbsp;sn</b></li>
+                <li style="--v:.63;--n:3"><span>Slayt&nbsp;4</span><i></i><b>2&nbsp;dk 40&nbsp;sn</b></li>
+                <li style="--v:.21;--n:4"><span>Slayt&nbsp;5</span><i></i><b>55&nbsp;sn</b></li>
+                <li style="--v:1;--n:5"><span>Slayt&nbsp;6</span><i></i><b>4&nbsp;dk 16&nbsp;sn</b></li>
+                <li style="--v:.35;--n:6"><span>Slayt&nbsp;7</span><i></i><b>1&nbsp;dk 30&nbsp;sn</b></li>
+                <li style="--v:.09;--n:7"><span>Slayt&nbsp;8</span><i></i><b>22&nbsp;sn</b></li>
+              </ol>
+            </div>
+          </div>
+          <div class="tile-text">
+            <h3>Sunumdan sonra raporun hazır.</h3>
+            <p>Hangi slaytta ne kadar kaldığını gör, raporu panoya kopyala.</p>
+          </div>
+        </article>
+
+        <article class="tile t-media">
+          <div class="tile-vis">
+            <div class="media-demo" data-media>
+              <div class="m-card">
+                <p class="m-h"><svg class="i" aria-hidden="true"><use href="#i-video"/></svg>Slayt Medyası</p>
+                <div class="m-video" aria-hidden="true"><div class="m-bar"><i></i></div></div>
+                <div class="m-btns">
+                  <button class="m-btn" type="button" data-media-cmd="rewind"><svg class="i" aria-hidden="true"><use href="#i-replay"/></svg>Başa Sar</button>
+                  <button class="m-btn m-play" type="button" data-media-cmd="play" data-play="Oynat" data-pause="Duraklat"><svg class="i i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="i i-pause" aria-hidden="true"><use href="#i-pause"/></svg><span>Oynat</span></button>
+                </div>
+              </div>
+              <div class="m-card">
+                <p class="m-h"><svg class="i" aria-hidden="true"><use href="#i-volume"/></svg><label for="vol">Sistem Sesi</label><output for="vol" data-vol-out>%64</output></p>
+                <input class="vol" id="vol" type="range" min="0" max="100" value="64" data-vol>
+                <p class="vol-steps" aria-hidden="true"><span>0</span><span>50</span><span>100</span></p>
+              </div>
+              <div class="m-card" aria-hidden="true">
+                <p class="m-h"><svg class="i"><use href="#i-music"/></svg>Şu An Çalan</p>
+                <div class="m-now">
+                  <span class="m-art"><svg class="i"><use href="#i-music"/></svg></span>
+                  <span class="m-track"><b>Gymnopédie No. 1</b><small>Erik Satie</small></span>
+                  <span class="m-trans"><svg class="i"><use href="#i-skip-prev"/></svg><svg class="i"><use href="#i-play"/></svg><svg class="i"><use href="#i-skip-next"/></svg></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tile-text">
+            <h3>Videoyu oynat, sesi ayarla.</h3>
+            <p>Slayttaki videoyu başlat, durdur ya da başa sar. Bilgisayarın sesini telefondan değiştir.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security: the phone's own first-connection check, and what guards it. -->
+  <section class="safe section" id="security" aria-labelledby="safe-title">
+    <div class="wrap safe-grid">
+      <figure class="verify" aria-hidden="true">
+        <span class="verify-badge"><svg class="i"><use href="#i-lock"/></svg></span>
+        <p class="verify-title">Güvenlik Kodunu Karşılaştırın</p>
+        <p class="verify-text">Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:</p>
+        <p class="verify-code" translate="no">4F2A-91C3-0B7E-D58A</p>
+        <p class="verify-text">Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.</p>
+        <p class="verify-actions"><span class="verify-cancel">İptal Et</span><span class="verify-ok">Kodlar Aynı, Bağlan</span></p>
+      </figure>
+      <div class="safe-copy">
+        <h2 class="h2" id="safe-title">Her şey kendi ağında kalır.</h2>
+        <p class="lede">Hesap açman ya da internete bağlanman gerekmez. Telefonla bilgisayar şifreli bir bağlantıyla konuşur.</p>
+        <dl class="safe-facts">
+          <div><dt><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>Şifreli bağlantı</dt><dd>Wi-Fi’da giden her komut TLS ile şifrelenir.</dd></div>
+          <div><dt><svg class="i" aria-hidden="true"><use href="#i-dialpad"/></svg>Her açılışta yeni PIN</dt><dd>QuickRemote&nbsp;PC her açıldığında 6&nbsp;haneli yeni bir PIN üretir.</dd></div>
+          <div><dt><svg class="i" aria-hidden="true"><use href="#i-qr"/></svg>QR kod bilgisayarı tanıtır</dt><dd>Telefon QR koddaki sertifikayı bekler. QR yoksa güvenlik kodunu sorar.</dd></div>
+          <div><dt><svg class="i" aria-hidden="true"><use href="#i-block"/></svg>Deneme sınırı</dt><dd>5 yanlış PIN’den sonra o cihaz 60&nbsp;saniye bekletilir.</dd></div>
+          <div><dt><svg class="i" aria-hidden="true"><use href="#i-hidden"/></svg>Kod perdeye yansımaz</dt><dd>İlk telefon bağlanınca QR kod ve PIN ekrandan gizlenir.</dd></div>
+          <div><dt><svg class="i" aria-hidden="true"><use href="#i-devices"/></svg>Bağlı telefonlar listesi</dt><dd>Kimin bağlı olduğunu PC’de görür, istemediğini çıkarırsın.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- Programs and system requirements. -->
+  <section class="programs section" id="programs" aria-labelledby="programs-title">
+    <div class="wrap">
+      <h2 class="h2" id="programs-title">Kullandığın programla çalışır.</h2>
+      <ul class="progs">
+        <li><span class="prog-name" translate="no">PowerPoint</span><span class="prog-where">Windows&nbsp;10 ve 11</span></li>
+        <li><span class="prog-name" translate="no">LibreOffice Impress</span><span class="prog-where">Linux, X11 ve Wayland</span></li>
+        <li><span class="prog-name" translate="no">WPS Presentation</span><span class="prog-where">Windows ve Linux</span></li>
+        <li><span class="prog-name" translate="no">PDF</span><span class="prog-where">Acrobat, SumatraPDF, Okular, Chrome, Edge, Firefox</span></li>
+      </ul>
+      <dl class="reqs">
+        <div>
+          <dt><svg class="i" aria-hidden="true"><use href="#i-computer"/></svg>Bilgisayar</dt>
+          <dd>Wi-Fi modu için Windows&nbsp;10, 11 ya da Linux. Bluetooth ve saat modunda kurulum gerekmez.</dd>
+        </div>
+        <div>
+          <dt><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg>Telefon</dt>
+          <dd>Android&nbsp;7 ve üzeri. Bluetooth modu Android&nbsp;9 ve üzerinde çalışır.</dd>
+        </div>
+        <div>
+          <dt><svg class="i" aria-hidden="true"><use href="#i-watch"/></svg>Saat</dt>
+          <dd>Wear&nbsp;OS&nbsp;3 ve üzeri. Saatin Bluetooth klavye olabilmesi gerekir.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- FAQ. -->
+  <section class="faq section" id="faq" aria-labelledby="faq-title">
+    <div class="wrap faq-grid">
+      <div class="faq-head">
+        <h2 class="h2" id="faq-title">Sık sorulanlar</h2>
+        <p>Cevabını bulamazsan <a href="https://github.com/berat-kaan-akcan/QuickRemote/issues">GitHub’da sor</a>.</p>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary>Ücretli mi?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Hayır, QuickRemote ücretsiz. Hesap açman da gerekmez.</p>
+        </details>
+        <details>
+          <summary>İnternet bağlantısı gerekir mi?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Hayır. Wi-Fi modunda telefonla bilgisayarın aynı ağda olması yeter. Bluetooth ve saat modunda bir ağa bile gerek yok.</p>
+        </details>
+        <details>
+          <summary>iPhone ya da Apple&nbsp;Watch ile çalışır mı?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Şimdilik hayır. Kumanda uygulaması Android’de, saat uygulaması Wear&nbsp;OS’ta çalışır.</p>
+        </details>
+        <details>
+          <summary>Hangi saatlerle çalışır?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Wear&nbsp;OS&nbsp;3 ve üzerini çalıştıran saatlerle. Saatin Bluetooth klavye olabilmesi gerekir; uygulama bunu açılışta kontrol eder, olmuyorsa söyler. Galaxy&nbsp;Watch’ta çerçeve, Pixel&nbsp;Watch’ta kuron slayt değiştirir.</p>
+        </details>
+        <details>
+          <summary>Bilgisayara bir şey kurmam gerekir mi?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Wi-Fi modunda QuickRemote&nbsp;PC gerekir. Bluetooth ve saat modunda hiçbir şey kurmazsın; bilgisayar telefonu ya da saati klavye olarak görür.</p>
+        </details>
+        <details>
+          <summary>PDF ile sunum yapabilir miyim?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Evet. Wi-Fi modunda Acrobat, SumatraPDF, Okular ve tarayıcılarda tam ekranı açar, sayfaları çevirir. Linux’ta LibreOffice’te açık bir PDF’i sunuma da çevirebilir.</p>
+        </details>
+        <details>
+          <summary>Aynı anda birden fazla telefon bağlanabilir mi?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Evet. Lazeri ya da kalemi ilk alan telefon, hareketi bitene kadar onu kullanır. İki kişi aynı anda İleri’ye basarsa slayt yalnızca bir kez ilerler.</p>
+        </details>
+        <details>
+          <summary>Telefon kilitlenince bağlantı kopar mı?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Hayır. Kumanda ekranı açıkken telefonu kilitlesen de bağlantı arka planda sürer.</p>
+        </details>
+        <details>
+          <summary>Hangi dilleri destekliyor?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          <p>Türkçe ve İngilizce. Uygulamalar cihazın dilini izler; istersen ayarlardan değiştirirsin.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download. -->
+  <section class="get section" id="download" aria-labelledby="get-title">
+    <div class="wrap">
+      <div class="get-head">
+        <img class="get-icon" src="assets/app-icon.png" width="512" height="512" alt="QuickRemote uygulama simgesi" loading="lazy" decoding="async">
+        <h2 class="h2" id="get-title">Ücretsiz indir.</h2>
+        <p class="lede">Bluetooth ve saat modunda bilgisayara bir şey kurmazsın; telefon ya da saat uygulaması yeter.</p>
+      </div>
+      <div class="get-list">
+        <a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">
+          <svg class="i" aria-hidden="true"><use href="#i-phone"/></svg>
+          <span class="get-name">Android telefon</span>
+          <span class="get-what">Kumanda uygulaması</span>
+          <span class="get-go"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>İndir</span>
+        </a>
+        <a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">
+          <svg class="i" aria-hidden="true"><use href="#i-watch"/></svg>
+          <span class="get-name">Wear&nbsp;OS saat</span>
+          <span class="get-what">Saat uygulaması</span>
+          <span class="get-go"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>İndir</span>
+        </a>
+        <a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">
+          <svg class="i" aria-hidden="true"><use href="#i-desktop"/></svg>
+          <span class="get-name">Windows</span>
+          <span class="get-what">QuickRemote&nbsp;PC, Wi-Fi modu için</span>
+          <span class="get-go"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>İndir</span>
+        </a>
+        <a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">
+          <svg class="i" aria-hidden="true"><use href="#i-terminal"/></svg>
+          <span class="get-name">Linux</span>
+          <span class="get-what">QuickRemote&nbsp;PC, Wi-Fi modu için</span>
+          <span class="get-go"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>İndir</span>
         </a>
       </div>
-
-      <!-- Mobile Menu Button -->
-      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menüyü aç" aria-expanded="false" aria-controls="mobile-nav">
-        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
-      </button>
+      <p class="get-src">Kaynak kodu <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da</a>.</p>
     </div>
-  </header>
+  </section>
 
-  <!-- Mobile Nav Overlay -->
-  <div class="mobile-nav-overlay" id="mobile-nav">
-    <button class="mobile-nav-close" id="mobile-nav-close" aria-label="Menüyü kapat">
-      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-    <a href="#features" class="mobile-nav-link">Özellikler</a>
-    <a href="#how-it-works" class="mobile-nav-link">Nasıl Çalışır?</a>
-    <a href="#faq" class="mobile-nav-link">SSS</a>
-    <a href="#contact" class="mobile-nav-link">İletişim</a>
-    <a href="en/index.html" class="mobile-nav-link" lang="en" hreflang="en">English</a>
-    <a href="#download" class="btn btn-primary" style="margin-top: 16px;">Hemen İndir</a>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <a class="brand" href="#top" aria-label="QuickRemote, sayfanın başı">
+        <svg class="brand-mark" aria-hidden="true"><use href="#mark"/></svg>
+        <span class="brand-word" translate="no"><b>Quick</b>Remote</span>
+      </a>
+      <p>Telefon ve saat için sunum kumandası.</p>
+    </div>
+    <nav aria-label="Alt menü">
+      <a href="#watch">Saat</a>
+      <a href="#how-it-works">Nasıl çalışır</a>
+      <a href="#features">Özellikler</a>
+      <a href="#faq">SSS</a>
+    </nav>
+    <nav aria-label="Bağlantılar">
+      <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub</a>
+      <a href="https://github.com/berat-kaan-akcan/QuickRemote/issues">Hata bildir</a>
+      <a href="en/" hreflang="en" lang="en">English</a>
+    </nav>
   </div>
-
-  <!-- ===================== HERO ===================== -->
-  <section class="hero" id="hero">
-    <div class="hero-grid"></div>
-    <div class="ambient-orb orb-blue"></div>
-    <div class="ambient-orb orb-purple"></div>
-
-    <div class="container">
-      <div class="hero-inner">
-        <!-- Text Content -->
-        <div class="hero-content reveal">
-          <div class="hero-badge">
-            <span class="dot"></span>
-            Sunum Kumandanız Cebinizde
-          </div>
-
-          <h1 class="hero-title">
-            Sunumlarınızın Kontrolü Artık <span class="highlight">Avucunuzun İçinde.</span>
-          </h1>
-
-          <p class="hero-description">
-            PowerPoint sunumlarınızı akıllı telefonunuzdan yönetin. Slayt geçişleri, lazer işaretçi, çizim araçları, touchpad ve sunum zamanlayıcı — hepsi tek bir uygulamada. Wi-Fi üzerinden düşük gecikmeli, güvenli bağlantı.
-          </p>
-
-          <div class="hero-buttons" id="download">
-            <a href="#" class="btn btn-primary">
-              <!-- Windows icon -->
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
-              </svg>
-              Windows Sunucu Uygulaması
-            </a>
-            <a href="#" class="btn btn-secondary">
-              <!-- Mobile icon -->
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-              Mobil Kumanda Uygulaması
-            </a>
-          </div>
-
-          <div class="hero-trust">
-            <div class="trust-item">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              TLS/WSS şifreli bağlantı
-            </div>
-            <div class="trust-item">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              Düşük gecikme (WebSocket)
-            </div>
-            <div class="trust-item">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
-              Ücretsiz · Açık kaynak
-            </div>
-          </div>
-        </div>
-
-        <!-- Visual -->
-        <div class="hero-visual reveal reveal-delay-2">
-          <div class="hero-image-wrapper">
-            <img src="assets/hero-mockup.jpg" alt="QuickRemote — Telefondan PowerPoint sunum kontrolü" width="600" height="338" loading="eager">
-          </div>
-
-          <!-- Floating Badges -->
-          <div class="floating-badge badge-latency">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-            Slayt: 12 / 34
-          </div>
-          <div class="floating-badge badge-secure">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            PIN Korumalı · TLS
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== HOW IT WORKS ===================== -->
-  <section class="section how-it-works" id="how-it-works">
-    <div class="container">
-      <div class="section-header reveal">
-        <div class="section-label">
-          <span class="line"></span>
-          Nasıl Çalışır?
-          <span class="line"></span>
-        </div>
-        <h2 class="section-title">3 Adımda Sunumunuzu Kontrol Edin</h2>
-        <p class="section-subtitle">
-          Karmaşık ayarlar gerekmez. Dakikalar içinde telefonunuzu kablosuz sunum kumandanıza dönüştürün.
-        </p>
-      </div>
-
-      <div class="steps-grid">
-        <!-- Step 1 -->
-        <div class="step-card reveal reveal-delay-1">
-          <div class="step-number">1</div>
-          <div class="step-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <h3>PC Uygulamasını Çalıştırın</h3>
-          <p>QuickRemote sunucu uygulamasını Windows bilgisayarınızda başlatın. Otomatik TLS sertifikası oluşturulur ve QR kod ekranda görüntülenir.</p>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="step-card reveal reveal-delay-2">
-          <div class="step-number">2</div>
-          <div class="step-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-              <line x1="12" y1="18" x2="12.01" y2="18"/>
-            </svg>
-          </div>
-          <h3>Mobil Uygulamayı Açın</h3>
-          <p>Telefonunuzdaki QuickRemote uygulamasını açın. mDNS ile aynı ağdaki PC'ler otomatik listelenir veya QR kodu tarayın.</p>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="step-card reveal reveal-delay-3">
-          <div class="step-number">3</div>
-          <div class="step-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="2" width="8" height="8" rx="1"/>
-              <rect x="14" y="2" width="8" height="8" rx="1"/>
-              <rect x="2" y="14" width="8" height="8" rx="1"/>
-              <rect x="14" y="14" width="8" height="8" rx="1"/>
-            </svg>
-          </div>
-          <h3>QR Kod veya PIN ile Eşleştirin</h3>
-          <p>QR kodu okutun veya 6 haneli PIN kodunu girerek güvenli bağlantı kurun. Sertifika parmak izi doğrulamasıyla hemen sunumunuzu yönetmeye başlayın.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== FEATURES ===================== -->
-  <section class="section features" id="features">
-    <div class="container">
-      <div class="section-header reveal">
-        <div class="section-label">
-          <span class="line"></span>
-          Özellikler
-          <span class="line"></span>
-        </div>
-        <h2 class="section-title">Profesyonel Sunum Araçları</h2>
-        <p class="section-subtitle">
-          QuickRemote, sunumlarınızı kusursuz yönetmeniz için ihtiyacınız olan tüm araçları tek bir uygulamada sunar.
-        </p>
-      </div>
-
-      <div class="features-grid">
-        <!-- Feature 1: Slide Control -->
-        <div class="feature-card reveal reveal-delay-1">
-          <div class="feature-icon">
-            <!-- Slides/presentation icon -->
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2"/>
-              <path d="M8 21h8"/>
-              <path d="M12 17v4"/>
-              <path d="M7 8l3 3-3 3"/>
-              <line x1="13" y1="11" x2="17" y2="11"/>
-            </svg>
-          </div>
-          <h3>Slayt Kontrolü</h3>
-          <p>Sunumu tek dokunuşla ilerletin veya geri alın. Sunumu başlatın (F5), belirli bir slayta atlayın, sonlandırın (ESC). Slayt numarası ve toplam sayı gerçek zamanlı olarak telefonunuza yansır.</p>
-        </div>
-
-        <!-- Feature 2: Drawing Tools -->
-        <div class="feature-card reveal reveal-delay-2">
-          <div class="feature-icon">
-            <!-- Pen/drawing icon -->
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-              <path d="M2 2l7.586 7.586"/>
-              <circle cx="11" cy="11" r="2"/>
-            </svg>
-          </div>
-          <h3>Çizim Araçları</h3>
-          <p>Lazer işaretçi, kalem, vurgulayıcı (highlighter) ve silgi araçlarını doğrudan telefonunuzdan kontrol edin. Kalem rengini COM otomasyonu ile dinamik olarak değiştirin.</p>
-        </div>
-
-        <!-- Feature 3: Touchpad & Mouse -->
-        <div class="feature-card reveal reveal-delay-3">
-          <div class="feature-icon">
-            <!-- Touchpad/cursor icon -->
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 4h16v16H4z" rx="2"/>
-              <path d="M9 14l2.5-2.5L14 14"/>
-              <path d="M11.5 11.5V8"/>
-            </svg>
-          </div>
-          <h3>Touchpad ve Fare</h3>
-          <p>Telefonunuzun ekranını hassas bir trackpad olarak kullanın. Sol/sağ tıklama, sürükle-bırak desteği ve ayarlanabilir fare hassasiyeti ile tam kontrol.</p>
-        </div>
-
-        <!-- Feature 4: Security -->
-        <div class="feature-card reveal reveal-delay-1">
-          <div class="feature-icon">
-            <!-- Shield/lock icon -->
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <rect x="9" y="10" width="6" height="5" rx="1"/>
-              <path d="M10 10V8a2 2 0 0 1 4 0v2"/>
-            </svg>
-          </div>
-          <h3>Güçlü Güvenlik</h3>
-          <p>TLS/WSS şifreli bağlantı, her oturumda rastgele 6 haneli PIN, sertifika sabitleme ve güvenlik kodu doğrulaması, brute-force koruması (5 başarısız deneme → 60 sn engel), eşleşmeden sonra gizlenen QR kodu ve kimlik doğrulama zaman aşımı.</p>
-        </div>
-
-        <!-- Feature 5: Auto Discovery -->
-        <div class="feature-card reveal reveal-delay-2">
-          <div class="feature-icon">
-            <!-- Wifi/discovery icon -->
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-              <circle cx="12" cy="20" r="1"/>
-            </svg>
-          </div>
-          <h3>Otomatik Keşif ve Eşleşme</h3>
-          <p>mDNS (_quickremote._tcp) ile aynı ağdaki PC'ler otomatik listelenir. QR kod tarama, manuel IP girişi veya son 5 cihaza hızlı yeniden bağlanma seçenekleri. Bağlantı koptuğunda otomatik yeniden bağlanma.</p>
-        </div>
-
-        <!-- Feature 6: Presentation Timer -->
-        <div class="feature-card reveal reveal-delay-3">
-          <div class="feature-icon">
-            <!-- Timer/clock icon -->
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <h3>Sunum Zamanlayıcı</h3>
-          <p>Sunumunuzun ne kadar sürdüğünü gerçek zamanlı takip edin. Konuşmacı notları, mevcut slayt numarası ve toplam slayt sayısı anında telefonunuza aktarılır.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== CROSS-PLATFORM ===================== -->
-  <section class="section cross-platform" id="platforms">
-    <div class="container">
-      <div class="section-header reveal">
-        <div class="section-label">
-          <span class="line"></span>
-          Platformlar
-          <span class="line"></span>
-        </div>
-        <h2 class="section-title">İki Parçalı Sistem, Sorunsuz Bağlantı</h2>
-        <p class="section-subtitle">
-          Windows bilgisayarınıza sunucu uygulamasını kurun, telefonunuza kumanda uygulamasını indirin. Aynı Wi-Fi ağında anında eşleşin.
-        </p>
-      </div>
-
-      <div class="platform-showcase">
-        <!-- Windows -->
-        <div class="platform-item reveal reveal-delay-1">
-          <div class="platform-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
-              <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
-            </svg>
-          </div>
-          <h3>Windows Sunucu</h3>
-          <p>Windows 10/11 · PowerPoint<br>WebSocket sunucusu + Win32 API</p>
-        </div>
-
-        <!-- Connector -->
-        <div class="platform-connector reveal reveal-delay-2">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-        </div>
-
-        <!-- Linux -->
-        <div class="platform-item reveal reveal-delay-3">
-          <div class="platform-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
-              <path d="M20 4H4c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8h16v10zm-2-1h-6v-2h6v2zM7.5 17l-1.41-1.41L8.67 13l-2.59-2.59L7.5 9l4 4-4 4z"/>
-            </svg>
-          </div>
-          <h3>Linux Sunucu</h3>
-          <p>LibreOffice Impress · X11 ve Wayland<br>WebSocket sunucusu + uinput</p>
-        </div>
-
-        <!-- Connector -->
-        <div class="platform-connector reveal reveal-delay-4">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-        </div>
-
-        <!-- Android -->
-        <div class="platform-item reveal reveal-delay-5">
-          <div class="platform-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" color="#60a5fa">
-              <path d="M17.523 2.377l1.595-1.595a.436.436 0 0 0-.617-.617l-1.727 1.727A8.197 8.197 0 0 0 12 .784a8.197 8.197 0 0 0-4.774 1.108L5.499.165a.436.436 0 0 0-.617.617L6.477 2.377A7.63 7.63 0 0 0 3.07 8.56h17.86a7.63 7.63 0 0 0-3.407-6.183zM8.628 5.96a.718.718 0 1 1 .718-.718.718.718 0 0 1-.718.718zm6.744 0a.718.718 0 1 1 .718-.718.718.718 0 0 1-.718.718zM3.07 9.83v8.35A1.61 1.61 0 0 0 4.68 19.8h.87v3.06a1.3 1.3 0 0 0 2.6 0V19.8h3.7v3.06a1.3 1.3 0 0 0 2.6 0V19.8h.87a1.61 1.61 0 0 0 1.61-1.62V9.83zm-2.4 0a1.3 1.3 0 0 0-1.3 1.3v5.52a1.3 1.3 0 0 0 2.6 0v-5.52a1.3 1.3 0 0 0-1.3-1.3zm22.66 0a1.3 1.3 0 0 0-1.3 1.3v5.52a1.3 1.3 0 0 0 2.6 0v-5.52a1.3 1.3 0 0 0-1.3-1.3z"/>
-            </svg>
-          </div>
-          <h3>Android Kumanda</h3>
-          <p>Android telefon ve tablet<br>Flutter · QR tarama · mDNS</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== TECH STACK ===================== -->
-  <section class="section tech-stack" id="tech">
-    <div class="container">
-      <div class="section-header reveal">
-        <div class="section-label">
-          <span class="line"></span>
-          Teknoloji
-          <span class="line"></span>
-        </div>
-        <h2 class="section-title">Altyapı ve Protokoller</h2>
-        <p class="section-subtitle">
-          Güvenilir ve yüksek performanslı bir mimari üzerine inşa edildi.
-        </p>
-      </div>
-
-      <div class="tech-grid reveal">
-        <div class="tech-item">
-          <div class="tech-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="16 18 22 12 16 6"/>
-              <polyline points="8 6 2 12 8 18"/>
-            </svg>
-          </div>
-          <div class="tech-info">
-            <h4>Flutter & Dart</h4>
-            <p>Çapraz platform UI framework</p>
-          </div>
-        </div>
-
-        <div class="tech-item">
-          <div class="tech-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-          </div>
-          <div class="tech-info">
-            <h4>WebSocket (WSS)</h4>
-            <p>Düşük gecikmeli çift yönlü iletişim</p>
-          </div>
-        </div>
-
-        <div class="tech-item">
-          <div class="tech-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <div class="tech-info">
-            <h4>TLS 1.2+ Şifreleme</h4>
-            <p>Self-signed sertifika ile güvenli kanal</p>
-          </div>
-        </div>
-
-        <div class="tech-item">
-          <div class="tech-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2"/>
-              <path d="M8 21h8"/>
-              <path d="M12 17v4"/>
-            </svg>
-          </div>
-          <div class="tech-info">
-            <h4>Win32 & PowerShell COM</h4>
-            <p>SendInput API + PowerPoint otomasyonu</p>
-          </div>
-        </div>
-
-        <div class="tech-item">
-          <div class="tech-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-              <circle cx="12" cy="20" r="1"/>
-            </svg>
-          </div>
-          <div class="tech-info">
-            <h4>mDNS Keşif</h4>
-            <p>_quickremote._tcp ile otomatik servis bulma</p>
-          </div>
-        </div>
-
-        <div class="tech-item">
-          <div class="tech-icon">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="2" width="8" height="8" rx="1"/>
-              <rect x="14" y="2" width="8" height="8" rx="1"/>
-              <rect x="2" y="14" width="8" height="8" rx="1"/>
-              <rect x="14" y="14" width="8" height="8" rx="1"/>
-            </svg>
-          </div>
-          <div class="tech-info">
-            <h4>Binary Protokol</h4>
-            <p>Fare/lazer verileri için yüksek frekanslı ikili format</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== FAQ ===================== -->
-  <section class="section faq" id="faq">
-    <div class="container">
-      <div class="section-header reveal">
-        <div class="section-label">
-          <span class="line"></span>
-          Sıkça Sorulan Sorular
-          <span class="line"></span>
-        </div>
-        <h2 class="section-title">Merak Ettikleriniz</h2>
-        <p class="section-subtitle">
-          QuickRemote hakkında en çok sorulan soruların yanıtları.
-        </p>
-      </div>
-
-      <div class="faq-list">
-        <div class="faq-item reveal reveal-delay-1">
-          <button class="faq-question" aria-expanded="false">
-            QuickRemote tam olarak ne yapıyor?
-            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          <div class="faq-answer">
-            <p>QuickRemote, akıllı telefonunuzu kablosuz bir sunum kumandası ve touchpad'e dönüştürür. PowerPoint sunumlarınızı uzaktan başlatabilir, slaytları ileri/geri geçebilir, lazer işaretçi, kalem ve vurgulayıcı gibi çizim araçlarını kullanabilir, fareyi kontrol edebilir ve sunum sürenizi takip edebilirsiniz.</p>
-          </div>
-        </div>
-
-        <div class="faq-item reveal reveal-delay-2">
-          <button class="faq-question" aria-expanded="false">
-            İnternet bağlantısı gerekli mi?
-            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          <div class="faq-answer">
-            <p>Hayır. QuickRemote tamamen yerel Wi-Fi ağı üzerinden çalışır. İnternet bağlantısı gerekmez. Bilgisayarınız ve telefonunuz aynı Wi-Fi ağına bağlı olduğu sürece sorunsuz çalışır. Tüm veriler yerel ağda kalır, dış sunuculara hiçbir şey gönderilmez.</p>
-          </div>
-        </div>
-
-        <div class="faq-item reveal reveal-delay-3">
-          <button class="faq-question" aria-expanded="false">
-            Güvenlik nasıl sağlanıyor?
-            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          <div class="faq-answer">
-            <p>Tüm iletişim TLS/WSS ile şifrelenir. Her oturumda rastgele 6 haneli PIN oluşturulur ve sabit zamanlı karşılaştırılır. 5 başarısız PIN denemesinde IP adresi 60 saniyeliğine engellenir. Bağlanan cihaz 5 saniye içinde doğrulanmazsa bağlantı otomatik kesilir. QR kodu sertifika parmak izini taşır; QR'sız ilk bağlantıda PIN gönderilmeden önce PC ekranındaki güvenlik kodunu karşılaştırmanız istenir. İlk telefon bağlandıktan sonra QR kodu ve PIN ekranda gizlenir.</p>
-          </div>
-        </div>
-
-        <div class="faq-item reveal reveal-delay-4">
-          <button class="faq-question" aria-expanded="false">
-            Hangi platformları destekliyor?
-            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          <div class="faq-answer">
-            <p>Sunucu uygulaması Windows 10/11 (PowerPoint) ve Linux (LibreOffice Impress) üzerinde çalışır. Kumanda uygulaması Android cihazlarda kullanılabilir. Bluetooth modunda PC'ye uygulama kurmadan telefonunuz klavye ve fare gibi davranır. Her iki uygulama da Flutter ile geliştirilmiştir.</p>
-          </div>
-        </div>
-
-        <div class="faq-item reveal reveal-delay-5">
-          <button class="faq-question" aria-expanded="false">
-            Nasıl bağlanabilirim?
-            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          <div class="faq-answer">
-            <p>Üç farklı yöntemle bağlanabilirsiniz: (1) PC ekranındaki QR kodu telefonunuzla tarayarak, (2) mDNS otomatik keşif ile aynı ağdaki PC'lerin listesinden seçerek, (3) IP adresi ve PIN kodunu manuel olarak girerek. Ayrıca daha önce bağlandığınız son 5 cihaza hızlıca yeniden bağlanabilirsiniz.</p>
-          </div>
-        </div>
-
-        <div class="faq-item reveal reveal-delay-5">
-          <button class="faq-question" aria-expanded="false">
-            Çizim araçları nasıl çalışıyor?
-            <svg aria-hidden="true" focusable="false" class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          <div class="faq-answer">
-            <p>QuickRemote, PowerPoint'in yerel çizim araçlarını uzaktan kontrol eder. Lazer işaretçi (Ctrl+L), kalem (Ctrl+P), vurgulayıcı (Ctrl+I) ve silgi (Ctrl+E) araçlarını telefonunuzdan seçebilirsiniz. Ayrıca COM otomasyonu sayesinde kalem rengini dinamik olarak değiştirebilirsiniz.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== CTA SECTION ===================== -->
-  <section class="section cta-section" id="contact">
-    <div class="container">
-      <div class="cta-card reveal">
-        <div class="section-label">
-          <span class="line"></span>
-          Başlayın
-          <span class="line"></span>
-        </div>
-        <h2 class="section-title">Bir Sonraki Sunumunuzda<br>QuickRemote Deneyin</h2>
-        <p class="section-subtitle">
-          Telefonunuzu profesyonel bir sunum kumandası, touchpad ve çizim aracına dönüştürün. Tamamen ücretsiz.
-        </p>
-        <div class="cta-buttons">
-          <a href="#" class="btn btn-primary">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 12V6.5l8-1.1V12H3zm0 .5h8v6.6l-8-1.1V12.5zM11.5 5.3l9.5-1.3v8h-9.5V5.3zM21 12.5v8l-9.5-1.3V12.5H21z"/>
-            </svg>
-            Windows Sunucu Uygulaması
-          </a>
-          <a href="#" class="btn btn-secondary">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-              <line x1="12" y1="18" x2="12.01" y2="18"/>
-            </svg>
-            Mobil Kumanda Uygulaması
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== FOOTER ===================== -->
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-inner">
-        <!-- Brand -->
-        <div class="footer-brand">
-          <a href="#" class="logo">
-            <div class="logo-icon">
-              <img src="assets/logo.png" alt="QuickRemote Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
-            </div>
-            <span class="logo-text">Quick<span>Remote</span></span>
-          </a>
-          <p>Akıllı telefonunuzdan PowerPoint sunumlarınızı kontrol edin. Sunum yönetimi, fare kontrolü ve çizim araçları — hepsi avucunuzun içinde.</p>
-          <div class="social-links">
-            <!-- GitHub -->
-            <a href="https://github.com/berat-kaan-akcan/QuickRemote" class="social-link" aria-label="GitHub" target="_blank" rel="noopener">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-              </svg>
-            </a>
-          </div>
-        </div>
-
-        <!-- Product -->
-        <div class="footer-column">
-          <h4>Ürün</h4>
-          <a href="#features">Özellikler</a>
-          <a href="#how-it-works">Nasıl Çalışır?</a>
-          <a href="#download">İndirmeler</a>
-          <a href="https://github.com/berat-kaan-akcan/QuickRemote" target="_blank" rel="noopener">Kaynak Kod</a>
-        </div>
-
-        <!-- Support -->
-        <div class="footer-column">
-          <h4>Destek</h4>
-          <a href="#faq">Sıkça Sorulan Sorular</a>
-          <a href="https://github.com/berat-kaan-akcan/QuickRemote" target="_blank" rel="noopener">Dokümantasyon</a>
-          <a href="https://github.com/berat-kaan-akcan/QuickRemote/issues" target="_blank" rel="noopener">Hata Bildirin</a>
-        </div>
-
-        <!-- Legal -->
-        <div class="footer-column">
-          <h4>Yasal</h4>
-          <a href="#">Gizlilik Politikası</a>
-          <a href="#">Kullanım Koşulları</a>
-          <a href="#">Lisans</a>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <p>&copy; 2026 QuickRemote. Kişisel kullanım amaçlıdır.</p>
-        <div class="footer-legal">
-          <a href="#">Gizlilik</a>
-          <a href="#">Koşullar</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ===================== JAVASCRIPT ===================== -->
-  <script>
-    // ---- Scroll Reveal (Intersection Observer) ----
-    const revealElements = document.querySelectorAll('.reveal');
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, {
-      threshold: 0.1,
-      rootMargin: '0px 0px -60px 0px'
-    });
-
-    revealElements.forEach(el => revealObserver.observe(el));
-
-    // ---- Sticky Header Background ----
-    const header = document.getElementById('site-header');
-    let lastScroll = 0;
-
-    window.addEventListener('scroll', () => {
-      const currentScroll = window.scrollY;
-      if (currentScroll > 50) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
-      lastScroll = currentScroll;
-    }, { passive: true });
-
-    // ---- Mobile Menu ----
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileNav = document.getElementById('mobile-nav');
-    const mobileNavClose = document.getElementById('mobile-nav-close');
-    const mobileNavLinks = mobileNav.querySelectorAll('.mobile-nav-link');
-
-    function openMobileMenu() {
-      mobileNav.classList.add('open');
-      mobileMenuBtn.setAttribute('aria-expanded', 'true');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeMobileMenu() {
-      mobileNav.classList.remove('open');
-      mobileMenuBtn.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
-    }
-
-    mobileMenuBtn.addEventListener('click', openMobileMenu);
-    mobileNavClose.addEventListener('click', closeMobileMenu);
-    mobileNavLinks.forEach(link => {
-      link.addEventListener('click', closeMobileMenu);
-    });
-
-    // ---- FAQ Accordion ----
-    const faqItems = document.querySelectorAll('.faq-item');
-
-    faqItems.forEach(item => {
-      const question = item.querySelector('.faq-question');
-      question.addEventListener('click', () => {
-        const isActive = item.classList.contains('active');
-
-        // Close all
-        faqItems.forEach(i => {
-          i.classList.remove('active');
-          i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-        });
-
-        // Open clicked (if it wasn't already open)
-        if (!isActive) {
-          item.classList.add('active');
-          question.setAttribute('aria-expanded', 'true');
-        }
-      });
-    });
-
-    // ---- Smooth scroll for anchor links ----
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        const href = this.getAttribute('href');
-        if (href === '#') return;
-
-        e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) {
-          const headerOffset = 80;
-          const elementPosition = target.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.scrollY - headerOffset;
-
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-        }
-      });
-    });
-  </script>
+  <p class="wrap foot-base">© 2026 QuickRemote. Kişisel kullanım amaçlıdır.</p>
+</footer>
 
 </body>
 </html>
