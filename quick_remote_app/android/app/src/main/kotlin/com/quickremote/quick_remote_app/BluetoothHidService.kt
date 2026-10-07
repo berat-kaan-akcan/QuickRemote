@@ -393,18 +393,23 @@ class BluetoothHidService(private val context: Context) {
             }
         }
 
-        // No last device or not bonded — try bonded computers only. Headsets,
-        // cars and watches are never HID hosts, and connecting as a keyboard to
-        // an unrelated device would send it our key presses.
-        val bonded = bluetoothAdapter?.bondedDevices ?: emptySet()
-        for (device in bonded) {
-            if (device.bluetoothClass?.majorDeviceClass != BluetoothClass.Device.Major.COMPUTER) continue
-            Log.d(TAG, "Trying bonded device: ${device.name ?: device.address}")
-            val result = connectHost(hid, device)
-            if (result) {
+        // No last device or not bonded: connect on our own only to the one
+        // bonded computer. Headsets, cars and watches are never HID hosts, and
+        // with several computers a guess would send our key presses to
+        // whichever comes first; the right one connects to us instead (and is
+        // the last device from then on).
+        val computers = (bluetoothAdapter?.bondedDevices ?: emptySet()).filter {
+            it.bluetoothClass?.majorDeviceClass == BluetoothClass.Device.Major.COMPUTER
+        }
+        if (computers.size == 1) {
+            val device = computers.first()
+            Log.d(TAG, "Trying the bonded computer: ${device.name ?: device.address}")
+            if (connectHost(hid, device)) {
                 Log.d(TAG, "Connect initiated to ${device.name}")
                 return
             }
+        } else if (computers.size > 1) {
+            Log.d(TAG, "${computers.size} bonded computers: waiting for one to connect")
         }
 
         // Nothing worked — schedule another attempt

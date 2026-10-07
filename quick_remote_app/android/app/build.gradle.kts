@@ -10,13 +10,28 @@ plugins {
 }
 
 // Release signing reads android/key.properties (gitignored, like the keystore):
-// storeFile, storePassword, keyAlias, keyPassword. Without it release builds
-// fall back to the debug key, which Play Console rejects.
+// storeFile, storePassword, keyAlias, keyPassword. Without it release APKs
+// fall back to the debug key (see below for app bundles).
 val keystoreProperties = Properties().apply {
     val file = rootProject.file("key.properties")
     if (file.exists()) FileInputStream(file).use { load(it) }
 }
 val hasReleaseKey = !keystoreProperties.isEmpty
+
+// A store upload (an app bundle) must never go out with the debug key, so
+// bundling stops without key.properties; a release APK for a test phone
+// only gets a warning.
+if (!hasReleaseKey) {
+    gradle.taskGraph.whenReady {
+        val names = allTasks.filter { it.project == project }.map { it.name }
+        if ("bundleRelease" in names) {
+            throw GradleException("key.properties is missing: a release app bundle would be signed with the debug key.")
+        }
+        if ("assembleRelease" in names) {
+            logger.warn("WARNING: key.properties is missing, this release build is signed with the debug key.")
+        }
+    }
+}
 
 android {
     namespace = "com.quickremote.quick_remote_app"
