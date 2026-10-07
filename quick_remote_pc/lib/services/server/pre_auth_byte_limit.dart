@@ -1,24 +1,36 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
 /// Wraps an upgraded socket and destroys it once a client that has not
-/// authenticated yet has sent more than [budget] bytes.
+/// authenticated yet has sent more than [budget] bytes, or any client sends
+/// a message (all its fragments together) larger than [maxMessage].
 ///
 /// dart:io buffers a whole WebSocket message, every fragment of it, before
 /// delivering it, and its `maxPayloadLength` only bounds single frames. Without
-/// this, a client that does not know the PIN could fill the server's memory
-/// with one endless fragmented message.
+/// this, a client could fill the server's memory with one endless fragmented
+/// message: before authenticating the byte budget stops it, afterwards the
+/// frame headers are read to add up each message's size.
 class PreAuthByteLimit extends Stream<Uint8List> implements Socket {
-  PreAuthByteLimit(this._socket, {required this.budget});
+  PreAuthByteLimit(this._socket, {required this.budget, this.maxMessage});
 
   final Socket _socket;
   final int budget;
+
+  /// Largest message, in payload bytes over all its frames; null for no limit.
+  final int? maxMessage;
   int _received = 0;
   bool _lifted = false;
+
+  // Frame header parser state (client frames, see [_withinMessageLimit]).
+  final List<int> _header = [];
+  int _headerLength = 2;
+  int _payloadLeft = 0;
+  int _messageBytes = 0;
 
   static const _webSocketGuid = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
@@ -33,6 +45,7 @@ class PreAuthByteLimit extends Stream<Uint8List> implements Socket {
     HttpRequest request, {
     required int budget,
     required int maxFramePayload,
+    int? maxMessage,
   }) async {
     final key = request.headers.value('sec-websocket-key');
     if (key == null) {
@@ -48,7 +61,11 @@ class PreAuthByteLimit extends Stream<Uint8List> implements Socket {
       ..headers.add('Sec-WebSocket-Accept',
           base64.encode(sha1.convert(utf8.encode('$key$_webSocketGuid')).bytes))
       ..headers.contentLength = 0;
-    final limited = PreAuthByteLimit(await request.response.detachSocket(), budget: budget);
+    final limited = PreAuthByteLimit(
+      await request.response.detachSocket(),
+      budget: budget,
+      maxMessage: maxMessage,
+    );
     final ws = WebSocket.fromUpgradedSocket(
       limited,
       serverSide: true,
@@ -79,10 +96,67 @@ class PreAuthByteLimit extends Stream<Uint8List> implements Socket {
                 return;
               }
             }
+            if (!_withinMessageLimit(chunk)) {
+              _socket.destroy();
+              sink.close();
+              return;
+            }
             sink.add(chunk);
           },
         ))
         .listen(onData, onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  }
+
+  /// Follows the frame headers in [chunk] and adds up the payload of the
+  /// current message. False once it exceeds [maxMessage].
+  bool _withinMessageLimit(Uint8List chunk) {
+    final limit = maxMessage;
+    if (limit == null) return true;
+    var i = 0;
+    while (i < chunk.length) {
+      if (_payloadLeft > 0) {
+        final skip = min(_payloadLeft, chunk.length - i);
+        _payloadLeft -= skip;
+        i += skip;
+        continue;
+      }
+      _header.add(chunk[i++]);
+      if (_header.length == 2) {
+        final length7 = _header[1] & 0x7F;
+        final masked = _header[1] & 0x80 != 0;
+        _headerLength = 2 + (length7 == 126 ? 2 : (length7 == 127 ? 8 : 0)) + (masked ? 4 : 0);
+      }
+      if (_header.length >= 2 && _header.length == _headerLength && !_frameWithinLimit(limit)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Called with a complete frame header in [_header].
+  bool _frameWithinLimit(int limit) {
+    final opcode = _header[0] & 0x0F;
+    final length7 = _header[1] & 0x7F;
+    var length = length7;
+    if (length7 == 126) {
+      length = (_header[2] << 8) | _header[3];
+    } else if (length7 == 127) {
+      length = 0;
+      for (var k = 2; k < 10; k++) {
+        length = (length << 8) | _header[k];
+      }
+    }
+    _header.clear();
+    _headerLength = 2;
+    // Negative: a 64-bit length with the top bit set.
+    if (length < 0 || length > limit) return false;
+    if (opcode < 8) {
+      // Data frame: a new message, or a continuation (opcode 0) of the last.
+      _messageBytes = opcode == 0 ? _messageBytes + length : length;
+      if (_messageBytes > limit) return false;
+    }
+    _payloadLeft = length;
+    return true;
   }
 
   // Everything below delegates to the wrapped socket.

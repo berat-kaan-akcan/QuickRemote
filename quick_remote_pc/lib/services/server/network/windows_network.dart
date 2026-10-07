@@ -89,6 +89,10 @@ class WindowsNetwork implements PlatformNetwork {
     return List.generate(32, (index) => chars[rng.nextInt(chars.length)]).join();
   }
 
+  /// Loads the certificate, or makes a new one when there is none or it
+  /// cannot be loaded (password file lost or out of step). It is never
+  /// renewed otherwise: phones pin its fingerprint and do not look at its
+  /// dates, and a new one makes every phone ask the user again.
   @override
   Future<SecurityContext> loadOrGenerateCert() async {
     final dir = await getApplicationSupportDirectory();
@@ -97,50 +101,42 @@ class WindowsNetwork implements PlatformNetwork {
     final file = File(certPath);
     final pwdFile = File(pwdPath);
 
-    bool generate = true;
-    if (file.existsSync()) {
-      final stat = file.statSync();
-      if (DateTime.now().difference(stat.modified).inDays < 365) {
-        generate = false;
+    if (file.existsSync() && pwdFile.existsSync()) {
+      try {
+        return _context(certPath, pwdFile.readAsStringSync().trim());
+      } catch (e) {
+        debugPrint('Stored TLS certificate unusable, generating a new one: $e');
       }
     }
 
-    String certPassword = '1234';
-    
-    if (generate) {
-      debugPrint('Generating new self-signed TLS certificate...');
-      certPassword = generateSecurePassword();
-      if (file.existsSync()) file.deleteSync();
-      pwdFile.writeAsStringSync(certPassword);
+    debugPrint('Generating new self-signed TLS certificate...');
+    final certPassword = generateSecurePassword();
+    if (file.existsSync()) file.deleteSync();
+    pwdFile.writeAsStringSync(certPassword);
 
-      // Path and password go in through the environment: a user name with
-      // `$` or a backtick would break them inside a PowerShell string.
-      const script = r'''
-$cert = New-SelfSignedCertificate -DnsName "QuickRemote" -CertStoreLocation "cert:\CurrentUser\My" -ErrorAction Stop
+    // Path and password go in through the environment: a user name with
+    // `$` or a backtick would break them inside a PowerShell string.
+    const script = r'''
+$cert = New-SelfSignedCertificate -DnsName "QuickRemote" -CertStoreLocation "cert:\CurrentUser\My" -NotAfter (Get-Date).AddYears(10) -ErrorAction Stop
 $pwd = ConvertTo-SecureString -String $env:QR_CERT_PASSWORD -Force -AsPlainText -ErrorAction Stop
 Export-PfxCertificate -Cert $cert -FilePath $env:QR_CERT_PATH -Password $pwd -ErrorAction Stop
 Remove-Item -Path "cert:\CurrentUser\My\$($cert.Thumbprint)" -ErrorAction Stop
 ''';
 
-      final res = await Process.run(
-        PowerShellRunner.executable,
-        ['-NoProfile', '-NonInteractive', '-Command', script],
-        environment: {'QR_CERT_PATH': certPath, 'QR_CERT_PASSWORD': certPassword},
-      );
-      if (res.exitCode != 0 || !file.existsSync()) {
-        throw Exception('Failed to generate TLS certificate via PowerShell: ${res.stderr}');
-      }
-    } else {
-       if (pwdFile.existsSync()) {
-         certPassword = pwdFile.readAsStringSync().trim();
-       }
+    final res = await Process.run(
+      PowerShellRunner.executable,
+      ['-NoProfile', '-NonInteractive', '-Command', script],
+      environment: {'QR_CERT_PATH': certPath, 'QR_CERT_PASSWORD': certPassword},
+    );
+    if (res.exitCode != 0 || !file.existsSync()) {
+      throw Exception('Failed to generate TLS certificate via PowerShell: ${res.stderr}');
     }
-
-    final ctx = SecurityContext();
-    ctx.useCertificateChain(certPath, password: certPassword);
-    ctx.usePrivateKey(certPath, password: certPassword);
-    return ctx;
+    return _context(certPath, certPassword);
   }
+
+  static SecurityContext _context(String pfxPath, String password) => SecurityContext()
+    ..useCertificateChain(pfxPath, password: password)
+    ..usePrivateKey(pfxPath, password: password);
 
   @override
   Future<NetworkTrust> checkNetworkProfile() async {
