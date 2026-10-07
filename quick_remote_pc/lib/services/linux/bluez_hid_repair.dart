@@ -22,6 +22,9 @@ class BluezHidRepair {
   static final _profilePath = DBusObjectPath('/com/quickremote/hid_repair');
 
   DBusClient? _client;
+  /// Unique bus name of bluetoothd: only its calls are taken (see
+  /// [_RepairProfile]).
+  String? _bluezOwner;
   StreamSubscription<DBusNameOwnerChangedEvent>? _bluezRestarts;
   final _throttle = RepairThrottle();
 
@@ -31,7 +34,9 @@ class BluezHidRepair {
     final client = DBusClient.system();
     _client = client;
     try {
-      await client.registerObject(_RepairProfile(_profilePath, _onConnection));
+      await client.registerObject(
+        _RepairProfile(_profilePath, _onConnection, isBluez: (sender) => sender != null && sender == _bluezOwner),
+      );
       _bluezRestarts = client.nameOwnerChanged
           .where((e) => e.name == _bluez && e.newOwner != null)
           .listen((_) => _register(client));
@@ -52,6 +57,7 @@ class BluezHidRepair {
   }
 
   Future<void> _register(DBusClient client) async {
+    _bluezOwner = await client.getNameOwner(_bluez);
     final manager = DBusRemoteObject(client, name: _bluez, path: DBusObjectPath('/org/bluez'));
     try {
       await manager.callMethod(
@@ -186,14 +192,21 @@ class _DbusBluezDevice implements BluezDevice {
 
 /// org.bluez.Profile1, called by bluetoothd.
 class _RepairProfile extends DBusObject {
-  _RepairProfile(super.path, this._onConnection);
+  _RepairProfile(super.path, this._onConnection, {required this.isBluez});
 
   final Future<void> Function(DBusObjectPath device) _onConnection;
+
+  /// Whether a call comes from bluetoothd. The system bus policy already
+  /// keeps other processes from calling here; this does not rely on it.
+  final bool Function(String? sender) isBluez;
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
     if (methodCall.interface != 'org.bluez.Profile1') {
       return DBusMethodErrorResponse.unknownInterface();
+    }
+    if (!isBluez(methodCall.sender)) {
+      return DBusMethodErrorResponse.accessDenied();
     }
     switch (methodCall.name) {
       case 'NewConnection':
