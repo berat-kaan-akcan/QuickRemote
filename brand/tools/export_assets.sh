@@ -8,6 +8,7 @@ LOGO=brand/logo
 OUT=brand/export
 APP=quick_remote_app
 PC=quick_remote_pc
+WEAR=quick_remote_wear
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$OUT"
@@ -48,9 +49,17 @@ for d in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
 done
 cp "$RES/drawable-xxxhdpi/ic_launcher_foreground.png" $APP/assets/images/logo_padded.png
 
+# ── Watch app ────────────────────────────────────────────────────────────────
+# The phone's adaptive layers; Wear OS masks them to a circle.
+WEAR_RES=$WEAR/app/src/main/res
+for n in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+  mkdir -p "$WEAR_RES/drawable-$n"
+  cp "$RES/drawable-$n"/ic_launcher_{background,foreground,monochrome}.png "$WEAR_RES/drawable-$n/"
+done
+
 # ── PC app ───────────────────────────────────────────────────────────────────
 svg $LOGO/app-icon.svg 1024 $PC/assets/images/logo.png
 for s in 16 20 24 32 40 48 64 128 256; do svg $LOGO/app-icon.svg $s "$TMP/ico-$s.png"; done
 python3 brand/tools/pack_ico.py $PC/windows/runner/resources/app_icon.ico "$TMP"/ico-{16,20,24,32,40,48,64,128,256}.png
 
-echo "Exported to $OUT, $APP and $PC."
+echo "Exported to $OUT, $APP, $PC and $WEAR."
