@@ -21,6 +21,11 @@
     <uses-feature
         android:name="android.hardware.bluetooth"
         android:required="false" />
+    <!-- The camera only scans the pairing QR code (the IP and PIN can be
+         typed): CAMERA alone would hide the app from devices without one. -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:label="QuickRemote"
