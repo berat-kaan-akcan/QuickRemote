@@ -168,6 +168,8 @@ QuickRemote/
 │   └── quick_remote_shared/       # 📦 Paylaşılan Dart Paketi
 │       ├── lib/src/
 │       │   ├── remote_commands.dart   # Ortak komut sabitleri ve üreticileri (NEXT, startAt(n) vb.)
+│       │   ├── remote_error.dart      # COMMAND_FAILED hata kodları
+│       │   ├── bt_hid_repair.dart     # Bluetooth HID için SDP yenileme servisi (BtHidRepair)
 │       │   └── pairing_payload.dart   # QR içeriği, parmak izi ve güvenlik kodu
 │       └── test/
 │
@@ -175,15 +177,16 @@ QuickRemote/
 │   ├── index.html                 # Türkçe
 │   ├── en/index.html              # İngilizce
 │   ├── style.css
-│   └── assets/
-│       ├── hero-mockup.jpg
-│       └── logo.png
+│   ├── main.js                    # Canlı demolar (metin içermez)
+│   └── assets/                    # Simgeler, yazı tipleri, og-image'lar
 │
 ├── brand/                         # 🎨 Marka kimliği
 │   ├── BRAND.md                   # Stil rehberi: logo, renkler, tipografi, hareket, bileşenler
 │   ├── logo/                      # Logo kaynakları (SVG): ikon, işaret, wordmark, favicon
 │   ├── export/                    # Hazır PNG/ICO çıktıları
 │   └── tools/export_assets.sh     # SVG'lerden uygulama ikonlarını üretir
+│
+├── quick_remote_wear/             # ⌚ Wear OS prototipi (Kotlin/Compose, doğrudan Bluetooth HID)
 │
 ├── logo/                          # Eski logo ve konsept görselleri
 │   ├── quick_remote_icon.jpg
