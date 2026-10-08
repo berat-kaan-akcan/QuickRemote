@@ -65,7 +65,8 @@
 | **QR Kod ile Eşleşme** | PC uygulamasındaki QR kodu telefonunuzla tarayarak anında bağlanın |
 | **mDNS Otomatik Keşif** | Aynı ağdaki PC'ler otomatik olarak listelenir (`_quickremote._tcp`) |
 | **Manuel Bağlantı** | IP adresi ve port ile doğrudan bağlanın |
-| **Bluetooth Bağlantısı** | Wi-Fi olmadan doğrudan Bluetooth (HID) üzerinden PC'nizi kontrol edin *(Yeni)* |
+| **Bluetooth Bağlantısı** | Wi-Fi olmadan doğrudan Bluetooth (HID) üzerinden PC'nizi kontrol edin. PC bu telefonu klavye olarak reddederse (SDP kaydı eksik), PC uygulaması çalışıyorsa Linux'ta otomatik onarılır; aksi halde telefon, bilgisayarda cihazı yeniden bağlama/eşleştirme adımlarını gösterir |
+| **Wear OS (prototip)** | Galaxy Watch gibi Wear OS saatlerden doğrudan Bluetooth HID ile slayt değiştirme; henüz bir cihazda tam doğrulanmadı |
 | **Son Cihazlar** | Daha önce bağlandığınız cihazlara hızla yeniden bağlanın (son 5 cihaz saklanır) |
 | **Otomatik Yeniden Bağlanma** | Bağlantı koptuğunda otomatik olarak yeniden bağlanma desteği |
 | **Arka Plan Desteği** | Uygulama arka plandayken veya telefon kilitliyken dahi bağlantıyı koruyun ve kontrol etmeye devam edin |
@@ -302,7 +303,7 @@ flutter run -d linux        # veya: flutter build linux
 |---------|--------------|
 | Slayt kontrolü, notlar, n. slayttan başlatma, siyah/beyaz ekran | ✅ Impress (UNO) |
 | Kalem, renk, silgi, tümünü sil, lazer işaretçi | ✅ Impress (UNO) |
-| Vurgulayıcı | ⚠️ Kalın sarı kalem olarak taklit edilir (Impress'te yarı saydam vurgulayıcı yok) |
+| Vurgulayıcı | ⚠️ LibreOffice 26.8'den itibaren yarı saydam çizgi olarak çizilir (animasyonlu veya medyalı slaytlarda kalın sarı kalem kalır); daha eski sürümlerde kalın sarı kalem olarak taklit edilir |
 | Sunuma gömülü video oynat/duraklat | ⚠️ Çalışır; "başa sar" videoyu durdurur |
 | Touchpad, tıklama, sürükleme | ✅ uinput (X11 + Wayland) |
 | Ses, şimdi çalan (kapak dahil), medya tuşları | ✅ pactl + MPRIS |
