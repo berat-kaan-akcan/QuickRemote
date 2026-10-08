@@ -66,11 +66,26 @@
 | **mDNS Otomatik Keşif** | Aynı ağdaki PC'ler otomatik olarak listelenir (`_quickremote._tcp`) |
 | **Manuel Bağlantı** | IP adresi ve port ile doğrudan bağlanın |
 | **Bluetooth Bağlantısı** | Wi-Fi olmadan doğrudan Bluetooth (HID) üzerinden PC'nizi kontrol edin. PC bu telefonu klavye olarak reddederse (SDP kaydı eksik), PC uygulaması çalışıyorsa Linux'ta otomatik onarılır; aksi halde telefon, bilgisayarda cihazı yeniden bağlama/eşleştirme adımlarını gösterir |
-| **Wear OS (prototip)** | Galaxy Watch gibi Wear OS saatlerden doğrudan Bluetooth HID ile slayt değiştirme; henüz bir cihazda tam doğrulanmadı |
 | **Son Cihazlar** | Daha önce bağlandığınız cihazlara hızla yeniden bağlanın (son 5 cihaz saklanır) |
 | **Otomatik Yeniden Bağlanma** | Bağlantı koptuğunda otomatik olarak yeniden bağlanma desteği |
 | **Arka Plan Desteği** | Uygulama arka plandayken veya telefon kilitliyken dahi bağlantıyı koruyun ve kontrol etmeye devam edin |
 | **Telefon Adı** | PC'nin bağlı cihazlar listesinde telefonunuzun adı (veya modeli) görünür |
+
+### ⌚ Wear OS (Prototip)
+Saat uygulaması (`quick_remote_wear/`) PC uygulaması gerekmeden doğrudan Bluetooth HID klavye/fare olarak çalışır. Galaxy Watch 6'da denendi; diğer saatlerde ve Windows'ta henüz doğrulanmadı.
+
+| Özellik | Açıklama |
+|---------|----------|
+| **Slayt İleri / Geri** | Ekrandaki düğmelerle veya döner çerçeve/kasa (bezel) ile slayt değiştirin |
+| **Gösteriyi Başlat / Bitir** | Eylemler sayfasından |
+| **Siyah / Beyaz Ekran** | Eylemler sayfasından |
+| **Lazer İşaretçi** | Tam ekran dokunmatik alanda parmağı sürükleyerek imleci taşıyın (telefondaki Bluetooth touchpad gibi); jiroskop kullanılmaz |
+| **Sunum Programı Seçimi** | PowerPoint, Impress veya WPS; saat bilgisayardaki programı algılayamadığı için elle seçilir ve lazerin hangi kısayolu göndereceğini belirler |
+| **Bilgisayar Listesi** | Eşleşmiş bilgisayarları listeler, bağlı olanı gösterir |
+| **Eşleştirme** | "Bilgisayardan" (saat 2 dakika görünür olur) veya "Saatten" (saat çevredeki bilgisayarları arar) |
+| **Bağlantı Servisi** | Bağlantı, bildirimli bir servis (`HidSessionService`) üzerinden tutulur |
+| **Durum Ekranları** | İzin, Bluetooth kapalı, desteklenmiyor, klavye başka uygulamada, bilgisayar reddetti gibi durumlar açıklama ve "Tekrar dene" ile gösterilir |
+| **Türkçe / İngilizce** | Sistem diline göre |
 
 ### 🌍 Arayüz
 | Özellik | Açıklama |
