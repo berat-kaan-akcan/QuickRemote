@@ -126,6 +126,7 @@ void main() {
       expect(reply, containsPair('status', 'ok'));
       expect(reply, containsPair('presenter', 'fake'));
       expect(reply, containsPair('presenters', ['fake', 'other']));
+      expect(reply, containsPair('name', Platform.localHostname));
       expect(server.clientCount.value, 1);
     });
 
