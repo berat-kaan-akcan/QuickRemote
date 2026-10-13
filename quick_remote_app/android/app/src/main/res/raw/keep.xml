@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources no code refers to, which release builds would shrink away.
+     android_wear_capabilities (values/wear.xml) is read by Google Play
+     services, not by the app: without it the watch app finds no phone. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@array/android_wear_capabilities" />

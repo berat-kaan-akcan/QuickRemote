@@ -14,6 +14,7 @@ import androidx.wear.compose.foundation.pager.PagerDefaults
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.HorizontalPageIndicator
 import androidx.wear.compose.material3.HorizontalPagerScaffold
+import com.quickremote.wear.phone.Show
 import com.quickremote.wear.remote.RemoteAction
 import kotlinx.coroutines.launch
 
@@ -26,13 +27,13 @@ private const val PAGE_COUNT = 2
  * slide buttons; starting the show turns to the slide buttons. The bezel (or
  * crown) changes slides on both pages. [page] is kept by the caller, so that
  * a dropped and restored connection comes back to the same page.
- * [onAction] answers whether the key went out; [onLaser] opens the laser.
+ * [onAction] answers whether the command went out; [onLaser] opens the laser.
  */
 @Composable
 fun ConnectedScreen(
+    show: Show?,
     onAction: (RemoteAction) -> Boolean,
     onLaser: () -> Unit,
-    onComputers: () -> Unit,
     page: Int,
     onPageChange: (Int) -> Unit,
 ) {
@@ -75,16 +76,16 @@ fun ConnectedScreen(
             ) { index ->
                 if (index == PAGE_ACTIONS) {
                     ActionsPage(
+                        show = show,
                         onPress = { action ->
                             press(action)
                             if (action == RemoteAction.START) {
                                 scope.launch { pagerState.animateScrollToPage(PAGE_REMOTE, animationSpec = PAGE_SNAP) }
                             }
                         },
-                        onComputers = onComputers,
                     )
                 } else {
-                    RemotePage(onPress = { press(it) }, onLaser = onLaser)
+                    RemotePage(show = show, onPress = { press(it) }, onLaser = onLaser)
                 }
             }
         }

@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'l10n/app_language.dart';
+import 'l10n/failure_text.dart';
 import 'screens/home/home_screen.dart';
 import 'services/background_session.dart';
+import 'services/wear/wear_bridge.dart';
 import 'services/websocket_service.dart';
 import 'providers/settings_provider.dart';
 import 'services/discovery_service.dart';
@@ -34,6 +36,19 @@ class QuickRemoteApp extends StatelessWidget {
               service!..setKeepInkOnSlideChange(settings.keepInkOnSlideChange),
         ),
         ChangeNotifierProvider(create: (_) => DiscoveryService()),
+        // The watch app's way to the PC; it listens from the start.
+        Provider<WearBridge>(
+          lazy: false,
+          create: (context) {
+            final settings = context.read<SettingsProvider>();
+            return WearBridge(
+              context.read<WebSocketService>(),
+              context.read<DiscoveryService>(),
+              btTarget: () => settings.btTarget,
+            );
+          },
+          dispose: (_, bridge) => bridge.dispose(),
+        ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) => MaterialApp(
@@ -53,6 +68,7 @@ class QuickRemoteApp extends StatelessWidget {
           darkTheme: AppTheme.dark,
           builder: (context, child) {
             BackgroundSession.notificationText = context.l10n.backgroundNotification;
+            WearBridge.failureText = context.l10n.failure;
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: AppTheme.overlayStyle(context.palette),
               child: Stack(

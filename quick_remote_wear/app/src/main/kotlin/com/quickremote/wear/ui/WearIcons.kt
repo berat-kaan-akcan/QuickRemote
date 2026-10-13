@@ -13,11 +13,11 @@ import com.quickremote.wear.ui.theme.WearColors
 
 /** Icons the core Material set lacks. */
 object WearIcons {
-    /** Material's "bluetooth". */
-    val Bluetooth: ImageVector = icon(
-        "Bluetooth",
-        "M17.71,7.71L12,2h-1v7.59L6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 11,14.41V22h1l5.71,-5.71 " +
-            "-4.3,-4.29 4.3,-4.29zM13,5.83l1.88,1.88L13,9.59V5.83zM14.88,16.29L13,18.17v-3.76l1.88,1.88z",
+    /** Material's "smartphone". */
+    val Phone: ImageVector = icon(
+        "Phone",
+        "M17,1.01L7,1c-1.1,0 -2,0.9 -2,2v18c0,1.1 0.9,2 2,2h10c1.1,0 2,-0.9 2,-2V3c0,-1.1 -0.9,-1.99 -2,-1.99z" +
+            "M17,19H7V5h10v14z",
     )
 
     /** A rounded square: "stop", the end of the slideshow. */

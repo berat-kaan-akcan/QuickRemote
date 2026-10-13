@@ -30,12 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.OutlinedIconButton
-import androidx.wear.compose.material3.Text
 import com.quickremote.wear.R
-import com.quickremote.wear.remote.PointerMover
-import com.quickremote.wear.remote.Presenter
 import com.quickremote.wear.remote.RemoteAction
-import com.quickremote.wear.remote.Shortcut
 import com.quickremote.wear.ui.theme.WearColors
 import kotlin.math.min
 
@@ -53,25 +49,26 @@ fun LaserButton(diameter: Dp, onClick: () -> Unit) {
 }
 
 /**
- * The laser: the whole screen is a touchpad, as the phone's is. The finger
- * moves the computer's mouse and the dot follows it; the bezel still changes
- * slides. [presenter]'s laser keys go out as the finger touches and leaves
- * ([onShortcut]). [onPointer] answers whether the cursor moved, [onAction]
- * whether the key went out. The back button, a swipe from the left edge and the
- * close button at the bottom return to the slide buttons ([onClose]).
+ * The laser: the whole screen is a touchpad, as the phone's is. The slide's
+ * laser comes on as the finger touches ([onDown], false when there is no
+ * computer), follows it ([onMove], in the computer's cursor units) and goes
+ * out as it leaves ([onUp]); the bezel still changes slides ([onAction]
+ * answers whether the command went out). The back button, a swipe from the
+ * left edge and the close button at the bottom return to the slide buttons
+ * ([onClose]).
  */
 @Composable
 fun LaserScreen(
-    presenter: Presenter,
-    onShortcut: (Shortcut) -> Boolean,
-    onPointer: (Int, Int) -> Boolean,
+    onDown: () -> Boolean,
+    onMove: (Float, Float) -> Unit,
+    onUp: () -> Unit,
     onAction: (RemoteAction) -> Boolean,
     onClose: () -> Unit,
 ) {
     val haptics = rememberHaptics()
-    val move by rememberUpdatedState(onPointer)
-    val program by rememberUpdatedState(presenter)
-    val press by rememberUpdatedState(onShortcut)
+    val down by rememberUpdatedState(onDown)
+    val move by rememberUpdatedState(onMove)
+    val up by rememberUpdatedState(onUp)
     val bezel = rememberSlideBezel { if (onAction(it)) haptics.step() else haptics.failed() }
     var finger by remember { mutableStateOf<Offset?>(null) }
     val background = MaterialTheme.colorScheme.background
@@ -86,34 +83,29 @@ fun LaserScreen(
                 .semantics { contentDescription = label }
                 .pointerInput(Unit) {
                     awaitEachGesture {
-                        val down = awaitFirstDown()
+                        val first = awaitFirstDown()
                         // Left unconsumed, a touch on the left edge is the
                         // system's swipe back, as on every other screen.
-                        if (down.position.x < EDGE_WIDTH.toPx()) return@awaitEachGesture
-                        down.consume()
-                        finger = down.position
+                        if (first.position.x < EDGE_WIDTH.toPx()) return@awaitEachGesture
+                        first.consume()
+                        if (!down()) {
+                            haptics.failed()
+                            return@awaitEachGesture
+                        }
+                        finger = first.position
                         haptics.sent()
-                        program.laserDown?.let { press(it) }
-                        val mover = PointerMover(LASER_GAIN)
-                        var sentAt = down.uptimeMillis
-                        fun flush() = mover.take().forEach { (dx, dy) -> move(dx, dy) }
                         try {
                             while (true) {
-                                val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                                val change = awaitPointerEvent().changes.firstOrNull { it.id == first.id } ?: break
                                 // Read before consuming: a consumed change moves by zero.
                                 val delta = change.positionChange()
                                 change.consume()
                                 if (!change.pressed) break
                                 finger = change.position
-                                mover.add(delta.x / density, delta.y / density)
-                                if (change.uptimeMillis - sentAt >= SEND_INTERVAL_MS) {
-                                    sentAt = change.uptimeMillis
-                                    flush()
-                                }
+                                move(delta.x / density * LASER_GAIN, delta.y / density * LASER_GAIN)
                             }
                         } finally {
-                            flush()
-                            program.laserUp?.let { press(it) }
+                            up()
                             finger = null
                         }
                     }
@@ -130,13 +122,6 @@ fun LaserScreen(
                 drawLaserDot(at, radius * 1.4f)
             }
         }
-        // Which program's laser this is: chosen on the computers screen.
-        Text(
-            presenterName(presenter),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.align(Alignment.TopCenter).offset(y = screen * 0.17f),
-        )
         OutlinedIconButton(
             onClick = onClose,
             modifier = Modifier
@@ -159,11 +144,11 @@ private fun DrawScope.drawLaserDot(at: Offset, radius: Float, alpha: Float = 1f)
     drawCircle(WearColors.laser.copy(alpha = alpha), radius * 0.48f, at)
 }
 
-/** Cursor counts per dp of finger movement: the watch is small, so more than the phone's 4. */
-private const val LASER_GAIN = 6f
+/**
+ * Cursor units per dp of finger movement. The phone's touchpad sends 8 per
+ * logical pixel (touchpad_view.dart); the watch is half as wide, so more.
+ */
+private const val LASER_GAIN = 12f
 
 /** Where a touch is the swipe back instead of the laser: Wear's SwipeToDismissBox edge. */
 private val EDGE_WIDTH = 30.dp
-
-/** At most one batch of reports per frame, as on the phone. */
-private const val SEND_INTERVAL_MS = 16L

@@ -3,36 +3,51 @@ package com.quickremote.wear.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.mutableStateOf
+import androidx.wear.ambient.AmbientLifecycleObserver
 import com.quickremote.wear.QuickRemoteWearApp
-import com.quickremote.wear.hid.HidSessionService
 import com.quickremote.wear.ui.theme.QuickRemoteTheme
 
 class MainActivity : ComponentActivity() {
     private val app get() = application as QuickRemoteWearApp
 
+    /** The screen is dimmed (always-on display): the remote shows its ambient screen. */
+    private val ambient = mutableStateOf(false)
+
+    // With this the remote stays in front while the screen is dimmed, on
+    // watches with the always-on display on, instead of the watch face.
+    private val ambientObserver = AmbientLifecycleObserver(
+        this,
+        object : AmbientLifecycleObserver.AmbientLifecycleCallback {
+            override fun onEnterAmbient(ambientDetails: AmbientLifecycleObserver.AmbientDetails) {
+                ambient.value = true
+            }
+
+            override fun onExitAmbient() {
+                ambient.value = false
+            }
+        },
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(ambientObserver)
         setContent {
             QuickRemoteTheme {
-                WearApp(app.hid, app.presenter)
+                WearApp(app.phone, ambient.value)
             }
         }
     }
 
+    // The watch holds no connection of its own: it listens to the phone while
+    // the remote is on screen, and asks for its state on every return.
     override fun onStart() {
         super.onStart()
-        app.remoteVisible.value = true
+        app.phone.start()
     }
 
     override fun onStop() {
-        app.remoteVisible.value = false
+        app.phone.stop()
         super.onStop()
-    }
-
-    override fun onDestroy() {
-        // Swiped away or closed with Back: the keyboard goes with the remote.
-        // The screen turning off only stops the activity.
-        if (isFinishing) HidSessionService.stop(this)
-        super.onDestroy()
     }
 }

@@ -77,6 +77,12 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        // ── Watch app (Wearable Data Layer) ────────────────────────────────
+        WearRelay.attach(
+            applicationContext,
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WearRelay.CHANNEL),
+        )
+
         // ── Bluetooth HID service setup ────────────────────────────────────
         btHidService = BluetoothHidService(applicationContext)
         var lastState: String? = null
@@ -249,6 +255,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        WearRelay.detach(applicationContext)
         releaseWifiLock()
         // lateinit: unset when the Activity dies before the engine was configured.
         if (::btHidService.isInitialized) btHidService.stopAdvertising()
