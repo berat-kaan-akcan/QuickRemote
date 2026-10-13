@@ -181,7 +181,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeSettingsTooltip => 'Ayarlar';
 
   @override
-  String get homeTagline => 'Sunumlarınızı telefondan kontrol edin';
+  String get homeTagline => 'Sunum kumandanız cebinizde';
 
   @override
   String get homeConnecting => 'Bağlanıyor...';

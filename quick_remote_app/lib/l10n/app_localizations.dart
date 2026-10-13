@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeTagline.
   ///
   /// In tr, this message translates to:
-  /// **'Sunumlarınızı telefondan kontrol edin'**
+  /// **'Sunum kumandanız cebinizde'**
   String get homeTagline;
 
   /// No description provided for @homeConnecting.
