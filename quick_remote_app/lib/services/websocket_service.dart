@@ -116,6 +116,9 @@ class WebSocketService extends ChangeNotifier {
   AppConnectionState get connectionState => _client.connectionState;
   String get serverAddress => _client.serverAddress;
 
+  /// The connected PC's name; null from a PC that does not tell it.
+  String? get pcName => isConnected ? _state.pcName : null;
+
   // ─── Presentation State ─────────────────────────────────────────────────────
 
   int get currentSlide => _state.currentSlide;

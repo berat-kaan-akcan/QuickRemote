@@ -313,7 +313,9 @@ class BluetoothHidService(private val context: Context) {
         report[0] = buttons.toByte()
         report[1] = dx.coerceIn(-127, 127).toByte()
         report[2] = dy.coerceIn(-127, 127).toByte()
-        dev.sendReport(host, REPORT_ID_MOUSE.toInt(), report)
+        val sent = dev.sendReport(host, REPORT_ID_MOUSE.toInt(), report)
+        // To measure the link: adb shell setprop log.tag.BluetoothHidService VERBOSE
+        if (Log.isLoggable(TAG, Log.VERBOSE)) Log.v(TAG, "mouse $buttons $dx $dy sent=$sent")
     }
 
     /** Send a mouse click (down then up). */

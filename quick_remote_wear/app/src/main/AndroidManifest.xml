@@ -1,28 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-feature android:name="android.hardware.type.watch" />
-    <uses-feature android:name="android.hardware.bluetooth" />
 
-    <!-- Bluetooth Classic HID: the watch is a keyboard for a computer.
-         Android 12+: BLUETOOTH_CONNECT runs the keyboard, BLUETOOTH_SCAN
-         searches for computers, BLUETOOTH_ADVERTISE asks for the watch to be
-         made visible. Android 11 searches only with the location permission. -->
-    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission
-        android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation"
-        tools:targetApi="s" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
-
-    <!-- HidSessionService keeps the HID registration while the screen is off. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- The laser's own socket to the phone app (DirectLink); optional, the
+         laser goes over the Data Layer without it. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Ambient mode (AmbientLifecycleObserver). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".QuickRemoteWearApp"
@@ -32,10 +19,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.QuickRemote">
 
-        <!-- Needs no phone: the watch reaches the computer over Bluetooth. -->
+        <!-- Not standalone: the watch reaches the computer through the phone
+             app (the Wearable Data Layer), which holds the connection. -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
-            android:value="true" />
+            android:value="false" />
 
         <activity
             android:name=".ui.MainActivity"
@@ -47,9 +35,5 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".hid.HidSessionService"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice" />
     </application>
 </manifest>

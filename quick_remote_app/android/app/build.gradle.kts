@@ -82,3 +82,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // The Wearable Data Layer: the watch app's link to this app (WearRelay.kt).
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
+}

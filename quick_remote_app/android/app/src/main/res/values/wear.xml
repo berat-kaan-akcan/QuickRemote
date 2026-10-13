@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tells the watch app (quick_remote_wear) which node is the phone app: it
+     sends its commands to the node with this capability (WearProtocol.CAPABILITY).
+     Kept in release builds by raw/keep.xml. -->
+<resources>
+    <string-array name="android_wear_capabilities" translatable="false">
+        <item>quickremote_phone</item>
+    </string-array>
+</resources>

@@ -576,6 +576,9 @@ class WebSocketServer {
       'presenter': InputSimulator.presenter,
       'presenters': InputSimulator.presenters,
       'platform': Platform.operatingSystem,
+      // The computer's name, as in the mDNS advertisement: a phone connected
+      // by QR code or address knows only the address. Shown on the watch.
+      'name': Platform.localHostname,
     });
 
     debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');

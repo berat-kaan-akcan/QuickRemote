@@ -9,9 +9,9 @@ plugins {
 
 // Release signing uses the phone app's key (quick_remote_app/android/key.properties,
 // storeFile relative to quick_remote_app/android/app): Play serves both apps
-// from one listing, and a later phone-watch link (Wearable Data Layer) only
-// pairs apps signed with the same key. Without it release builds fall back
-// to the debug key, which Play Console rejects.
+// from one listing, and the Wearable Data Layer, the watch's link to the phone
+// app, only joins apps with the same application id and signing key. Without
+// it release builds fall back to the debug key, which Play Console rejects.
 val phoneAndroidDir = rootProject.file("../quick_remote_app/android")
 val keystoreProperties = Properties().apply {
     val file = phoneAndroidDir.resolve("key.properties")
@@ -98,6 +98,12 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.core:core-ktx:1.19.1")
+    // Ambient mode: the remote stays in front while the screen is dimmed.
+    implementation("androidx.wear:wear:1.4.0")
+    // The Wearable Data Layer (the link to the phone app), and opening the
+    // phone app from the watch.
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
+    implementation("androidx.wear:wear-remote-interactions:1.2.0")
 
     testImplementation("junit:junit:4.13.2")
 }

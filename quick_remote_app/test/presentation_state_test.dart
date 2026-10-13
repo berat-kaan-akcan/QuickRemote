@@ -16,6 +16,23 @@ void main() {
     expect(state.presenterNames, ['LibreOffice Impress']);
   });
 
+  test('the PC\'s name is kept as one short line', () {
+    final state = PresentationState()..updatePresenters({'presenter': 'impress', 'name': '  berat\u202E  cachyos\n '});
+    expect(state.pcName, 'berat cachyos');
+    state.updatePresenters({'presenter': 'impress', 'name': 'a' * 100});
+    expect(state.pcName, hasLength(PresentationState.maxNameLength));
+    // An older PC, or anything that is not a name.
+    for (final name in [null, '', '   ', 42]) {
+      state.updatePresenters({'presenter': 'impress', 'name': name});
+      expect(state.pcName, isNull);
+    }
+    // The end of a show resets the slides, not the connection's name.
+    state
+      ..updatePresenters({'presenter': 'impress', 'name': 'Ofis-PC'})
+      ..reset();
+    expect(state.pcName, 'Ofis-PC');
+  });
+
   test('the slide state names the program running the show', () {
     final state = PresentationState()
       ..updatePresenters({'presenter': 'powerpoint', 'presenters': ['powerpoint', 'wps']})

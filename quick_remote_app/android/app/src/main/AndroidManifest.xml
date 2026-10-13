@@ -54,7 +54,29 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- "Open on phone" on the watch (WearProtocol.OPEN_URI): brings
+                 the app to the front. Flutter must not take the link for a
+                 route to open. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="quickremote" android:host="watch"/>
+            </intent-filter>
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false" />
         </activity>
+        <!-- The watch app's messages (WearRelay.kt). Google Play services
+             binds to it, also while the app is closed. -->
+        <service
+            android:name=".WearListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/quickremote" />
+            </intent-filter>
+        </service>
         <!-- flutter_background does not declare its service; Android 14+ also
              requires a type. connectedDevice: it keeps the session with the PC. -->
         <service

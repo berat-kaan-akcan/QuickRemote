@@ -22,11 +22,34 @@ class PresentationState {
   List<String> get presenterNames =>
       isPptRunning ? [nameOf(presenter)] : presenters.map(nameOf).toList();
 
+  /// The PC's own name (its host name); null from a PC that does not send it.
+  /// Kept while the show changes: it is the connection's, not the show's.
+  String? pcName;
+
   void updatePresenters(Map<String, dynamic> authReply) {
     presenter = authReply['presenter'] as String? ?? 'powerpoint';
     final list = authReply['presenters'];
     presenters = list is List && list.isNotEmpty ? list.whereType<String>().toList() : [presenter];
+    pcName = cleanName(authReply['name']);
   }
+
+  /// Makes the PC's name safe to show, as the PC does with a phone's
+  /// (`ConnectedClient.sanitizeName`): no control or bidi override
+  /// characters, single spaces, at most [maxNameLength] characters. Null if
+  /// nothing is left.
+  static String? cleanName(Object? raw) {
+    if (raw is! String) return null;
+    final cleaned = raw
+        .replaceAll(RegExp(r'[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (cleaned.isEmpty) return null;
+    final runes = cleaned.runes;
+    if (runes.length <= maxNameLength) return cleaned;
+    return '${String.fromCharCodes(runes.take(maxNameLength - 1)).trimRight()}…';
+  }
+
+  static const maxNameLength = 40;
 
   bool hasMedia = false;
   String? mediaTitle;

@@ -11,8 +11,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 
 /**
- * A keyboard gets no answer from the computer, so the wrist is where the
- * presenter learns that a key went out, without looking.
+ * The wrist is where the presenter learns that a command went out, or that
+ * it did not, without looking.
  */
 class Haptics(context: Context, private val view: View) {
     private val vibrator = context.getSystemService(Vibrator::class.java)
@@ -26,12 +26,12 @@ class Haptics(context: Context, private val view: View) {
         view.performHapticFeedback(if (isGalaxyWatch) GALAXY_ROTARY_FOCUS else ROTARY_ITEM_FOCUS)
     }
 
-    /** A key was sent. */
+    /** A command was sent. */
     fun sent() {
         vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
     }
 
-    /** Nothing was sent: no computer is connected. */
+    /** Nothing was sent, or the computer refused the command. */
     fun failed() {
         vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK))
     }
