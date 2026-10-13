@@ -184,7 +184,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSettingsTooltip => 'Settings';
 
   @override
-  String get homeTagline => 'Control your presentations from your phone';
+  String get homeTagline => 'The presentation remote in your pocket';
 
   @override
   String get homeConnecting => 'Connecting...';
