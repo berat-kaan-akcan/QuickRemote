@@ -279,7 +279,8 @@
     const mirror = $('[data-mirror]', demo);
     const menuBtn = $('[data-wmenu]', demo);
     const menu = $('[data-wmenu-panel]', demo);
-    const keys = new Map($$('[data-key]', demo).map((k) => [k.dataset.key, k]));
+    const hops = $$('[data-hop]', demo);
+    const num = $('[data-wnum]', demo);
 
     // The screen beside the watch shows the same talk as the hero.
     const deck = $('.deck', mirror);
@@ -290,22 +291,26 @@
         deck.append(copy);
       });
     }
-    const show = createShow(mirror);
+    // The slide number on the watch, as the phone reports it (ShowLabel).
+    const show = createShow(mirror, (s) => {
+      if (num) num.textContent = s.running ? `${s.index + 1} / ${s.total}` : num.dataset.off;
+    });
     const live = $('[data-live]', demo);
 
-    // A keyboard gets no answer from the computer: the key goes out whatever
-    // the slide does, and the wrist buzzes for it (Haptics.sent / step).
+    // The command goes out whatever the slide does, by way of the phone, and
+    // the wrist buzzes for it (Haptics.sent / step).
     function press(cmd, fromBezel) {
       if (show.command(cmd) && live) {
         const { index, total } = show.state;
         live.textContent = live.dataset.live.replace('{n}', index + 1).replace('{t}', total);
       }
-      const key = keys.get(cmd);
-      if (key) {
-        key.classList.add('is-down');
-        clearTimeout(key.upTimer);
-        key.upTimer = setTimeout(() => key.classList.remove('is-down'), 170);
-      }
+      hops.forEach((hop, i) => {
+        clearTimeout(hop.downTimer);
+        clearTimeout(hop.upTimer);
+        hop.classList.remove('is-down');
+        hop.downTimer = setTimeout(() => hop.classList.add('is-down'), i * 110);
+        hop.upTimer = setTimeout(() => hop.classList.remove('is-down'), i * 110 + 170);
+      });
       if (!reduceMotion.matches) replay(watch, fromBezel ? 'is-tick' : 'is-buzz');
     }
 
