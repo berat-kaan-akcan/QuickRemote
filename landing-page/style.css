@@ -999,14 +999,14 @@ kbd {
 @media (min-width: 720px) {
   .watch-demo {
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas: "watch screen" "keys keys" "hint hint";
+    grid-template-areas: "watch screen" "route route" "hint hint";
     align-items: center;
     justify-items: start;
     column-gap: 40px;
   }
   .watch { grid-area: watch; }
   .mini { grid-area: screen; }
-  .keys { grid-area: keys; }
+  .route { grid-area: route; }
   .watch-demo .demo-hint { grid-area: hint; }
 }
 
@@ -1021,8 +1021,8 @@ kbd {
 .no-js .mini { display: none; }
 
 .demo-hint { color: rgb(255 255 255 / .78); font-size: .875rem; }
-.keys-k { flex-basis: 100%; color: rgb(255 255 255 / .78); font: 600 .8125rem/1 var(--font-text); text-align: center; }
-@media (min-width: 720px) { .keys-k { text-align: left; } }
+.route-k { flex-basis: 100%; color: rgb(255 255 255 / .78); font: 600 .8125rem/1 var(--font-text); text-align: center; }
+@media (min-width: 720px) { .route-k { text-align: left; } }
 
 /* The watch, sized by --d; 1em is 1 % of its diameter. */
 .watch {
@@ -1098,6 +1098,20 @@ kbd {
   pointer-events: none;
 }
 .watch-time .host { fill: #A9AFCB; }
+
+/* The slide number, between the halves and the menu's edge. */
+.w-num {
+  position: absolute;
+  top: 75.4%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  color: #EEF0FA;
+  font: 600 calc(var(--u) * 5)/1 var(--font-display, var(--font-text));
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  pointer-events: none;
+}
 
 /* RemoteScreen: two halves (Next wider), rounded like the screen outside,
    nearly square inside; pressed, the inner corners round off. */
@@ -1190,17 +1204,20 @@ kbd {
 .watch.is-buzz { animation: buzz 180ms linear; }
 .watch.is-tick .watch-screen { animation: tick 140ms var(--ease-out); }
 
-.keys {
+/* The command's way: watch, phone, computer, each lit as it passes. */
+.route {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
   justify-content: center;
 }
-@media (min-width: 720px) { .keys { justify-content: flex-start; } }
-.key {
-  display: inline-grid;
-  place-items: center;
-  min-width: 50px;
+@media (min-width: 720px) { .route { justify-content: flex-start; } }
+.route .hop-arrow { width: 18px; height: 18px; color: rgb(255 255 255 / .6); }
+.hop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   height: 44px;
   padding: 0 14px;
   border-radius: 10px;
@@ -1210,7 +1227,8 @@ kbd {
   box-shadow: 0 4px 0 #A9B2D6, 0 10px 16px -8px rgb(6 10 40 / .55);
   transition: transform 90ms var(--ease-out), box-shadow 90ms var(--ease-out), background-color 160ms;
 }
-.key.is-down {
+.hop .i { width: 18px; height: 18px; }
+.hop.is-down {
   transform: translateY(4px);
   background: #fff;
   box-shadow: 0 0 0 #A9B2D6, 0 4px 8px -6px rgb(6 10 40 / .55);
