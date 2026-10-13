@@ -72,19 +72,18 @@
 | **Telefon Adı** | PC'nin bağlı cihazlar listesinde telefonunuzun adı (veya modeli) görünür |
 
 ### ⌚ Wear OS (Prototip)
-Saat uygulaması (`quick_remote_wear/`) PC uygulaması gerekmeden doğrudan Bluetooth HID klavye/fare olarak çalışır. Galaxy Watch 6'da denendi; diğer saatlerde ve Windows'ta henüz doğrulanmadı.
+Saat uygulaması (`quick_remote_wear/`) bilgisayara telefon üzerinden ulaşır: saat ⇄ telefon (Wear OS'in kendi kanalı) ⇄ bilgisayar (telefonun Wi-Fi bağlantısı ya da Bluetooth klavye modu). Saatte eşleştirme ya da izin adımı yoktur; telefonda bilgisayara bağlanınca saatteki kumanda kendiliğinden açılır. Telefondaki QuickRemote ile aynı imzayla kurulmuş olmalıdır.
 
 | Özellik | Açıklama |
 |---------|----------|
 | **Slayt İleri / Geri** | Ekrandaki düğmelerle veya döner çerçeve/kasa (bezel) ile slayt değiştirin |
+| **Slayt Numarası** | Kumandada "5 / 20" biçiminde (telefon Wi-Fi ile bağlıyken; Bluetooth modunda bilgisayar bilgi göndermez); saatin yanında bilgisayarın adı görünür |
 | **Gösteriyi Başlat / Bitir** | Eylemler sayfasından |
 | **Siyah / Beyaz Ekran** | Eylemler sayfasından |
-| **Lazer İşaretçi** | Tam ekran dokunmatik alanda parmağı sürükleyerek imleci taşıyın (telefondaki Bluetooth touchpad gibi); jiroskop kullanılmaz |
-| **Sunum Programı Seçimi** | PowerPoint, Impress veya WPS; saat bilgisayardaki programı algılayamadığı için elle seçilir ve lazerin hangi kısayolu göndereceğini belirler |
-| **Bilgisayar Listesi** | Eşleşmiş bilgisayarları listeler, bağlı olanı gösterir |
-| **Eşleştirme** | "Bilgisayardan" (saat 2 dakika görünür olur) veya "Saatten" (saat çevredeki bilgisayarları arar) |
-| **Bağlantı Servisi** | Bağlantı, bildirimli bir servis (`HidSessionService`) üzerinden tutulur |
-| **Durum Ekranları** | İzin, Bluetooth kapalı, desteklenmiyor, klavye başka uygulamada, bilgisayar reddetti gibi durumlar açıklama ve "Tekrar dene" ile gösterilir |
+| **Lazer İşaretçi** | Tam ekran dokunmatik alanda parmağı sürükleyin; Wi-Fi'da sunum programının gerçek lazeri, Bluetooth modunda telefonda seçili programın kısayolu ve fare imleci kullanılır; jiroskop kullanılmaz |
+| **Hata Bildirimi** | Bilgisayarın reddettiği komut saatte kısa bir bildirim ve titreşimle gösterilir (yalnızca Wi-Fi) |
+| **Durum Ekranları** | Telefona ulaşılamıyor, telefonda uygulama kapalı ("Telefonda aç" düğmesiyle), telefon bilgisayara bağlı değil |
+| **Ortam Ekranı** | Ekran kararınca kumanda önde kalır ve slayt numarasını gösterir (her zaman açık ekranı olan saatlerde) |
 | **Türkçe / İngilizce** | Sistem diline göre |
 
 ### 🌍 Arayüz
@@ -202,7 +201,7 @@ QuickRemote/
 │   ├── export/                    # Hazır PNG/ICO çıktıları
 │   └── tools/export_assets.sh     # SVG'lerden uygulama ikonlarını üretir
 │
-├── quick_remote_wear/             # ⌚ Wear OS prototipi (Kotlin/Compose, doğrudan Bluetooth HID)
+├── quick_remote_wear/             # ⌚ Wear OS prototipi (Kotlin/Compose, telefon üzerinden bağlanır)
 │
 ├── logo/                          # Eski logo ve konsept görselleri
 │   ├── quick_remote_icon.jpg
