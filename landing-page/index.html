@@ -232,7 +232,7 @@
       <div class="watch-copy">
         <p class="new-tag">Yeni</p>
         <h2 class="h2" id="watch-title">Çerçeveyi çevir, slayt ilerlesin.</h2>
-        <p class="lede">QuickRemote artık Wear&nbsp;OS saatlerde. Saat bilgisayara Bluetooth klavye olarak bağlanır; telefona da PC uygulamasına da gerek kalmaz.</p>
+        <p class="lede">QuickRemote artık Wear&nbsp;OS saatlerde. Saat, telefonunun bilgisayarla kurduğu bağlantıyı kullanır: saatte eşleştirme yok, telefon cebinde kalır, slayt numarası bileğinde.</p>
         <dl class="facts">
           <div>
             <dt>Çerçeve ya da kuron</dt>
@@ -240,7 +240,7 @@
           </div>
           <div>
             <dt>Bakmadan sun</dt>
-            <dd>Tuş gidince saat bir kez titrer. Bilgisayar bağlı değilse iki kez titrer.</dd>
+            <dd>Komut gidince saat bir kez titrer. Gitmezse ya da bilgisayar kabul etmezse iki kez titrer.</dd>
           </div>
           <div>
             <dt>Bitir bir adım ötede</dt>
@@ -259,6 +259,7 @@
               <path id="watch-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none"/>
               <text><textPath href="#watch-arc" startOffset="50%" text-anchor="middle"><tspan data-clock>10:09</tspan><tspan class="host"> · Ofis-PC</tspan></textPath></text>
             </svg>
+            <p class="w-num" aria-hidden="true" data-wnum data-off="Gösteri kapalı">1 / 5</p>
             <button class="wh wh-prev" type="button" data-cmd="prev" aria-label="Önceki slayt"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
             <button class="wh wh-next" type="button" data-cmd="next" aria-label="Sonraki slayt"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             <button class="w-edge" type="button" aria-label="Diğer işlemler" aria-expanded="false" aria-controls="watch-menu" data-wmenu><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
@@ -280,14 +281,13 @@
           </div>
         </div>
 
-        <div class="keys" aria-hidden="true" translate="no">
-          <span class="keys-k">Bilgisayara giden tuş</span>
-          <span class="key" data-key="prev">Page&nbsp;Up</span>
-          <span class="key" data-key="next">Page&nbsp;Down</span>
-          <span class="key" data-key="start">F5</span>
-          <span class="key" data-key="black">B</span>
-          <span class="key" data-key="white">W</span>
-          <span class="key" data-key="end">Esc</span>
+        <div class="route" aria-hidden="true">
+          <span class="route-k">Komutun yolu</span>
+          <span class="hop" data-hop><svg class="i"><use href="#i-watch"/></svg>Saat</span>
+          <svg class="i hop-arrow"><use href="#i-arrow-forward"/></svg>
+          <span class="hop" data-hop><svg class="i"><use href="#i-phone"/></svg>Telefon</span>
+          <svg class="i hop-arrow"><use href="#i-arrow-forward"/></svg>
+          <span class="hop" data-hop><svg class="i"><use href="#i-computer"/></svg>Bilgisayar</span>
         </div>
         <p class="sr" aria-live="polite" data-live="Slayt {n} / {t}"></p>
         <p class="demo-hint">Çerçeveyi sürükleyerek çevir ya da ekranın yarılarına dokun.</p>
@@ -299,7 +299,7 @@
   <section class="modes section" id="how-it-works" aria-labelledby="modes-title">
     <div class="wrap">
       <h2 class="h2" id="modes-title">Üç yoldan biriyle bağlan.</h2>
-      <p class="lede">PC uygulamasıyla her özellik açılır. Bilgisayara bir şey kurmak istemiyorsan telefon ya da saat bilgisayara klavye gibi bağlanır.</p>
+      <p class="lede">PC uygulamasıyla her özellik açılır. Bilgisayara bir şey kurmak istemiyorsan telefon ona klavye gibi bağlanır. Saat, telefonun kurduğu bağlantıyı kullanır.</p>
 
       <div class="seg" role="tablist" aria-label="Bağlantı yolu" data-tabs>
         <button type="button" role="tab" id="tab-wifi" aria-controls="panel-wifi" aria-selected="true"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>Wi-Fi</button>
@@ -373,26 +373,28 @@
 
       <div class="mode" role="tabpanel" id="panel-watch" aria-labelledby="tab-watch" tabindex="0">
         <div class="mode-text">
-          <h3>Yalnızca saat</h3>
-          <p class="mode-intro">Telefon cebinde kalabilir. Saat bilgisayara doğrudan Bluetooth klavye olarak bağlanır.</p>
+          <h3>Saat, telefonun üzerinden</h3>
+          <p class="mode-intro">Saat bilgisayarla eşleşmez; telefonunun Wi-Fi ya da Bluetooth bağlantısını kullanır. Telefon cebinde kalabilir.</p>
           <ol class="steps">
-            <li>Saatte QuickRemote’u aç, Bilgisayar ekle’ye dokun.</li>
-            <li>Bilgisayarın Bluetooth ayarlarında saati seç, kodu iki cihazda da onayla.</li>
+            <li>Telefonda bilgisayara Wi-Fi ya da Bluetooth ile bağlan ve kumanda ekranını açık bırak.</li>
+            <li>Saatte QuickRemote’u aç. Kumanda kendiliğinden gelir.</li>
             <li>Çerçeveyi çevir ya da ekrana dokun.</li>
           </ol>
           <ul class="caps" aria-label="Bu yolla">
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>İleri ve geri</li>
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Başlat ve bitir</li>
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Siyah ve beyaz ekran</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Lazer</li>
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Titreşimle onay</li>
           </ul>
+          <p class="caps-note">Slayt numarası ve bilgisayarın hata bildirimleri, telefon Wi-Fi ile bağlıyken saate gelir.</p>
         </div>
         <figure class="w-mini" aria-hidden="true">
           <div class="w-mini-face">
             <p class="w-mini-time" data-clock>10:09</p>
-            <p class="w-mini-h">Bilgisayarlar</p>
+            <p class="w-mini-h">5 / 20</p>
             <p class="w-mini-item"><svg class="i"><use href="#i-computer"/></svg><span>Ofis-PC<small>Bağlı</small></span></p>
-            <p class="w-mini-add"><svg class="i"><use href="#i-add"/></svg>Bilgisayar ekle</p>
+            <p class="w-mini-item"><svg class="i"><use href="#i-phone"/></svg><span>Telefon üzerinden</span></p>
           </div>
         </figure>
       </div>
@@ -601,7 +603,7 @@
       <dl class="reqs">
         <div>
           <dt><svg class="i" aria-hidden="true"><use href="#i-computer"/></svg>Bilgisayar</dt>
-          <dd>Wi-Fi modu için Windows&nbsp;10, 11 ya da Linux. Bluetooth ve saat modunda kurulum gerekmez.</dd>
+          <dd>Wi-Fi modu için Windows&nbsp;10, 11 ya da Linux. Bluetooth modunda kurulum gerekmez.</dd>
         </div>
         <div>
           <dt><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg>Telefon</dt>
@@ -609,7 +611,7 @@
         </div>
         <div>
           <dt><svg class="i" aria-hidden="true"><use href="#i-watch"/></svg>Saat</dt>
-          <dd>Wear&nbsp;OS&nbsp;3 ve üzeri. Saatin Bluetooth klavye olabilmesi gerekir.</dd>
+          <dd>Wear&nbsp;OS&nbsp;3 ve üzeri, QuickRemote kurulu bir Android telefonla eşleşmiş.</dd>
         </div>
       </dl>
     </div>
@@ -629,7 +631,7 @@
         </details>
         <details>
           <summary>İnternet bağlantısı gerekir mi?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-          <p>Hayır. Wi-Fi modunda telefonla bilgisayarın aynı ağda olması yeter. Bluetooth ve saat modunda bir ağa bile gerek yok.</p>
+          <p>Hayır. Wi-Fi modunda telefonla bilgisayarın aynı ağda olması yeter. Bluetooth modunda bir ağa bile gerek yok. Saat, telefon hangisiyle bağlıysa onu kullanır.</p>
         </details>
         <details>
           <summary>iPhone ya da Apple&nbsp;Watch ile çalışır mı?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
@@ -637,11 +639,11 @@
         </details>
         <details>
           <summary>Hangi saatlerle çalışır?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-          <p>Wear&nbsp;OS&nbsp;3 ve üzerini çalıştıran saatlerle. Saatin Bluetooth klavye olabilmesi gerekir; uygulama bunu açılışta kontrol eder, olmuyorsa söyler. Galaxy&nbsp;Watch’ta çerçeve, Pixel&nbsp;Watch’ta kuron slayt değiştirir.</p>
+          <p>Wear&nbsp;OS&nbsp;3 ve üzerini çalıştıran saatlerle. Saat, eşleştiği Android telefondaki QuickRemote üzerinden çalışır; bilgisayarla ayrıca eşleşmez. Galaxy&nbsp;Watch’ta çerçeve, Pixel&nbsp;Watch’ta kuron slayt değiştirir.</p>
         </details>
         <details>
           <summary>Bilgisayara bir şey kurmam gerekir mi?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-          <p>Wi-Fi modunda QuickRemote&nbsp;PC gerekir. Bluetooth ve saat modunda hiçbir şey kurmazsın; bilgisayar telefonu ya da saati klavye olarak görür.</p>
+          <p>Wi-Fi modunda QuickRemote&nbsp;PC gerekir. Bluetooth modunda hiçbir şey kurmazsın; bilgisayar telefonu klavye olarak görür. Saat iki modda da telefonun üzerinden çalışır.</p>
         </details>
         <details>
           <summary>PDF ile sunum yapabilir miyim?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
@@ -669,7 +671,7 @@
       <div class="get-head">
         <img class="get-icon" src="assets/app-icon.png" width="512" height="512" alt="QuickRemote uygulama simgesi" loading="lazy" decoding="async">
         <h2 class="h2" id="get-title">Ücretsiz indir.</h2>
-        <p class="lede">Bluetooth ve saat modunda bilgisayara bir şey kurmazsın; telefon ya da saat uygulaması yeter.</p>
+        <p class="lede">Bluetooth modunda bilgisayara bir şey kurmazsın; telefon uygulaması yeter. Saat uygulaması telefondakiyle birlikte çalışır.</p>
       </div>
       <div class="get-list">
         <a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">

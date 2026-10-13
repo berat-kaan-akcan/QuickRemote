@@ -232,7 +232,7 @@
       <div class="watch-copy">
         <p class="new-tag">New</p>
         <h2 class="h2" id="watch-title">Turn the bezel, change the slide.</h2>
-        <p class="lede">QuickRemote now runs on Wear&nbsp;OS watches. The watch pairs with your computer as a Bluetooth keyboard, so you need neither your phone nor the PC app.</p>
+        <p class="lede">QuickRemote now runs on Wear&nbsp;OS watches. The watch uses the connection your phone has with the computer: nothing to pair on the watch, the phone stays in your pocket, and the slide number is on your wrist.</p>
         <dl class="facts">
           <div>
             <dt>Bezel or crown</dt>
@@ -240,7 +240,7 @@
           </div>
           <div>
             <dt>Present without looking</dt>
-            <dd>The watch buzzes once when a key goes out, and twice when no computer is connected.</dd>
+            <dd>The watch buzzes once when a command goes out, and twice when it doesn’t or the computer refuses it.</dd>
           </div>
           <div>
             <dt>End is a step away</dt>
@@ -259,6 +259,7 @@
               <path id="watch-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none"/>
               <text><textPath href="#watch-arc" startOffset="50%" text-anchor="middle"><tspan data-clock>10:09</tspan><tspan class="host"> · Office-PC</tspan></textPath></text>
             </svg>
+            <p class="w-num" aria-hidden="true" data-wnum data-off="No slideshow">1 / 5</p>
             <button class="wh wh-prev" type="button" data-cmd="prev" aria-label="Previous slide"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
             <button class="wh wh-next" type="button" data-cmd="next" aria-label="Next slide"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             <button class="w-edge" type="button" aria-label="More actions" aria-expanded="false" aria-controls="watch-menu" data-wmenu><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
@@ -280,14 +281,13 @@
           </div>
         </div>
 
-        <div class="keys" aria-hidden="true" translate="no">
-          <span class="keys-k">Key sent to the computer</span>
-          <span class="key" data-key="prev">Page&nbsp;Up</span>
-          <span class="key" data-key="next">Page&nbsp;Down</span>
-          <span class="key" data-key="start">F5</span>
-          <span class="key" data-key="black">B</span>
-          <span class="key" data-key="white">W</span>
-          <span class="key" data-key="end">Esc</span>
+        <div class="route" aria-hidden="true">
+          <span class="route-k">The command’s way</span>
+          <span class="hop" data-hop><svg class="i"><use href="#i-watch"/></svg>Watch</span>
+          <svg class="i hop-arrow"><use href="#i-arrow-forward"/></svg>
+          <span class="hop" data-hop><svg class="i"><use href="#i-phone"/></svg>Phone</span>
+          <svg class="i hop-arrow"><use href="#i-arrow-forward"/></svg>
+          <span class="hop" data-hop><svg class="i"><use href="#i-computer"/></svg>Computer</span>
         </div>
         <p class="sr" aria-live="polite" data-live="Slide {n} of {t}"></p>
         <p class="demo-hint">Drag the bezel round, or tap either half of the screen.</p>
@@ -299,7 +299,7 @@
   <section class="modes section" id="how-it-works" aria-labelledby="modes-title">
     <div class="wrap">
       <h2 class="h2" id="modes-title">Connect in one of three ways.</h2>
-      <p class="lede">The PC app unlocks every feature. If you would rather not install anything, the phone or the watch connects to the computer like a keyboard.</p>
+      <p class="lede">The PC app unlocks every feature. If you would rather not install anything, the phone connects to the computer like a keyboard. The watch uses whichever connection the phone has.</p>
 
       <div class="seg" role="tablist" aria-label="Way to connect" data-tabs>
         <button type="button" role="tab" id="tab-wifi" aria-controls="panel-wifi" aria-selected="true"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>Wi-Fi</button>
@@ -373,26 +373,28 @@
 
       <div class="mode" role="tabpanel" id="panel-watch" aria-labelledby="tab-watch" tabindex="0">
         <div class="mode-text">
-          <h3>Just the watch</h3>
-          <p class="mode-intro">Your phone can stay in your pocket. The watch connects straight to the computer as a Bluetooth keyboard.</p>
+          <h3>The watch, through your phone</h3>
+          <p class="mode-intro">The watch never pairs with the computer; it uses your phone’s Wi-Fi or Bluetooth connection. Your phone can stay in your pocket.</p>
           <ol class="steps">
-            <li>Open QuickRemote on the watch and tap Add computer.</li>
-            <li>Pick the watch in the computer’s Bluetooth settings and confirm the code on both.</li>
+            <li>Connect to the computer on the phone, over Wi-Fi or Bluetooth, and leave the remote open.</li>
+            <li>Open QuickRemote on the watch. The remote appears by itself.</li>
             <li>Turn the bezel or tap the screen.</li>
           </ol>
           <ul class="caps" aria-label="Included">
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Next and back</li>
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Start and end</li>
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Black and white screen</li>
-            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>A buzz for every key</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Laser</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>A buzz for every press</li>
           </ul>
+          <p class="caps-note">The slide number and the computer’s error messages reach the watch while the phone is connected over Wi-Fi.</p>
         </div>
         <figure class="w-mini" aria-hidden="true">
           <div class="w-mini-face">
             <p class="w-mini-time" data-clock>10:09</p>
-            <p class="w-mini-h">Computers</p>
+            <p class="w-mini-h">5 / 20</p>
             <p class="w-mini-item"><svg class="i"><use href="#i-computer"/></svg><span>Office-PC<small>Connected</small></span></p>
-            <p class="w-mini-add"><svg class="i"><use href="#i-add"/></svg>Add computer</p>
+            <p class="w-mini-item"><svg class="i"><use href="#i-phone"/></svg><span>Through the phone</span></p>
           </div>
         </figure>
       </div>
@@ -601,7 +603,7 @@
       <dl class="reqs">
         <div>
           <dt><svg class="i" aria-hidden="true"><use href="#i-computer"/></svg>Computer</dt>
-          <dd>Windows&nbsp;10, 11 or Linux for the Wi-Fi mode. Nothing to install for Bluetooth or the watch.</dd>
+          <dd>Windows&nbsp;10, 11 or Linux for the Wi-Fi mode. Nothing to install for Bluetooth.</dd>
         </div>
         <div>
           <dt><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg>Phone</dt>
@@ -609,7 +611,7 @@
         </div>
         <div>
           <dt><svg class="i" aria-hidden="true"><use href="#i-watch"/></svg>Watch</dt>
-          <dd>Wear&nbsp;OS&nbsp;3 or later, on a watch that can act as a Bluetooth keyboard.</dd>
+          <dd>Wear&nbsp;OS&nbsp;3 or later, paired with an Android phone that has QuickRemote.</dd>
         </div>
       </dl>
     </div>
@@ -629,7 +631,7 @@
         </details>
         <details>
           <summary>Do I need an internet connection?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-          <p>No. In the Wi-Fi mode the phone and the computer only need to share a network. The Bluetooth and watch modes don’t need a network at all.</p>
+          <p>No. In the Wi-Fi mode the phone and the computer only need to share a network. The Bluetooth mode doesn’t need a network at all. The watch uses whichever one the phone is connected with.</p>
         </details>
         <details>
           <summary>Does it work with an iPhone or Apple&nbsp;Watch?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
@@ -637,11 +639,11 @@
         </details>
         <details>
           <summary>Which watches does it work with?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-          <p>Watches running Wear&nbsp;OS&nbsp;3 or later. The watch has to be able to act as a Bluetooth keyboard; the app checks this when it opens and tells you if it can’t. The bezel changes slides on a Galaxy&nbsp;Watch, the crown on a Pixel&nbsp;Watch.</p>
+          <p>Watches running Wear&nbsp;OS&nbsp;3 or later. The watch works through QuickRemote on the Android phone it is paired with, and never pairs with the computer. The bezel changes slides on a Galaxy&nbsp;Watch, the crown on a Pixel&nbsp;Watch.</p>
         </details>
         <details>
           <summary>Do I have to install anything on the computer?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-          <p>The Wi-Fi mode needs QuickRemote&nbsp;PC. For Bluetooth and the watch you install nothing: the computer sees the phone or the watch as a keyboard.</p>
+          <p>The Wi-Fi mode needs QuickRemote&nbsp;PC. For Bluetooth you install nothing: the computer sees the phone as a keyboard. The watch works through the phone in both modes.</p>
         </details>
         <details>
           <summary>Can I present a PDF?<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
@@ -669,7 +671,7 @@
       <div class="get-head">
         <img class="get-icon" src="../assets/app-icon.png" width="512" height="512" alt="QuickRemote app icon" loading="lazy" decoding="async">
         <h2 class="h2" id="get-title">Download it free.</h2>
-        <p class="lede">For Bluetooth and the watch you install nothing on the computer; the phone or watch app is enough.</p>
+        <p class="lede">For Bluetooth you install nothing on the computer; the phone app is enough. The watch app works together with the one on the phone.</p>
       </div>
       <div class="get-list">
         <a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">
