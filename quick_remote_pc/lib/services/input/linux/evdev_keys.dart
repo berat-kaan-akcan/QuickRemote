@@ -30,6 +30,7 @@ abstract class Evdev {
   static const keyI = 23;
   static const keyL = 38;
   static const keyP = 25;
+  static const keyR = 19;
   static const keyF5 = 63;
   static const keyPageUp = 104;
   static const keyPageDown = 109;

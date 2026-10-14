@@ -323,8 +323,9 @@ class Wps:
         call(self._require_show()[1], "EraseDrawing")
 
     def laserOn(self, _args):
-        # WPS has no laser in its object model: the server moves the visible
-        # arrow pointer instead.
+        # WPS's laser pen (Ctrl+R) is not in its object model: the server
+        # presses that key in a focused show, and moves the visible arrow
+        # pointer instead when the show is not focused.
         self._pointer(POINTER_ARROW)
 
     def laserOff(self, _args):

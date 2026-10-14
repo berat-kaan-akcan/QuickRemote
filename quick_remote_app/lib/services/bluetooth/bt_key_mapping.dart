@@ -28,6 +28,7 @@ abstract class BtKeyMapping {
   static const int keyI          = 0x0C;
   static const int keyL          = 0x0F;
   static const int keyP          = 0x13;
+  static const int keyR          = 0x15;
   static const int keyW          = 0x1A;
   static const int keyF5         = 0x3E;
   static const int keyEscape     = 0x29;
@@ -81,15 +82,21 @@ abstract class BtKeyMapping {
   };
 
   /// WPS Presentation slideshow shortcuts, verified against WPS 11.1 on
-  /// Linux: F5/Esc/B/W/E/PageUp/PageDown and Ctrl+P/Ctrl+I/Ctrl+A behave like
-  /// PowerPoint. Ctrl+L moves the show and Ctrl+E is not the eraser, and WPS
-  /// has no laser: the "laser" is the arrow pointer (Ctrl+A), moved with the
-  /// mouse, and the toolbar hides the eraser.
+  /// Linux: F5/Esc/B/W/E/PageUp/PageDown and Ctrl+P/Ctrl+I/Ctrl+E/Ctrl+A
+  /// behave like PowerPoint (Ctrl+E is the show's `ShowErase`, an eraser that removes whole strokes). Ctrl+L is
+  /// WPS's playback bar. WPS's laser pen is Ctrl+R (its
+  /// `LaserPenShortCut`); Ctrl+A first returns to the arrow, so the laser
+  /// comes on whatever was on before, and a WPS without the laser keeps the
+  /// arrow, moved with the mouse.
   static final Map<String, BtAction> _wpsOverrides = {
-    RemoteCommands.modeLaser:   _KeyAction(modLCtrl, [keyA]),
-    RemoteCommands.laserCursor: _KeyAction(modLCtrl, [keyA]),
-    RemoteCommands.modeEraser:  _NoopAction(),
+    RemoteCommands.modeLaser:   _wpsLaser,
+    RemoteCommands.laserCursor: _wpsLaser,
   };
+
+  static final BtAction _wpsLaser = _SequenceAction([
+    _KeyAction(modLCtrl, [keyA]),
+    _KeyAction(modLCtrl, [keyR]),
+  ]);
 
   static final Map<String, BtAction> _map = {
     // Slide navigation
@@ -186,6 +193,19 @@ class _MouseClickAction extends BtAction {
   @override
   Future<void> execute(BtHidService service) =>
       service.sendMouseClick(button: button);
+}
+
+/// Runs [actions] one after another.
+class _SequenceAction extends BtAction {
+  final List<BtAction> actions;
+  _SequenceAction(this.actions);
+
+  @override
+  Future<void> execute(BtHidService service) async {
+    for (final action in actions) {
+      await action.execute(service);
+    }
+  }
 }
 
 class _NoopAction extends BtAction {
