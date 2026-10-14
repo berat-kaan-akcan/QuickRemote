@@ -67,7 +67,10 @@ class _BrandSplashState extends State<BrandSplash> with SingleTickerProviderStat
           ignoring: fadeOut > 0.5,
           child: Opacity(
             opacity: 1 - fadeOut,
-            child: ColoredBox(
+            // MaterialApp.builder puts this above the Navigator, so no route's
+            // Material gives its texts a style; without this one they get
+            // the yellow double underline.
+            child: Material(
               color: p.background,
               child: Center(
                 child: Transform.scale(
