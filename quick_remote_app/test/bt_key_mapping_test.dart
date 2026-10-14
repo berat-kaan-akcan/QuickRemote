@@ -55,17 +55,29 @@ void main() {
     }
   });
 
-  test('WPS uses the arrow for the laser and has no eraser key', () async {
+  test('WPS uses its own pen and eraser keys', () async {
     expect(await keyReport('MODE_PEN', BtTarget.wps), (ctrl, BtKeyMapping.keyP));
     calls.clear();
     expect(await keyReport('MODE_HIGHLIGHTER', BtTarget.wps), (ctrl, BtKeyMapping.keyI));
     calls.clear();
-    // Ctrl+L moves WPS's show: the "laser" is the arrow pointer.
-    expect(await keyReport('MODE_LASER', BtTarget.wps), (ctrl, BtKeyMapping.keyA));
+    expect(await keyReport('LASER_OFF', BtTarget.wps), (ctrl, BtKeyMapping.keyA));
     calls.clear();
     expect(await keyReport('ERASE_ALL', BtTarget.wps), (0, BtKeyMapping.keyE));
     calls.clear();
-    expect(await keyReport('MODE_ERASER', BtTarget.wps), isNull);
+    expect(await keyReport('MODE_ERASER', BtTarget.wps), (ctrl, BtKeyMapping.keyE));
+  });
+
+  test('WPS\'s laser is Ctrl+R, after the arrow (Ctrl+A)', () async {
+    // Ctrl+L is WPS's playback bar, not the laser.
+    for (final command in ['MODE_LASER', 'LASER_CURSOR']) {
+      calls.clear();
+      await BtKeyMapping.forCommand(command, target: BtTarget.wps)!.execute(BtHidService.instance);
+      expect(
+        [for (final call in calls) ((call.arguments as Map)['modifier'], ((call.arguments as Map)['keyCodes'] as List).single)],
+        [(ctrl, BtKeyMapping.keyA), (ctrl, BtKeyMapping.keyR)],
+        reason: command,
+      );
+    }
   });
 
   test('BtTarget.fromName falls back to PowerPoint', () {

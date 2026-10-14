@@ -64,20 +64,20 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   /// Where the finger is, for the surface's glow only.
   final _touch = ValueNotifier<Offset?>(null);
 
-  /// Impress and WPS have no laser shortcut: the "laser" is the mouse cursor.
-  bool get _cursorLaser => widget.target != BtTarget.powerpoint;
+  /// Impress has no laser shortcut: the "laser" is the mouse cursor.
+  bool get _cursorLaser => widget.target == BtTarget.impress;
 
   /// Tools with a shortcut in the target (see BtKeyMapping). Without the pen
   /// a click advances the slide, so a tool without one cannot stand in.
   Set<DrawTool> get _availableTools => switch (widget.target) {
         BtTarget.powerpoint => DrawTool.values.toSet(),
         BtTarget.impress => const {DrawTool.laser, DrawTool.pen},
-        BtTarget.wps => const {DrawTool.laser, DrawTool.pen, DrawTool.highlighter},
+        BtTarget.wps => DrawTool.values.toSet(),
       };
 
   DrawTool get _selectedTool => _availableTools.contains(_drawTool) ? _drawTool : DrawTool.pen;
 
-  /// In Impress and WPS the "laser" is just the mouse cursor.
+  /// In Impress the "laser" is just the mouse cursor.
   String get _laserLabel => _cursorLaser ? context.l10n.toolCursor : context.l10n.toolLaser;
 
   @override
