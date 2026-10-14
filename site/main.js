@@ -80,7 +80,9 @@
     const sentinel = document.createElement('div');
     sentinel.setAttribute('aria-hidden', 'true');
     sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none';
-    document.body.prepend(sentinel);
+    const skip = $('.skip');
+    if (skip) skip.after(sentinel);
+    else document.body.prepend(sentinel);
     new IntersectionObserver(([e]) => top.classList.toggle('is-stuck', !e.isIntersecting)).observe(sentinel);
 
     const btn = $('[data-menu-btn]');
@@ -219,9 +221,10 @@
     };
 
     const announce = () => {
-      const { index, total } = show.state;
-      live.textContent = live.dataset.live.replace('{n}', index + 1).replace('{t}', total);
+      const { index, total, running } = show.state;
+      live.textContent = running ? live.dataset.live.replace('{n}', index + 1).replace('{t}', total) : live.dataset.ended;
     };
+    announce();
 
     const toggleNotes = () => {
       const open = sheet.hidden;
@@ -295,6 +298,10 @@
       num.textContent = state.running ? `${state.index + 1} / ${state.total}` : num.dataset.off;
       num.classList.toggle('is-off', !state.running);
     };
+    const say = () => {
+      if (!live) return;
+      live.textContent = state.running ? live.dataset.live.replace('{n}', state.index + 1).replace('{t}', state.total) : live.dataset.ended;
+    };
     const apply = (cmd) => {
       const before = `${state.index}${state.running}`;
       if (cmd === 'next' && state.running) state.index = Math.min(state.total - 1, state.index + 1);
@@ -308,9 +315,7 @@
     // The command goes out whatever the slide does, by way of the phone, and
     // the wrist buzzes for it.
     function press(cmd, fromBezel) {
-      if (apply(cmd) && live && state.running) {
-        live.textContent = live.dataset.live.replace('{n}', state.index + 1).replace('{t}', state.total);
-      }
+      if (apply(cmd)) say();
       hops.forEach((hop, i) => {
         clearTimeout(hop.downTimer);
         clearTimeout(hop.upTimer);
@@ -424,6 +429,7 @@
       }, 0.6);
     }
     paint();
+    say();
   }
 
   /** Watch faces show the visitor's own time, without AM/PM, as Wear OS does. */
