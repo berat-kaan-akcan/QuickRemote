@@ -23,7 +23,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import com.quickremote.wear.ui.theme.WearColors
 
 /**
  * The remote's round button: a disc of [fill] that shrinks a little while
@@ -59,9 +58,3 @@ fun RoundButton(
         content = content,
     )
 }
-
-/** The brand's cobalt gradient, as on the phone's primary buttons. */
-val CobaltFill = Brush.linearGradient(listOf(WearColors.cobaltBright, WearColors.cobalt))
-
-/** The same, a shade darker. */
-val CobaltDeepFill = Brush.linearGradient(listOf(WearColors.cobalt, WearColors.cobaltDeep))
