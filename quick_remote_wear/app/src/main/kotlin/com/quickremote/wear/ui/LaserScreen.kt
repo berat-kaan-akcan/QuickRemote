@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
@@ -32,19 +33,21 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.OutlinedIconButton
 import com.quickremote.wear.R
 import com.quickremote.wear.remote.RemoteAction
-import com.quickremote.wear.ui.theme.WearColors
+import com.quickremote.wear.ui.theme.LocalWearPalette
 import kotlin.math.min
 
-/** The small laser disc under the slide buttons: opens the laser screen. */
+/** The small laser disc beside the slide number: opens the laser screen. */
 @Composable
-fun LaserButton(diameter: Dp, onClick: () -> Unit) {
+fun LaserButton(diameter: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val palette = LocalWearPalette.current
     RoundButton(
         onClick = onClick,
-        fill = SolidColor(MaterialTheme.colorScheme.surfaceContainerHigh),
+        fill = SolidColor(palette.raised),
         diameter = diameter,
         label = stringResource(R.string.action_laser),
+        modifier = modifier,
     ) {
-        Canvas(Modifier.fillMaxSize()) { drawLaserDot(center, size.minDimension / 2) }
+        Canvas(Modifier.fillMaxSize()) { drawLaserDot(center, size.minDimension * 0.36f, palette.laser) }
     }
 }
 
@@ -73,6 +76,7 @@ fun LaserScreen(
     var finger by remember { mutableStateOf<Offset?>(null) }
     val background = MaterialTheme.colorScheme.background
     val hint = MaterialTheme.colorScheme.surfaceContainerHigh
+    val laserColor = LocalWearPalette.current.laser
     val label = stringResource(R.string.laser_hint)
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize().then(bezel)) {
@@ -117,9 +121,9 @@ fun LaserScreen(
             if (at == null) {
                 // Idle: a dim dot in the middle says where the laser is.
                 drawCircle(hint, radius * 1.6f)
-                drawLaserDot(center, radius, alpha = 0.6f)
+                drawLaserDot(center, radius, laserColor, alpha = 0.6f)
             } else {
-                drawLaserDot(at, radius * 1.4f)
+                drawLaserDot(at, radius * 1.4f, laserColor)
             }
         }
         OutlinedIconButton(
@@ -139,16 +143,16 @@ fun LaserScreen(
 }
 
 /** The brand's laser dot: a glow and its core. */
-private fun DrawScope.drawLaserDot(at: Offset, radius: Float, alpha: Float = 1f) {
-    drawCircle(WearColors.laser.copy(alpha = 0.3f * alpha), radius * 0.84f, at)
-    drawCircle(WearColors.laser.copy(alpha = alpha), radius * 0.48f, at)
+fun DrawScope.drawLaserDot(at: Offset, radius: Float, color: Color, alpha: Float = 1f) {
+    drawCircle(color.copy(alpha = 0.3f * alpha), radius * 0.84f, at)
+    drawCircle(color.copy(alpha = alpha), radius * 0.48f, at)
 }
 
 /**
  * Cursor units per dp of finger movement. The phone's touchpad sends 8 per
  * logical pixel (touchpad_view.dart); the watch is half as wide, so more.
  */
-private const val LASER_GAIN = 12f
+const val LASER_GAIN = 12f
 
 /** Where a touch is the swipe back instead of the laser: Wear's SwipeToDismissBox edge. */
 private val EDGE_WIDTH = 30.dp

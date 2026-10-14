@@ -32,4 +32,17 @@
     <string name="action_laser">Laser pointer</string>
     <string name="laser_close">Close laser</string>
     <string name="laser_hint">Laser: drag to move the pointer</string>
+
+    <!-- Under the arrow of the large Next button. -->
+    <string name="next_short">Next</string>
+    <!-- One word each, in the quarters of the tools page. -->
+    <string name="tool_laser">Laser</string>
+    <string name="tool_white">White</string>
+    <string name="tool_black">Black</string>
+    <string name="hold_to_end">Hold</string>
+    <string name="ending">Ending…</string>
+    <!-- While the room's screen is black or white. -->
+    <string name="blank_black">Screen is black</string>
+    <string name="blank_white">Screen is white</string>
+    <string name="blank_restore">Tap to show the slide</string>
 </resources>

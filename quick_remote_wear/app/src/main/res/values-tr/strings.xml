@@ -25,4 +25,14 @@
     <string name="action_laser">Lazer imleci</string>
     <string name="laser_close">Lazeri kapat</string>
     <string name="laser_hint">Lazer: imleci sürükleyerek taşı</string>
+
+    <string name="next_short">İleri</string>
+    <string name="tool_laser">Lazer</string>
+    <string name="tool_white">Beyaz</string>
+    <string name="tool_black">Siyah</string>
+    <string name="hold_to_end">Basılı tut</string>
+    <string name="ending">Bitiriliyor…</string>
+    <string name="blank_black">Perde siyah</string>
+    <string name="blank_white">Perde beyaz</string>
+    <string name="blank_restore">Dokun: slayta dön</string>
 </resources>
