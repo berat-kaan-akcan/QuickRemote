@@ -1,5 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quick_remote_app/l10n/app_localizations.dart';
+import 'package:quick_remote_app/screens/bt_connect/widgets/bt_pairing_guide.dart';
+import 'package:quick_remote_app/theme/app_theme.dart';
 import 'package:quick_remote_app/services/bluetooth/bt_hid_service.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
@@ -101,5 +105,71 @@ void main() {
     messenger.setMockMethodCallHandler(methods, (call) async => throw PlatformException(code: 'x'));
     expect(await BtHidService.instance.requestDiscoverable(), 0);
     messenger.setMockMethodCallHandler(methods, null);
+  });
+
+  test('Bluetooth switched off waits for it, also across a resume', () async {
+    final calls = <MethodCall>[];
+    messenger.setMockMethodCallHandler(methods, (call) async {
+      calls.add(call);
+      return null;
+    });
+    late MockStreamHandlerEventSink sink;
+    messenger.setMockStreamHandler(
+      events,
+      MockStreamHandler.inline(onListen: (_, s) => sink = s),
+    );
+    final bt = BtHidService.instance;
+
+    await bt.startAdvertising();
+    sink.success('bluetooth_off');
+    await Future<void>.delayed(Duration.zero);
+    expect(bt.connectionState, BtHidConnectionState.bluetoothOff);
+    // Not an error: the session goes on, and a resume does not show it as waiting.
+    expect(bt.isAdvertisingRequested, isTrue);
+    await bt.ensureConnected();
+    expect(bt.connectionState, BtHidConnectionState.bluetoothOff);
+    expect(calls.last.method, 'startAdvertising');
+
+    await bt.requestEnable();
+    expect(calls.last.method, 'requestEnable');
+
+    sink.success('connected:berat-cachyos');
+    await Future<void>.delayed(Duration.zero);
+    expect(bt.connectionState, BtHidConnectionState.connected);
+
+    await bt.stopAdvertising();
+    messenger.setMockMethodCallHandler(methods, null);
+    messenger.setMockStreamHandler(events, null);
+  });
+
+  Widget app(Widget child) => MaterialApp(
+    locale: const Locale('tr'),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    theme: AppTheme.light,
+    home: Scaffold(body: SingleChildScrollView(child: child)),
+  );
+
+  testWidgets('the pairing guide names the phone as computers list it', (tester) async {
+    messenger.setMockMethodCallHandler(methods, (call) async => call.method == 'localName' ? 'Galaxy S23 FE' : null);
+    await tester.pumpWidget(app(const BtPairingGuide()));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('“Galaxy S23 FE”'), findsOneWidget);
+
+    // Without a name (Bluetooth off, no permission) it says what to look for.
+    messenger.setMockMethodCallHandler(methods, (call) async => null);
+    await tester.pumpWidget(app(const BtPairingGuide(key: ValueKey(2))));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('telefonunuzun adını'), findsOneWidget);
+    messenger.setMockMethodCallHandler(methods, null);
+  });
+
+  testWidgets('the troubleshooting list opens on a tap', (tester) async {
+    await tester.pumpWidget(app(const BtTroubleshooting()));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('engeli kaldırın'), findsNothing);
+    await tester.tap(find.text('Bağlanmıyor mu?'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('engeli kaldırın'), findsOneWidget);
   });
 }

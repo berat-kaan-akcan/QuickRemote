@@ -100,9 +100,10 @@ class BtHidService {
 
     // Re-start advertising — native side will try reconnecting
     // to the last known device automatically. A refusal stays on screen
-    // until the computer accepts the keyboard.
+    // until the computer accepts the keyboard, Bluetooth off until it is on.
     if (_state != BtHidConnectionState.refreshing &&
-        _state != BtHidConnectionState.hostUnaware) {
+        _state != BtHidConnectionState.hostUnaware &&
+        _state != BtHidConnectionState.bluetoothOff) {
       _setState(BtHidConnectionState.advertising);
     }
     try {
@@ -119,6 +120,25 @@ class BtHidService {
       return await _methodChannel.invokeMethod<int>('requestDiscoverable') ?? 0;
     } on PlatformException {
       return 0;
+    }
+  }
+
+  /// Asks Android to turn Bluetooth on (a system dialog). The native side
+  /// goes on by itself once it is on.
+  Future<void> requestEnable() async {
+    try {
+      await _methodChannel.invokeMethod<bool>('requestEnable');
+    } catch (_) {
+      // No dialog: the user turns it on in the quick settings.
+    }
+  }
+
+  /// The name computers list the phone under; null while Bluetooth is off.
+  Future<String?> localName() async {
+    try {
+      return await _methodChannel.invokeMethod<String>('localName');
+    } catch (_) {
+      return null;
     }
   }
 
@@ -195,6 +215,10 @@ class BtHidService {
       _setState(BtHidConnectionState.refreshing);
     } else if (event == 'host_unaware') {
       _setState(BtHidConnectionState.hostUnaware);
+    } else if (event == 'bluetooth_off') {
+      // Not an error: the native side goes on once Bluetooth is on.
+      _connectedDeviceName = null;
+      _setState(BtHidConnectionState.bluetoothOff);
     } else if (event == 'unsupported') {
       _setState(BtHidConnectionState.unsupported);
     } else if (event.startsWith('error:')) {
@@ -237,6 +261,9 @@ enum BtHidConnectionState {
   /// phone's records again. Advertising goes on, so the remote opens as soon
   /// as the computer accepts it.
   hostUnaware,
+
+  /// The phone's Bluetooth is off. Advertising goes on once it is on.
+  bluetoothOff,
 
   /// Device does not support BluetoothHidDevice (or non-Android).
   unsupported,

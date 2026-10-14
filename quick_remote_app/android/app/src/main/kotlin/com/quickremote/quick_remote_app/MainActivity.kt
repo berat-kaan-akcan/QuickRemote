@@ -128,6 +128,20 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
+                // The system dialog that turns Bluetooth on. The service
+                // notices the adapter coming on and goes on by itself.
+                "requestEnable" -> {
+                    try {
+                        startActivity(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
+                }
+
+                // The name computers list the phone under, for the pairing guide.
+                "localName" -> result.success(btHidService.localName())
+
                 "stopAdvertising" -> {
                     btHidService.stopAdvertising()
                     lastState = null

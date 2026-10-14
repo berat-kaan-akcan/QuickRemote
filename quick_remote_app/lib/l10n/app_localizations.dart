@@ -980,17 +980,17 @@ abstract class AppLocalizations {
   /// **'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.'**
   String get btUnsupportedLong;
 
+  /// No description provided for @btPermissionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin gerekiyor'**
+  String get btPermissionTitle;
+
   /// No description provided for @btPermissionDenied.
   ///
   /// In tr, this message translates to:
-  /// **'Bluetooth izni reddedildi. Ayarlardan izin vermelisiniz.'**
+  /// **'Telefonun klavye ve fare olarak bağlanabilmesi için “Yakındaki cihazlar” izni gerekiyor.'**
   String get btPermissionDenied;
-
-  /// No description provided for @btDisabled.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bluetooth kapalı. Açıp tekrar deneyin.'**
-  String get btDisabled;
 
   /// No description provided for @btConnectingTo.
   ///
@@ -1007,7 +1007,7 @@ abstract class AppLocalizations {
   /// No description provided for @btMakeVisibleHint.
   ///
   /// In tr, this message translates to:
-  /// **'Bilgisayar telefonu ancak görünürken listesinde bulur.'**
+  /// **'Bilgisayar telefonu yalnızca telefon görünürken listeler.'**
   String get btMakeVisibleHint;
 
   /// No description provided for @btVisibleFor.
@@ -1037,25 +1037,25 @@ abstract class AppLocalizations {
   /// No description provided for @btHostUnawareTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Bilgisayar telefonu klavye olarak tanımıyor'**
+  /// **'Bilgisayar telefonu klavye olarak kabul etmiyor'**
   String get btHostUnawareTitle;
 
   /// No description provided for @btHostUnawareBody.
   ///
   /// In tr, this message translates to:
-  /// **'Telefon bu bilgisayarla QuickRemote açık değilken eşleştirilmiş. Bilgisayarda bir kez şunu yapın:'**
+  /// **'Bu çoğunlukla telefon bu bilgisayarla daha önce, QuickRemote açık değilken eşleştirildiğinde olur (örneğin ses ya da dosya aktarımı için): bilgisayar telefonu klavye olarak tanımaz. Bilgisayarda bir kez şunu yapın:'**
   String get btHostUnawareBody;
 
   /// No description provided for @btHostUnawareWindows.
   ///
   /// In tr, this message translates to:
-  /// **'Ayarlar → Bluetooth ve cihazlar\'da telefonu kaldırın, sonra bu ekran açıkken yeniden ekleyin.'**
+  /// **'Ayarlar → Bluetooth ve cihazlar → Cihazlar’da telefonu bulun ve “…” menüsünden “Cihazı kaldır”ı seçin. Sonra bu ekran açıkken “Cihaz ekle” ile yeniden ekleyin.'**
   String get btHostUnawareWindows;
 
   /// No description provided for @btHostUnawareLinux.
   ///
   /// In tr, this message translates to:
-  /// **'Bluetooth ayarlarında telefonun bağlantısını kesip yeniden bağlayın. Olmazsa telefonu kaldırıp bu ekran açıkken yeniden eşleştirin.'**
+  /// **'Bluetooth ayarlarında telefonun bağlantısını kesip yeniden bağlayın. Olmazsa telefonu kaldırın ve bu ekran açıkken yeniden eşleştirin.'**
   String get btHostUnawareLinux;
 
   /// No description provided for @btHostUnawareAuto.
@@ -1103,62 +1103,140 @@ abstract class AppLocalizations {
   /// No description provided for @btOnYourComputer.
   ///
   /// In tr, this message translates to:
-  /// **'Bilgisayarınızda şunları yapın:'**
+  /// **'Bilgisayarda bir kez eşleştirin'**
   String get btOnYourComputer;
 
   /// No description provided for @btLinuxStep1.
   ///
   /// In tr, this message translates to:
-  /// **'Sistem Ayarları\'nı açın (KDE: Bluetooth, GNOME: Ayarlar → Bluetooth)'**
+  /// **'Bluetooth ayarlarını açın: KDE’de Sistem Ayarları → Bluetooth, GNOME’da Ayarlar → Bluetooth.'**
   String get btLinuxStep1;
 
   /// No description provided for @btLinuxStep2.
   ///
   /// In tr, this message translates to:
-  /// **'Bluetooth\'un açık olduğundan emin olun'**
+  /// **'Bluetooth’u açın ve cihaz aramayı başlatın. KDE’de “Cihaz ekle”ye basın; GNOME bu sayfa açıkken kendisi arar.'**
   String get btLinuxStep2;
-
-  /// No description provided for @btLinuxStep3.
-  ///
-  /// In tr, this message translates to:
-  /// **'\"Yeni cihaz ekle\" / cihaz aramayı başlatın'**
-  String get btLinuxStep3;
 
   /// No description provided for @btStepPickPhone.
   ///
   /// In tr, this message translates to:
-  /// **'Listeden telefonunuzun adını seçin'**
+  /// **'Listede telefonunuzun adını seçin. Görünmüyorsa yukarıdaki “Telefonu görünür yap”a basın.'**
   String get btStepPickPhone;
 
   /// No description provided for @btStepConfirm.
   ///
   /// In tr, this message translates to:
-  /// **'Eşleştirmeyi onaylayın'**
+  /// **'Telefonda ve bilgisayarda aynı 6 haneli kod çıkar. Kodlar aynıysa ikisinde de onaylayın.'**
   String get btStepConfirm;
 
   /// No description provided for @btWindowsStep1.
   ///
   /// In tr, this message translates to:
-  /// **'Windows Ayarlar\'ı açın'**
+  /// **'Ayarlar’ı açın (Windows tuşu + I).'**
   String get btWindowsStep1;
 
   /// No description provided for @btWindowsStep2.
   ///
   /// In tr, this message translates to:
-  /// **'Bluetooth ve diğer cihazlar\'a gidin'**
+  /// **'Bluetooth ve cihazlar → Cihaz ekle → Bluetooth’u seçin. Windows 10’da: Bluetooth ve diğer cihazlar → Bluetooth veya başka cihaz ekle.'**
   String get btWindowsStep2;
-
-  /// No description provided for @btWindowsStep3.
-  ///
-  /// In tr, this message translates to:
-  /// **'\"Cihaz ekle\" butonuna basın'**
-  String get btWindowsStep3;
 
   /// No description provided for @btPairOnce.
   ///
   /// In tr, this message translates to:
-  /// **'Bu ekran açıkken bir kez eşleştirmeniz yeterli; sonraki bağlantılar otomatiktir.'**
+  /// **'Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.'**
   String get btPairOnce;
+
+  /// No description provided for @btPermissionAllow.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin ver'**
+  String get btPermissionAllow;
+
+  /// No description provided for @btPermissionSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarları aç'**
+  String get btPermissionSettings;
+
+  /// No description provided for @btPermissionSettingsHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin daha önce reddedildiği için artık yalnızca Ayarlar’dan verilebilir: İzinler → Yakındaki cihazlar → İzin ver.'**
+  String get btPermissionSettingsHint;
+
+  /// No description provided for @btOffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth kapalı'**
+  String get btOffTitle;
+
+  /// No description provided for @btOffBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon bilgisayara Bluetooth ile klavye ve fare olarak bağlanır. Bluetooth açılınca bağlantı kendiliğinden sürer.'**
+  String get btOffBody;
+
+  /// No description provided for @btTurnOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth’u aç'**
+  String get btTurnOn;
+
+  /// No description provided for @btOffDuringRemote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonun Bluetooth’u kapandı. Açılınca kumanda yeniden bağlanır.'**
+  String get btOffDuringRemote;
+
+  /// No description provided for @btStepPickPhoneNamed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listede “{name}” adını seçin. Görünmüyorsa yukarıdaki “Telefonu görünür yap”a basın.'**
+  String btStepPickPhoneNamed(String name);
+
+  /// No description provided for @btTroubleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlanmıyor mu?'**
+  String get btTroubleTitle;
+
+  /// No description provided for @btTroubleNearby.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayarın Bluetooth’u açık olsun, bilgisayar uykuda olmasın ve telefon birkaç metre yakınında dursun.'**
+  String get btTroubleNearby;
+
+  /// No description provided for @btTroubleNotListed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon listede yoksa “Telefonu görünür yap”a basın ve bilgisayarda aramayı yeniden başlatın.'**
+  String get btTroubleNotListed;
+
+  /// No description provided for @btTroubleAlreadyPaired.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon bilgisayarda zaten eşleştirilmiş görünüyor ama bağlanmıyorsa telefonu bilgisayardan kaldırın ve bu ekran açıkken yeniden ekleyin.'**
+  String get btTroubleAlreadyPaired;
+
+  /// No description provided for @btTroubleBlocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayarın Bluetooth ayarlarında telefon engellenmişse engeli kaldırın.'**
+  String get btTroubleBlocked;
+
+  /// No description provided for @btTroubleSeveral.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon birden fazla bilgisayarla eşleştirilmişse hangisine bağlanacağını bilemez: istediğiniz bilgisayarın Bluetooth ayarlarında telefona “Bağlan” deyin.'**
+  String get btTroubleSeveral;
+
+  /// No description provided for @btTroubleOtherApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon aynı anda tek bir uygulama için klavye olabilir. Başka bir Bluetooth klavye ya da fare uygulaması açıksa kapatın.'**
+  String get btTroubleOtherApp;
 
   /// No description provided for @btConnected.
   ///
