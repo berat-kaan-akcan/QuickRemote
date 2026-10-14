@@ -36,6 +36,11 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
   String? _errorMessage;
   bool _holdsBackground = false;
 
+  /// The error on screen is the refused Bluetooth permission; [_permanentlyDenied]
+  /// when Android no longer asks and only the settings can give it.
+  bool _permissionError = false;
+  bool _permanentlyDenied = false;
+
   @override
   void initState() {
     super.initState();
@@ -51,7 +56,15 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _bt.ensureConnected();
+    if (state != AppLifecycleState.resumed) return;
+    if (_permissionError) {
+      // Back from the settings: go on if the permission was given there.
+      Permission.bluetoothConnect.isGranted.then((granted) {
+        if (granted && mounted && _permissionError) _retry();
+      });
+      return;
+    }
+    _bt.ensureConnected();
   }
 
   @override
@@ -99,10 +112,20 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
     final connectStatus = statuses[Permission.bluetoothConnect];
     if (connectStatus == PermissionStatus.denied ||
         connectStatus == PermissionStatus.permanentlyDenied) {
+      // A permission refused for good in an earlier run comes back as plain
+      // denied, without a dialog; Android asks again only while it would show
+      // a rationale. Otherwise "Allow" would do nothing, so send to Settings.
+      final permanently =
+          connectStatus == PermissionStatus.permanentlyDenied ||
+          !await Permission.bluetoothConnect.shouldShowRequestRationale;
       if (!mounted) return;
       setState(() {
         _state = BtHidConnectionState.error;
-        _errorMessage = context.l10n.btPermissionDenied;
+        _permissionError = true;
+        _permanentlyDenied = permanently;
+        _errorMessage = permanently
+            ? '${context.l10n.btPermissionDenied}\n\n${context.l10n.btPermissionSettingsHint}'
+            : context.l10n.btPermissionDenied;
       });
       return;
     }
@@ -120,11 +143,12 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
   void _onStateChanged(BtHidConnectionState state) {
     if (!mounted) return;
+    // A permission error stays until the permission is given (_retry).
+    if (_permissionError) return;
     setState(() {
       _state = state;
       if (state == BtHidConnectionState.error) {
         _errorMessage = switch (_bt.errorReason) {
-          'bluetooth_disabled' => context.l10n.btDisabled,
           'hid_unavailable' => context.l10n.btHidUnavailable,
           _ => context.l10n.btErrorRetry,
         };
@@ -157,9 +181,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       extendBodyBehindAppBar: true,
       body: AmbientBackground(
         accent: p.info,
-        child: SafeArea(
-          child: ContentWidth(child: _buildBody()),
-        ),
+        child: SafeArea(child: ContentWidth(child: _buildBody())),
       ),
     );
   }
@@ -171,7 +193,21 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
       ),
       BtHidConnectionState.error => BtErrorView(
         message: _errorMessage,
-        onRetry: _retry,
+        onRetry: _permanentlyDenied ? openAppSettings : _retry,
+        title: _permissionError ? context.l10n.btPermissionTitle : null,
+        actionLabel: !_permissionError
+            ? null
+            : _permanentlyDenied
+            ? context.l10n.btPermissionSettings
+            : context.l10n.btPermissionAllow,
+        actionIcon: !_permissionError
+            ? null
+            : _permanentlyDenied
+            ? Icons.settings_rounded
+            : Icons.bluetooth_rounded,
+      ),
+      BtHidConnectionState.bluetoothOff => BtOffView(
+        onTurnOn: _bt.requestEnable,
       ),
       BtHidConnectionState.connected => BtConnectedView(
         deviceName: _bt.connectedDeviceName,
@@ -187,6 +223,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
         key: ValueKey(switch (_state) {
           BtHidConnectionState.unsupported ||
           BtHidConnectionState.error ||
+          BtHidConnectionState.bluetoothOff ||
           BtHidConnectionState.connected ||
           BtHidConnectionState.hostUnaware => _state,
           _ => null,
@@ -220,7 +257,10 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [Color.lerp(p.info, Colors.white, 0.15)!, p.primary],
+                        colors: [
+                          Color.lerp(p.info, Colors.white, 0.15)!,
+                          p.primary,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -246,8 +286,10 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
                         child: Text(
                           _state == BtHidConnectionState.advertising
                               ? (_bt.targetName != null
-                                  ? context.l10n.btConnectingTo(_bt.targetName!)
-                                  : context.l10n.btWaitingPairing)
+                                    ? context.l10n.btConnectingTo(
+                                        _bt.targetName!,
+                                      )
+                                    : context.l10n.btWaitingPairing)
                               : _state == BtHidConnectionState.refreshing
                               ? context.l10n.btHostRefreshing
                               : retrying
@@ -278,6 +320,8 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
               // Step-by-step pairing guide card (Windows / Linux)
               const FadeSlideIn(index: 1, child: BtPairingGuide()),
+              const SizedBox(height: AppSpace.md),
+              const FadeSlideIn(index: 2, child: BtTroubleshooting()),
 
               const Spacer(),
               const SizedBox(height: AppSpace.lg),
@@ -301,6 +345,8 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
     setState(() {
       _state = BtHidConnectionState.disconnected;
       _errorMessage = null;
+      _permissionError = false;
+      _permanentlyDenied = false;
     });
     _startAdvertising();
   }

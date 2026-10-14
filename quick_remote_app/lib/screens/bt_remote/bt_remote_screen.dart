@@ -83,6 +83,14 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
           duration: const Duration(seconds: 3),
         );
       }
+    } else if (state == BtHidConnectionState.bluetoothOff) {
+      // Not lost for good: the service goes on once Bluetooth is on.
+      AppSnackbar.show(
+        context,
+        message: context.l10n.btOffDuringRemote,
+        type: SnackbarType.warning,
+        duration: const Duration(seconds: 6),
+      );
     } else if (state == BtHidConnectionState.connected) {
       AppSnackbar.show(
         context,
@@ -103,7 +111,12 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       setState(() => _activeScreen = _activeScreen == 'BLACK' ? null : 'BLACK');
     } else if (command == RemoteCommands.whiteScreen) {
       setState(() => _activeScreen = _activeScreen == 'WHITE' ? null : 'WHITE');
-    } else if ([RemoteCommands.next, RemoteCommands.prev, RemoteCommands.start, RemoteCommands.end].contains(command)) {
+    } else if ([
+      RemoteCommands.next,
+      RemoteCommands.prev,
+      RemoteCommands.start,
+      RemoteCommands.end,
+    ].contains(command)) {
       setState(() => _activeScreen = null);
     }
 
@@ -179,7 +192,11 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       title: RemoteHeader(
         subtitle: Row(
           children: [
-            Icon(Icons.bluetooth_rounded, color: context.palette.info, size: 12),
+            Icon(
+              Icons.bluetooth_rounded,
+              color: context.palette.info,
+              size: 12,
+            ),
             const SizedBox(width: 4),
             Flexible(
               child: Text(

@@ -502,11 +502,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This device doesn\'t support Bluetooth HID.\nUse Wi-Fi mode.';
 
   @override
-  String get btPermissionDenied =>
-      'Bluetooth permission was denied. Allow it in Settings.';
+  String get btPermissionTitle => 'Permission needed';
 
   @override
-  String get btDisabled => 'Bluetooth is off. Turn it on and try again.';
+  String get btPermissionDenied =>
+      'The phone needs the “Nearby devices” permission to connect as a keyboard and mouse.';
 
   @override
   String btConnectingTo(String device) {
@@ -518,7 +518,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get btMakeVisibleHint =>
-      'The computer finds the phone in its list only while the phone is visible.';
+      'The computer lists the phone only while the phone is visible.';
 
   @override
   String btVisibleFor(int minutes) {
@@ -544,15 +544,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get btHostUnawareTitle =>
-      'The computer doesn\'t know the phone as a keyboard';
+      'The computer doesn\'t accept the phone as a keyboard';
 
   @override
   String get btHostUnawareBody =>
-      'The phone was paired with this computer while QuickRemote was not open. Do this once on the computer:';
+      'This mostly happens when the phone was paired with this computer before, while QuickRemote was not open (for audio or file transfer, say): the computer doesn\'t know it as a keyboard. Do this once on the computer:';
 
   @override
   String get btHostUnawareWindows =>
-      'In Settings → Bluetooth & devices, remove the phone, then add it again while this screen is open.';
+      'In Settings → Bluetooth & devices → Devices, find the phone and choose “Remove device” from its “…” menu. Then add it again with “Add device” while this screen is open.';
 
   @override
   String get btHostUnawareLinux =>
@@ -582,36 +582,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get btNotConnectedRetrying => 'Not connected, retrying';
 
   @override
-  String get btOnYourComputer => 'On your computer:';
+  String get btOnYourComputer => 'Pair once on your computer';
 
   @override
   String get btLinuxStep1 =>
-      'Open System Settings (KDE: Bluetooth, GNOME: Settings → Bluetooth)';
+      'Open the Bluetooth settings: in KDE, System Settings → Bluetooth; in GNOME, Settings → Bluetooth.';
 
   @override
-  String get btLinuxStep2 => 'Make sure Bluetooth is on';
+  String get btLinuxStep2 =>
+      'Turn Bluetooth on and start a device search. In KDE, press “Add device”; GNOME searches by itself while that page is open.';
 
   @override
-  String get btLinuxStep3 => 'Start \"Add new device\" / a device search';
+  String get btStepPickPhone =>
+      'Pick your phone\'s name in the list. If it isn\'t there, press “Make the phone visible” above.';
 
   @override
-  String get btStepPickPhone => 'Pick your phone\'s name from the list';
+  String get btStepConfirm =>
+      'The phone and the computer show the same 6-digit code. If the codes match, confirm on both.';
 
   @override
-  String get btStepConfirm => 'Confirm the pairing';
+  String get btWindowsStep1 => 'Open Settings (Windows key + I).';
 
   @override
-  String get btWindowsStep1 => 'Open Windows Settings';
-
-  @override
-  String get btWindowsStep2 => 'Go to Bluetooth & devices';
-
-  @override
-  String get btWindowsStep3 => 'Press \"Add device\"';
+  String get btWindowsStep2 =>
+      'Choose Bluetooth & devices → Add device → Bluetooth. On Windows 10: Bluetooth & other devices → Add Bluetooth or other device.';
 
   @override
   String get btPairOnce =>
-      'Pair once while this screen is open; later connections are automatic.';
+      'You pair only once. Next time, just open this screen: the phone connects to the computer by itself.';
+
+  @override
+  String get btPermissionAllow => 'Allow';
+
+  @override
+  String get btPermissionSettings => 'Open settings';
+
+  @override
+  String get btPermissionSettingsHint =>
+      'The permission was refused before, so it can now be given only in Settings: Permissions → Nearby devices → Allow.';
+
+  @override
+  String get btOffTitle => 'Bluetooth is off';
+
+  @override
+  String get btOffBody =>
+      'The phone connects to the computer over Bluetooth as a keyboard and mouse. Once Bluetooth is on, connecting goes on by itself.';
+
+  @override
+  String get btTurnOn => 'Turn on Bluetooth';
+
+  @override
+  String get btOffDuringRemote =>
+      'The phone\'s Bluetooth turned off. The remote reconnects once it is on.';
+
+  @override
+  String btStepPickPhoneNamed(String name) {
+    return 'Pick “$name” in the list. If it isn\'t there, press “Make the phone visible” above.';
+  }
+
+  @override
+  String get btTroubleTitle => 'Not connecting?';
+
+  @override
+  String get btTroubleNearby =>
+      'Keep the computer\'s Bluetooth on, the computer awake and the phone within a few meters of it.';
+
+  @override
+  String get btTroubleNotListed =>
+      'If the phone isn\'t in the list, press “Make the phone visible” and start the search on the computer again.';
+
+  @override
+  String get btTroubleAlreadyPaired =>
+      'If the computer already shows the phone as paired but it doesn\'t connect, remove the phone on the computer and add it again while this screen is open.';
+
+  @override
+  String get btTroubleBlocked =>
+      'If the phone is blocked in the computer\'s Bluetooth settings, unblock it.';
+
+  @override
+  String get btTroubleSeveral =>
+      'A phone paired with more than one computer can\'t tell which one to connect to: in the Bluetooth settings of the computer you want, choose “Connect” for the phone.';
+
+  @override
+  String get btTroubleOtherApp =>
+      'The phone can be a keyboard for only one app at a time. If another Bluetooth keyboard or mouse app is open, close it.';
 
   @override
   String get btConnected => 'Connected!';

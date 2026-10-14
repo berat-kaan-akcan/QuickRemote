@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_language.dart';
+import '../../../services/bluetooth/bt_hid_service.dart';
 import '../../../widgets/ui/ui.dart';
 import 'bt_make_visible_button.dart';
 
-/// Step-by-step pairing guide for the computer, Windows or Linux.
+/// Step-by-step pairing guide for the computer, Windows or Linux. It names
+/// the phone as the computer lists it, when Android tells.
 class BtPairingGuide extends StatefulWidget {
   const BtPairingGuide({super.key});
 
@@ -14,25 +16,26 @@ class BtPairingGuide extends StatefulWidget {
 
 class _BtPairingGuideState extends State<BtPairingGuide> {
   bool _linuxGuide = false;
+  String? _phoneName;
+
+  @override
+  void initState() {
+    super.initState();
+    BtHidService.instance.localName().then((name) {
+      if (mounted && name != null && name.trim().isNotEmpty) {
+        setState(() => _phoneName = name.trim());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final l10n = context.l10n;
+    final pick = _phoneName == null ? l10n.btStepPickPhone : l10n.btStepPickPhoneNamed(_phoneName!);
     final steps = _linuxGuide
-        ? [
-            context.l10n.btLinuxStep1,
-            context.l10n.btLinuxStep2,
-            context.l10n.btLinuxStep3,
-            context.l10n.btStepPickPhone,
-            context.l10n.btStepConfirm,
-          ]
-        : [
-            context.l10n.btWindowsStep1,
-            context.l10n.btWindowsStep2,
-            context.l10n.btWindowsStep3,
-            context.l10n.btStepPickPhone,
-            context.l10n.btStepConfirm,
-          ];
+        ? [l10n.btLinuxStep1, l10n.btLinuxStep2, pick, l10n.btStepConfirm]
+        : [l10n.btWindowsStep1, l10n.btWindowsStep2, pick, l10n.btStepConfirm];
 
     return AppCard(
       elevated: true,
@@ -134,6 +137,104 @@ class _BtPairingGuideState extends State<BtPairingGuide> {
                 style: AppType.body.copyWith(color: p.textSecondary, fontSize: 14),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// What to check when the phone does not connect, folded away until asked.
+class BtTroubleshooting extends StatefulWidget {
+  const BtTroubleshooting({super.key});
+
+  @override
+  State<BtTroubleshooting> createState() => _BtTroubleshootingState();
+}
+
+class _BtTroubleshootingState extends State<BtTroubleshooting> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final l10n = context.l10n;
+    final tips = [
+      (Icons.bluetooth_searching_rounded, l10n.btTroubleNearby),
+      (Icons.visibility_rounded, l10n.btTroubleNotListed),
+      (Icons.link_off_rounded, l10n.btTroubleAlreadyPaired),
+      (Icons.block_rounded, l10n.btTroubleBlocked),
+      (Icons.devices_rounded, l10n.btTroubleSeveral),
+      (Icons.keyboard_rounded, l10n.btTroubleOtherApp),
+    ];
+    return AppCard(
+      radius: AppRadius.xl,
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            button: true,
+            expanded: _open,
+            child: Pressable(
+              onTap: () => setState(() => _open = !_open),
+              pressedScale: 1,
+              borderRadius: AppRadius.all(AppRadius.xl),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg, vertical: AppSpace.md),
+                child: Row(
+                  children: [
+                    Icon(Icons.help_outline_rounded, color: p.textSecondary, size: 20),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Text(
+                        l10n.btTroubleTitle,
+                        style: AppType.titleSmall.copyWith(color: p.textPrimary),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _open ? 0.5 : 0,
+                      duration: AppMotion.of(context, AppMotion.base),
+                      child: Icon(Icons.expand_more_rounded, color: p.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: AppMotion.of(context, AppMotion.base),
+            curve: AppMotion.enter,
+            alignment: Alignment.topCenter,
+            child: !_open
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
+                    child: Column(
+                      children: [
+                        for (final (icon, text) in tips)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpace.sm),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 1),
+                                  child: Icon(icon, color: p.info, size: 18),
+                                ),
+                                const SizedBox(width: AppSpace.sm),
+                                Expanded(
+                                  child: Text(
+                                    text,
+                                    style: AppType.body.copyWith(color: p.textSecondary, fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),

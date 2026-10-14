@@ -8,7 +8,10 @@ import android.bluetooth.BluetoothHidDevice
 import android.bluetooth.BluetoothHidDeviceAppSdpSettings
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.SystemClock
 import android.util.Log
@@ -159,6 +162,8 @@ class BluetoothHidService(private val context: Context) {
     private var hidDevice: BluetoothHidDevice? = null
     private var connectedHost: BluetoothDevice? = null
     private var isRegistered = false
+    /** registerApp was called and its onAppStatusChanged has not come yet. */
+    private var registering = false
 
     /** True while the user explicitly wants BT HID active. */
     private var isAdvertisingRequested = false
@@ -166,7 +171,7 @@ class BluetoothHidService(private val context: Context) {
     /**
      * Callback to Flutter: "connected:<name>" | "disconnected" | "unsupported" |
      * "target:<name>" (the computer being tried) | "refreshing" |
-     * "host_unaware" | "error:<msg>"
+     * "host_unaware" | "bluetooth_off" | "error:<msg>"
      */
     var onStateChanged: ((String) -> Unit)? = null
 
@@ -185,6 +190,7 @@ class BluetoothHidService(private val context: Context) {
     // service (BtHidRepair in the shared package); without it the user has to,
     // and Flutter shows how ("host_unaware").
     private var repairUuid: UUID? = null
+    private var repairUuidText: String? = null
     private var connectAttemptAtMs = 0L
     private var connectedAtMs = 0L
     private var repairRequestedAtMs = 0L
@@ -223,6 +229,16 @@ class BluetoothHidService(private val context: Context) {
         return mgr.adapter != null
     }
 
+    /** The phone's Bluetooth name, as computers list it; null while Bluetooth is off. */
+    fun localName(): String? {
+        val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+        return try {
+            adapter?.takeIf { it.isEnabled }?.name
+        } catch (e: SecurityException) {
+            null
+        }
+    }
+
     /**
      * Registers the phone as a HID device (which publishes our SDP record) and
      * connects to the last host. Making the phone visible to a computer that
@@ -242,14 +258,17 @@ class BluetoothHidService(private val context: Context) {
             repairDelivered = false
         }
         this.repairUuid = repairUuid?.let { UUID.fromString(it) }
+        repairUuidText = repairUuid
         isAdvertisingRequested = true
         loadLastDevice()
+        watchAdapter()
 
         val mgr = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = mgr.adapter
 
+        // Not an error: the adapter receiver goes on once Bluetooth is on.
         if (bluetoothAdapter?.isEnabled != true) {
-            onStateChanged?.invoke("error:bluetooth_disabled")
+            onStateChanged?.invoke("bluetooth_off")
             return
         }
 
@@ -258,6 +277,10 @@ class BluetoothHidService(private val context: Context) {
         }
 
         if (hidDevice != null) {
+            // A second registerApp while the first is pending is refused
+            // ("another app is registered"), and that refusal would end the
+            // session. The pending one connects when it comes.
+            if (registering) return
             if (isRegistered) {
                 Log.d(TAG, "HID already registered, attempting reconnect")
                 tryReconnectToLastDevice()
@@ -269,13 +292,24 @@ class BluetoothHidService(private val context: Context) {
             return
         }
 
-        bluetoothAdapter!!.getProfileProxy(context, profileListener, BluetoothProfile.HID_DEVICE)
+        // Asked for already (the app came back meanwhile): it registers when it comes.
+        if (proxyRequested) return
+        proxyRequested = bluetoothAdapter!!.getProfileProxy(context, profileListener, BluetoothProfile.HID_DEVICE)
     }
+
+    /** getProfileProxy was called and its onServiceConnected has not come yet. */
+    private var proxyRequested = false
 
     /** Disconnect from host and unregister HID app. */
     fun stopAdvertising() {
         isAdvertisingRequested = false
+        unwatchAdapter()
         cancelReconnect()
+        releaseProfile()
+    }
+
+    /** Unregisters and drops the profile proxy; [isAdvertisingRequested] stays. */
+    private fun releaseProfile() {
 
         val hid = hidDevice
         connectedHost?.let { host ->
@@ -290,6 +324,51 @@ class BluetoothHidService(private val context: Context) {
         hidDevice = null
         connectedHost = null
         isRegistered = false
+        registering = false
+        proxyRequested = false
+        connectAttemptAtMs = 0L
+    }
+
+    // ── Bluetooth switched off and on ────────────────────────────────────────
+    // Switched off, Android drops the registration and the profile proxy, and
+    // registering again fails until it is back on. So the session waits for
+    // the adapter and starts again by itself, instead of failing.
+
+    private var adapterReceiver: BroadcastReceiver? = null
+
+    private fun watchAdapter() {
+        if (adapterReceiver != null) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context, intent: Intent) {
+                if (!isAdvertisingRequested) return
+                when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
+                    BluetoothAdapter.STATE_TURNING_OFF, BluetoothAdapter.STATE_OFF -> {
+                        Log.d(TAG, "Bluetooth turned off")
+                        reconnectHandler?.removeCallbacksAndMessages(null)
+                        releaseProfile()
+                        onStateChanged?.invoke("bluetooth_off")
+                    }
+                    BluetoothAdapter.STATE_ON -> {
+                        Log.d(TAG, "Bluetooth turned on, registering again")
+                        reconnectAttempt = 0
+                        startAdvertising(repairUuidText)
+                    }
+                }
+            }
+        }
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        // A system broadcast: delivered to a receiver that is not exported.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(receiver, filter)
+        }
+        adapterReceiver = receiver
+    }
+
+    private fun unwatchAdapter() {
+        adapterReceiver?.let { context.unregisterReceiver(it) }
+        adapterReceiver = null
     }
 
     /** Send a keyboard report: modifier byte + up-to-6 key codes. */
@@ -488,6 +567,12 @@ class BluetoothHidService(private val context: Context) {
         override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
             if (profile != BluetoothProfile.HID_DEVICE) return
             val hid = proxy as BluetoothHidDevice
+            proxyRequested = false
+            // Bluetooth went off meanwhile, or the session ended: not ours to keep.
+            if (!isAdvertisingRequested || bluetoothAdapter?.isEnabled != true) {
+                bluetoothAdapter?.closeProfileProxy(BluetoothProfile.HID_DEVICE, hid)
+                return
+            }
             hidDevice = hid
 
             // Check if we are already connected to a host (e.g. Windows auto-connected)
@@ -505,10 +590,13 @@ class BluetoothHidService(private val context: Context) {
 
         override fun onServiceDisconnected(profile: Int) {
             hidDevice = null
-            // Profile proxy disconnected — try to re-acquire if still requested
-            if (isAdvertisingRequested) {
+            isRegistered = false
+            registering = false
+            // Profile proxy disconnected — try to re-acquire if still requested.
+            // With Bluetooth off the adapter receiver does it once it is on.
+            if (isAdvertisingRequested && bluetoothAdapter?.isEnabled == true) {
                 Log.d(TAG, "Profile proxy lost, re-acquiring...")
-                bluetoothAdapter?.getProfileProxy(context, this, BluetoothProfile.HID_DEVICE)
+                proxyRequested = bluetoothAdapter?.getProfileProxy(context, this, BluetoothProfile.HID_DEVICE) == true
             }
         }
     }
@@ -516,6 +604,7 @@ class BluetoothHidService(private val context: Context) {
     private val hidCallback = object : BluetoothHidDevice.Callback() {
         override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
             isRegistered = registered
+            registering = false
             if (registered) {
                 Log.d(TAG, "HID app registered")
                 if (pluggedDevice != null && connectedHost == null) {
@@ -532,7 +621,8 @@ class BluetoothHidService(private val context: Context) {
                 // foreground without a foreground service. Registering again
                 // works only in the foreground; otherwise startAdvertising
                 // does it when the app comes back (BtHidService.ensureConnected).
-                if (isAdvertisingRequested && hidDevice != null && registerHidApp()) {
+                if (isAdvertisingRequested && hidDevice != null &&
+                    bluetoothAdapter?.isEnabled == true && registerHidApp()) {
                     Log.d(TAG, "Registering the HID app again")
                 }
             }
@@ -584,6 +674,7 @@ class BluetoothHidService(private val context: Context) {
      * be a HID device, and only one in the foreground.
      */
     private fun registerOrReport() {
+        if (registering) return
         if (registerHidApp()) return
         Log.d(TAG, "HID app registration refused")
         isAdvertisingRequested = false
@@ -597,6 +688,8 @@ class BluetoothHidService(private val context: Context) {
         // connectedHost / isRegistered, instead of on a binder thread.
         val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
         val executor = Executor { mainHandler.post(it) }
-        return hidDevice?.registerApp(SDP_SETTINGS, null, null, executor, hidCallback) ?: false
+        val started = hidDevice?.registerApp(SDP_SETTINGS, null, null, executor, hidCallback) ?: false
+        registering = started
+        return started
     }
 }
