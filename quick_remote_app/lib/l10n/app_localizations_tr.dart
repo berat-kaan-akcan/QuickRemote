@@ -499,11 +499,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.';
 
   @override
-  String get btPermissionDenied =>
-      'Bluetooth izni reddedildi. Ayarlardan izin vermelisiniz.';
+  String get btPermissionTitle => 'İzin gerekiyor';
 
   @override
-  String get btDisabled => 'Bluetooth kapalı. Açıp tekrar deneyin.';
+  String get btPermissionDenied =>
+      'Telefonun klavye ve fare olarak bağlanabilmesi için “Yakındaki cihazlar” izni gerekiyor.';
 
   @override
   String btConnectingTo(String device) {
@@ -515,7 +515,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get btMakeVisibleHint =>
-      'Bilgisayar telefonu ancak görünürken listesinde bulur.';
+      'Bilgisayar telefonu yalnızca telefon görünürken listeler.';
 
   @override
   String btVisibleFor(int minutes) {
@@ -539,19 +539,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get btHostUnawareTitle =>
-      'Bilgisayar telefonu klavye olarak tanımıyor';
+      'Bilgisayar telefonu klavye olarak kabul etmiyor';
 
   @override
   String get btHostUnawareBody =>
-      'Telefon bu bilgisayarla QuickRemote açık değilken eşleştirilmiş. Bilgisayarda bir kez şunu yapın:';
+      'Bu çoğunlukla telefon bu bilgisayarla daha önce, QuickRemote açık değilken eşleştirildiğinde olur (örneğin ses ya da dosya aktarımı için): bilgisayar telefonu klavye olarak tanımaz. Bilgisayarda bir kez şunu yapın:';
 
   @override
   String get btHostUnawareWindows =>
-      'Ayarlar → Bluetooth ve cihazlar\'da telefonu kaldırın, sonra bu ekran açıkken yeniden ekleyin.';
+      'Ayarlar → Bluetooth ve cihazlar → Cihazlar’da telefonu bulun ve “…” menüsünden “Cihazı kaldır”ı seçin. Sonra bu ekran açıkken “Cihaz ekle” ile yeniden ekleyin.';
 
   @override
   String get btHostUnawareLinux =>
-      'Bluetooth ayarlarında telefonun bağlantısını kesip yeniden bağlayın. Olmazsa telefonu kaldırıp bu ekran açıkken yeniden eşleştirin.';
+      'Bluetooth ayarlarında telefonun bağlantısını kesip yeniden bağlayın. Olmazsa telefonu kaldırın ve bu ekran açıkken yeniden eşleştirin.';
 
   @override
   String get btHostUnawareAuto =>
@@ -577,36 +577,90 @@ class AppLocalizationsTr extends AppLocalizations {
   String get btNotConnectedRetrying => 'Bağlanılmadı, tekrar deneniyor';
 
   @override
-  String get btOnYourComputer => 'Bilgisayarınızda şunları yapın:';
+  String get btOnYourComputer => 'Bilgisayarda bir kez eşleştirin';
 
   @override
   String get btLinuxStep1 =>
-      'Sistem Ayarları\'nı açın (KDE: Bluetooth, GNOME: Ayarlar → Bluetooth)';
+      'Bluetooth ayarlarını açın: KDE’de Sistem Ayarları → Bluetooth, GNOME’da Ayarlar → Bluetooth.';
 
   @override
-  String get btLinuxStep2 => 'Bluetooth\'un açık olduğundan emin olun';
+  String get btLinuxStep2 =>
+      'Bluetooth’u açın ve cihaz aramayı başlatın. KDE’de “Cihaz ekle”ye basın; GNOME bu sayfa açıkken kendisi arar.';
 
   @override
-  String get btLinuxStep3 => '\"Yeni cihaz ekle\" / cihaz aramayı başlatın';
+  String get btStepPickPhone =>
+      'Listede telefonunuzun adını seçin. Görünmüyorsa yukarıdaki “Telefonu görünür yap”a basın.';
 
   @override
-  String get btStepPickPhone => 'Listeden telefonunuzun adını seçin';
+  String get btStepConfirm =>
+      'Telefonda ve bilgisayarda aynı 6 haneli kod çıkar. Kodlar aynıysa ikisinde de onaylayın.';
 
   @override
-  String get btStepConfirm => 'Eşleştirmeyi onaylayın';
+  String get btWindowsStep1 => 'Ayarlar’ı açın (Windows tuşu + I).';
 
   @override
-  String get btWindowsStep1 => 'Windows Ayarlar\'ı açın';
-
-  @override
-  String get btWindowsStep2 => 'Bluetooth ve diğer cihazlar\'a gidin';
-
-  @override
-  String get btWindowsStep3 => '\"Cihaz ekle\" butonuna basın';
+  String get btWindowsStep2 =>
+      'Bluetooth ve cihazlar → Cihaz ekle → Bluetooth’u seçin. Windows 10’da: Bluetooth ve diğer cihazlar → Bluetooth veya başka cihaz ekle.';
 
   @override
   String get btPairOnce =>
-      'Bu ekran açıkken bir kez eşleştirmeniz yeterli; sonraki bağlantılar otomatiktir.';
+      'Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.';
+
+  @override
+  String get btPermissionAllow => 'İzin ver';
+
+  @override
+  String get btPermissionSettings => 'Ayarları aç';
+
+  @override
+  String get btPermissionSettingsHint =>
+      'İzin daha önce reddedildiği için artık yalnızca Ayarlar’dan verilebilir: İzinler → Yakındaki cihazlar → İzin ver.';
+
+  @override
+  String get btOffTitle => 'Bluetooth kapalı';
+
+  @override
+  String get btOffBody =>
+      'Telefon bilgisayara Bluetooth ile klavye ve fare olarak bağlanır. Bluetooth açılınca bağlantı kendiliğinden sürer.';
+
+  @override
+  String get btTurnOn => 'Bluetooth’u aç';
+
+  @override
+  String get btOffDuringRemote =>
+      'Telefonun Bluetooth’u kapandı. Açılınca kumanda yeniden bağlanır.';
+
+  @override
+  String btStepPickPhoneNamed(String name) {
+    return 'Listede “$name” adını seçin. Görünmüyorsa yukarıdaki “Telefonu görünür yap”a basın.';
+  }
+
+  @override
+  String get btTroubleTitle => 'Bağlanmıyor mu?';
+
+  @override
+  String get btTroubleNearby =>
+      'Bilgisayarın Bluetooth’u açık olsun, bilgisayar uykuda olmasın ve telefon birkaç metre yakınında dursun.';
+
+  @override
+  String get btTroubleNotListed =>
+      'Telefon listede yoksa “Telefonu görünür yap”a basın ve bilgisayarda aramayı yeniden başlatın.';
+
+  @override
+  String get btTroubleAlreadyPaired =>
+      'Telefon bilgisayarda zaten eşleştirilmiş görünüyor ama bağlanmıyorsa telefonu bilgisayardan kaldırın ve bu ekran açıkken yeniden ekleyin.';
+
+  @override
+  String get btTroubleBlocked =>
+      'Bilgisayarın Bluetooth ayarlarında telefon engellenmişse engeli kaldırın.';
+
+  @override
+  String get btTroubleSeveral =>
+      'Telefon birden fazla bilgisayarla eşleştirilmişse hangisine bağlanacağını bilemez: istediğiniz bilgisayarın Bluetooth ayarlarında telefona “Bağlan” deyin.';
+
+  @override
+  String get btTroubleOtherApp =>
+      'Telefon aynı anda tek bir uygulama için klavye olabilir. Başka bir Bluetooth klavye ya da fare uygulaması açıksa kapatın.';
 
   @override
   String get btConnected => 'Bağlandı!';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 import 'bt_make_visible_button.dart';
+import 'bt_pairing_guide.dart';
 
 /// Shown for a moment before the remote opens.
 class BtConnectedView extends StatelessWidget {
@@ -96,12 +97,54 @@ class BtUnsupportedView extends StatelessWidget {
   }
 }
 
-/// Something went wrong; the user can try again.
+/// The phone's Bluetooth is off. The screen goes on by itself once it is on.
+class BtOffView extends StatelessWidget {
+  const BtOffView({super.key, required this.onTurnOn});
+
+  final VoidCallback onTurnOn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        child: FadeSlideIn(
+          child: EmptyState(
+            icon: Icons.bluetooth_disabled_rounded,
+            tone: AppTone.warning,
+            title: context.l10n.btOffTitle,
+            message: context.l10n.btOffBody,
+            action: AppButton(
+              label: context.l10n.btTurnOn,
+              icon: Icons.bluetooth_rounded,
+              variant: AppButtonVariant.solid,
+              tone: AppTone.info,
+              expand: false,
+              onPressed: onTurnOn,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Something went wrong; the user can try again, or do what [actionLabel]
+/// says (e.g. open the settings for a refused permission).
 class BtErrorView extends StatelessWidget {
-  const BtErrorView({super.key, required this.message, required this.onRetry});
+  const BtErrorView({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    this.title,
+    this.actionLabel,
+    this.actionIcon,
+  });
 
   final String? message;
   final VoidCallback onRetry;
+  final String? title;
+  final String? actionLabel;
+  final IconData? actionIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -111,11 +154,11 @@ class BtErrorView extends StatelessWidget {
           child: EmptyState(
             icon: Icons.error_outline_rounded,
             tone: AppTone.danger,
-            title: context.l10n.errorTitle,
+            title: title ?? context.l10n.errorTitle,
             message: message ?? context.l10n.btErrorOccurred,
             action: AppButton(
-              label: context.l10n.tryAgain,
-              icon: Icons.refresh_rounded,
+              label: actionLabel ?? context.l10n.tryAgain,
+              icon: actionIcon ?? Icons.refresh_rounded,
               variant: AppButtonVariant.solid,
               tone: AppTone.info,
               expand: false,
@@ -196,6 +239,10 @@ class _BtHostSetupViewState extends State<BtHostSetupView> {
                   ],
                 ),
               ),
+              const SizedBox(height: AppSpace.md),
+              // The phone cannot tell why the computer refused: the same
+              // refusal comes from a blocked phone.
+              const BtTroubleshooting(),
               const SizedBox(height: AppSpace.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
