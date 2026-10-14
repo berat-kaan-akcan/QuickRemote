@@ -125,7 +125,7 @@
           <path class="beam-line" pathLength="1" d="M 236 448 C 384 448 497 362 497 214"/>
           <path class="beam-pulse" pathLength="1" d="M 236 448 C 384 448 497 362 497 214" data-pulse/>
         </svg>
-        <div class="screen" tabindex="0" role="group" aria-roledescription="sunum ekranı" aria-label="Örnek sunum: Kahvenin kısa tarihi. Tıklayınca ya da sağ ok tuşuyla slayt ilerler.">
+        <div class="screen" tabindex="0" role="group" aria-keyshortcuts="ArrowRight ArrowLeft B W Escape" aria-roledescription="sunum ekranı" aria-label="Örnek sunum: Kahvenin kısa tarihi. Tıklayınca ya da sağ ok tuşuyla slayt ilerler." aria-describedby="hero-live">
           <div class="show" data-show>
             <div class="deck">
               <div class="slide s-title is-on" data-note="Kendini tanıt. Konuşma on dakika sürecek.">
@@ -156,7 +156,7 @@
           </div>
         </div>
 
-        <div class="phone" role="group" aria-label="QuickRemote kumandası, örnek" data-phone>
+        <div class="phone" role="group" aria-label="QuickRemote kumandası, örnek: Ofis-PC’ye bağlı, beş slaytlık bir sunum" data-phone>
           <div class="ph">
             <div class="ph-status" aria-hidden="true"><span>14:32</span><span class="ph-sys"><svg class="i"><use href="#i-wifi"/></svg><i class="ph-batt"></i></span></div>
             <div class="ph-head" aria-hidden="true">
@@ -171,7 +171,7 @@
               </div>
               <p class="ph-count" aria-hidden="true"><span data-cur>1</span><span class="ph-tot"> / 5</span></p>
               <div class="ph-track" aria-hidden="true" data-track><i class="is-on"></i><i></i><i></i><i></i><i></i></div>
-              <button class="ph-notes" type="button" data-cmd="notes" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#i-notes"/></svg>Notlar</button>
+              <button class="ph-notes" type="button" data-cmd="notes" aria-expanded="false" aria-controls="ph-sheet"><svg class="i" aria-hidden="true"><use href="#i-notes"/></svg>Notlar</button>
             </div>
             <div class="ph-row">
               <button class="ph-act" type="button" data-cmd="start"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Başlat</button>
@@ -190,14 +190,14 @@
               <span><svg class="i"><use href="#i-touch"/></svg>Touchpad</span>
               <span><svg class="i"><use href="#i-music"/></svg>Medya</span>
             </div>
-            <div class="ph-sheet" data-sheet hidden>
+            <div class="ph-sheet" id="ph-sheet" data-sheet hidden>
               <p class="ph-sheet-title">Slayt notları</p>
               <p class="ph-sheet-text" data-note-text>Kendini tanıt. Konuşma on dakika sürecek.</p>
               <button class="ph-sheet-close" type="button" data-cmd="notes">Kapat</button>
             </div>
           </div>
         </div>
-        <p class="sr" aria-live="polite" data-live="Slayt {n} / {t}"></p>
+        <p class="sr" id="hero-live" aria-live="polite" data-live="Slayt {n} / {t}" data-ended="Gösteri bitti"></p>
       </div>
       <p class="stage-hint">Telefondaki düğmelere bas.<span class="hint-keys"> Slayta tıklayınca <kbd>←</kbd> ve <kbd>→</kbd> tuşları da çalışır.</span></p>
     </div>
@@ -216,7 +216,7 @@
         </dl>
       </div>
       <div class="watch-demo" data-watch-demo>
-        <div class="watch" tabindex="0" role="group" aria-roledescription="saat" aria-label="Saat kumandası, örnek. Ok tuşlarıyla çerçeve döner." data-watch>
+        <div class="watch" tabindex="0" role="group" aria-keyshortcuts="ArrowRight ArrowLeft" aria-roledescription="saat" aria-label="Saat kumandası, örnek. Ok tuşlarıyla çerçeve döner." aria-describedby="watch-live" data-watch>
           <div class="watch-bezel" aria-hidden="true" data-bezel></div>
           <div class="watch-screen">
             <p class="w-time" aria-hidden="true"><span data-clock>10:09</span> Ofis-PC</p>
@@ -241,7 +241,7 @@
           <span class="hop" data-hop><svg class="i"><use href="#i-computer"/></svg>Bilgisayar</span>
         </div>
         <p class="demo-hint">Çerçeveyi sürükleyerek çevir ya da saatin iki yanına dokun.</p>
-        <p class="sr" aria-live="polite" data-live="Slayt {n} / {t}"></p>
+        <p class="sr" id="watch-live" aria-live="polite" data-live="Slayt {n} / {t}" data-ended="Gösteri bitti"></p>
       </div>
     </div>
   </section>
@@ -251,7 +251,7 @@
     <div class="wrap">
       <div class="sec-head">
         <h2 class="h2" id="features-title">Sahnede sen, notların telefonda.</h2>
-        <p class="lede">QuickRemote&nbsp;PC ile telefon hangi slaytta olduğunu bilir, notlarını getirir, süreni tutar.</p>
+        <p class="lede"><span translate="no">QuickRemote&nbsp;PC</span> ile telefon hangi slaytta olduğunu bilir, notlarını getirir, süreni tutar.</p>
       </div>
 
       <div class="pv">
@@ -375,7 +375,7 @@
     <div class="wrap">
       <div class="sec-head">
         <h2 class="h2" id="connect-title">Üç yoldan biriyle bağlan.</h2>
-        <p class="lede">Her özellik QuickRemote&nbsp;PC ile açılır. Bilgisayara bir şey kurmak istemiyorsan telefon ona klavye gibi bağlanır. Saat, telefonun kurduğu bağlantıyı kullanır.</p>
+        <p class="lede">Her özellik <span translate="no">QuickRemote&nbsp;PC</span> ile açılır. Bilgisayara bir şey kurmak istemiyorsan telefon ona klavye gibi bağlanır. Saat, telefonun kurduğu bağlantıyı kullanır.</p>
       </div>
       <div class="seg" role="tablist" aria-label="Bağlantı yolu" data-tabs>
         <button type="button" role="tab" id="tab-wifi" aria-controls="panel-wifi" aria-selected="true"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>Wi-Fi</button>
@@ -386,10 +386,10 @@
 
       <div class="mode" role="tabpanel" id="panel-wifi" aria-labelledby="tab-wifi" tabindex="0">
         <div class="mode-text">
-          <h3>Telefon ve QuickRemote&nbsp;PC</h3>
+          <h3>Telefon ve <span translate="no">QuickRemote&nbsp;PC</span></h3>
           <p>En çok özellik bu yolda. Telefonla bilgisayar aynı Wi-Fi ağında olmalı; internet gerekmez.</p>
           <ol class="steps">
-            <li>Bilgisayarda QuickRemote&nbsp;PC’yi aç.</li>
+            <li>Bilgisayarda <span translate="no">QuickRemote&nbsp;PC</span>’yi aç.</li>
             <li>Telefonda QR kodu okut. Aynı ağdaki bilgisayarlar listede de görünür.</li>
             <li>Sunumunu aç, telefonda Başlat’a dokun.</li>
           </ol>
@@ -402,8 +402,8 @@
             <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Birden fazla telefon</li>
           </ul>
         </div>
-        <figure class="pc-card" aria-hidden="true">
-          <div class="pc-bar"><svg><use href="#mark"/></svg><span translate="no">QuickRemote <b>PC</b></span></div>
+        <figure class="pc-card" role="img" aria-label="QuickRemote PC penceresi, örnek: QR kod, PIN 482 913 ve güvenlik kodu 4F2A-91C3-0B7E-D58A.">
+          <div class="pc-bar" aria-hidden="true"><svg><use href="#mark"/></svg><span translate="no">QuickRemote <b>PC</b></span></div>
           <div class="pc-body">
             <div class="pc-qr"><svg viewBox="0 0 33 33" shape-rendering="crispEdges" aria-hidden="true"><path stroke="#0E1224" d="M0 0.5h7m1 0h1m2 0h1m7 0h2m2 0h1m2 0h7M0 1.5h1m5 0h1m1 0h2m1 0h2m1 0h1m2 0h1m3 0h4m1 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m3 0h6m2 0h3m3 0h1m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h3m1 0h1m5 0h1m3 0h1m1 0h1m1 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m3 0h1m2 0h3m3 0h1m1 0h1m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h8m3 0h2m1 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m1 0h2m2 0h3m1 0h1m3 0h2M0 8.5h1m1 0h2m1 0h3m1 0h2m3 0h5m2 0h4m1 0h1m2 0h1m1 0h2M1 9.5h1m1 0h1m1 0h1m1 0h1m2 0h1m2 0h1m2 0h6m1 0h1m2 0h2m1 0h2m1 0h1M0 10.5h1m1 0h1m3 0h1m1 0h1m2 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h2m3 0h3m1 0h2M0 11.5h5m6 0h2m3 0h2m4 0h1m4 0h1m1 0h1m2 0h1M1 12.5h3m2 0h2m1 0h2m3 0h3m3 0h1m1 0h4m1 0h3M2 13.5h2m3 0h2m5 0h1m2 0h1m2 0h2m2 0h1m2 0h1m1 0h1m1 0h1M0 14.5h2m2 0h1m1 0h1m1 0h1m1 0h2m2 0h1m4 0h3m2 0h1m1 0h4M0 15.5h1m1 0h1m4 0h4m2 0h3m5 0h1m3 0h2m2 0h2M0 16.5h2m4 0h1m1 0h4m1 0h2m3 0h1m1 0h4m1 0h2m1 0h3M1 17.5h1m1 0h1m1 0h1m4 0h1m2 0h1m1 0h1m2 0h1m1 0h1m1 0h5m1 0h2m1 0h2M2 18.5h2m2 0h2m4 0h1m1 0h3m1 0h1m1 0h3m1 0h1m2 0h2m1 0h2M3 19.5h3m1 0h1m2 0h3m4 0h3m2 0h4m2 0h1m2 0h1M0 20.5h1m1 0h2m2 0h2m4 0h3m1 0h1m5 0h1m4 0h1m1 0h4M0 21.5h3m2 0h1m2 0h6m1 0h2m3 0h2m1 0h1m2 0h1m2 0h1m2 0h1M2 22.5h1m2 0h3m2 0h1m1 0h2m1 0h1m1 0h5m1 0h1m1 0h3m1 0h4M1 23.5h1m3 0h1m2 0h3m1 0h1m2 0h1m4 0h1m2 0h1m2 0h1m1 0h1m3 0h1M0 24.5h1m1 0h3m1 0h2m6 0h1m2 0h3m2 0h1m1 0h5m2 0h2M8 25.5h1m2 0h1m2 0h3m2 0h3m2 0h1m3 0h2M0 26.5h7m1 0h2m4 0h1m2 0h5m1 0h2m1 0h1m1 0h1M0 27.5h1m5 0h1m1 0h2m2 0h1m1 0h1m2 0h2m1 0h1m2 0h2m3 0h4M0 28.5h1m1 0h3m1 0h1m4 0h1m1 0h1m1 0h5m2 0h7m1 0h1m1 0h1M0 29.5h1m1 0h3m1 0h1m1 0h1m2 0h4m1 0h2m1 0h1m1 0h3m3 0h1m1 0h4M0 30.5h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2m3 0h1m1 0h1m3 0h2m1 0h1M0 31.5h1m5 0h1m6 0h2m2 0h2m1 0h1m1 0h1m4 0h2m3 0h1M0 32.5h7m1 0h1m1 0h1m3 0h1m1 0h4m1 0h1m1 0h1m2 0h1m1 0h2"/></svg></div>
             <div class="pc-info">
@@ -475,7 +475,7 @@
         </div>
         <dl class="spec">
           <div><dt>Şifreli bağlantı</dt><dd>Wi-Fi’da giden her komut TLS ile şifrelenir.</dd></div>
-          <div><dt>Her açılışta yeni PIN</dt><dd>QuickRemote&nbsp;PC her açıldığında 6&nbsp;haneli yeni bir PIN üretir.</dd></div>
+          <div><dt>Her açılışta yeni PIN</dt><dd><span translate="no">QuickRemote&nbsp;PC</span> her açıldığında 6&nbsp;haneli yeni bir PIN üretir.</dd></div>
           <div><dt>QR kod bilgisayarı tanıtır</dt><dd>Telefon QR koddaki sertifikayı bekler. QR yoksa güvenlik kodunu sorar.</dd></div>
           <div><dt>Deneme sınırı</dt><dd>5 yanlış PIN’den sonra o cihaz 60&nbsp;saniye bekletilir.</dd></div>
           <div><dt>Kod perdeye yansımaz</dt><dd>İlk telefon bağlanınca QR kod ve PIN ekrandan gizlenir.</dd></div>
@@ -527,7 +527,7 @@
         <details><summary>İnternet bağlantısı gerekir mi?</summary><p>Hayır. Wi-Fi modunda telefonla bilgisayarın aynı ağda olması yeter. Bluetooth modunda bir ağa bile gerek yok. Saat, telefon hangisiyle bağlıysa onu kullanır.</p></details>
         <details><summary>iPhone ya da Apple&nbsp;Watch ile çalışır mı?</summary><p>Şimdilik hayır. Kumanda uygulaması Android’de, saat uygulaması Wear&nbsp;OS’ta çalışır.</p></details>
         <details><summary>Hangi saatlerle çalışır?</summary><p>Wear&nbsp;OS&nbsp;3 ve üzerini çalıştıran saatlerle. Saat, eşleştiği Android telefondaki QuickRemote üzerinden çalışır; bilgisayarla ayrıca eşleşmez. Galaxy&nbsp;Watch’ta çerçeve, Pixel&nbsp;Watch’ta kuron slaytları çevirir.</p></details>
-        <details><summary>Bilgisayara bir şey kurmam gerekir mi?</summary><p>Wi-Fi modunda QuickRemote&nbsp;PC gerekir. Bluetooth modunda hiçbir şey kurmazsın; bilgisayar telefonu klavye olarak görür. Saat iki modda da telefonun üzerinden çalışır.</p></details>
+        <details><summary>Bilgisayara bir şey kurmam gerekir mi?</summary><p>Wi-Fi modunda <span translate="no">QuickRemote&nbsp;PC</span> gerekir. Bluetooth modunda hiçbir şey kurmazsın; bilgisayar telefonu klavye olarak görür. Saat iki modda da telefonun üzerinden çalışır.</p></details>
         <details><summary>PDF ile sunum yapabilir miyim?</summary><p>Evet. Wi-Fi modunda Acrobat, SumatraPDF, Okular ve tarayıcılarda tam ekranı açar, sayfaları çevirir. Linux’ta LibreOffice’te açık bir PDF’i sunuma da çevirebilir.</p></details>
         <details><summary>Aynı anda birden fazla telefon bağlanabilir mi?</summary><p>Evet. Lazeri ya da kalemi ilk alan telefon, hareketi bitene kadar onu kullanır. İki kişi aynı anda İleri’ye basarsa slayt yalnızca bir kez ilerler.</p></details>
         <details><summary>Telefon kilitlenince bağlantı kopar mı?</summary><p>Hayır. Kumanda ekranı açıkken telefonu kilitlesen de bağlantı arka planda sürer.</p></details>
@@ -546,8 +546,8 @@
       <ul class="get-list">
         <li><a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases"><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg><span class="get-name">Android telefon</span><span class="get-what">Kumanda uygulaması</span></a></li>
         <li><a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases"><svg class="i" aria-hidden="true"><use href="#i-watch"/></svg><span class="get-name">Wear&nbsp;OS saat</span><span class="get-what">Saat uygulaması</span></a></li>
-        <li><a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases"><svg class="i" aria-hidden="true"><use href="#i-computer"/></svg><span class="get-name">Windows</span><span class="get-what">QuickRemote&nbsp;PC, Wi-Fi modu için</span></a></li>
-        <li><a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases"><svg class="i" aria-hidden="true"><use href="#i-computer"/></svg><span class="get-name">Linux</span><span class="get-what">QuickRemote&nbsp;PC, Wi-Fi modu için</span></a></li>
+        <li><a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases"><svg class="i" aria-hidden="true"><use href="#i-computer"/></svg><span class="get-name">Windows</span><span class="get-what"><span translate="no">QuickRemote&nbsp;PC</span>, Wi-Fi modu için</span></a></li>
+        <li><a class="get-item" href="https://github.com/berat-kaan-akcan/QuickRemote/releases"><svg class="i" aria-hidden="true"><use href="#i-computer"/></svg><span class="get-name">Linux</span><span class="get-what"><span translate="no">QuickRemote&nbsp;PC</span>, Wi-Fi modu için</span></a></li>
       </ul>
       <p class="get-src">Kaynak kodu <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da</a>.</p>
     </div>
