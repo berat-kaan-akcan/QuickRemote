@@ -337,7 +337,7 @@ void main() {
       keyboard.sent.clear();
       program = BtTarget.wps;
       await fromWatch('command', RemoteCommands.modeLaser);
-      expect(keyboard.sent, [(ctrl, BtKeyMapping.keyA)]);
+      expect(keyboard.sent, [(ctrl, BtKeyMapping.keyA), (ctrl, BtKeyMapping.keyR)]);
     });
 
     test('Wi-Fi comes first when both are connected', () async {

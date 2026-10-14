@@ -60,6 +60,9 @@ class LinuxInputService implements InputService {
   bool _laserViaImpress = false;
   bool _laserOn = false;
 
+  /// WPS's laser pen is on, turned on with its key (Ctrl+R).
+  bool _wpsLaser = false;
+
   /// Impress draws the highlighter as see-through strokes (its bridge's
   /// strokeBegin/strokeEnd) instead of the ink the mouse button would draw.
   bool _strokesViaImpress = false;
@@ -103,6 +106,13 @@ class LinuxInputService implements InputService {
   X11Window? _focusedWps() {
     final window = _activeWindow();
     return window != null && window.hasClass('wpp') ? window : null;
+  }
+
+  /// The focused window when it is a WPS slideshow, where Ctrl+A/Ctrl+R are
+  /// pointer keys (in the editor they select all and align right).
+  X11Window? _focusedWpsShow() {
+    final window = _focusedWps();
+    return window != null && window.fullscreen ? window : null;
   }
 
   /// A WPS slideshow (a full-screen WPS Presentation window) is on screen.
@@ -198,6 +208,7 @@ class LinuxInputService implements InputService {
       };
     }
     _laserOn = false;
+    _wpsLaser = false;
     return {'error': 'POWERPOINT_NOT_RUNNING'};
   }
 
@@ -283,6 +294,7 @@ class LinuxInputService implements InputService {
     _laserViaImpress = false;
     _endStrokes();
     _laserOn = false;
+    _wpsLaser = false;
     final toggled = _toggled;
     _toggled = null;
     if (toggled != null && _activeWindow()?.id == toggled.$1) {
@@ -347,7 +359,7 @@ class LinuxInputService implements InputService {
       );
 
   @override
-  void modeEraser() => _setMode('eraser');
+  void modeEraser() => _setMode('eraser', wpsKeys: [Evdev.keyLeftCtrl, Evdev.keyE]);
 
   @override
   void laserOff() => _setMode('laserOff', wpsKeys: const []);
@@ -358,6 +370,7 @@ class LinuxInputService implements InputService {
   Future<void> _modeHighlighter() async {
     _laserViaImpress = false;
     _laserOn = false;
+    _wpsLaser = false;
     // Like the laser, the motion goes to Impress before its reply.
     _strokesViaImpress = true;
     final reply = await _impress.request('highlighter');
@@ -396,7 +409,17 @@ class LinuxInputService implements InputService {
       return;
     }
     _laserViaImpress = false;
-    // WPS has no laser: the server moves its visible arrow pointer instead.
+    // WPS's laser pen has a key (Ctrl+R) but no counterpart in its object
+    // model, so it reaches only a focused show. Ctrl+A first returns to the
+    // arrow, so the laser comes on whatever was on before.
+    if (_focusedWpsShow() != null) {
+      _keys([Evdev.keyLeftCtrl, Evdev.keyA]);
+      _keys([Evdev.keyLeftCtrl, Evdev.keyR]);
+      _laserOn = true;
+      _wpsLaser = true;
+      return;
+    }
+    // Elsewhere the server moves the bridge's WPS's visible arrow instead.
     final wps = await _wpsRequest('laserOn');
     if (wps['ok'] == true) {
       _laserOn = true;
@@ -415,6 +438,11 @@ class LinuxInputService implements InputService {
     _laserOn = false;
     _wpsHighlighter = false;
     _endStrokes();
+    // The bridge's pointer types and LASER_OFF's no key leave WPS's laser on.
+    if (_wpsLaser) {
+      _wpsLaser = false;
+      if (_focusedWpsShow() != null) _keys([Evdev.keyLeftCtrl, Evdev.keyA]);
+    }
     final failed = await _showCommand(cmd, const {}, wpsArgs);
     if (failed == null) return;
     if (_focusedWps() != null) {

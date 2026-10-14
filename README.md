@@ -28,7 +28,7 @@
 | **PDF Sunumları** | PDF görüntüleyicilerde ve tarayıcılarda sunum/tam ekran modunu açın, sayfaları çevirin (ayrıntılar aşağıda) |
 | **Sunum Zamanlayıcı** | Sunumunuzun ne kadar sürdüğünü takip edin |
 | **Protected View Desteği** | PowerPoint Korumalı Görünüm otomatik olarak düzenleme moduna geçirilir |
-| **WPS Office** | Windows'ta WPS Presentation, PowerPoint ile aynı COM arayüzünden (`KWPP.Application`) kontrol edilir; Linux'ta RPC ve kısayollarla (aşağıya bakın). WPS'te lazer yoktur, yerine görünür fare imleci kullanılır. Windows'ta WPS 12.2 ile denendi: gezinme, siyah/beyaz ekran, kalem, fosforlu kalem, silgi, renkler, tümünü sil. Video oynat/duraklat videoya tıklanarak yapılır; WPS'te başa sarma yoktur |
+| **WPS Office** | Windows'ta WPS Presentation, PowerPoint ile aynı COM arayüzünden (`KWPP.Application`) kontrol edilir; Linux'ta RPC ve kısayollarla (aşağıya bakın). Lazer, WPS'in kendi lazer kalemidir (Ctrl+R); Windows'ta henüz denenmediği için orada görünür fare imleci kullanılır. Windows'ta WPS 12.2 ile denendi: gezinme, siyah/beyaz ekran, kalem, fosforlu kalem, silgi, renkler, tümünü sil. Video oynat/duraklat videoya tıklanarak yapılır; WPS'te başa sarma yoktur |
 
 ### 🖱️ Fare & Touchpad
 | Özellik | Açıklama |
@@ -38,7 +38,7 @@
 ### 🎨 Çizim Araçları
 | Araç | Açıklama |
 |------|----------|
-| **Lazer İşaretçi** | PowerPoint'in yerel lazer modunu uzaktan kontrol edin (Ctrl+L); Impress'te UNO ile, WPS'te görünür fare imleciyle |
+| **Lazer İşaretçi** | PowerPoint'in yerel lazer modunu uzaktan kontrol edin (Ctrl+L); Impress'te UNO ile, WPS'te WPS'in lazer kalemiyle (Ctrl+R; Windows'ta görünür fare imleci) |
 | **Kalem** | Sunum üzerine serbest çizim yapın (Ctrl+P) |
 | **Vurgulayıcı** | Önemli alanları fosforlu kalemle işaretleyin (Ctrl+I) |
 | **Silgi / Tümünü Sil** | Çizimleri tek tek silin (Ctrl+E) veya slayttaki tüm çizimleri temizleyin |
@@ -323,7 +323,7 @@ flutter run -d linux        # veya: flutter build linux
 | Ses, şimdi çalan (kapak dahil), medya tuşları | ✅ pactl + MPRIS |
 | Bilgisayarı kilitle | ✅ `loginctl lock-session` |
 | Otomatik keşif (mDNS) | ✅ Avahi |
-| Bluetooth HID modu | ✅ Dokunmatik alanda "Hedef: Impress" seçilince: slayt, siyah/beyaz ekran, kalem, temizle çalışır. ⚠️ Lazer yerine fare imleci kullanılır; vurgulayıcı ve silgi gizlenir (Impress'te klavye kısayolları yok). "Hedef: WPS" seçilince vurgulayıcı da çalışır, silgi gizlenir |
+| Bluetooth HID modu | ✅ Dokunmatik alanda "Hedef: Impress" seçilince: slayt, siyah/beyaz ekran, kalem, temizle çalışır. ⚠️ Lazer yerine fare imleci kullanılır; vurgulayıcı ve silgi gizlenir (Impress'te klavye kısayolları yok). "Hedef: WPS" seçilince vurgulayıcı, silgi (Ctrl+E) ve lazer (Ctrl+R) de çalışır |
 
 Impress'e ulaşılamazsa ileri/geri, başlat ve bitir komutları klavye kısayoluna (PageDown/PageUp/F5/Esc) düşer; böylece PDF görüntüleyiciler ve tarayıcıdaki sunumlar da kontrol edilebilir. Çizim modları ve siyah/beyaz ekran yalnızca bir slayt gösterisi açıkken çalışır, başka bir pencereye tuş yazmaz.
 
@@ -340,7 +340,7 @@ Impress'e ulaşılamazsa ileri/geri, başlat ve bitir komutları klavye kısayol
 | Slayt numarası, notlar, n. slayttan başlatma | ✅ | ❌ Telefonda "Slayt gösterisi açık" görünür |
 | Kalem, vurgulayıcı, tümünü sil | ✅ (kalem rengi dahil) | ✅ Ctrl+P / Ctrl+I / E (renk seçilemez) |
 | Silgi | ✅ | ❌ |
-| Lazer | ⚠️ Görünür fare imleci telefonla hareket eder (WPS'te lazer yok) | ⚠️ Aynı |
+| Lazer | ✅ Gösteri odaktayken WPS'in lazer kalemi (Ctrl+R); odakta değilken görünür fare imleci telefonla hareket eder | ✅ Ctrl+R |
 | Sunuma gömülü video | ✅ | ❌ |
 
 Kendi açtığınız WPS'e kısayollar yalnızca WPS penceresi odaktayken gönderilir. WPS kapalıyken "Sunum aç" ile açılan WPS, sonradan çift tıklayarak açtığınız sunumları da alır ve onlar da tam kontrol edilir.

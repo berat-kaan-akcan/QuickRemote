@@ -157,13 +157,15 @@ void main() {
   });
 
   group('tools', () {
-    test('a WPS out of the bridge\'s reach has no eraser', () async {
+    test('a WPS out of the bridge\'s reach gets its eraser key', () async {
       active = userWps;
       windows = const [wpsShow];
       service().modeEraser();
       await pumpEventQueue();
-      expect(keys, isEmpty);
-      expect(errors.single, (RemoteError.wpsOpenFromApp, null));
+      expect(keys, [
+        [Evdev.keyLeftCtrl, Evdev.keyE],
+      ]);
+      expect(errors, isEmpty);
     });
 
     test('a focused WPS takes the pen and erase-all keys', () async {
@@ -175,6 +177,46 @@ void main() {
       expect(keys, [
         [Evdev.keyLeftCtrl, Evdev.keyP],
         [Evdev.keyE],
+      ]);
+    });
+
+    test('a focused WPS show gets its laser pen, which the next mode puts away', () async {
+      active = wpsShow;
+      windows = const [wpsShow];
+      final s = service();
+      await s.modeLaser();
+      expect(keys, [
+        [Evdev.keyLeftCtrl, Evdev.keyA],
+        [Evdev.keyLeftCtrl, Evdev.keyR],
+      ]);
+      // Neither the bridge's pointer types nor LASER_OFF's no key would.
+      keys.clear();
+      s.laserOff();
+      await pumpEventQueue();
+      expect(keys, [
+        [Evdev.keyLeftCtrl, Evdev.keyA]
+      ]);
+      keys.clear();
+      s.modePen();
+      await pumpEventQueue();
+      expect(keys, [
+        [Evdev.keyLeftCtrl, Evdev.keyP]
+      ]);
+    });
+
+    test('an unfocused WPS gets the bridge\'s arrow for a laser, the editor no keys', () async {
+      wps.replies['laserOn'] = _ok;
+      final s = service();
+      await s.modeLaser();
+      expect(wps.commands, ['laserOn']);
+      expect(keys, isEmpty);
+
+      // Ctrl+R in the editor aligns text right: only the arrow, as before.
+      wps.replies.remove('laserOn');
+      active = userWps;
+      await s.modeLaser();
+      expect(keys, [
+        [Evdev.keyLeftCtrl, Evdev.keyA]
       ]);
     });
 
