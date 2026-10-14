@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>QuickRemote social template</title>
+<!-- Source of the share images and the hero loop in ../assets/.
+     ?lang=tr|en  &format=og (1200x630) | square (1080x1080) | loop (1280x720)
+     window.renderAt(seconds) draws one frame of the 6 s loop; see README.md. -->
+<link rel="stylesheet" href="../style.css">
+<style>
+  html, body { margin: 0; background: var(--bg); overflow: hidden; }
+  .canvas { position: relative; overflow: hidden; background: #F4F5FA; color: #0E1224; color-scheme: light; }
+  .og { width: 1200px; height: 630px; }
+  .square { width: 1080px; height: 1080px; }
+  .loop { width: 1280px; height: 720px; }
+  .canvas, .canvas * { animation: none !important; transition: none !important; }
+
+  .c-spine { position: absolute; left: 61px; width: 6px; border-radius: 3px; background: #2F4BE0; }
+  .c-stop { position: absolute; left: 49px; width: 30px; height: 30px; box-sizing: border-box; border: 6px solid #2F4BE0; border-radius: 11px; background: #F4F5FA; }
+  .c-lockup { position: absolute; display: flex; align-items: center; gap: 12px; }
+  .c-lockup svg { width: 46px; height: 46px; color: #2F4BE0; }
+  .c-lockup span { font: 500 28px/1 var(--display); letter-spacing: -.01em; }
+  .c-lockup b { font-weight: 700; }
+  .c-copy { position: absolute; display: grid; gap: 22px; }
+  .c-h { font: 700 76px/.95 var(--display); letter-spacing: -.035em; margin: 0; }
+  .c-p { font: 400 22px/1.45 var(--text); color: #4A5172; margin: 0; }
+  .c-free { font: 600 18px/1.2 var(--text); color: #2F4BE0; margin: 4px 0 0; }
+
+  .c-rig { position: absolute; width: 600px; }
+  .c-rig .rig { width: 600px; }
+
+  /* og: copy left, rig right */
+  .og .c-spine { top: 96px; bottom: 0; }
+  .og .c-lockup { left: 42px; top: 40px; }
+  .og .c-copy { left: 112px; top: 150px; width: 520px; }
+  .og .c-rig { left: 640px; top: 40px; transform: scale(.86); transform-origin: top left; }
+
+  /* square: copy on top, rig below */
+  .square .c-spine { top: 104px; bottom: 0; }
+  .square .c-lockup { left: 42px; top: 48px; }
+  .square .c-copy { left: 112px; top: 150px; width: 860px; }
+  .square .c-h { font-size: 84px; }
+  .square .c-rig { left: 330px; top: 460px; transform: scale(.82); transform-origin: top left; }
+
+  /* loop: the rig alone, the line from the left edge into the phone */
+  .loop .c-spine, .loop .c-stop, .loop .c-lockup, .loop .c-copy { display: none; }
+  .loop .c-rig { left: 350px; top: 22px; transform: scale(.97); transform-origin: top left; }
+</style>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true">
+<defs><radialGradient id="laser-glow"><stop offset="0" stop-color="#FF6A3D" stop-opacity=".85"/><stop offset=".45" stop-color="#FF6A3D" stop-opacity=".28"/><stop offset="1" stop-color="#FF6A3D" stop-opacity="0"/></radialGradient></defs>
+<symbol id="mark" viewBox="-181 -181 368 368"><rect x="-118" y="-118" width="200" height="200" rx="70" fill="none" stroke="currentColor" stroke-width="38"/><line x1="16" y1="16" x2="74" y2="74" stroke="currentColor" stroke-width="38" stroke-linecap="round"/><circle cx="120" cy="120" r="64" fill="url(#laser-glow)"/><circle cx="120" cy="120" r="23" fill="#FF6A3D"/></symbol>
+<symbol id="i-arrow-back" viewBox="0 -960 960 960"><path d="m274-450 227 227q9 9 9 21t-9 21q-9 9-21 9t-21-9L181-459q-5-5-7-10t-2-11q0-6 2-11t7-10l278-278q9-9 21-9t21 9q9 9 9 21t-9 21L274-510h496q13 0 21.5 8.5T800-480q0 13-8.5 21.5T770-450H274Z"/></symbol>
+<symbol id="i-arrow-forward" viewBox="0 -960 960 960"><path d="M686-450H190q-13 0-21.5-8.5T160-480q0-13 8.5-21.5T190-510h496L459-737q-9-9-9-21t9-21q9-9 21-9t21 9l278 278q5 5 7 10t2 11q0 6-2 11t-7 10L501-181q-9 9-21 9t-21-9q-9-9-9-21t9-21l227-227Z"/></symbol>
+<symbol id="i-play" viewBox="0 -960 960 960"><path d="M320-273v-414q0-17 12-28.5t28-11.5q5 0 10.5 1.5T381-721l326 207q9 6 13.5 15t4.5 19q0 10-4.5 19T707-446L381-239q-5 3-10.5 4.5T360-233q-16 0-28-11.5T320-273Z"/></symbol>
+<symbol id="i-stop" viewBox="0 -960 960 960"><path d="M240-300v-360q0-25 17.5-42.5T300-720h360q25 0 42.5 17.5T720-660v360q0 25-17.5 42.5T660-240H300q-25 0-42.5-17.5T240-300Z"/></symbol>
+</svg>
+
+<div class="canvas" id="canvas">
+  <i class="c-spine"></i>
+  <i class="c-stop" id="stop"></i>
+  <div class="c-lockup"><svg aria-hidden="true"><use href="#mark"/></svg><span><b>Quick</b>Remote</span></div>
+  <div class="c-copy" id="copy"><p class="c-h" id="h"></p><p class="c-p" id="p"></p><p class="c-free" id="free"></p></div>
+  <div class="c-rig"><div class="rig" id="rig"></div></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const lang = params.get('lang') === 'en' ? 'en' : 'tr';
+  const format = ['og', 'square', 'loop'].includes(params.get('format')) ? params.get('format') : 'og';
+  document.documentElement.lang = lang;
+  const T = {
+    tr: {
+      h: 'Sunumunu telefonundan yönet.',
+      p: 'Telefonun kumanda, touchpad ve lazer olur. PowerPoint, Impress ve WPS ile çalışır.',
+      free: 'Android ve Wear OS için ücretsiz',
+      slides: [
+        ['Kahve Kulübü, Ekim buluşması', 'Kahvenin kısa tarihi', 'Yemen’den İstanbul’a, oradan dünyaya'],
+        ['1554', 'İstanbul’un ilk kahvehanesi Tahtakale’de açıldı.'],
+        ['2013', 'Türk kahvesi kültürü UNESCO listesine girdi.'],
+      ],
+      pc: 'Ofis-PC', connected: 'Bağlı', slide: 'Slayt', notes: 'Notlar', start: 'Başlat', end: 'Bitir', black: 'Siyah ekran', white: 'Beyaz ekran', back: 'Geri', next: 'İleri', controls: 'Kontroller', media: 'Medya',
+    },
+    en: {
+      h: 'Run your slides from your phone.',
+      p: 'Your phone becomes a remote, a touchpad and a laser. Works with PowerPoint, Impress and WPS.',
+      free: 'Free for Android and Wear OS',
+      slides: [
+        ['Coffee Club, October meetup', 'A short history of coffee', 'From Yemen to Istanbul, then the world'],
+        ['1554', 'Istanbul’s first coffeehouse opened in Tahtakale.'],
+        ['2013', 'Turkish coffee culture joined the UNESCO list.'],
+      ],
+      pc: 'Office-PC', connected: 'Connected', slide: 'Slide', notes: 'Notes', start: 'Start', end: 'End', black: 'Black screen', white: 'White screen', back: 'Back', next: 'Next', controls: 'Controls', media: 'Media',
+    },
+  }[lang];
+  const canvas = document.getElementById('canvas');
+  canvas.classList.add(format);
+  document.getElementById('h').textContent = T.h;
+  document.getElementById('p').textContent = T.p;
+  document.getElementById('free').textContent = T.free;
+
+  const slideHtml = (s, i) => i === 0
+    ? `<div class="slide s-title"><p class="s-kicker">${s[0]}</p><p class="s-h">${s[1]}</p><p class="s-sub">${s[2]}</p></div>`
+    : `<div class="slide"><p class="s-big">${s[0]}</p><p class="s-text">${s[1]}</p></div>`;
+  document.getElementById('rig').innerHTML = `
+    <svg class="beam" viewBox="0 0 600 690" preserveAspectRatio="none">
+      <path class="beam-line" pathLength="1" d="M 236 448 C 384 448 497 362 497 214"/>
+      <path class="beam-pulse" id="pulse" pathLength="1" d="M 236 448 C 384 448 497 362 497 214"/>
+    </svg>
+    <div class="screen"><div class="show"><div class="deck">${T.slides.map(slideHtml).join('')}</div><i class="laser" id="laser"></i></div></div>
+    <div class="phone"><div class="ph">
+      <div class="ph-status"><span>14:32</span><span class="ph-sys"><i class="ph-batt"></i></span></div>
+      <div class="ph-head"><span class="ph-tile"><svg><use href="#mark"/></svg></span><span class="ph-id"><b>${T.pc}</b><small>192.168.1.24</small></span><span class="ph-chip">${T.connected}</span></div>
+      <div class="ph-card">
+        <div class="ph-card-top"><span class="ph-over">${T.slide}</span><span class="ph-timer"><span>03:24</span></span></div>
+        <p class="ph-count"><span id="cur">1</span><span class="ph-tot"> / 5</span></p>
+        <div class="ph-track" id="track"><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="ph-notes">${T.notes}</span>
+      </div>
+      <div class="ph-row"><span class="ph-act" id="b-start"><svg class="i"><use href="#i-play"/></svg>${T.start}</span><span class="ph-act ph-end"><svg class="i"><use href="#i-stop"/></svg>${T.end}</span></div>
+      <div class="ph-row"><span class="ph-act"><i class="sw sw-black"></i>${T.black}</span><span class="ph-act"><i class="sw sw-white"></i>${T.white}</span></div>
+      <div class="ph-row ph-slides"><span class="ph-big"><span class="ph-circ"><svg class="i"><use href="#i-arrow-back"/></svg></span>${T.back}</span><span class="ph-big ph-next" id="b-next"><span class="ph-circ"><svg class="i"><use href="#i-arrow-forward"/></svg></span>${T.next}</span></div>
+      <div class="ph-nav"><span class="is-on">${T.controls}</span><span>Touchpad</span><span>${T.media}</span></div>
+    </div></div>`;
+
+  // The stop sits beside the headline's first line.
+  const h = document.getElementById('h');
+  const place = () => {
+    const lh = parseFloat(getComputedStyle(h).lineHeight);
+    const top = h.getBoundingClientRect().top - canvas.getBoundingClientRect().top;
+    document.getElementById('stop').style.top = `${top + lh / 2 - 15}px`;
+  };
+
+  // ── The 6 s loop: Next, Next, Start; each press runs along the line ──
+  const slides = [...document.querySelectorAll('.slide')];
+  const segs = [...document.querySelectorAll('#track i')];
+  const pulse = document.getElementById('pulse');
+  const laser = document.getElementById('laser');
+  const cur = document.getElementById('cur');
+  const bNext = document.getElementById('b-next');
+  const bStart = document.getElementById('b-start');
+  const LOOP = 6;
+  const presses = [{ at: 0.6, btn: bNext, to: 1 }, { at: 2.6, btn: bNext, to: 2 }, { at: 4.6, btn: bStart, to: 0 }];
+  const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+  const inOut = (x) => { x = Math.min(1, Math.max(0, x)); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+
+  window.renderAt = (t) => {
+    t = ((t % LOOP) + LOOP) % LOOP;
+    let index = 0, from = 0, changeAt = -1;
+    for (const p of presses) if (t >= p.at + 0.38) { from = index; index = p.to; changeAt = p.at + 0.38; }
+    // slides: 220 ms cross-fade after the pulse lands
+    const k = changeAt < 0 ? 1 : ease((t - changeAt) / 0.22);
+    slides.forEach((s, i) => {
+      const o = i === index ? k : i === from && k < 1 ? 1 - k : 0;
+      s.style.opacity = o;
+      s.style.visibility = o > 0 ? 'visible' : 'hidden';
+    });
+    // the loop starts and ends on slide 1, so the seam is invisible
+    cur.textContent = String(index + 1);
+    segs.forEach((s, i) => { s.classList.toggle('is-on', i === index); s.classList.toggle('is-past', i < index); });
+    // press feedback (120 ms) and the pulse along the line (380 ms)
+    for (const p of presses) {
+      const d = t - p.at;
+      p.btn.style.transform = d >= 0 && d < 0.18 ? `scale(${1 - 0.04 * Math.sin((d / 0.18) * Math.PI)})` : '';
+    }
+    const active = presses.find((p) => t >= p.at && t < p.at + 0.42);
+    if (active) {
+      const x = inOut((t - active.at) / 0.38);
+      pulse.style.opacity = 1;
+      pulse.style.strokeDashoffset = String(0.08 - 1.08 * x);
+    } else pulse.style.opacity = 0;
+    const hit = presses.find((p) => t >= p.at + 0.36 && t < p.at + 0.6);
+    laser.style.scale = hit ? String(1 + 0.6 * (1 - ease((t - hit.at - 0.36) / 0.22))) : '1';
+  };
+  document.fonts.ready.then(() => { place(); window.renderAt(0); document.body.dataset.ready = '1'; });
+</script>
+</body>
+</html>
