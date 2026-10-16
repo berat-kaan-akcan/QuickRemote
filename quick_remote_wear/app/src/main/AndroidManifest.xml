@@ -10,6 +10,13 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <!-- Ambient mode (AmbientLifecycleObserver). -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- PresentingService: the remote as an Ongoing Activity while a show
+         runs. A connectedDevice service needs one of a list of permissions;
+         CHANGE_NETWORK_STATE is granted with the app. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".QuickRemoteWearApp"
@@ -36,6 +43,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".PresentingService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
 
         <!-- The talk's clock warnings, vibrated also while the remote is not
              on screen. -->

@@ -55,7 +55,7 @@ fun ConnectedScreen(
     show: Show?,
     clock: TalkClock?,
     duration: Int?,
-    onDuration: (Int) -> Boolean,
+    onEditDuration: () -> Unit,
     onAction: (RemoteAction) -> Boolean,
     onLaser: () -> Unit,
     laser: HeldLaser,
@@ -65,7 +65,9 @@ fun ConnectedScreen(
 ) {
     val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()
-    val running = show?.running == true
+    // Over Bluetooth the computer tells nothing: the talk's clock, which runs
+    // from the watch's Start to its End, stands in for the show.
+    val running = show?.running ?: (clock?.running == true)
     var blank by rememberSaveable { mutableStateOf<RemoteAction?>(null) }
     val showTools = show == null || running
     var tip by remember { mutableStateOf<Notice?>(null) }
@@ -148,7 +150,7 @@ fun ConnectedScreen(
                                 }
                             },
                             duration = duration,
-                            onDuration = onDuration,
+                            onEditDuration = onEditDuration,
                         )
                         Page.TOOLS -> ToolsPage(
                             show = show,

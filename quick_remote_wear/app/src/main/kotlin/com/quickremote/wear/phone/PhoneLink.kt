@@ -54,6 +54,7 @@ class PhoneLink(context: Context) :
     private val handler = Handler(Looper.getMainLooper())
 
     private var started = false
+    private var users = 0
 
     /** The phone's node, while it is in reach. */
     private var node: String? = null
@@ -70,7 +71,13 @@ class PhoneLink(context: Context) :
     private val _events = MutableSharedFlow<LinkEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<LinkEvent> = _events.asSharedFlow()
 
+    /**
+     * Starts listening to the phone. Called by the remote while it is on
+     * screen and by [com.quickremote.wear.PresentingService] while a show
+     * runs; it listens until both have called [stop].
+     */
     fun start() {
+        users++
         if (started) return
         started = true
         data.addListener(this, STATE_URI, DataClient.FILTER_LITERAL)
@@ -91,7 +98,8 @@ class PhoneLink(context: Context) :
     }
 
     fun stop() {
-        if (!started) return
+        if (users > 0) users--
+        if (!started || users > 0) return
         laserUp()
         started = false
         direct.close()
@@ -148,6 +156,7 @@ class PhoneLink(context: Context) :
         for (event in events) {
             if (event.dataItem.uri.path != WearProtocol.PATH_STATE) continue
             report = if (event.type == DataEvent.TYPE_CHANGED) read(event.dataItem) else null
+            if (Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG, "State: $report")
             unanswered = 0
             handler.removeCallbacks(helloAgain)
         }
