@@ -18,6 +18,25 @@ object WearProtocol {
     const val KEY_CURRENT = "current"
     const val KEY_TOTAL = "total"
 
+    /** What the laser is on the computer, so that the watch names it. */
+    const val KEY_POINTER = "pointer"
+    const val POINTER_LASER = "laser"
+
+    /** Windows WPS has no laser: its arrow follows the watch. */
+    const val POINTER_ARROW = "arrow"
+
+    /** Impress over Bluetooth has no laser shortcut: the mouse cursor moves. */
+    const val POINTER_CURSOR = "cursor"
+
+    /** The talk's length, in seconds (0: none), picked on the watch or on the phone's timer. */
+    const val KEY_DURATION = "duration"
+
+    /** The talk's clock: its length (0 counts up), whether it runs, its start (ms since the epoch) and, paused, its time. */
+    const val KEY_TIMER_TARGET = "timerTarget"
+    const val KEY_TIMER_RUNNING = "timerRunning"
+    const val KEY_TIMER_START = "timerStart"
+    const val KEY_TIMER_ELAPSED = "timerElapsed"
+
     /** [KEY_LINK]: the phone app is not running. */
     const val LINK_CLOSED = "closed"
     const val LINK_DISCONNECTED = "disconnected"
@@ -37,6 +56,9 @@ object WearProtocol {
     /** A command name, UTF-8. */
     const val PATH_COMMAND = "/quickremote/command"
 
+    /** The talk's length picked on the watch, in seconds, as UTF-8 text. */
+    const val PATH_DURATION = "/quickremote/duration"
+
     /** Laser movement: float32 dx, float32 dy, little-endian. */
     const val PATH_MOVE = "/quickremote/move"
 
@@ -51,6 +73,13 @@ object WearProtocol {
 
     /** A command the computer refused, as text in the phone's language, UTF-8. */
     const val PATH_ERROR = "/quickremote/error"
+
+    /**
+     * A timer warning, "warning:SECONDS:PATTERN" or "timeUp:0:PATTERN", UTF-8;
+     * an empty pattern does not vibrate. Received also while the app is in
+     * the background ([com.quickremote.wear.phone.AlertService]).
+     */
+    const val PATH_ALERT = "/quickremote/alert"
 
     // The watch's own Bluetooth socket to the phone, for the laser (DirectLink).
     /** The RFCOMM service the phone app listens on (WearDirect.kt there). */

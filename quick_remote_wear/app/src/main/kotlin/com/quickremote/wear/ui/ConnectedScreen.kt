@@ -17,11 +17,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.material3.HorizontalPageIndicator
 import androidx.wear.compose.material3.HorizontalPagerScaffold
+import com.quickremote.wear.R
+import com.quickremote.wear.phone.Pointer
 import com.quickremote.wear.phone.Show
+import com.quickremote.wear.phone.TalkClock
 import com.quickremote.wear.remote.RemoteAction
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** The pages of a connected watch, in their order. */
@@ -39,14 +44,22 @@ enum class Page { START, TOOLS, REMOTE }
  * The black and white screens are toggles the computer does not report, so
  * the watch remembers what it sent and shows it ([BlankScreen]) until it is
  * sent again, or the slide or the show changes.
+ *
+ * Over Wi-Fi with no slideshow running (nothing open, or a PDF), the
+ * computer ignores the laser and the black and white screens: they are
+ * faded, and a tap says when they work. Over Bluetooth the watch is told
+ * nothing about the show, so they stay as they are. [pointer] names the laser.
  */
 @Composable
 fun ConnectedScreen(
     show: Show?,
-    startedAt: Long?,
+    clock: TalkClock?,
+    duration: Int?,
+    onDuration: (Int) -> Boolean,
     onAction: (RemoteAction) -> Boolean,
     onLaser: () -> Unit,
     laser: HeldLaser,
+    pointer: Pointer,
     page: Page?,
     onPageChange: (Page) -> Unit,
 ) {
@@ -54,6 +67,16 @@ fun ConnectedScreen(
     val scope = rememberCoroutineScope()
     val running = show?.running == true
     var blank by rememberSaveable { mutableStateOf<RemoteAction?>(null) }
+    val showTools = show == null || running
+    var tip by remember { mutableStateOf<Notice?>(null) }
+    val needsShow = stringResource(R.string.needs_show)
+    val unavailable = { tip = Notice(needsShow) }
+    LaunchedEffect(tip) {
+        if (tip != null) {
+            delay(TIP_MS)
+            tip = null
+        }
+    }
 
     fun press(action: RemoteAction, fromBezel: Boolean = false) {
         val sent = onAction(action)
@@ -64,11 +87,11 @@ fun ConnectedScreen(
         }
         if (!sent) return
         when (action) {
-            RemoteAction.BLACK_SCREEN, RemoteAction.WHITE_SCREEN -> blank = if (blank == action) null else action
+            RemoteAction.BLACK_SCREEN, RemoteAction.WHITE_SCREEN ->
+                blank = if (blank == action || !showTools) null else action
             else -> blank = null
         }
     }
-    val bezel = rememberSlideBezel { press(it, fromBezel = true) }
 
     LaunchedEffect(show?.current, running) { blank = null }
 
@@ -78,7 +101,9 @@ fun ConnectedScreen(
     val pages = if (running) listOf(Page.TOOLS, Page.REMOTE) else listOf(Page.START, Page.TOOLS, Page.REMOTE)
     var wasRunning by remember { mutableStateOf(running) }
     val target = when {
-        running == wasRunning -> page ?: if (show == null || running) Page.REMOTE else Page.START
+        // The first connection opens on Start unless a show is known to run:
+        // over Bluetooth nothing is known, and a talk begins with Start.
+        running == wasRunning -> page ?: if (running) Page.REMOTE else Page.START
         running -> Page.REMOTE.takeIf { page == null || page == Page.START } ?: page!!
         else -> Page.START
     }
@@ -87,7 +112,7 @@ fun ConnectedScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .then(bezel),
+            .slideBezel { press(it, fromBezel = true) },
     ) {
         key(running) {
             val pagerState = rememberPagerState(
@@ -122,14 +147,26 @@ fun ConnectedScreen(
                                     pagerState.animateScrollToPage(pages.indexOf(Page.REMOTE), animationSpec = PAGE_SNAP)
                                 }
                             },
+                            duration = duration,
+                            onDuration = onDuration,
                         )
-                        Page.TOOLS -> ToolsPage(show = show, onPress = { press(it) }, onLaser = onLaser)
+                        Page.TOOLS -> ToolsPage(
+                            show = show,
+                            onPress = { press(it) },
+                            onLaser = onLaser,
+                            pointer = pointer,
+                            showTools = showTools,
+                            onUnavailable = unavailable,
+                        )
                         Page.REMOTE -> RemotePage(
                             show = show,
-                            startedAt = startedAt,
+                            clock = clock,
                             onPress = { press(it) },
                             onLaser = onLaser,
                             laser = laser,
+                            pointer = pointer,
+                            canPoint = showTools,
+                            onUnavailable = unavailable,
                         )
                     }
                 }
@@ -138,7 +175,11 @@ fun ConnectedScreen(
         blank?.let { action ->
             BlankScreen(white = action == RemoteAction.WHITE_SCREEN, onRestore = { press(action) })
         }
+        tip?.let { NoticeBanner(it.text) }
     }
 }
+
+/** How long "only while a slideshow runs" stays. */
+private const val TIP_MS = 2_500L
 
 private val PAGE_SNAP = spring<Float>(stiffness = Spring.StiffnessMedium)

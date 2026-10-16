@@ -43,7 +43,7 @@ fun PhoneStatusScreen(state: PhoneState, onOpenPhone: () -> Unit, onRetry: () ->
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(state = listState, contentPadding = contentPadding) {
             item {
-                ListHeader(modifier = headerItem(spec)) {
+                ListHeader(modifier = Modifier.headerItem(this, spec)) {
                     when {
                         busy -> CircularProgressIndicator(modifier = Modifier.size(16.dp))
                         state is PhoneState.NoPhone -> Icon(
@@ -64,7 +64,7 @@ fun PhoneStatusScreen(state: PhoneState, onOpenPhone: () -> Unit, onRetry: () ->
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
-                        modifier = textItem(spec),
+                        modifier = Modifier.textItem(this, spec),
                     )
                 }
             }
@@ -72,7 +72,7 @@ fun PhoneStatusScreen(state: PhoneState, onOpenPhone: () -> Unit, onRetry: () ->
                 item {
                     Button(
                         onClick = onOpenPhone,
-                        modifier = buttonItem(spec),
+                        modifier = Modifier.buttonItem(this, spec),
                         transformation = SurfaceTransformation(spec),
                         icon = { Icon(WearIcons.Phone, contentDescription = null) },
                         label = { Text(stringResource(R.string.open_on_phone)) },
@@ -83,7 +83,7 @@ fun PhoneStatusScreen(state: PhoneState, onOpenPhone: () -> Unit, onRetry: () ->
                 item {
                     FilledTonalButton(
                         onClick = onRetry,
-                        modifier = buttonItem(spec),
+                        modifier = Modifier.buttonItem(this, spec),
                         transformation = SurfaceTransformation(spec),
                         icon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
                         label = { Text(stringResource(R.string.retry)) },

@@ -32,11 +32,24 @@
     <string name="action_laser">Laser pointer</string>
     <string name="laser_close">Close laser</string>
     <string name="laser_hint">Laser: drag to move the pointer</string>
+    <!-- The laser where the program has none: Windows WPS's arrow, or the mouse cursor (Impress over Bluetooth). -->
+    <string name="action_arrow">Arrow pointer</string>
+    <string name="action_cursor">Mouse cursor</string>
+    <string name="arrow_hint">Arrow: drag to move it</string>
+    <string name="cursor_hint">Cursor: drag to move it</string>
+    <!-- Under Next until the presenter has held it once. -->
+    <string name="hold_for_laser">Hold: laser</string>
+    <string name="hold_for_arrow">Hold: arrow</string>
+    <string name="hold_for_cursor">Hold: cursor</string>
+    <!-- A tool tapped while no slideshow runs: the computer ignores it then. -->
+    <string name="needs_show">Only while a slideshow runs</string>
 
     <!-- Under the arrow of the large Next button. -->
     <string name="next_short">Next</string>
     <!-- One word each, in the quarters of the tools page. -->
     <string name="tool_laser">Laser</string>
+    <string name="tool_arrow">Arrow</string>
+    <string name="tool_cursor">Cursor</string>
     <string name="tool_white">White</string>
     <string name="tool_black">Black</string>
     <string name="hold_to_end">Hold</string>
@@ -45,4 +58,16 @@
     <string name="blank_black">Screen is black</string>
     <string name="blank_white">Screen is white</string>
     <string name="blank_restore">Tap to show the slide</string>
+
+    <!-- The talk's length, picked under Start; the phone's timer takes it too. -->
+    <string name="duration_none">No time limit</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_shorter">Shorter talk</string>
+    <string name="duration_longer">Longer talk</string>
+    <!-- The talk's clock warning, shown with the vibration ("5:00 left"). -->
+    <string name="time_left">%1$s left</string>
+    <string name="time_up">Time\'s up</string>
+    <!-- The talk's clock on the dimmed screen, to the minute. -->
+    <string name="clock_minutes">%1$d min</string>
+    <string name="clock_minutes_left">%1$d min left</string>
 </resources>
