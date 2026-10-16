@@ -28,3 +28,6 @@ quick_remote_watch/android/app/google-services.json
 # OS
 Thumbs.db
 .DS_Store
+
+# Browser tool output (Playwright MCP)
+.playwright-mcp/
