@@ -46,12 +46,15 @@
     <string name="blank_white">Perde beyaz</string>
     <string name="blank_restore">Dokun: slayta dön</string>
 
+    <string name="duration_title">Sunum süresi</string>
+    <string name="duration_done">Tamam</string>
     <string name="duration_none">Süre yok</string>
     <string name="duration_minutes">%1$d dk</string>
-    <string name="duration_shorter">Süreyi kısalt</string>
-    <string name="duration_longer">Süreyi uzat</string>
     <string name="time_left">%1$s kaldı</string>
     <string name="time_up">Süre doldu</string>
     <string name="clock_minutes">%1$d dk</string>
     <string name="clock_minutes_left">%1$d dk kaldı</string>
+
+    <string name="presenting">Bilgisayara bağlı</string>
+    <string name="presenting_channel">Sunum</string>
 </resources>
