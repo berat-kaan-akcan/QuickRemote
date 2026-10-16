@@ -45,6 +45,13 @@ class QuickRemoteApp extends StatelessWidget {
               context.read<WebSocketService>(),
               context.read<DiscoveryService>(),
               btTarget: () => settings.btTarget,
+              talkDuration: () => settings.talkDuration,
+              setTalkDuration: settings.setTalkDuration,
+              timerAlerts: () => TimerAlerts(
+                warnings: settings.earlyWarningHaptic ? settings.warningVibrations : const {},
+                timeUp: settings.timeOutVibrationEnabled ? settings.timeOutVibrationPattern : null,
+              ),
+              settings: settings,
             );
           },
           dispose: (_, bridge) => bridge.dispose(),

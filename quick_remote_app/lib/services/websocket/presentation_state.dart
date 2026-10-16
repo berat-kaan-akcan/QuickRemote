@@ -8,6 +8,9 @@ class PresentationState {
   /// Linux; 'wps' while WPS runs the show).
   String presenter = 'powerpoint';
 
+  /// The PC's system ('windows' or 'linux'); null from a PC that does not send it.
+  String? platform;
+
   /// Every program the PC controls (older PCs send only [presenter]).
   List<String> presenters = const ['powerpoint'];
 
@@ -31,6 +34,7 @@ class PresentationState {
     final list = authReply['presenters'];
     presenters = list is List && list.isNotEmpty ? list.whereType<String>().toList() : [presenter];
     pcName = cleanName(authReply['name']);
+    platform = authReply['platform'] as String?;
   }
 
   /// Makes the PC's name safe to show, as the PC does with a phone's
