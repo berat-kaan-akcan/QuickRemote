@@ -33,6 +33,13 @@ void main() {
     expect(state.pcName, 'Ofis-PC');
   });
 
+  test('the PC tells its system; an older PC does not', () {
+    final state = PresentationState()..updatePresenters({'presenter': 'powerpoint', 'platform': 'windows'});
+    expect(state.platform, 'windows');
+    state.updatePresenters({'presenter': 'impress'});
+    expect(state.platform, isNull);
+  });
+
   test('the slide state names the program running the show', () {
     final state = PresentationState()
       ..updatePresenters({'presenter': 'powerpoint', 'presenters': ['powerpoint', 'wps']})

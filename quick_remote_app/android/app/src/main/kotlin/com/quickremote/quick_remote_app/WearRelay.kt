@@ -37,6 +37,19 @@ object WearRelay {
     const val KEY_RUNNING = "running"
     const val KEY_CURRENT = "current"
     const val KEY_TOTAL = "total"
+
+    /** What the watch's laser is on the computer: [POINTER_LASER], "arrow" or "cursor". */
+    const val KEY_POINTER = "pointer"
+    const val POINTER_LASER = "laser"
+
+    /** The talk's length picked on either side, in seconds (0: none). */
+    const val KEY_DURATION = "duration"
+
+    /** The talk's clock: its length (0 counts up), whether it runs, its start (ms since the epoch) and, paused, its time. */
+    const val KEY_TIMER_TARGET = "timerTarget"
+    const val KEY_TIMER_RUNNING = "timerRunning"
+    const val KEY_TIMER_START = "timerStart"
+    const val KEY_TIMER_ELAPSED = "timerElapsed"
     const val LINK_CLOSED = "closed"
     const val MODE_WIFI = "wifi"
     const val PATH_HELLO = "/quickremote/hello"
@@ -46,6 +59,12 @@ object WearRelay {
     const val PATH_PONG = "/quickremote/pong"
     const val PATH_MOVED = "/quickremote/moved"
     const val PATH_ERROR = "/quickremote/error"
+
+    /** Watch: the talk's length it picked, in seconds, as UTF-8 text. */
+    const val PATH_DURATION = "/quickremote/duration"
+
+    /** To the watch: a timer warning, "warning:SECONDS:PATTERN" or "timeUp:0:PATTERN" (an empty pattern does not vibrate). */
+    const val PATH_ALERT = "/quickremote/alert"
 
     /** Written with every state, so that an unchanged one still reaches the watch as a change. */
     private const val KEY_STAMP = "stamp"
@@ -75,7 +94,26 @@ object WearRelay {
                         running = call.argument<Boolean>(KEY_RUNNING) ?: false,
                         current = call.argument<Int>(KEY_CURRENT) ?: 0,
                         total = call.argument<Int>(KEY_TOTAL) ?: 0,
+                        pointer = call.argument<String>(KEY_POINTER) ?: POINTER_LASER,
+                        clock = Clock(
+                            duration = call.argument<Number>(KEY_DURATION)?.toInt() ?: 0,
+                            target = call.argument<Number>(KEY_TIMER_TARGET)?.toInt() ?: 0,
+                            running = call.argument<Boolean>(KEY_TIMER_RUNNING) ?: false,
+                            start = call.argument<Number>(KEY_TIMER_START)?.toLong() ?: 0L,
+                            elapsed = call.argument<Number>(KEY_TIMER_ELAPSED)?.toInt() ?: 0,
+                        ),
                     )
+                    result.success(null)
+                }
+                "alert" -> {
+                    val to = watch
+                    val kind = call.argument<String>("kind")
+                    val seconds = call.argument<Number>("seconds")?.toInt() ?: 0
+                    val pattern = call.argument<String>("pattern") ?: ""
+                    if (to != null && kind != null) {
+                        val text = "$kind:$seconds:$pattern"
+                        Wearable.getMessageClient(app).sendMessage(to, PATH_ALERT, text.toByteArray(Charsets.UTF_8))
+                    }
                     result.success(null)
                 }
                 "error" -> {
@@ -131,6 +169,7 @@ object WearRelay {
             when (path) {
                 PATH_HELLO -> dart.invokeMethod("hello", null)
                 PATH_COMMAND -> dart.invokeMethod("command", String(data, Charsets.UTF_8))
+                PATH_DURATION -> String(data, Charsets.UTF_8).toIntOrNull()?.let { dart.invokeMethod("duration", it) }
                 PATH_MOVE -> if (data.size == 8) {
                     val bytes = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
                     dart.invokeMethod("move", listOf(bytes.float.toDouble(), bytes.float.toDouble()))
@@ -144,7 +183,7 @@ object WearRelay {
         main.post { channel?.invokeMethod("move", listOf(dx, dy)) }
     }
 
-    private fun putClosed(context: Context) = putState(context, LINK_CLOSED, MODE_WIFI, "", false, 0, 0)
+    private fun putClosed(context: Context) = putState(context, LINK_CLOSED, MODE_WIFI, "", false, 0, 0, POINTER_LASER, Clock())
 
     private fun putState(
         context: Context,
@@ -154,6 +193,8 @@ object WearRelay {
         running: Boolean,
         current: Int,
         total: Int,
+        pointer: String,
+        clock: Clock,
     ) {
         val request = PutDataMapRequest.create(PATH_STATE).apply {
             dataMap.putString(KEY_LINK, link)
@@ -162,6 +203,12 @@ object WearRelay {
             dataMap.putBoolean(KEY_RUNNING, running)
             dataMap.putInt(KEY_CURRENT, current)
             dataMap.putInt(KEY_TOTAL, total)
+            dataMap.putString(KEY_POINTER, pointer)
+            dataMap.putInt(KEY_DURATION, clock.duration)
+            dataMap.putInt(KEY_TIMER_TARGET, clock.target)
+            dataMap.putBoolean(KEY_TIMER_RUNNING, clock.running)
+            dataMap.putLong(KEY_TIMER_START, clock.start)
+            dataMap.putInt(KEY_TIMER_ELAPSED, clock.elapsed)
             dataMap.putLong(KEY_STAMP, System.currentTimeMillis())
         }
         // Urgent: the slide number on the watch follows at once, not with
@@ -170,6 +217,15 @@ object WearRelay {
             .addOnFailureListener { Log.w(TAG, "State not written: ${it.message}") }
     }
 }
+
+/** The talk's length and clock, as the state carries them (WearBridge._clockState). */
+private data class Clock(
+    val duration: Int = 0,
+    val target: Int = 0,
+    val running: Boolean = false,
+    val start: Long = 0L,
+    val elapsed: Int = 0,
+)
 
 /**
  * Receives the watch's messages. Declared in the manifest, so the system

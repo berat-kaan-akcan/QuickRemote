@@ -20,6 +20,10 @@ class SettingsProvider extends ChangeNotifier {
   // Start the presentation timer as soon as a duration is picked
   bool _timerAutoStart = false;
 
+  // The talk's length in seconds, 0 for none: picked on the phone's timer or
+  // on the watch, and shared by both
+  int _talkDuration = 0;
+
   // Presentation program targeted in Bluetooth HID mode
   BtTarget _btTarget = BtTarget.powerpoint;
 
@@ -44,6 +48,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get timeOutVibrationEnabled => _timeOutVibrationEnabled;
   String get timeOutVibrationPattern => _timeOutVibrationPattern;
   bool get timerAutoStart => _timerAutoStart;
+  int get talkDuration => _talkDuration;
   BtTarget get btTarget => _btTarget;
   bool get keepInkOnSlideChange => _keepInkOnSlideChange;
   AppLanguage get language => _language;
@@ -60,6 +65,7 @@ class SettingsProvider extends ChangeNotifier {
     _timeOutVibrationEnabled = prefs.getBool('timeout_vibration_enabled') ?? true;
     _timeOutVibrationPattern = prefs.getString('timeout_vibration_pattern') ?? 'triple';
     _timerAutoStart = prefs.getBool('timer_auto_start') ?? false;
+    _talkDuration = prefs.getInt('talk_duration') ?? 0;
     _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
     _keepInkOnSlideChange = prefs.getBool('keep_ink_on_slide_change') ?? false;
     _language = AppLanguage.fromCode(prefs.getString('language'));
@@ -157,6 +163,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('timer_auto_start', value);
+  }
+
+  Future<void> setTalkDuration(int seconds) async {
+    if (seconds < 0 || seconds == _talkDuration) return;
+    _talkDuration = seconds;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('talk_duration', seconds);
   }
 
   Future<void> setBtTarget(BtTarget target) async {
