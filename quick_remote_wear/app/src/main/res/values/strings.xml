@@ -59,15 +59,19 @@
     <string name="blank_white">Screen is white</string>
     <string name="blank_restore">Tap to show the slide</string>
 
-    <!-- The talk's length, picked under Start; the phone's timer takes it too. -->
+    <!-- The talk's length, picked by the minute from Start; the phone's timer takes it too. -->
+    <string name="duration_title">Talk length</string>
+    <string name="duration_done">Done</string>
     <string name="duration_none">No time limit</string>
     <string name="duration_minutes">%1$d min</string>
-    <string name="duration_shorter">Shorter talk</string>
-    <string name="duration_longer">Longer talk</string>
     <!-- The talk's clock warning, shown with the vibration ("5:00 left"). -->
     <string name="time_left">%1$s left</string>
     <string name="time_up">Time\'s up</string>
     <!-- The talk's clock on the dimmed screen, to the minute. -->
     <string name="clock_minutes">%1$d min</string>
     <string name="clock_minutes_left">%1$d min left</string>
+
+    <!-- The Ongoing Activity while the phone is connected (on the watch face and in notifications). -->
+    <string name="presenting">Connected to the computer</string>
+    <string name="presenting_channel">Presentation</string>
 </resources>

@@ -110,6 +110,8 @@ dependencies {
     // phone app from the watch.
     implementation("com.google.android.gms:play-services-wearable:20.0.1")
     implementation("androidx.wear:wear-remote-interactions:1.2.0")
+    // The remote as an Ongoing Activity while a show runs (PresentingService).
+    implementation("androidx.wear:wear-ongoing:1.1.0")
 
     testImplementation("junit:junit:4.13.2")
 }

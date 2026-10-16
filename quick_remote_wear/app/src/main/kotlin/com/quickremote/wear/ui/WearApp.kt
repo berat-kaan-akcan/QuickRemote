@@ -1,6 +1,7 @@
 package com.quickremote.wear.ui
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,13 +13,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.TimeText
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.quickremote.wear.PresentingService
 import com.quickremote.wear.R
 import com.quickremote.wear.phone.LinkEvent
 import com.quickremote.wear.phone.PhoneLink
@@ -29,6 +33,7 @@ import kotlinx.coroutines.delay
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_LASER = "laser"
+private const val ROUTE_DURATION = "duration"
 
 @Composable
 fun WearApp(phone: PhoneLink, ambient: Boolean) {
@@ -36,20 +41,41 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
     val connected = state as? PhoneState.Connected
     val haptics = rememberHaptics()
 
-    // The laser's own Bluetooth socket to the phone needs the "nearby
-    // devices" permission: asked for as soon as the app opens (once per
-    // start), so that it is there by the time the laser is. Refused, the
-    // laser works as before.
+    // Asked for as soon as the app opens (once per start), so that they are
+    // there when needed. The laser's own Bluetooth socket to the phone needs
+    // the "nearby devices" permission (Android 11 grants it with the app);
+    // refused, the laser works as before. The Ongoing Activity of a running
+    // show (PresentingService) is a notification (asked from Android 13).
+    val context = LocalContext.current
     var bluetoothAllowed by remember { mutableStateOf(phone.directPermitted) }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        bluetoothAllowed = granted
+    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            it[Manifest.permission.BLUETOOTH_CONNECT]?.let { granted -> bluetoothAllowed = granted }
+        }
     }
     LaunchedEffect(Unit) {
-        // Android 11 grants Bluetooth with the app (BLUETOOTH); 12 asks.
-        if (!bluetoothAllowed && !askedForBluetooth && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            askedForBluetooth = true
-            permission.launch(Manifest.permission.BLUETOOTH_CONNECT)
+        if (askedForPermissions) return@LaunchedEffect
+        askedForPermissions = true
+        val wanted = buildList {
+            if (!bluetoothAllowed && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                add(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
+        if (wanted.isNotEmpty()) permissions.launch(wanted.toTypedArray())
+    }
+
+    // While the phone is connected to a computer the remote is an Ongoing
+    // Activity, which the watch shows again when the screen wakes; the
+    // service ends itself after the connection.
+    val active = PresentingService.active(state)
+    LaunchedEffect(active) {
+        if (active) PresentingService.start(context)
     }
 
     // Outlives the connected screen: a dropped and restored connection comes
@@ -88,6 +114,10 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
             null -> Unit
         }
     }
+    // The length just picked here, shown until the phone's answer.
+    var picked by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(connected?.duration) { picked = null }
+
     var lastClock by remember { mutableStateOf<TalkClock?>(null) }
     LaunchedEffect(connected?.clock) { connected?.clock?.let { lastClock = it } }
     val clock = lastClock ?: startedAt?.let { TalkClock(target = 0, running = true, startedAt = it, elapsed = 0) }
@@ -132,8 +162,8 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
                     is PhoneState.Connected -> ConnectedScreen(
                         show = current.show,
                         clock = clock,
-                        duration = current.duration,
-                        onDuration = phone::setDuration,
+                        duration = picked ?: current.duration,
+                        onEditDuration = { nav.navigate(ROUTE_DURATION) },
                         onAction = { phone.send(it.command) },
                         onLaser = { nav.navigate(ROUTE_LASER) },
                         laser = heldLaser,
@@ -146,6 +176,17 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
                         onOpenPhone = phone::openOnPhone,
                         onRetry = phone::refresh,
                     )
+                }
+            }
+            composable(ROUTE_DURATION) {
+                DurationScreen(seconds = picked ?: connected?.duration ?: 0) { seconds ->
+                    if (phone.setDuration(seconds)) {
+                        picked = seconds
+                        haptics.sent()
+                    } else {
+                        haptics.failed()
+                    }
+                    nav.popBackStack()
                 }
             }
             composable(ROUTE_LASER) {
@@ -176,8 +217,8 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
 /** A new object for every message, so that the same text again starts its time anew. */
 class Notice(val text: String)
 
-/** The Bluetooth permission is asked for once per start of the app. */
-private var askedForBluetooth = false
+/** The permissions are asked for once per start of the app. */
+private var askedForPermissions = false
 
 private const val NOTICE_MS = 4_000L
 
