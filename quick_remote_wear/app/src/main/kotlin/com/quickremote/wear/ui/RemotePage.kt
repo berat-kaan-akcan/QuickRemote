@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -48,7 +50,9 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.quickremote.wear.R
+import com.quickremote.wear.phone.Pointer
 import com.quickremote.wear.phone.Show
+import com.quickremote.wear.phone.TalkClock
 import com.quickremote.wear.remote.RemoteAction
 import com.quickremote.wear.ui.theme.LocalWearPalette
 import kotlin.math.min
@@ -63,25 +67,37 @@ class HeldLaser(
 /**
  * The slide buttons. The lower half of the round screen is one large Next
  * button, found without looking; previous and the laser screen are small
- * discs above it, beside the slide number and the time the show has run
- * ([startedAt], an elapsedRealtime). A ring along the upper edge shows how far
+ * discs above it, beside the slide number and the talk's clock ([clock]:
+ * the time left, or run). A ring along the upper edge shows how far
  * the show is. Held instead of tapped, Next turns into the laser: it follows
- * the finger, anywhere on the screen, until it lifts ([laser]).
+ * the finger, anywhere on the screen, until it lifts ([laser]). Until that
+ * has been done once, Next says so.
+ *
+ * [pointer] names what the laser is on the computer. While it would ignore
+ * the laser ([canPoint] false: no slideshow runs), the laser disc is faded,
+ * and it and the held Next call [onUnavailable] instead.
  */
 @Composable
 fun RemotePage(
     show: Show?,
-    startedAt: Long?,
+    clock: TalkClock?,
     onPress: (RemoteAction) -> Unit,
     onLaser: () -> Unit,
     laser: HeldLaser,
+    pointer: Pointer,
+    canPoint: Boolean,
+    onUnavailable: () -> Unit,
 ) {
     val palette = LocalWearPalette.current
     val haptics = rememberHaptics()
+    val context = LocalContext.current
     val press by rememberUpdatedState(onPress)
     val held by rememberUpdatedState(laser)
+    val pointing by rememberUpdatedState(canPoint)
+    val unavailable by rememberUpdatedState(onUnavailable)
     var pressed by remember { mutableStateOf(false) }
-    var pointer by remember { mutableStateOf<Offset?>(null) }
+    var finger by remember { mutableStateOf<Offset?>(null) }
+    var holdTip by remember { mutableStateOf(!Tips.seen(context, Tips.HELD_LASER)) }
     val nextLabel = stringResource(R.string.action_next)
 
     ScreenScaffold {
@@ -124,10 +140,17 @@ fun RemotePage(
                             when (outcome) {
                                 Touch.TAP -> press(RemoteAction.NEXT)
                                 Touch.CANCEL -> Unit
-                                Touch.HOLD -> {
+                                Touch.HOLD -> if (!pointing) {
+                                    haptics.failed()
+                                    unavailable()
+                                } else {
                                     val on = held.onDown()
                                     if (on) haptics.sent() else haptics.failed()
-                                    if (on) pointer = first.position
+                                    if (on) finger = first.position
+                                    if (on && holdTip) {
+                                        holdTip = false
+                                        Tips.markSeen(context, Tips.HELD_LASER)
+                                    }
                                     try {
                                         while (true) {
                                             val change = awaitPointerEvent().changes
@@ -137,13 +160,13 @@ fun RemotePage(
                                             change.consume()
                                             if (!change.pressed) break
                                             if (on) {
-                                                pointer = change.position
+                                                finger = change.position
                                                 held.onMove(delta.x / density * LASER_GAIN, delta.y / density * LASER_GAIN)
                                             }
                                         }
                                     } finally {
                                         if (on) held.onUp()
-                                        pointer = null
+                                        finger = null
                                     }
                                 }
                             }
@@ -152,6 +175,7 @@ fun RemotePage(
             ) {
                 NextButton(
                     pressed = pressed,
+                    hint = if (holdTip && canPoint) stringResource(pointer.holdHint) else null,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
@@ -179,7 +203,9 @@ fun RemotePage(
                 }
                 LaserButton(
                     diameter = screen * SMALL,
-                    onClick = onLaser,
+                    pointer = pointer,
+                    enabled = canPoint,
+                    onClick = if (canPoint) onLaser else onUnavailable,
                     modifier = Modifier.offset(x = screen * (0.93f - SMALL), y = screen * SMALL_TOP),
                 )
                 Column(
@@ -190,10 +216,10 @@ fun RemotePage(
                         .offset(y = screen * 0.19f),
                 ) {
                     SlideNumber(show, screen)
-                    ShowClock(startedAt)
+                    ShowClock(clock)
                 }
                 ProgressRing(show, Modifier.fillMaxSize())
-                pointer?.let { LaserPointer(it) }
+                finger?.let { LaserPointer(it) }
             }
         }
     }
@@ -201,9 +227,9 @@ fun RemotePage(
 
 private enum class Touch { TAP, CANCEL, HOLD }
 
-/** The lower part of the round screen, its top edge a flat dome. */
+/** The lower part of the round screen, its top edge a flat dome; [hint] under its word. */
 @Composable
-private fun NextButton(pressed: Boolean, screen: Dp, modifier: Modifier) {
+private fun NextButton(pressed: Boolean, hint: String?, screen: Dp, modifier: Modifier) {
     val palette = LocalWearPalette.current
     Box(
         modifier = modifier
@@ -228,6 +254,15 @@ private fun NextButton(pressed: Boolean, screen: Dp, modifier: Modifier) {
                 color = palette.onAccent.copy(alpha = 0.85f),
                 maxLines = 1,
             )
+            if (hint != null) {
+                Text(
+                    hint,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.onAccent.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    modifier = Modifier.padding(top = screen * 0.015f),
+                )
+            }
         }
     }
 }

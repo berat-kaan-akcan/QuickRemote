@@ -16,25 +16,28 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 // the time and the round bottom (the list's own padding is small on purpose).
 
 @Composable
-fun TransformingLazyColumnItemScope.headerItem(spec: TransformationSpec): Modifier =
-    Modifier
-        .transformedHeight(this, spec)
+fun Modifier.headerItem(scope: TransformingLazyColumnItemScope, spec: TransformationSpec): Modifier = with(scope) {
+    this@headerItem
+        .transformedHeight(scope, spec)
         .minimumVerticalContentPadding(
             ListHeaderDefaults.minimumTopListContentPadding,
             ListHeaderDefaults.minimumBottomListContentPadding,
         )
+}
 
 @Composable
-fun TransformingLazyColumnItemScope.buttonItem(spec: TransformationSpec): Modifier =
-    Modifier
+fun Modifier.buttonItem(scope: TransformingLazyColumnItemScope, spec: TransformationSpec): Modifier = with(scope) {
+    this@buttonItem
         .fillMaxWidth()
-        .transformedHeight(this, spec)
+        .transformedHeight(scope, spec)
         .minimumVerticalContentPadding(ButtonDefaults.minimumVerticalListContentPadding)
+}
 
 @Composable
-fun TransformingLazyColumnItemScope.textItem(spec: TransformationSpec): Modifier =
-    Modifier
+fun Modifier.textItem(scope: TransformingLazyColumnItemScope, spec: TransformationSpec): Modifier = with(scope) {
+    this@textItem
         .fillMaxWidth()
         .padding(horizontal = 8.dp)
-        .transformedHeight(this, spec)
+        .transformedHeight(scope, spec)
         .minimumVerticalContentPadding(ButtonDefaults.minimumVerticalListContentPadding)
+}

@@ -168,6 +168,18 @@ class PhoneLink(context: Context) :
                     total = map.getInt(WearProtocol.KEY_TOTAL, 0),
                 )
             },
+            pointer = Pointer.of(map.getString(WearProtocol.KEY_POINTER)),
+            duration = if (map.containsKey(WearProtocol.KEY_DURATION)) map.getInt(WearProtocol.KEY_DURATION) else null,
+            clock = if (map.containsKey(WearProtocol.KEY_TIMER_TARGET)) {
+                TalkClock(
+                    target = map.getInt(WearProtocol.KEY_TIMER_TARGET),
+                    running = map.getBoolean(WearProtocol.KEY_TIMER_RUNNING),
+                    startedAt = map.getLong(WearProtocol.KEY_TIMER_START),
+                    elapsed = map.getInt(WearProtocol.KEY_TIMER_ELAPSED),
+                )
+            } else {
+                null
+            },
         )
     }
 
@@ -178,6 +190,8 @@ class PhoneLink(context: Context) :
     override fun onMessageReceived(event: MessageEvent) {
         when (event.path) {
             WearProtocol.PATH_ERROR -> _events.tryEmit(LinkEvent.PcError(String(event.data, Charsets.UTF_8)))
+            WearProtocol.PATH_ALERT ->
+                TimerAlert.parse(String(event.data, Charsets.UTF_8))?.let { _events.tryEmit(LinkEvent.Timer(it)) }
             WearProtocol.PATH_PONG -> onPong(event.data)
             WearProtocol.PATH_MOVED -> onMoved()
         }
@@ -192,6 +206,18 @@ class PhoneLink(context: Context) :
                 Log.w(TAG, "$command not sent: ${it.message}")
                 _events.tryEmit(LinkEvent.NotSent)
                 refresh()
+            }
+        return true
+    }
+
+    /** The talk's length picked here, in seconds (0: none): the phone keeps it and its timer takes it. */
+    fun setDuration(seconds: Int): Boolean {
+        val to = node
+        if (to == null || _state.value !is PhoneState.Connected) return false
+        messages.sendMessage(to, WearProtocol.PATH_DURATION, seconds.toString().toByteArray(Charsets.UTF_8))
+            .addOnFailureListener {
+                Log.w(TAG, "Duration not sent: ${it.message}")
+                _events.tryEmit(LinkEvent.NotSent)
             }
         return true
     }

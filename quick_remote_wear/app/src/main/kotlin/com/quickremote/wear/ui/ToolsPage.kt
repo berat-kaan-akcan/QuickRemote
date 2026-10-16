@@ -23,6 +23,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -44,6 +45,7 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.quickremote.wear.R
+import com.quickremote.wear.phone.Pointer
 import com.quickremote.wear.phone.Show
 import com.quickremote.wear.remote.RemoteAction
 import com.quickremote.wear.ui.theme.LocalWearPalette
@@ -65,26 +67,39 @@ private enum class Tool(val angle: Float) { LASER(-90f), WHITE(0f), END(90f), BL
  * screen), the white and the black screen at the sides, and ending the show
  * at the bottom, which takes a hold of a second (a ring fills, the wrist
  * ticks) so that it is never pressed by accident.
+ *
+ * [pointer] names the laser's quarter. While no slideshow runs the computer
+ * ignores the laser and the black and white screens ([showTools] false):
+ * their quarters are faded and call [onUnavailable] instead.
  */
 @Composable
-fun ToolsPage(show: Show?, onPress: (RemoteAction) -> Unit, onLaser: () -> Unit) {
+fun ToolsPage(
+    show: Show?,
+    onPress: (RemoteAction) -> Unit,
+    onLaser: () -> Unit,
+    pointer: Pointer,
+    showTools: Boolean,
+    onUnavailable: () -> Unit,
+) {
     val palette = LocalWearPalette.current
     val haptics = rememberHaptics()
     val press by rememberUpdatedState(onPress)
     val laser by rememberUpdatedState(onLaser)
+    val usable by rememberUpdatedState(showTools)
+    val unavailable by rememberUpdatedState(onUnavailable)
     val scope = rememberCoroutineScope()
     val ending = remember { Animatable(0f) }
     var pressed by remember { mutableStateOf<Tool?>(null) }
 
     val endLabel = stringResource(R.string.action_end)
     val labels = mapOf(
-        Tool.LASER to stringResource(R.string.action_laser),
+        Tool.LASER to stringResource(pointer.label),
         Tool.WHITE to stringResource(R.string.action_white_screen),
         Tool.BLACK to stringResource(R.string.action_black_screen),
     )
     // The quarters have room for one word.
     val words = mapOf(
-        Tool.LASER to stringResource(R.string.tool_laser),
+        Tool.LASER to stringResource(pointer.word),
         Tool.WHITE to stringResource(R.string.tool_white),
         Tool.BLACK to stringResource(R.string.tool_black),
     )
@@ -97,7 +112,7 @@ fun ToolsPage(show: Show?, onPress: (RemoteAction) -> Unit, onLaser: () -> Unit)
                     .fillMaxSize()
                     .semantics {
                         contentDescription = labels.values.joinToString() + ", " + endLabel
-                        customActions = listOf(
+                        val showOnly = listOf(
                             CustomAccessibilityAction(labels.getValue(Tool.LASER)) { laser(); true },
                             CustomAccessibilityAction(labels.getValue(Tool.WHITE)) {
                                 press(RemoteAction.WHITE_SCREEN); true
@@ -105,8 +120,9 @@ fun ToolsPage(show: Show?, onPress: (RemoteAction) -> Unit, onLaser: () -> Unit)
                             CustomAccessibilityAction(labels.getValue(Tool.BLACK)) {
                                 press(RemoteAction.BLACK_SCREEN); true
                             },
-                            CustomAccessibilityAction(endLabel) { press(RemoteAction.END); true },
                         )
+                        customActions = (if (showTools) showOnly else emptyList()) +
+                            CustomAccessibilityAction(endLabel) { press(RemoteAction.END); true }
                     }
                     .pointerInput(Unit) {
                         awaitEachGesture {
@@ -152,6 +168,10 @@ fun ToolsPage(show: Show?, onPress: (RemoteAction) -> Unit, onLaser: () -> Unit)
                                     scope.launch { ending.snapTo(0f) }
                                 }
                                 !released -> Unit
+                                !usable -> {
+                                    haptics.failed()
+                                    unavailable()
+                                }
                                 tool == Tool.LASER -> laser()
                                 tool == Tool.WHITE -> press(RemoteAction.WHITE_SCREEN)
                                 tool == Tool.BLACK -> press(RemoteAction.BLACK_SCREEN)
@@ -171,6 +191,7 @@ fun ToolsPage(show: Show?, onPress: (RemoteAction) -> Unit, onLaser: () -> Unit)
                     drawArc(
                         fills.getValue(tool), tool.angle - 45f, 90f, true,
                         Offset(c.x - outer, c.y - outer), Size(outer * 2, outer * 2),
+                        alpha = if (showTools || tool == Tool.END) 1f else DISABLED_ALPHA,
                     )
                     if (pressed == tool) {
                         drawArc(
@@ -207,16 +228,17 @@ fun ToolsPage(show: Show?, onPress: (RemoteAction) -> Unit, onLaser: () -> Unit)
             }
 
             val mid = screen * LABEL_RADIUS
-            ToolLabel(Tool.LASER, mid) {
+            val faded = !showTools
+            ToolLabel(Tool.LASER, mid, faded) {
                 Canvas(Modifier.size(screen * 0.11f)) {
                     drawLaserDot(center, size.minDimension / 2, palette.laser)
                 }
                 Text(words.getValue(Tool.LASER), style = MaterialTheme.typography.labelSmall, color = palette.laser)
             }
-            ToolLabel(Tool.WHITE, mid) {
+            ToolLabel(Tool.WHITE, mid, faded) {
                 Text(words.getValue(Tool.WHITE), style = toolText(), color = WearColors.inkText, textAlign = TextAlign.Center)
             }
-            ToolLabel(Tool.BLACK, mid) {
+            ToolLabel(Tool.BLACK, mid, faded) {
                 Text(words.getValue(Tool.BLACK), style = toolText(), color = WearColors.paperText, textAlign = TextAlign.Center)
             }
             ToolLabel(Tool.END, mid) {
@@ -257,6 +279,7 @@ private fun toolText() = MaterialTheme.typography.labelMedium
 private fun androidx.compose.foundation.layout.BoxScope.ToolLabel(
     tool: Tool,
     radius: Dp,
+    faded: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val r = Math.toRadians(tool.angle.toDouble())
@@ -264,7 +287,8 @@ private fun androidx.compose.foundation.layout.BoxScope.ToolLabel(
     Column(
         modifier = Modifier
             .align(Alignment.Center)
-            .offset(at.x, at.y),
+            .offset(at.x, at.y)
+            .alpha(if (faded) DISABLED_ALPHA else 1f),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) { content() }

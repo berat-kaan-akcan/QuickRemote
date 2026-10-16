@@ -1,5 +1,6 @@
 package com.quickremote.wear
 
+import com.quickremote.wear.phone.AlertService
 import com.quickremote.wear.phone.WearProtocol
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -28,6 +29,15 @@ class WearProtocolTest {
             "KEY_RUNNING" to WearProtocol.KEY_RUNNING,
             "KEY_CURRENT" to WearProtocol.KEY_CURRENT,
             "KEY_TOTAL" to WearProtocol.KEY_TOTAL,
+            "KEY_POINTER" to WearProtocol.KEY_POINTER,
+            "POINTER_LASER" to WearProtocol.POINTER_LASER,
+            "KEY_DURATION" to WearProtocol.KEY_DURATION,
+            "KEY_TIMER_TARGET" to WearProtocol.KEY_TIMER_TARGET,
+            "KEY_TIMER_RUNNING" to WearProtocol.KEY_TIMER_RUNNING,
+            "KEY_TIMER_START" to WearProtocol.KEY_TIMER_START,
+            "KEY_TIMER_ELAPSED" to WearProtocol.KEY_TIMER_ELAPSED,
+            "PATH_DURATION" to WearProtocol.PATH_DURATION,
+            "PATH_ALERT" to WearProtocol.PATH_ALERT,
             "LINK_CLOSED" to WearProtocol.LINK_CLOSED,
             "PATH_HELLO" to WearProtocol.PATH_HELLO,
             "PATH_COMMAND" to WearProtocol.PATH_COMMAND,
@@ -62,7 +72,18 @@ class WearProtocolTest {
             WearProtocol.KEY_RUNNING,
             WearProtocol.KEY_CURRENT,
             WearProtocol.KEY_TOTAL,
+            WearProtocol.KEY_POINTER,
+            WearProtocol.KEY_DURATION,
+            WearProtocol.KEY_TIMER_TARGET,
+            WearProtocol.KEY_TIMER_RUNNING,
+            WearProtocol.KEY_TIMER_START,
+            WearProtocol.KEY_TIMER_ELAPSED,
         ).forEach { assertTrue("wear_bridge.dart writes no '$it'", "'$it': " in bridge) }
+        listOf(
+            WearProtocol.POINTER_LASER,
+            WearProtocol.POINTER_ARROW,
+            WearProtocol.POINTER_CURSOR,
+        ).forEach { assertTrue("wear_bridge.dart has no pointer '$it'", "'$it'" in bridge) }
         listOf(
             WearProtocol.LINK_CONNECTED,
             WearProtocol.LINK_CONNECTING,
@@ -95,5 +116,23 @@ class WearProtocolTest {
     fun `the phone app opens for the watch's link`() {
         val (scheme, host) = WearProtocol.OPEN_URI.split("://")
         assertTrue("""<data android:scheme="$scheme" android:host="$host"/>""" in manifest)
+    }
+
+    @Test
+    fun `the timer's vibrations are the phone's patterns`() {
+        val timer = phone.resolve("lib/widgets/presentation_timer.dart").readText()
+        val cases = Regex("""case '(\w+)':\s*(?:case '\w+':\s*)?(?:default:\s*)?Vibration\.vibrate\(pattern: \[([\d, ]+)]""")
+            .findAll(timer).map { it.groupValues[1] to it.groupValues[2] }.toList()
+        assertTrue("no patterns found in presentation_timer.dart", cases.size >= 4)
+        for ((name, pattern) in cases) {
+            val timings = pattern.split(',').map { it.trim().toLong() }
+            assertEquals(name, timings, AlertService.timings(name)!!.toList())
+        }
+    }
+
+    @Test
+    fun `the watch's alerts are the words the phone's relay sends`() {
+        assertTrue("\"\$kind:\$seconds:\$pattern\"" in relay)
+        assertTrue("'timeUp'" in bridge && "'warning'" in bridge)
     }
 }

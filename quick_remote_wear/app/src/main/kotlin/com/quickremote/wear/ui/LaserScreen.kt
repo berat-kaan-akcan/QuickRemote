@@ -17,6 +17,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -32,20 +33,30 @@ import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.OutlinedIconButton
 import com.quickremote.wear.R
+import com.quickremote.wear.phone.Pointer
 import com.quickremote.wear.remote.RemoteAction
 import com.quickremote.wear.ui.theme.LocalWearPalette
 import kotlin.math.min
 
-/** The small laser disc beside the slide number: opens the laser screen. */
+/**
+ * The small laser disc beside the slide number: opens the laser screen.
+ * Faded while the computer would ignore it ([enabled]).
+ */
 @Composable
-fun LaserButton(diameter: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun LaserButton(
+    diameter: Dp,
+    pointer: Pointer,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     val palette = LocalWearPalette.current
     RoundButton(
         onClick = onClick,
         fill = SolidColor(palette.raised),
         diameter = diameter,
-        label = stringResource(R.string.action_laser),
-        modifier = modifier,
+        label = stringResource(pointer.label),
+        modifier = modifier.alpha(if (enabled) 1f else DISABLED_ALPHA),
     ) {
         Canvas(Modifier.fillMaxSize()) { drawLaserDot(center, size.minDimension * 0.36f, palette.laser) }
     }
@@ -62,6 +73,7 @@ fun LaserButton(diameter: Dp, onClick: () -> Unit, modifier: Modifier = Modifier
  */
 @Composable
 fun LaserScreen(
+    pointer: Pointer,
     onDown: () -> Boolean,
     onMove: (Float, Float) -> Unit,
     onUp: () -> Unit,
@@ -72,14 +84,15 @@ fun LaserScreen(
     val down by rememberUpdatedState(onDown)
     val move by rememberUpdatedState(onMove)
     val up by rememberUpdatedState(onUp)
-    val bezel = rememberSlideBezel { if (onAction(it)) haptics.step() else haptics.failed() }
     var finger by remember { mutableStateOf<Offset?>(null) }
     val background = MaterialTheme.colorScheme.background
     val hint = MaterialTheme.colorScheme.surfaceContainerHigh
     val laserColor = LocalWearPalette.current.laser
-    val label = stringResource(R.string.laser_hint)
+    val label = stringResource(pointer.hint)
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize().then(bezel)) {
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize().slideBezel { if (onAction(it)) haptics.step() else haptics.failed() },
+    ) {
         val screen = min(maxWidth.value, maxHeight.value).dp
         Canvas(
             modifier = Modifier

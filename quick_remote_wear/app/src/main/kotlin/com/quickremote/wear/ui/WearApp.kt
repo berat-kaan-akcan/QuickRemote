@@ -1,7 +1,7 @@
 package com.quickremote.wear.ui
 
 import android.Manifest
-import android.os.SystemClock
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -12,15 +12,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalResources
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.TimeText
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.quickremote.wear.R
 import com.quickremote.wear.phone.LinkEvent
 import com.quickremote.wear.phone.PhoneLink
 import com.quickremote.wear.phone.PhoneState
+import com.quickremote.wear.phone.TalkClock
+import com.quickremote.wear.phone.Pointer
 import kotlinx.coroutines.delay
 
 private const val ROUTE_HOME = "home"
@@ -41,7 +45,8 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
         bluetoothAllowed = granted
     }
     LaunchedEffect(Unit) {
-        if (!bluetoothAllowed && !askedForBluetooth) {
+        // Android 11 grants Bluetooth with the app (BLUETOOTH); 12 asks.
+        if (!bluetoothAllowed && !askedForBluetooth && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             askedForBluetooth = true
             permission.launch(Manifest.permission.BLUETOOTH_CONNECT)
         }
@@ -71,24 +76,42 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
         )
     }
 
-    // How long the show has run, counted from when the watch saw it start.
-    // Kept through a dropped connection; the Bluetooth keyboard tells no show.
+    // The talk's clock, which the phone keeps. A phone from before that
+    // tells none: then how long the show has run, from when the watch saw
+    // it start. Kept through a dropped connection.
     var startedAt by rememberSaveable { mutableStateOf<Long?>(null) }
     val running = connected?.let { it.show?.running == true }
     LaunchedEffect(running) {
         when (running) {
-            true -> if (startedAt == null) startedAt = SystemClock.elapsedRealtime()
+            true -> if (startedAt == null) startedAt = System.currentTimeMillis()
             false -> startedAt = null
             null -> Unit
         }
     }
+    var lastClock by remember { mutableStateOf<TalkClock?>(null) }
+    LaunchedEffect(connected?.clock) { connected?.clock?.let { lastClock = it } }
+    val clock = lastClock ?: startedAt?.let { TalkClock(target = 0, running = true, startedAt = it, elapsed = 0) }
 
-    // What the computer answered to a command, shown for a moment.
+    // What the computer answered to a command, or the talk's clock's
+    // warning (AlertService vibrates it), shown for a moment.
     var notice by remember { mutableStateOf<Notice?>(null) }
+    val res = LocalResources.current
     LaunchedEffect(phone) {
         phone.events.collect { event ->
-            haptics.failed()
-            if (event is LinkEvent.PcError) notice = Notice(event.text)
+            when (event) {
+                is LinkEvent.PcError -> {
+                    haptics.failed()
+                    notice = Notice(event.text)
+                }
+                LinkEvent.NotSent -> haptics.failed()
+                is LinkEvent.Timer -> notice = Notice(
+                    if (event.alert.timeUp) {
+                        res.getString(R.string.time_up)
+                    } else {
+                        res.getString(R.string.time_left, elapsedText(event.alert.secondsLeft * 1_000L))
+                    },
+                )
+            }
         }
     }
     LaunchedEffect(notice) {
@@ -108,10 +131,13 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
                 when (val current = state) {
                     is PhoneState.Connected -> ConnectedScreen(
                         show = current.show,
-                        startedAt = startedAt,
+                        clock = clock,
+                        duration = current.duration,
+                        onDuration = phone::setDuration,
                         onAction = { phone.send(it.command) },
                         onLaser = { nav.navigate(ROUTE_LASER) },
                         laser = heldLaser,
+                        pointer = current.pointer,
                         page = page,
                         onPageChange = { page = it },
                     )
@@ -132,6 +158,7 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
                     onDispose { laserOpen = false }
                 }
                 LaserScreen(
+                    pointer = connected?.pointer ?: Pointer.LASER,
                     onDown = phone::laserDown,
                     onMove = phone::laserMove,
                     onUp = phone::laserUp,
@@ -142,12 +169,12 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
         }
         notice?.let { NoticeBanner(it.text) }
         // Over the remote, which stays as it is underneath.
-        if (ambient) AmbientScreen(state)
+        if (ambient) AmbientScreen(state, clock.takeIf { connected != null })
     }
 }
 
-/** A new object for every error, so that the same text again starts its time anew. */
-private class Notice(val text: String)
+/** A new object for every message, so that the same text again starts its time anew. */
+class Notice(val text: String)
 
 /** The Bluetooth permission is asked for once per start of the app. */
 private var askedForBluetooth = false

@@ -58,3 +58,6 @@ fun RoundButton(
         content = content,
     )
 }
+
+/** A control the computer would ignore now (no slideshow runs): seen, but faded. */
+const val DISABLED_ALPHA = 0.35f

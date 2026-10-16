@@ -15,15 +15,16 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import com.quickremote.wear.phone.PhoneState
+import com.quickremote.wear.phone.TalkClock
 
 /**
- * The remote while the screen is dimmed: the slide number, or the connection
- * in a few dim words, on black with nothing filled (the always-on display
+ * The remote while the screen is dimmed: the slide number and the talk's
+ * time to the minute, or the connection in a few dim words, on black with nothing filled (the always-on display
  * lights few pixels). A touch wakes the watch, which brings the remote back;
  * it presses nothing here.
  */
 @Composable
-fun AmbientScreen(state: PhoneState) {
+fun AmbientScreen(state: PhoneState, clock: TalkClock?) {
     val connected = state as? PhoneState.Connected
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
@@ -44,6 +45,15 @@ fun AmbientScreen(state: PhoneState) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        ambientClockText(clock)?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
+        }
         if (connected != null && connected.pc.isNotEmpty()) {
             Text(
                 connected.pc,
