@@ -32,6 +32,11 @@ object WearColors {
     val paperTextMuted = Color(0xFF7D84A6)
     val danger = Color(0xFFFF5C77)
 
+    // Starting a show: green in every theme, as on the phone (status colors do not follow the theme).
+    val success = Color(0xFF3DDC97)
+    val successDeep = Color(0xFF1F9E6B)
+    val onSuccess = Color(0xFF05170F)
+
     // The light ("Paper") values, for the watch that stands in for a white screen.
     val paper = Color(0xFFF4F5FA)
     val paperBorder = Color(0xFFC9CEDD)
@@ -67,7 +72,11 @@ data class WearPalette(
     val accentFill: Brush get() = Brush.linearGradient(listOf(accent, accentEnd))
 }
 
-/** The themes a presenter can pick; [COBALT], the brand's, is the default. */
+/**
+ * The themes a presenter can pick; [COBALT], the brand's, is the default.
+ * The same as the phone's themes of the same names (all but its light-only
+ * Sunset: a watch is always dark). The laser and the status colors stay.
+ */
 enum class WearTheme(val palette: WearPalette) {
     COBALT(
         WearPalette(
@@ -101,18 +110,6 @@ enum class WearTheme(val palette: WearPalette) {
             border = Color(0xFF333333), text = Color(0xFFFFFFFF),
             textSecondary = Color(0xFFD0D0D0), muted = Color(0xFFB5B5B5),
             ring = Color(0xFFFFD000), laser = Color(0xFFFF5A36), danger = Color(0xFFFF4D6A),
-        ),
-    ),
-
-    /** The brand's warm accent in front. */
-    LASER(
-        WearPalette(
-            accent = Color(0xFFFF7A4D), accentEnd = Color(0xFFF05A2A), onAccent = WearColors.white,
-            accentText = Color(0xFFFFB08F),
-            raised = Color(0xFF241B15), sunken = Color(0xFF1A1410), surface = Color(0xFF1F1712),
-            border = Color(0xFF3A2B20), text = Color(0xFFFFF3EC),
-            textSecondary = Color(0xFFCDB8AB), muted = Color(0xFFA08B7E),
-            ring = Color(0xFFFFB08F), laser = Color(0xFFFFD24A), danger = WearColors.danger,
         ),
     ),
 

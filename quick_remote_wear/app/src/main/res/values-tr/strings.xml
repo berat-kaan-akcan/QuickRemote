@@ -25,9 +25,19 @@
     <string name="action_laser">Lazer imleci</string>
     <string name="laser_close">Lazeri kapat</string>
     <string name="laser_hint">Lazer: imleci sürükleyerek taşı</string>
+    <string name="action_arrow">Ok imleci</string>
+    <string name="action_cursor">Fare imleci</string>
+    <string name="arrow_hint">Ok: sürükleyerek taşı</string>
+    <string name="cursor_hint">İmleç: sürükleyerek taşı</string>
+    <string name="hold_for_laser">Basılı tut: lazer</string>
+    <string name="hold_for_arrow">Basılı tut: ok</string>
+    <string name="hold_for_cursor">Basılı tut: imleç</string>
+    <string name="needs_show">Yalnız gösteri açıkken</string>
 
     <string name="next_short">İleri</string>
     <string name="tool_laser">Lazer</string>
+    <string name="tool_arrow">Ok</string>
+    <string name="tool_cursor">İmleç</string>
     <string name="tool_white">Beyaz</string>
     <string name="tool_black">Siyah</string>
     <string name="hold_to_end">Basılı tut</string>
@@ -35,4 +45,13 @@
     <string name="blank_black">Perde siyah</string>
     <string name="blank_white">Perde beyaz</string>
     <string name="blank_restore">Dokun: slayta dön</string>
+
+    <string name="duration_none">Süre yok</string>
+    <string name="duration_minutes">%1$d dk</string>
+    <string name="duration_shorter">Süreyi kısalt</string>
+    <string name="duration_longer">Süreyi uzat</string>
+    <string name="time_left">%1$s kaldı</string>
+    <string name="time_up">Süre doldu</string>
+    <string name="clock_minutes">%1$d dk</string>
+    <string name="clock_minutes_left">%1$d dk kaldı</string>
 </resources>

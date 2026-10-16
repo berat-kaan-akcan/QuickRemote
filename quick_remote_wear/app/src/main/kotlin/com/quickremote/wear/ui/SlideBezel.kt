@@ -25,7 +25,7 @@ import com.quickremote.wear.remote.RemoteAction
  * turns each step into [onSlide] with NEXT or PREV.
  */
 @Composable
-fun rememberSlideBezel(onSlide: (RemoteAction) -> Unit): Modifier {
+fun Modifier.slideBezel(onSlide: (RemoteAction) -> Unit): Modifier {
     val context = LocalContext.current
     val slide by rememberUpdatedState(onSlide)
     val stepPx = with(LocalDensity.current) { CROWN_STEP.toPx() }
@@ -44,7 +44,7 @@ fun rememberSlideBezel(onSlide: (RemoteAction) -> Unit): Modifier {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { focus.requestFocus() }
     }
 
-    return Modifier
+    return this
         .onRotaryScrollEvent { event ->
             val step = stepper.onRotate(event.verticalScrollPixels, event.uptimeMillis)
             Log.d(TAG, "rotary ${event.verticalScrollPixels} -> $step")

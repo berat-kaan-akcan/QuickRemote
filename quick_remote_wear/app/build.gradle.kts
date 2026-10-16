@@ -79,6 +79,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    lint {
+        // Gradle and AGP follow the phone app's Flutter toolchain on purpose
+        // (the root build.gradle.kts): they are upgraded with it, not alone.
+        disable += "AndroidGradlePluginVersion"
+    }
 }
 
 kotlin {
@@ -92,9 +98,9 @@ dependencies {
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material:material-icons-core:1.7.8")
-    implementation("androidx.wear.compose:compose-material3:1.7.0")
-    implementation("androidx.wear.compose:compose-foundation:1.7.0")
-    implementation("androidx.wear.compose:compose-navigation:1.7.0")
+    implementation("androidx.wear.compose:compose-material3:1.7.1")
+    implementation("androidx.wear.compose:compose-foundation:1.7.1")
+    implementation("androidx.wear.compose:compose-navigation:1.7.1")
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.core:core-ktx:1.19.1")
