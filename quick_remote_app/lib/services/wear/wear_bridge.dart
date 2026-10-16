@@ -8,6 +8,7 @@ import '../../utils/delta_accumulator.dart';
 import '../bluetooth/bt_hid_service.dart';
 import '../bluetooth/bt_key_mapping.dart';
 import '../discovery_service.dart';
+import '../presentation_timer_controller.dart';
 import '../websocket_service.dart';
 
 /// Lets the watch app (quick_remote_wear) use this phone's connection to the
@@ -23,23 +24,44 @@ import '../websocket_service.dart';
 /// and no errors, and the laser is the program's shortcut and the mouse.
 ///
 /// It stays silent until a watch asks ([_watchSeen]): most phones have none.
+///
+/// The talk's clock is kept here too, for the watch to show and to vibrate
+/// with: the presentation timer of the remote screen while it runs
+/// ([attachTimer]), otherwise one of its own, from when the show started
+/// (over Bluetooth: from the watch's START) to its end. Its length is shared
+/// by the phone's timer and the watch ([talkDuration]); its warnings go to
+/// the watch as alerts, which the watch vibrates also in the background.
 class WearBridge {
   /// [btTarget] is the program the user picked for the Bluetooth remote
-  /// (`SettingsProvider.btTarget`): its shortcuts differ.
+  /// (`SettingsProvider.btTarget`): its shortcuts differ. [talkDuration] and
+  /// [setTalkDuration] keep the talk's length (`SettingsProvider.talkDuration`),
+  /// [timerAlerts] what the timer warns with. [settings] tells when they change.
   WearBridge(
     this._ws,
     this._discovery, {
     BtHidService? bt,
     BtTarget Function()? btTarget,
+    int Function()? talkDuration,
+    void Function(int seconds)? setTalkDuration,
+    TimerAlerts Function()? timerAlerts,
+    Listenable? settings,
     MethodChannel channel = const MethodChannel('com.quickremote.quick_remote_app/wear'),
     DateTime Function() now = DateTime.now,
   })  : _bt = bt ?? BtHidService.instance,
         _btTarget = btTarget ?? (() => BtTarget.powerpoint),
+        _talkDuration = talkDuration ?? (() => 0),
+        _setTalkDuration = setTalkDuration ?? ((_) {}),
+        _timerAlerts = timerAlerts ?? (() => const TimerAlerts()),
+        _settings = settings,
         _channel = channel,
         _now = now {
     _channel.setMethodCallHandler(_onCall);
     _ws.addListener(_onChange);
     _discovery.addListener(_onChange);
+    _settings?.addListener(_onChange);
+    _ownClock = PresentationTimerController(clock: now)
+      ..warningTimes = (() => _timerAlerts().warnings.keys.toList())
+      ..onAlert = _onOwnAlert;
     _btStates = _bt.stateStream.listen((_) => _onChange());
   }
 
@@ -80,6 +102,19 @@ class WearBridge {
   final DiscoveryService _discovery;
   final BtHidService _bt;
   final BtTarget Function() _btTarget;
+  final int Function() _talkDuration;
+  final void Function(int seconds) _setTalkDuration;
+  final TimerAlerts Function() _timerAlerts;
+  final Listenable? _settings;
+
+  /// The remote screen's timer, while that screen is open.
+  PresentationTimerController? _timer;
+  void Function(TimerAlert alert)? _timerOwnAlert;
+  int? _timerTarget;
+
+  /// The talk's clock while the phone's timer does not run.
+  late final PresentationTimerController _ownClock;
+  bool _showWasRunning = false;
   late final StreamSubscription<BtHidConnectionState> _btStates;
   final MethodChannel _channel;
   final DateTime Function() _now;
@@ -113,6 +148,9 @@ class WearBridge {
       case 'command':
         final command = call.arguments;
         if (command is String) _onCommand(command);
+      case 'duration':
+        final seconds = call.arguments;
+        if (seconds is int && seconds >= 0) _onWatchDuration(seconds);
       case 'move':
         final delta = call.arguments;
         if (delta is List && delta.length == 2 && delta[0] is double && delta[1] is double) {
@@ -134,6 +172,11 @@ class WearBridge {
     } else if (command == RemoteCommands.laserOff) {
       _laserOn = false;
       _laserTimer?.cancel();
+    } else if (_overBluetooth && command == RemoteCommands.start) {
+      // A keyboard is told nothing: the show starts when the watch says so.
+      _startOwnClock();
+    } else if (_overBluetooth && command == RemoteCommands.end) {
+      _stopOwnClock();
     }
     _send(command);
   }
@@ -198,6 +241,14 @@ class WearBridge {
       _laserOn = false;
       _laserTimer?.cancel();
     }
+    // Over Wi-Fi the show's start and end start and stop the talk's clock.
+    // A dropped connection keeps it: the show goes on meanwhile.
+    if (_ws.isConnected) {
+      final running = _ws.isPptRunning;
+      if (running && !_showWasRunning) _startOwnClock();
+      if (!running && _showWasRunning) _stopOwnClock();
+      _showWasRunning = running;
+    }
     final error = _ws.lastCommandError;
     if (!identical(error, _lastError)) {
       _lastError = error;
@@ -240,7 +291,121 @@ class WearBridge {
       'running': wifi && _ws.isPptRunning,
       'current': wifi ? _ws.currentSlide : 0,
       'total': wifi ? _ws.totalSlides : 0,
+      'pointer': _pointer(wifi: wifi),
+      'duration': _talkDuration(),
+      ..._clockState(),
     };
+  }
+
+  // ─── The talk's clock ───────────────────────────────────────────────────
+
+  /// The remote screen's timer, which the watch then shows and vibrates
+  /// with while it runs. Until [detachTimer].
+  void attachTimer(PresentationTimerController timer) {
+    detachTimer();
+    _timer = timer;
+    _timerOwnAlert = timer.onAlert;
+    timer.onAlert = (alert) {
+      _timerOwnAlert?.call(alert);
+      _sendAlert(alert);
+    };
+    // A length picked on the watch is the phone timer's too.
+    final length = _talkDuration();
+    if (!timer.isDurationSelected && length > 0) timer.setDuration(length);
+    _timerTarget = timer.isDurationSelected ? timer.targetSeconds : null;
+    timer.addListener(_onTimer);
+    _pushState();
+  }
+
+  void detachTimer() {
+    final timer = _timer;
+    if (timer == null) return;
+    timer.removeListener(_onTimer);
+    timer.onAlert = _timerOwnAlert;
+    _timer = null;
+    _timerOwnAlert = null;
+    _pushState();
+  }
+
+  void _onTimer() {
+    final timer = _timer!;
+    // A length picked on the phone is the watch's too.
+    final target = timer.isDurationSelected ? timer.targetSeconds : null;
+    if (target != _timerTarget) {
+      _timerTarget = target;
+      if (target != null) _setTalkDuration(target);
+    }
+    _pushState();
+  }
+
+  void _onWatchDuration(int seconds) {
+    _watchSeen = true;
+    _setTalkDuration(seconds);
+    final timer = _timer;
+    if (timer != null && !timer.isRunning) {
+      _timerTarget = seconds;
+      timer.setDuration(seconds);
+    }
+    _pushState();
+  }
+
+  /// The phone's timer is the talk's clock while it runs or is paused.
+  bool get _timerInUse {
+    final timer = _timer;
+    return timer != null && timer.isDurationSelected && (timer.isRunning || timer.elapsedSeconds > 0);
+  }
+
+  void _startOwnClock() {
+    if (_ownClock.isRunning) return;
+    _ownClock.setDuration(_talkDuration(), start: true);
+    _pushState();
+  }
+
+  void _stopOwnClock() {
+    _ownClock.reset();
+    _pushState();
+  }
+
+  /// The clock the watch shows: its length (0 counts up), when it started
+  /// (ms since the epoch, while it runs) and, while paused, how far it got.
+  Map<String, Object> _clockState() {
+    final clock = _timerInUse ? _timer! : _ownClock;
+    final started = clock.startTime;
+    return {
+      'timerTarget': clock.targetSeconds,
+      'timerRunning': clock.isRunning,
+      'timerStart': started?.millisecondsSinceEpoch ?? 0,
+      // Only while paused: a running one would write every second.
+      'timerElapsed': clock.isRunning ? 0 : clock.elapsedSeconds,
+    };
+  }
+
+  void _onOwnAlert(TimerAlert alert) {
+    // The phone's timer warns for itself while it is the clock.
+    if (!_timerInUse) _sendAlert(alert);
+  }
+
+  void _sendAlert(TimerAlert alert) {
+    if (!_watchSeen) return;
+    final alerts = _timerAlerts();
+    final pattern = alert.kind == TimerAlertKind.timeUp
+        ? alerts.timeUp
+        : alerts.warnings[alert.remainingSeconds] ?? 'double';
+    _invoke('alert', {
+      'kind': alert.kind == TimerAlertKind.timeUp ? 'timeUp' : 'warning',
+      'seconds': alert.remainingSeconds,
+      // Empty: shown, not vibrated.
+      'pattern': pattern ?? '',
+    });
+  }
+
+  /// What the watch's laser shows on the computer, so that it names it:
+  /// 'laser', or 'arrow' (Windows WPS has no laser, its arrow follows the
+  /// watch), or 'cursor' (Impress has no laser shortcut: over Bluetooth the
+  /// laser is the mouse).
+  String _pointer({required bool wifi}) {
+    if (wifi) return _ws.presenter == 'wps' && _ws.pcPlatform == 'windows' ? 'arrow' : 'laser';
+    return _btTarget() == BtTarget.impress ? 'cursor' : 'laser';
   }
 
   /// The name the PC gave when it accepted the PIN. An older PC gives none:
@@ -265,10 +430,24 @@ class WearBridge {
   }
 
   void dispose() {
+    detachTimer();
+    _ownClock.dispose();
     _laserTimer?.cancel();
     _ws.removeListener(_onChange);
     _discovery.removeListener(_onChange);
+    _settings?.removeListener(_onChange);
     _btStates.cancel();
     _channel.setMethodCallHandler(null);
   }
+}
+
+/// What the presentation timer warns with (the timer settings).
+class TimerAlerts {
+  const TimerAlerts({this.warnings = const {}, this.timeUp});
+
+  /// Seconds left → vibration pattern ('short', 'double', 'long', 'triple').
+  final Map<int, String> warnings;
+
+  /// The pattern when the time is up; null: no vibration.
+  final String? timeUp;
 }

@@ -8,6 +8,7 @@ import '../../l10n/app_language.dart';
 import '../../l10n/failure_text.dart';
 import '../../services/background_session.dart';
 import '../../services/presentation_timer_controller.dart';
+import '../../services/wear/wear_bridge.dart';
 import '../../services/wifi_low_latency.dart';
 import '../../services/websocket_service.dart';
 import '../analytics/analytics_report_screen.dart';
@@ -39,6 +40,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
   final PresentationTimerController _timer = PresentationTimerController();
 
   late WebSocketService _wsRef;
+  late WearBridge _wear;
   late HardwareKeyHandler _hardwareKeyHandler;
   bool _wasConnected = true;
   bool _wsRefReady = false;
@@ -55,6 +57,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _wsRef = context.read<WebSocketService>();
+      // The watch shows this timer and vibrates with it.
+      _wear = context.read<WearBridge>()..attachTimer(_timer);
       _wasConnected = _wsRef.isConnected;
       _wsRef.addListener(_onConnectionChanged);
       
@@ -150,6 +154,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
     if (_wsRefReady) {
       _hardwareKeyHandler.detach();
       _wsRef.removeListener(_onConnectionChanged);
+      _wear.detachTimer();
     }
     _timer.dispose();
     WakelockPlus.disable();

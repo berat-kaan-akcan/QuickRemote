@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_app/services/bluetooth/bt_hid_service.dart';
 import 'package:quick_remote_app/services/bluetooth/bt_key_mapping.dart';
 import 'package:quick_remote_app/services/discovery_service.dart';
+import 'package:quick_remote_app/services/presentation_timer_controller.dart';
 import 'package:quick_remote_app/services/wear/wear_bridge.dart';
 import 'package:quick_remote_app/services/websocket_service.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
@@ -18,6 +20,8 @@ class FakeConnection extends WebSocketService {
   int total = 0;
   Failure? error;
   String? name;
+  String showProgram = 'powerpoint';
+  String? platform;
   final sent = <Object>[];
 
   @override
@@ -28,6 +32,10 @@ class FakeConnection extends WebSocketService {
   String get serverAddress => address;
   @override
   String? get pcName => name;
+  @override
+  String get presenter => showProgram;
+  @override
+  String? get pcPlatform => platform;
   @override
   bool get isPptRunning => running;
   @override
@@ -94,6 +102,9 @@ class FakeKeyboard implements BtHidService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// The talk's clock in the state while none runs.
+const noClock = {'duration': 0, 'timerTarget': 0, 'timerRunning': false, 'timerStart': 0, 'timerElapsed': 0};
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -104,6 +115,9 @@ void main() {
   late FakeDiscovery discovery;
   late FakeKeyboard keyboard;
   late BtTarget program;
+  late ValueNotifier<int> picked;
+  late int length;
+  late TimerAlerts alerts;
   late WearBridge bridge;
   late List<MethodCall> toWatch;
   late DateTime clock;
@@ -131,7 +145,23 @@ void main() {
     clock = DateTime(2026, 10, 13, 9);
     keyboard = FakeKeyboard();
     program = BtTarget.powerpoint;
-    bridge = WearBridge(ws, discovery, bt: keyboard, btTarget: () => program, now: () => clock);
+    picked = ValueNotifier(0);
+    length = 0;
+    alerts = const TimerAlerts(warnings: {300: 'double', 60: 'long'}, timeUp: 'triple');
+    bridge = WearBridge(
+      ws,
+      discovery,
+      bt: keyboard,
+      btTarget: () => program,
+      talkDuration: () => length,
+      setTalkDuration: (seconds) {
+        length = seconds;
+        picked.value++;
+      },
+      timerAlerts: () => alerts,
+      settings: picked,
+      now: () => clock,
+    );
     WearBridge.failureText = (failure) => 'text for ${(failure as RemoteFailure).error?.code}';
   });
 
@@ -146,7 +176,7 @@ void main() {
 
     await fromWatch('hello');
     expect(states(), [
-      {'link': 'connected', 'mode': 'wifi', 'pc': '192.168.1.20', 'running': false, 'current': 0, 'total': 0},
+      {'link': 'connected', 'mode': 'wifi', 'pc': '192.168.1.20', 'running': false, 'current': 0, 'total': 0, 'pointer': 'laser', ...noClock},
     ]);
   });
 
@@ -171,6 +201,13 @@ void main() {
       'running': true,
       'current': 5,
       'total': 20,
+      'pointer': 'laser',
+      // The show started: the talk's clock counts up from now.
+      'duration': 0,
+      'timerTarget': 0,
+      'timerRunning': true,
+      'timerStart': clock.millisecondsSinceEpoch,
+      'timerElapsed': 0,
     });
   });
 
@@ -206,6 +243,20 @@ void main() {
       ..connect192();
     await fromWatch('hello');
     expect(states().last['pc'], 'berat-cachyos');
+  });
+
+  test('the watch is told when the laser is Windows WPS\'s arrow', () async {
+    await fromWatch('hello');
+    ws
+      ..platform = 'windows'
+      ..showProgram = 'wps'
+      ..connect192();
+    expect(states().last['pointer'], 'arrow');
+
+    ws
+      ..platform = 'linux'
+      ..change();
+    expect(states().last['pointer'], 'laser');
   });
 
   test('a watch command is sent as the phone would send it', () async {
@@ -281,6 +332,8 @@ void main() {
         'running': false,
         'current': 0,
         'total': 0,
+        'pointer': 'laser',
+        ...noClock,
       });
 
       keyboard.set(BtHidConnectionState.disconnected);
@@ -340,6 +393,17 @@ void main() {
       expect(keyboard.sent, [(ctrl, BtKeyMapping.keyA), (ctrl, BtKeyMapping.keyR)]);
     });
 
+    test('the watch is told that the laser is the cursor in Impress', () async {
+      program = BtTarget.impress;
+      await fromWatch('hello');
+      keyboard.set(BtHidConnectionState.connected, computer: 'PC');
+      expect(states().last['pointer'], 'cursor');
+
+      program = BtTarget.powerpoint;
+      picked.value++;
+      expect(states().last['pointer'], 'laser');
+    });
+
     test('Wi-Fi comes first when both are connected', () async {
       keyboard.set(BtHidConnectionState.connected, computer: 'PC');
       ws.connect192();
@@ -384,5 +448,84 @@ void main() {
       ..error = const ConnectionFailure(ConnectionError.closed)
       ..change();
     expect(toWatch.where((call) => call.method == 'error'), isEmpty);
+  });
+
+  group('the talk\'s clock', () {
+    List<Map<Object?, Object?>> alertsSent() =>
+        [for (final call in toWatch) if (call.method == 'alert') call.arguments as Map<Object?, Object?>];
+
+    test('runs from the show\'s start for the length picked on the watch, and stops at its end', () async {
+      await fromWatch('hello');
+      await fromWatch('duration', 1200);
+      expect(length, 1200);
+      expect(states().last['duration'], 1200);
+
+      ws
+        ..connect192()
+        ..running = true
+        ..change();
+      expect(states().last, containsPair('timerTarget', 1200));
+      expect(states().last, containsPair('timerRunning', true));
+      expect(states().last, containsPair('timerStart', clock.millisecondsSinceEpoch));
+
+      ws
+        ..running = false
+        ..change();
+      expect(states().last, containsPair('timerRunning', false));
+    });
+
+    test('over Bluetooth it runs from the watch\'s start to its end', () async {
+      keyboard.set(BtHidConnectionState.connected, computer: 'PC');
+      await fromWatch('hello');
+      await fromWatch('command', RemoteCommands.start);
+      expect(states().last, containsPair('timerRunning', true));
+      await fromWatch('command', RemoteCommands.end);
+      expect(states().last, containsPair('timerRunning', false));
+    });
+
+    test('the phone\'s timer is the clock while it runs, and the length is shared', () async {
+      await fromWatch('hello');
+      // As the remote screen sets it up from the settings (bindTimerToSettings).
+      final timer = PresentationTimerController(clock: () => clock)..warningTimes = (() => [300, 60]);
+      addTearDown(timer.dispose);
+      length = 900;
+      bridge.attachTimer(timer);
+      // The watch's length is the phone timer's.
+      expect(timer.targetSeconds, 900);
+
+      // A length picked on the phone is the watch's.
+      timer.setDuration(600);
+      expect(length, 600);
+      expect(states().last['duration'], 600);
+
+      timer.start();
+      expect(states().last, containsPair('timerTarget', 600));
+      expect(states().last, containsPair('timerStart', clock.millisecondsSinceEpoch));
+
+      // Its warnings go to the watch with the settings' pattern.
+      clock = clock.add(const Duration(seconds: 301));
+      timer.tick();
+      expect(alertsSent(), [
+        {'kind': 'warning', 'seconds': 300, 'pattern': 'double'},
+      ]);
+      clock = clock.add(const Duration(seconds: 300));
+      timer.tick();
+      expect(alertsSent().last, {'kind': 'timeUp', 'seconds': 0, 'pattern': 'triple'});
+
+      bridge.detachTimer();
+      expect(states().last, containsPair('timerRunning', false));
+    });
+
+    test('a time-up without vibration is still told', () async {
+      await fromWatch('hello');
+      alerts = const TimerAlerts();
+      final timer = PresentationTimerController(clock: () => clock);
+      addTearDown(timer.dispose);
+      bridge.attachTimer(timer);
+      timer.setDuration(60, start: true);
+      clock = clock.add(const Duration(seconds: 61));
+      timer.tick();
+      expect(alertsSent().single, {'kind': 'timeUp', 'seconds': 0, 'pattern': ''});
+    });
   });
 }

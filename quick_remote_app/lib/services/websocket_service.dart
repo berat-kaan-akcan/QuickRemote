@@ -126,6 +126,12 @@ class WebSocketService extends ChangeNotifier {
   String get slideNotes => _state.slideNotes;
   bool get isPptRunning => _state.isPptRunning;
   List<String> get presenterNames => _state.presenterNames;
+
+  /// The program running the show ('powerpoint', 'impress', 'wps').
+  String get presenter => _state.presenter;
+
+  /// The PC's system ('windows' or 'linux'); null from an older PC.
+  String? get pcPlatform => _state.platform;
   bool get pptHasMedia => _state.pptHasMedia;
   bool get pptIsMediaPlaying => _state.pptIsMediaPlaying;
   

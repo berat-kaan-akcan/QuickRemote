@@ -37,6 +37,8 @@ class PresentationTimerController extends ChangeNotifier {
   int get targetSeconds => _targetSeconds;
   bool get isRunning => _isRunning;
   bool get isDurationSelected => _isDurationSelected;
+  /// When the running timer started (paused time taken out); null while it is stopped.
+  DateTime? get startTime => _isRunning ? _startTime : null;
   bool get isOvertime => _targetSeconds > 0 && _elapsedSeconds > _targetSeconds;
 
   /// Counts down to the target, then up past it; counts up without a target.
