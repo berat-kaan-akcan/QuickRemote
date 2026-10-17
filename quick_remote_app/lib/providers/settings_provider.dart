@@ -33,6 +33,10 @@ class SettingsProvider extends ChangeNotifier {
   // UI language; system follows the phone (not sent to the PC)
   AppLanguage _language = AppLanguage.system;
 
+  // The program the user marked per PC (its address) in the remote's program
+  // sheet. It only names the program while no show runs; the PC is not told.
+  Map<String, String> _presenterByPc = {};
+
   // Presentation History
   List<PresentationAnalytics> _presentationHistory = [];
   static const int _maxHistoryCount = 20;
@@ -52,6 +56,7 @@ class SettingsProvider extends ChangeNotifier {
   BtTarget get btTarget => _btTarget;
   bool get keepInkOnSlideChange => _keepInkOnSlideChange;
   AppLanguage get language => _language;
+  String? presenterFor(String pc) => _presenterByPc[pc];
   List<PresentationAnalytics> get presentationHistory =>
       List.unmodifiable(_presentationHistory);
 
@@ -69,6 +74,14 @@ class SettingsProvider extends ChangeNotifier {
     _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
     _keepInkOnSlideChange = prefs.getBool('keep_ink_on_slide_change') ?? false;
     _language = AppLanguage.fromCode(prefs.getString('language'));
+    final presenters = prefs.getString('presenter_by_pc');
+    if (presenters != null) {
+      try {
+        _presenterByPc = (jsonDecode(presenters) as Map<String, dynamic>).map((k, v) => MapEntry(k, v as String));
+      } catch (e) {
+        _presenterByPc = {};
+      }
+    }
     
     final timesStrList = prefs.getStringList('warning_times');
     final vibrationsStr = prefs.getString('warning_vibrations');
@@ -185,6 +198,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('keep_ink_on_slide_change', value);
+  }
+
+  Future<void> setPresenterFor(String pc, String presenter) async {
+    _presenterByPc = {..._presenterByPc, pc: presenter};
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('presenter_by_pc', jsonEncode(_presenterByPc));
   }
 
   Future<void> setLanguage(AppLanguage language) async {
