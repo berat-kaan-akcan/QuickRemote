@@ -20,6 +20,14 @@ class PresentationState {
         _ => 'PowerPoint',
       };
 
+  /// The name in the remote's header: "WPS" for WPS Office, "Impress" for
+  /// LibreOffice Impress.
+  static String shortNameOf(String presenter) => switch (presenter) {
+        'impress' => 'Impress',
+        'wps' => 'WPS',
+        _ => 'PowerPoint',
+      };
+
   /// The program running the show, or while none does, every one the PC
   /// controls (the UI joins them: "PowerPoint or WPS Office").
   List<String> get presenterNames =>

@@ -47,6 +47,7 @@ abstract final class AppColors {
   // ── Status: bright on Ink, deep on Paper (both AA on their background) ───
   static const success = Color(0xFF3DDC97);
   static const successDeep = Color(0xFF12804F);
+  static const successShade = Color(0xFF1F9E6B); // start of the Start button's gradient
   static const warning = Color(0xFFFFB547);
   static const warningDeep = Color(0xFFA35F00);
   static const danger = Color(0xFFFF5C77);
