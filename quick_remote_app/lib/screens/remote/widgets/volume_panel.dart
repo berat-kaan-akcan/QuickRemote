@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../utils/throttler.dart';
-import 'glass_panel.dart';
+import 'package:intl/intl.dart';
+import '../../../theme/app_colors.dart';
+import 'media_labels.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
@@ -101,136 +103,122 @@ class _VolumePanelState extends State<VolumePanel> {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final accent = p.info;
     final isMuted = widget.muted;
-    final volStr = widget.volume >= 0 ? '%${_displayVolume.toInt()}' : '–';
-    final muteColor = isMuted ? p.danger : accent;
+    final known = widget.volume >= 0;
+    final percent = known
+        ? NumberFormat.percentPattern(Localizations.localeOf(context).toLanguageTag()).format(_displayVolume / 100)
+        : '–';
+    final muteColor = isMuted ? p.danger : p.textPrimary;
+    final connected = widget.isConnected;
 
-    return GlassPanel(
-      accent: accent,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              AnimatedSwitcher(
-                duration: AppMotion.of(context, AppMotion.base),
-                transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-                child: IconBadge(
-                  key: ValueKey(isMuted),
-                  icon: isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                  color: muteColor,
-                  size: 44,
-                ),
-              ),
-              const SizedBox(width: AppSpace.sm),
-              // Yüzde Metni
-              Expanded(
-                child: Text(
-                  volStr,
-                  style: AppType.numeric.copyWith(
-                    color: isMuted ? p.textMuted : p.textPrimary,
-                    fontSize: 30,
-                    decoration: isMuted ? TextDecoration.lineThrough : null,
-                    decorationColor: p.textMuted,
-                  ),
-                ),
-              ),
-              // Mute butonu
-              Pressable(
-                onTap: widget.isConnected
-                    ? () {
-                        HapticFeedback.lightImpact();
-                        widget.onMute();
-                      }
-                    : null,
-                semanticLabel: isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn,
-                selected: isMuted,
-                borderRadius: AppRadius.all(AppRadius.pill),
-                child: AnimatedContainer(
-                  duration: AppMotion.of(context, AppMotion.base),
-                  height: 40,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.md - 2),
-                  decoration: BoxDecoration(
-                    color: muteColor.withValues(alpha: p.isDark ? 0.16 : 0.10),
-                    borderRadius: AppRadius.all(AppRadius.pill),
-                    border: Border.all(color: muteColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                        color: muteColor,
-                        size: 18,
-                        shadows: (!isMuted && _localVolume != null)
-                            ? [Shadow(color: accent, blurRadius: 12)]
-                            : null,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn,
-                        style: AppType.labelSmall.copyWith(color: muteColor),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MediaSectionHeader(
+          icon: isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          label: context.l10n.systemVolume,
+          trailing: Text(
+            percent,
+            style: AppType.numeric.copyWith(color: isMuted ? p.textMuted : p.textPrimary, fontSize: 18, letterSpacing: 0),
           ),
-          const SizedBox(height: AppSpace.sm),
-          Row(
+        ),
+        const SizedBox(height: AppSpace.sm),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: p.surface,
+            borderRadius: AppRadius.all(AppRadius.lg),
+            border: Border.all(color: p.border),
+          ),
+          child: Column(
             children: [
-              _StepButton(
-                icon: Icons.remove_rounded,
-                color: accent,
-                onTap: widget.isConnected ? _stepDown : null,
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 12,
+                  activeTrackColor: p.primaryBright,
+                  inactiveTrackColor: p.surfaceSunken,
+                  thumbColor: AppColors.white,
+                  overlayColor: p.primaryBright.withValues(alpha: 0.16),
+                  valueIndicatorColor: p.primary,
+                  valueIndicatorTextStyle: AppType.labelSmall.copyWith(color: p.onPrimary),
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 11, elevation: 2),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+                  trackShape: const RoundedRectSliderTrackShape(),
+                ),
+                child: Slider(
+                  value: _displayVolume,
+                  min: 0,
+                  max: 100,
+                  divisions: 100,
+                  label: '${_displayVolume.toInt()}',
+                  onChanged: connected ? _setLocalVolume : null,
+                  onChangeEnd: connected ? (v) => _setLocalVolume(v, sendImmediately: true) : null,
+                ),
               ),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 8,
-                    activeTrackColor: accent,
-                    inactiveTrackColor: accent.withValues(alpha: 0.18),
-                    thumbColor: Colors.white,
-                    overlayColor: accent.withValues(alpha: 0.16),
-                    valueIndicatorColor: accent,
-                    valueIndicatorTextStyle: AppType.labelSmall.copyWith(color: p.onInfo),
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 11,
-                      elevation: 3,
+              const SizedBox(height: AppSpace.xs),
+              Row(
+                children: [
+                  Expanded(
+                    child: Pressable(
+                      onTap: connected
+                          ? () {
+                              HapticFeedback.lightImpact();
+                              widget.onMute();
+                            }
+                          : null,
+                      semanticLabel: isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn,
+                      selected: isMuted,
+                      borderRadius: AppRadius.all(AppRadius.md),
+                      child: AnimatedContainer(
+                        duration: AppMotion.of(context, AppMotion.base),
+                        height: 44,
+                        decoration: BoxDecoration(
+                          borderRadius: AppRadius.all(AppRadius.md),
+                          border: Border.all(color: p.border, width: 1.5),
+                        ),
+                        child: ExcludeSemantics(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded, color: muteColor, size: 19),
+                              const SizedBox(width: AppSpace.xs),
+                              Text(
+                                isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn,
+                                style: AppType.label.copyWith(color: muteColor, fontSize: 13.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  child: Slider(
-                    value: _displayVolume,
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    label: '${_displayVolume.toInt()}',
-                    onChanged: widget.isConnected ? _setLocalVolume : null,
-                    onChangeEnd: widget.isConnected
-                        ? (v) => _setLocalVolume(v, sendImmediately: true)
-                        : null,
+                  const SizedBox(width: AppSpace.sm),
+                  _StepButton(
+                    icon: Icons.remove_rounded,
+                    label: context.l10n.volumeDown,
+                    onTap: connected ? _stepDown : null,
                   ),
-                ),
-              ),
-              _StepButton(
-                icon: Icons.add_rounded,
-                color: accent,
-                onTap: widget.isConnected ? _stepUp : null,
+                  const SizedBox(width: AppSpace.sm),
+                  _StepButton(
+                    icon: Icons.add_rounded,
+                    label: context.l10n.volumeUp,
+                    onTap: connected ? _stepUp : null,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
 class _StepButton extends StatelessWidget {
-  const _StepButton({required this.icon, required this.color, this.onTap});
+  const _StepButton({required this.icon, required this.label, this.onTap});
 
   final IconData icon;
-  final Color color;
+  final String label;
   final VoidCallback? onTap;
 
   @override
@@ -238,17 +226,19 @@ class _StepButton extends StatelessWidget {
     final p = context.palette;
     return Pressable(
       onTap: onTap,
+      semanticLabel: label,
+      tooltip: label,
       pressedScale: 0.88,
-      borderRadius: AppRadius.all(AppRadius.pill),
+      borderRadius: AppRadius.all(AppRadius.sm),
       child: Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: p.isDark ? 0.14 : 0.10),
-          shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.28)),
+          color: p.surface,
+          borderRadius: AppRadius.all(AppRadius.sm),
+          border: Border.all(color: p.border),
         ),
-        child: Icon(icon, color: color, size: 22),
+        child: Icon(icon, color: p.textPrimary, size: 22),
       ),
     );
   }
