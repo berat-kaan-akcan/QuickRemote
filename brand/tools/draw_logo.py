@@ -12,6 +12,7 @@ only read here.
 """
 import math
 import pathlib
+import random
 import re
 
 LOGO = pathlib.Path(__file__).resolve().parent.parent / 'logo'
@@ -21,10 +22,11 @@ NEXT = (196, 158, 200, 236)  # corner radius w * .26
 LASER = (420, 116, 28)  # cx, cy, r; its glow reaches r * 2.6
 MARK_CENTER = (256, 260)
 MARK_SCALE = 1.12
-# Every part of the mark lies within this distance of MARK_CENTER (the laser
-# dot's far edge); the adaptive icon fits it in the 66 dp safe zone with it.
-MARK_REACH = 246
+# Every part of the one-color mark lies within this distance of MARK_CENTER
+# (the laser dot's far edge).
 MONO_REACH = 248
+# The adaptive icon's safe zone: a circle of 33 dp on the 108 dp layer.
+SAFE_RADIUS = 33
 
 LASER_COLOR = '#FF6A3D'
 NEXT_STOPS = ('#3E63F5', '#2F4BE0', '#1B28A3')
@@ -97,9 +99,9 @@ def mono_mark(color):
             f'<circle cx="{lx}" cy="{ly}" r="30" fill="{color}"/>')
 
 
-def placed(content, center, scale):
-    """Moves the mark's MARK_CENTER to [center] and scales it."""
-    mx, my = MARK_CENTER
+def placed(content, center, scale, origin=MARK_CENTER):
+    """Moves the mark's [origin] to [center] and scales it."""
+    mx, my = origin
     return f'<g transform="translate({center[0]:g} {center[1]:g}) scale({scale:g}) translate({-mx} {-my})">{content}</g>'
 
 
@@ -121,10 +123,71 @@ def svg(width, height, body, extra_defs=''):
             f'  <defs>{extra_defs}</defs>\n  {body}\n</svg>\n')
 
 
+def outline_points(key_stroke, dot_radius):
+    """Points around the mark's shapes, the Previous key with half its
+    stroke ([key_stroke]); the glows are left out."""
+    def rounded(x, y, w, h, r):
+        for cx, cy, start in ((x + w - r, y + r, -90), (x + w - r, y + h - r, 0), (x + r, y + h - r, 90), (x + r, y + r, 180)):
+            for i in range(31):
+                a = math.radians(start + 3 * i)
+                yield cx + r * math.cos(a), cy + r * math.sin(a)
+
+    x, y, w, h = PREV
+    k = key_stroke / 2
+    yield from rounded(x - k, y - k, w + 2 * k, h + 2 * k, w * .3 + k)
+    x, y, w, h = NEXT
+    yield from rounded(x, y, w, h, w * .26)
+    lx, ly, _ = LASER
+    for i in range(120):
+        a = 2 * math.pi * i / 120
+        yield lx + dot_radius * math.cos(a), ly + dot_radius * math.sin(a)
+
+
+def enclosing_circle(points):
+    """The smallest circle around [points]: center and radius (Welzl's
+    incremental algorithm)."""
+    points = list(points)
+    random.Random(0).shuffle(points)
+
+    def through(*ps):
+        if len(ps) == 2:
+            (ax, ay), (bx, by) = ps
+            return ((ax + bx) / 2, (ay + by) / 2), math.hypot(ax - bx, ay - by) / 2
+        (ax, ay), (bx, by), (cx, cy) = ps
+        d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
+        if abs(d) < 1e-9:  # in a line: the two farthest apart
+            return max((through(p, q) for p, q in ((ps[0], ps[1]), (ps[0], ps[2]), (ps[1], ps[2]))), key=lambda c: c[1])
+        a2, b2, c2 = ax * ax + ay * ay, bx * bx + by * by, cx * cx + cy * cy
+        ux = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d
+        uy = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d
+        return (ux, uy), math.hypot(ax - ux, ay - uy)
+
+    inside = lambda c, p: math.hypot(p[0] - c[0][0], p[1] - c[0][1]) <= c[1] + 1e-7
+    circle = (points[0], 0.0)
+    for i, p in enumerate(points):
+        if inside(circle, p):
+            continue
+        circle = (p, 0.0)
+        for j, q in enumerate(points[:i]):
+            if inside(circle, q):
+                continue
+            circle = through(p, q)
+            for r in points[:j]:
+                if not inside(circle, r):
+                    circle = through(p, q, r)
+    return circle
+
+
+def adaptive(content, points):
+    """[content] on a 108 dp adaptive icon layer, centered on the circle
+    around its shapes, laser dot included, and as large as the safe zone
+    allows, so that no launcher mask cuts it."""
+    center, radius = enclosing_circle(points)
+    return placed(content, (54, 54), SAFE_RADIUS / radius, origin=(round(center[0], 2), round(center[1], 2)))
+
+
 def adaptive_foreground(theme):
-    """The mark alone on a 108 dp adaptive icon layer, all of it inside the
-    66 dp safe zone, so that no launcher mask cuts it (32 dp of the 33)."""
-    return svg(108, 108, placed(mark(theme), (54, 54), 32 / MARK_REACH), defs(theme))
+    return svg(108, 108, adaptive(mark(theme), outline_points(5, LASER[2])), defs(theme))
 
 
 def adaptive_background(theme):
@@ -256,7 +319,7 @@ def main():
         'adaptive-foreground.svg': adaptive_foreground('dark'),
         'adaptive-background-oled.svg': adaptive_background('oled'),
         'adaptive-foreground-oled.svg': adaptive_foreground('oled'),
-        'adaptive-monochrome.svg': svg(108, 108, placed(mono_mark('#000000'), (54, 54), 32 / MONO_REACH)),
+        'adaptive-monochrome.svg': svg(108, 108, adaptive(mono_mark('#000000'), outline_points(22, 30))),
         'mark-mono.svg': svg(512, 512, placed(mono_mark('#0E1224'), (256, 256), 256 / MONO_REACH)),
         'lockup-dark-bg.svg': lockup('dark', 'wordmark-dark-bg.svg'),
         'lockup-light-bg.svg': lockup('light', 'wordmark-light-bg.svg'),
