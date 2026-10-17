@@ -141,27 +141,8 @@
   "statusDisconnected": "Kopuk",
   "disconnectTitle": "Bağlantıyı Kes",
   "disconnectContent": "Bağlantıyı kesmek ve ana ekrana dönmek istediğinize emin misiniz?",
-  "notesTitle": "Slayt Notları",
+  "notesTitle": "Konuşmacı Notları",
   "notesEmpty": "Bu slayt için not bulunmuyor.",
-  "startPresentation": "Sunuma Başla",
-  "slidePickerRange": "Slayt (1-{total})",
-  "@slidePickerRange": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "slidePickerHint": "Slayt Numarası (Örn: 5)",
-  "slidePickerMax": "Maksimum {total} slayt girebilirsiniz.",
-  "@slidePickerMax": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "slidePickerEmpty": "Boş bırakırsanız baştan başlar.",
   "actionStart": "Başlat",
   "slidePickerInvalid": "Geçerli bir slayt numarası girin (1-{max})",
   "@slidePickerInvalid": {
@@ -183,7 +164,6 @@
       }
     }
   },
-  "notes": "Notlar",
   "presentationNotOpen": "Sunum Açık Değil, {programs}'i başlatın",
   "@presentationNotOpen": {
     "placeholders": {
@@ -195,12 +175,8 @@
   "actionEnd": "Bitir",
   "blackScreen": "Siyah Ekran",
   "whiteScreen": "Beyaz Ekran",
-  "actionPrev": "Geri",
-  "actionNext": "İleri",
-  "listOr": " veya ",
-  "@listOr": {
-    "description": "Joins program names: \"PowerPoint or WPS Office\". Keep the spaces."
-  },
+  "actionPrev": "Önceki",
+  "actionNext": "Sonraki",
   "mediaControlTitle": "Medya Kontrolü",
   "nowPlaying": "Şu An Çalan",
   "systemVolume": "Sistem Sesi",
@@ -234,7 +210,6 @@
   "mediaPause": "Duraklat",
   "mediaPlay": "Oynat",
   "mediaRewind": "Başa Sar",
-  "toolHighlighter": "Vurgulayıcı",
   "tapForTool": "Tek dokunuş → {tool}",
   "@tapForTool": {
     "placeholders": {
@@ -243,9 +218,9 @@
       }
     }
   },
-  "doubleTapSelected": "Çift dokunuş → Seçili Araç",
+  "doubleTapSelected": "Çift dokunuş → Seçili araç",
   "volumeMuted": "Sessiz",
-  "volumeOn": "Açık",
+  "volumeOn": "Sesli",
   "btUnsupportedLong": "Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.",
   "btPermissionTitle": "İzin gerekiyor",
   "btPermissionDenied": "Telefonun klavye ve fare olarak bağlanabilmesi için “Yakındaki cihazlar” izni gerekiyor.",
@@ -517,5 +492,80 @@
   "settingsSectionGeneral": "Genel",
   "@settingsSectionGeneral": {
     "description": "Settings section header."
-  }
+  },
+  "remoteProgramHint": "Sunum programını seç",
+  "@remoteProgramHint": {
+    "description": "Screen reader hint of the PC · program line in the remote header."
+  },
+  "programSheetTitle": "Sunum programı",
+  "programSheetBody": "{pc} şu programları kontrol edebilir. Gösterisi açık olan kendiliğinden kullanılır.",
+  "@programSheetBody": {
+    "placeholders": {
+      "pc": {
+        "type": "String"
+      }
+    }
+  },
+  "programShowOpenSlide": "Gösteri açık · Slayt {slide}",
+  "@programShowOpenSlide": {
+    "placeholders": {
+      "slide": {
+        "type": "int"
+      }
+    }
+  },
+  "programShowOpen": "Gösteri açık",
+  "programShowClosed": "Gösteri açık değil",
+  "programPdfNote": "PDF'ler ayrıca seçilmez; öndeki pencere PDF ise o kontrol edilir.",
+  "programBluetoothNote": "Bluetooth modunda program buradan seçilir (PowerPoint / Impress / WPS).",
+  "goToSlide": "Slayta git",
+  "goToSlideRange": "1–{total} arası bir numara",
+  "@goToSlideRange": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "goToSlideNumber": "Slayt numarası",
+  "goAction": "Git",
+  "notesSlide": "Slayt {slide}",
+  "@notesSlide": {
+    "placeholders": {
+      "slide": {
+        "type": "int"
+      }
+    }
+  },
+  "notesOpenHint": "Notun tamamını aç",
+  "@notesOpenHint": {
+    "description": "Screen reader hint of the two-line note on the slide card."
+  },
+  "unreadableShow": "WPS slayt numarasını bildirmiyor; tuşlar yine çalışır.",
+  "unreadableShowUserWps": "Bu WPS'i QuickRemote açmadı: slayt numarası ve notlar gelmez, tuşlar WPS penceresi öndeyken çalışır.",
+  "drawToolsNeedShow": "Çizim araçları slayt gösterisi açıkken çalışır.",
+  "toolArrow": "Ok",
+  "@toolArrow": {
+    "description": "The laser tool where the program has no laser and the pointer arrow follows the phone (WPS on Windows)."
+  },
+  "colorUnavailableTitle": "Bu programda renk seçilemez.",
+  "colorUnavailableBody": "WPS'i QuickRemote açmadığı için kalem WPS'in kendi rengiyle çizer.",
+  "slideMediaOnSlide": "Slayt {slide}'{suffix, select, de{deki} da{daki} te{teki} ta{taki} other{deki}} medya",
+  "@slideMediaOnSlide": {
+    "description": "suffix: the Turkish locative ending of the number (turkishLocative).",
+    "placeholders": {
+      "slide": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "slideMediaPlaying": "Oynatılıyor",
+  "slideMediaNotPlaying": "Oynatılmıyor",
+  "slideMediaStateUnknown": "WPS oynatma durumunu bildirmiyor",
+  "volumeDown": "Sesi kıs",
+  "volumeUp": "Sesi aç",
+  "mediaStop": "Durdur"
 }
