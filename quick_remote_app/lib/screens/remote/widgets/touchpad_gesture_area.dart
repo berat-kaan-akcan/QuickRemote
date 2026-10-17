@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../models/draw_tool.dart';
 import '../../../utils/delta_accumulator.dart';
+import '../../../widgets/ui/ui.dart';
 import 'touchpad_surface.dart';
 
 class TouchpadGestureArea extends StatefulWidget {
@@ -12,19 +13,33 @@ class TouchpadGestureArea extends StatefulWidget {
   final void Function(String) onSendCommand;
   final void Function(String, double, double) onSendTouchOrLaser;
 
+  /// The ink the pen and highlighter were last given, for their trail.
+  final Map<DrawTool, Color> inks;
+
+  /// The laser's name and icon where the program has none (the arrow).
+  final String? laserLabel;
+  final IconData? laserIcon;
+
+  /// False while no slideshow runs (see [TouchpadSurface.enabled]).
+  final bool enabled;
+
   const TouchpadGestureArea({
     super.key,
     required this.sensitivity,
     required this.drawTool,
     required this.onSendCommand,
     required this.onSendTouchOrLaser,
+    this.inks = const {},
+    this.laserLabel,
+    this.laserIcon,
+    this.enabled = true,
   });
 
   @override
   State<TouchpadGestureArea> createState() => _TouchpadGestureAreaState();
 }
 
-class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
+class _TouchpadGestureAreaState extends State<TouchpadGestureArea> with SingleTickerProviderStateMixin {
   DateTime? _lastPointerUpTime;
   Offset? _lastPointerUpPosition;
   bool _isDrawActive = false;
@@ -40,15 +55,18 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
   int _gesture = 0;
   bool _leftDownSent = false;
 
-  /// Where the finger is, for the surface's glow only.
-  final _touch = ValueNotifier<Offset?>(null);
+  /// The finger's path, drawn on the surface and faded after it lifts.
+  final _trail = TouchTrail();
+  late final AnimationController _fade = AnimationController(vsync: this)
+    ..addListener(() => _trail.setFade(_fade.value));
 
   String get _moveType => _activeTool == DrawTool.laser ? 'LASER' : 'TOUCH';
 
   @override
   void dispose() {
     _sendTimer?.cancel();
-    _touch.dispose();
+    _fade.dispose();
+    _trail.dispose();
     super.dispose();
   }
 
@@ -63,8 +81,9 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
         (pos - _lastPointerUpPosition!).distance < 80;
 
     _isDrawActive = true;
-    _touch.value = pos;
     _activeTool = isDoubleTap ? widget.drawTool : DrawTool.laser;
+    _fade.stop();
+    _trail.start(pos, _activeTool, widget.inks[_activeTool]);
     final gesture = ++_gesture;
     _pending.clear();
     _sendTimer?.cancel();
@@ -94,7 +113,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
 
   void _onPointerMove(PointerMoveEvent event) {
     if (!_isDrawActive) return;
-    _touch.value = event.localPosition;
+    _trail.add(event.localPosition);
 
     _pending.add(event.delta.dx * widget.sensitivity, event.delta.dy * widget.sensitivity);
     // Send at once when idle, then at most every 16 ms until drained.
@@ -133,7 +152,9 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
 
     _isDrawActive = false;
     _leftDownSent = false;
-    _touch.value = null;
+    _trail.end();
+    _fade.duration = AppMotion.of(context, const Duration(seconds: 1));
+    _fade.forward(from: 0);
     setState(() {});
   }
 
@@ -150,7 +171,15 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> {
       onPointerMove: _onPointerMove,
       onPointerUp: _onPointerUp,
       onPointerCancel: _onPointerCancel,
-      child: TouchpadSurface(isDrawActive: _isDrawActive, activeTool: _activeTool, touch: _touch),
+      child: TouchpadSurface(
+        isDrawActive: _isDrawActive,
+        activeTool: _activeTool,
+        selectedTool: widget.drawTool,
+        laserLabel: widget.laserLabel,
+        laserIcon: widget.laserIcon,
+        trail: _trail,
+        enabled: widget.enabled,
+      ),
     );
   }
 }

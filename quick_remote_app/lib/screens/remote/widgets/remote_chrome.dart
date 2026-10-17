@@ -4,8 +4,8 @@ import '../../settings/settings_screen.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
-/// The app bar row of the Wi-Fi and Bluetooth remotes: logo, connection
-/// subtitle, status chip, settings and close.
+/// The app bar row of the Wi-Fi and Bluetooth remotes: logo, the PC and
+/// program line, status chip, settings and close.
 class RemoteHeader extends StatelessWidget {
   const RemoteHeader({
     super.key,
@@ -14,6 +14,7 @@ class RemoteHeader extends StatelessWidget {
     required this.onClose,
     this.isConnecting = false,
     this.onReconnect,
+    this.onSubtitleTap,
   });
 
   final Widget subtitle;
@@ -24,31 +25,53 @@ class RemoteHeader extends StatelessWidget {
   final VoidCallback? onReconnect;
   final VoidCallback onClose;
 
+  /// Makes the subtitle a button with an arrow: the program sheet.
+  final VoidCallback? onSubtitleTap;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    // On narrow phones the status chip shrinks to its dot.
-    final compact = MediaQuery.sizeOf(context).width < 360;
+    final line = DefaultTextStyle.merge(
+      style: AppType.bodySmall.copyWith(
+        color: p.textMuted,
+        fontSize: 11.5,
+        fontWeight: FontWeight.w500,
+        height: 1.25,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      child: IconTheme.merge(
+        data: IconThemeData(color: p.textMuted, size: 15),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: subtitle),
+            if (onSubtitleTap != null) const Icon(Icons.expand_more_rounded),
+          ],
+        ),
+      ),
+    );
     return Row(
       children: [
-        const BrandTile(size: 38, shadow: false),
-        const SizedBox(width: AppSpace.sm - 2),
+        const BrandTile(size: 36, shadow: false),
+        const SizedBox(width: 6),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const BrandWordmark(fontSize: 17),
+              const BrandWordmark(fontSize: 16),
               const SizedBox(height: 2),
-              DefaultTextStyle.merge(
-                style: AppType.mono.copyWith(
-                  color: p.textMuted,
-                  fontSize: 11.5,
+              if (onSubtitleTap == null)
+                line
+              else
+                Pressable(
+                  onTap: onSubtitleTap,
+                  semanticLabel: context.l10n.remoteProgramHint,
+                  pressedScale: 0.97,
+                  borderRadius: AppRadius.all(AppRadius.xs),
+                  child: line,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                child: subtitle,
-              ),
             ],
           ),
         ),
@@ -60,12 +83,13 @@ class RemoteHeader extends StatelessWidget {
             size: 40,
             onPressed: onReconnect,
           ),
-        _StatusChip(isConnected: isConnected, isConnecting: isConnecting, compact: compact),
+        _StatusChip(isConnected: isConnected, isConnecting: isConnecting),
         const SizedBox(width: AppSpace.xxs),
         AppIconButton(
           icon: Icons.settings_rounded,
           tooltip: context.l10n.homeSettingsTooltip,
-          size: 40,
+          size: 34,
+          iconSize: 21,
           onPressed: () {
             Navigator.push(
               context,
@@ -76,7 +100,8 @@ class RemoteHeader extends StatelessWidget {
         AppIconButton(
           icon: Icons.close_rounded,
           tooltip: context.l10n.close,
-          size: 40,
+          size: 34,
+          iconSize: 21,
           onPressed: onClose,
         ),
       ],
@@ -84,14 +109,12 @@ class RemoteHeader extends StatelessWidget {
   }
 }
 
+/// "Connected" on the surface with a status dot; tinted while it is not.
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.isConnected, required this.isConnecting, this.compact = false});
+  const _StatusChip({required this.isConnected, required this.isConnecting});
 
   final bool isConnected;
   final bool isConnecting;
-
-  /// Only the dot, with the label for screen readers.
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -101,20 +124,77 @@ class _StatusChip extends StatelessWidget {
         : isConnecting
         ? p.warning
         : p.danger;
-    return StatusPill(
-      color: color,
-      busy: !isConnected && isConnecting,
-      label: isConnected
-          ? context.l10n.statusConnected
-          : isConnecting
-          ? context.l10n.homeConnecting
-          : context.l10n.statusDisconnected,
+    final label = isConnected
+        ? context.l10n.statusConnected
+        : isConnecting
+        ? context.l10n.homeConnecting
+        : context.l10n.statusDisconnected;
+    // On narrow phones only the dot, with the label for screen readers.
+    final compact = MediaQuery.sizeOf(context).width < 340;
+    return Semantics(
+      label: label,
+      liveRegion: true,
+      child: ExcludeSemantics(
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.base),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 8 : 10,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            color: p.surface,
+            borderRadius: AppRadius.all(AppRadius.pill),
+            border: Border.all(
+              color: isConnected ? p.border : color.withValues(alpha: 0.45),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isConnected && isConnecting)
+                SizedBox.square(
+                  dimension: 10,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: color,
+                  ),
+                )
+              else
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.25),
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              if (!compact) ...[
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  maxLines: 1,
+                  style: AppType.labelSmall.copyWith(
+                    color: isConnected ? p.textPrimary : color,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-/// Controls, touchpad and media tabs: a floating glass bar whose highlight
-/// slides to the selected tab.
+/// Controls, touchpad and media tabs: a bar along the bottom edge whose
+/// selected icon sits in a tinted pill.
 class RemoteBottomNav extends StatelessWidget {
   const RemoteBottomNav({
     super.key,
@@ -146,75 +226,44 @@ class RemoteBottomNav extends StatelessWidget {
         context.l10n.remoteTabMedia,
       ),
     ];
-    final duration = AppMotion.of(context, AppMotion.base);
 
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.only(bottom: AppSpace.sm),
-      child: Center(
-        heightFactor: 1,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppSpace.contentMaxWidth),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpace.md,
-              AppSpace.xxs,
-              AppSpace.md,
-              0,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: p.surface,
+        border: Border(top: BorderSide(color: p.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: AppSpace.contentMaxWidth,
             ),
-            // Opaque, not blurred: a backdrop filter would be redrawn on every
-            // frame the touchpad animates.
-            child: Container(
-              height: 66,
-              padding: const EdgeInsets.all(AppSpace.xs - 2),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [p.surfaceRaised, p.surface],
-                ),
-                borderRadius: AppRadius.all(AppRadius.xl),
-                border: Border.all(color: p.glassBorder),
-                boxShadow: AppShadows.raised(p),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xs,
+                AppSpace.xs,
+                AppSpace.xs,
+                AppSpace.xxs,
               ),
-              child: Stack(
+              child: Row(
                 children: [
-                  AnimatedAlign(
-                    duration: duration,
-                    curve: AppMotion.standard,
-                    alignment: Alignment(-1 + selected.toDouble(), 0),
-                    child: FractionallySizedBox(
-                      widthFactor: 1 / 3,
-                      heightFactor: 1,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: p.primaryText.withValues(
-                            alpha: p.isDark ? 0.16 : 0.10,
-                          ),
-                          borderRadius: AppRadius.all(AppRadius.lg),
+                  for (final (i, item) in items.indexed)
+                    Expanded(
+                      child: Pressable(
+                        onTap: () => onTap(i),
+                        selected: i == selected,
+                        semanticLabel: item.$3,
+                        pressedScale: 0.92,
+                        borderRadius: AppRadius.all(AppRadius.md),
+                        child: _NavItem(
+                          icon: i == selected ? item.$1 : item.$2,
+                          label: item.$3,
+                          selected: i == selected,
                         ),
                       ),
                     ),
-                  ),
-                  Row(
-                    children: [
-                      for (final (i, item) in items.indexed)
-                        Expanded(
-                          child: Pressable(
-                            onTap: () => onTap(i),
-                            selected: i == selected,
-                            semanticLabel: item.$3,
-                            pressedScale: 0.92,
-                            borderRadius: AppRadius.all(AppRadius.lg),
-                            child: _NavItem(
-                              icon: i == selected ? item.$1 : item.$2,
-                              label: item.$3,
-                              selected: i == selected,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -242,26 +291,32 @@ class _NavItem extends StatelessWidget {
     final color = selected ? p.primaryText : p.textMuted;
     final duration = AppMotion.of(context, AppMotion.base);
     return ExcludeSemantics(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedScale(
-            scale: selected ? 1.08 : 1,
-            duration: duration,
-            curve: AppMotion.standard,
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 3),
-          AnimatedDefaultTextStyle(
-            duration: duration,
-            style: AppType.labelSmall.copyWith(
-              color: color,
-              fontSize: 11.5,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpace.xxs),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: duration,
+              curve: AppMotion.standard,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: AppSpace.xxs,
+              ),
+              decoration: BoxDecoration(
+                color: p.primary.withValues(alpha: selected ? 0.18 : 0),
+                borderRadius: AppRadius.all(AppRadius.pill),
+              ),
+              child: Icon(icon, color: color, size: 24),
             ),
-            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-        ],
+            const SizedBox(height: 3),
+            AnimatedDefaultTextStyle(
+              duration: duration,
+              style: AppType.labelSmall.copyWith(color: color, fontSize: 11.5),
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
       ),
     );
   }

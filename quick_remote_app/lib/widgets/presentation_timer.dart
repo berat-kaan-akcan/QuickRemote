@@ -62,16 +62,17 @@ void bindTimerToSettings(BuildContext context, PresentationTimerController contr
   };
 }
 
+/// The talk's clock: the time, a play/pause and a reset key. A tap starts or
+/// pauses it, a long press picks a new length. [tall] sits beside the
+/// Start/End button above the touchpad.
 class PresentationTimer extends StatelessWidget {
   final PresentationTimerController controller;
-  final double fontSize;
-  final double iconSize;
+  final bool tall;
 
   const PresentationTimer({
     super.key,
     required this.controller,
-    this.fontSize = 16.0,
-    this.iconSize = 18.0,
+    this.tall = false,
   });
 
   void _toggle(BuildContext context) {
@@ -116,96 +117,86 @@ class PresentationTimer extends StatelessWidget {
         var timeStr = formatTimerSeconds(controller.displaySeconds);
         if (isOvertime) timeStr = '+$timeStr';
 
-        final color = isOvertime
+        final iconColor = isOvertime
             ? p.danger
             : controller.isRunning
-                ? p.primaryText
-                : p.textSecondary;
+                ? p.warning
+                : p.textMuted;
         final canReset = controller.isRunning || controller.elapsedSeconds > 0;
-        final target = controller.targetSeconds;
-        final progress = isOvertime
-            ? 1.0
-            : target > 0
-                ? (controller.elapsedSeconds / target).clamp(0.0, 1.0)
-                : 0.0;
-        final ring = iconSize + 12;
 
         return Pressable(
           onTap: () => _toggle(context),
           onLongPress: () => showDurationPicker(context),
           semanticLabel: timeStr,
-          borderRadius: AppRadius.all(AppRadius.pill),
+          borderRadius: AppRadius.all(AppRadius.sm),
           child: AnimatedContainer(
             duration: AppMotion.of(context, AppMotion.base),
-            padding: EdgeInsets.fromLTRB(5, 5, canReset ? 5 : AppSpace.md, 5),
+            height: tall ? 50 : null,
+            padding: const EdgeInsets.fromLTRB(10, 5, 6, 5),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: p.isDark ? 0.13 : 0.09),
-              borderRadius: AppRadius.all(AppRadius.pill),
-              border: Border.all(color: color.withValues(alpha: isOvertime ? 0.5 : 0.28)),
+              color: p.surfaceSunken,
+              borderRadius: AppRadius.all(AppRadius.sm),
+              border: Border.all(color: isOvertime ? p.danger.withValues(alpha: 0.5) : p.border),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox.square(
-                  dimension: ring,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(end: progress),
-                        duration: AppMotion.of(context, AppMotion.slow),
-                        builder: (context, value, _) => CircularProgressIndicator(
-                          value: value,
-                          strokeWidth: 2.5,
-                          strokeCap: StrokeCap.round,
-                          color: color,
-                          backgroundColor: color.withValues(alpha: 0.16),
-                        ),
-                      ),
-                      Icon(
-                        controller.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                        color: color,
-                        size: iconSize,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpace.xs),
+                Icon(Icons.timer_outlined, color: iconColor, size: 18),
+                const SizedBox(width: 6),
                 Text(
                   timeStr,
                   style: AppType.numeric.copyWith(
                     color: isOvertime ? p.danger : p.textPrimary,
-                    fontSize: fontSize + 1,
+                    fontSize: 18,
                     letterSpacing: 0,
                   ),
                 ),
-                if (canReset) ...[
-                  const SizedBox(width: AppSpace.xs),
-                  Pressable(
-                    onTap: _reset,
-                    pressedScale: 0.85,
-                    semanticLabel: MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
-                    borderRadius: AppRadius.all(AppRadius.pill),
-                    child: Container(
-                      width: ring,
-                      height: ring,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.14),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.refresh_rounded,
-                        color: color,
-                        size: iconSize * 0.85,
-                      ),
-                    ),
-                  ),
-                ],
+                const SizedBox(width: 6),
+                _TimerKey(
+                  icon: controller.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  semanticLabel: timeStr,
+                  onTap: () => _toggle(context),
+                ),
+                const SizedBox(width: 6),
+                _TimerKey(
+                  icon: Icons.refresh_rounded,
+                  semanticLabel: MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
+                  onTap: canReset ? _reset : null,
+                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+/// A small square key inside the timer.
+class _TimerKey extends StatelessWidget {
+  const _TimerKey({required this.icon, required this.semanticLabel, this.onTap});
+
+  final IconData icon;
+  final String semanticLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Pressable(
+      onTap: onTap,
+      pressedScale: 0.85,
+      semanticLabel: semanticLabel,
+      borderRadius: AppRadius.all(AppRadius.xs),
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: p.surfaceRaised,
+          borderRadius: AppRadius.all(AppRadius.xs),
+        ),
+        child: Icon(icon, color: p.textSecondary, size: 18),
+      ),
     );
   }
 }

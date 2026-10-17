@@ -129,8 +129,6 @@ class WebSocketService extends ChangeNotifier {
   int get totalSlides => _state.totalSlides;
   String get slideNotes => _state.slideNotes;
   bool get isPptRunning => _state.isPptRunning;
-  List<String> get presenterNames => _state.presenterNames;
-
   /// Every program the PC controls ('powerpoint', 'impress', 'wps').
   List<String> get presenters => _state.presenters;
 

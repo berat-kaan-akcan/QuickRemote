@@ -5,11 +5,11 @@ import '../../../services/websocket_service.dart';
 import '../../../services/presentation_timer_controller.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
-import '../utils/slide_picker_sheet.dart';
 import '../../../models/draw_tool.dart';
-import '../widgets/color_picker_sheet.dart';
+import '../widgets/tool_popover.dart';
 import '../widgets/touchpad_gesture_area.dart';
 import '../widgets/draw_tool_bar.dart';
+import '../utils/show_info.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
@@ -17,10 +17,17 @@ class TouchpadView extends StatefulWidget {
   final WebSocketService ws;
   final PresentationTimerController timer;
 
+  /// The ink (BGR) the user last sent to the pen and the highlighter, kept
+  /// by the remote while the tabs change.
+  final Map<DrawTool, int> inks;
+  final void Function(DrawTool tool, int bgr) onInk;
+
   const TouchpadView({
     super.key,
     required this.ws,
     required this.timer,
+    required this.inks,
+    required this.onInk,
   });
 
   @override
@@ -31,110 +38,130 @@ class _TouchpadViewState extends State<TouchpadView> {
   final double _sensitivity = 8.0;
   DrawTool _drawTool = DrawTool.laser;
 
+  /// The tool whose colors (or note) show above the bar; null: none.
+  DrawTool? _popoverFor;
+
   void _send(String command) {
     HapticFeedback.mediumImpact();
     widget.ws.sendCommand(command);
   }
 
-  void _showStartSlideDialog(BuildContext context) {
-    SlidePickerSheet.show(
-      context,
-      totalSlides: widget.ws.totalSlides,
-      onSend: _send,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
+    final ws = widget.ws;
+    final show = ShowInfo.of(ws);
+    final connected = ws.isConnected;
+    final swatches = {
+      for (final (_, color, bgr) in inkSwatches(context)) bgr: color,
+    };
+    final inks = show.colorsAvailable
+        ? {
+            for (final MapEntry(key: tool, value: bgr) in widget.inks.entries)
+              if (swatches[bgr] != null) tool: swatches[bgr]!,
+          }
+        : const <DrawTool, Color>{};
+    final laserLabel = show.windowsWps ? context.l10n.toolArrow : null;
+    final laserIcon = show.windowsWps ? Icons.near_me_rounded : null;
+    final popoverFor = show.running ? _popoverFor : null;
+
     return ContentWidth(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, AppSpace.sm),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.page,
+          AppSpace.xxs,
+          AppSpace.page,
+          AppSpace.sm,
+        ),
         child: Column(
           children: [
             Row(
               children: [
                 Expanded(
-                  child: PillButton(
-                    icon: Icons.play_arrow_rounded,
-                    label: context.l10n.actionStart,
-                    color: p.success,
-                    showMenuHint: true,
-                    onTap: !widget.ws.isConnected
+                  child: ShowToggleButton(
+                    compact: true,
+                    running: show.running,
+                    startLabel: context.l10n.actionStart,
+                    endLabel: context.l10n.actionEnd,
+                    onTap: !connected
                         ? null
                         : () {
                             HapticFeedback.heavyImpact();
-                            _send(RemoteCommands.start);
-                          },
-                    onLongPress: !widget.ws.isConnected
-                        ? null
-                        : () {
-                            HapticFeedback.heavyImpact();
-                            _showStartSlideDialog(context);
+                            _send(
+                              show.running
+                                  ? RemoteCommands.end
+                                  : RemoteCommands.start,
+                            );
                           },
                   ),
                 ),
-                const SizedBox(width: AppSpace.xs),
-                PresentationTimer(controller: widget.timer),
-                const SizedBox(width: AppSpace.xs),
-                Expanded(
-                  child: PillButton(
-                    icon: Icons.stop_rounded,
-                    label: context.l10n.actionEnd,
-                    color: p.danger,
-                    onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.end),
-                  ),
-                ),
+                const SizedBox(width: AppSpace.sm),
+                PresentationTimer(controller: widget.timer, tall: true),
               ],
             ),
             const SizedBox(height: AppSpace.sm),
-            // Touchpad area
             Expanded(
               child: TouchpadGestureArea(
                 sensitivity: _sensitivity,
                 drawTool: _drawTool,
+                inks: inks,
+                laserLabel: laserLabel,
+                laserIcon: laserIcon,
+                enabled: show.running,
                 onSendCommand: (cmd) => widget.ws.sendCommand(cmd),
-                onSendTouchOrLaser: (type, dx, dy) => widget.ws.sendTouchOrLaser(type, dx, dy),
+                onSendTouchOrLaser: (type, dx, dy) =>
+                    widget.ws.sendTouchOrLaser(type, dx, dy),
               ),
             ),
             const SizedBox(height: AppSpace.sm),
-            // Draw tool selector
+            Reveal(
+              child: popoverFor == null
+                  ? null
+                  : ToolPopover(
+                      // The pen is the second of five keys, the highlighter the third.
+                      anchor: popoverFor == DrawTool.pen ? 0.3 : 0.5,
+                      child: show.colorsAvailable
+                          ? InkPicker(
+                              tool: popoverFor,
+                              selected: widget.inks[popoverFor],
+                              onPicked: (bgr) {
+                                // Pen and highlighter keep separate colors.
+                                _send(
+                                  popoverFor == DrawTool.pen
+                                      ? RemoteCommands.penColor(bgr)
+                                      : RemoteCommands.highlighterColor(bgr),
+                                );
+                                widget.onInk(popoverFor, bgr);
+                                setState(() => _popoverFor = null);
+                              },
+                              onClose: () => setState(() => _popoverFor = null),
+                            )
+                          : const NoColorNote(),
+                    ),
+            ),
             DrawToolBar(
               activeTool: _drawTool,
-              onToolSelected: (tool) => setState(() => _drawTool = tool),
+              inks: inks,
+              laserLabel: laserLabel,
+              laserIcon: laserIcon,
+              enabled: show.running,
+              onToolSelected: (tool) => setState(() {
+                _drawTool = tool;
+                _popoverFor = null;
+              }),
               onClear: () {
                 HapticFeedback.mediumImpact();
                 _send(RemoteCommands.eraseAll);
               },
-              onColorPickerRequested: (tool) {
-                ColorPickerSheet.show(context, tool, _send);
-              },
+              onColorPickerRequested: (tool) => setState(
+                () => _popoverFor = _popoverFor == tool ? null : tool,
+              ),
             ),
             const SizedBox(height: AppSpace.sm),
-            // Slide buttons at bottom
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: SlideButton(
-                    icon: Icons.arrow_back_rounded,
-                    label: context.l10n.actionPrev,
-                    height: 76,
-                    onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.prev),
-                  ),
-                ),
-                const SizedBox(width: AppSpace.sm),
-                Expanded(
-                  flex: 3,
-                  child: SlideButton(
-                    icon: Icons.arrow_forward_rounded,
-                    label: context.l10n.actionNext,
-                    isPrimary: true,
-                    height: 76,
-                    onTap: !widget.ws.isConnected ? null : () => _send(RemoteCommands.next),
-                  ),
-                ),
-              ],
+            SlideNavRow(
+              prevLabel: context.l10n.actionPrev,
+              nextLabel: context.l10n.actionNext,
+              onPrev: !connected ? null : () => _send(RemoteCommands.prev),
+              onNext: !connected ? null : () => _send(RemoteCommands.next),
             ),
           ],
         ),
