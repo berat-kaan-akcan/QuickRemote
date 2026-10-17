@@ -5,8 +5,8 @@ import '../../theme/app_tokens.dart';
 import '../../theme/app_typography.dart';
 import 'brand_mark.dart';
 
-/// The launch intro, laid over the first screen: the icon tile draws its
-/// mark, the laser dot lights up, the name rises, then the whole layer fades
+/// The launch intro, laid over the first screen: the icon's keys come in,
+/// the laser dot lights up, the name rises, then the whole layer fades
 /// away. The screen below is built from the start, so nothing waits on it.
 ///
 /// Skipped when the system asks for less motion. Lasts about 1.3 s and ignores
@@ -20,7 +20,8 @@ class BrandSplash extends StatefulWidget {
   State<BrandSplash> createState() => _BrandSplashState();
 }
 
-class _BrandSplashState extends State<BrandSplash> with SingleTickerProviderStateMixin {
+class _BrandSplashState extends State<BrandSplash>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1350),
@@ -48,8 +49,12 @@ class _BrandSplashState extends State<BrandSplash> with SingleTickerProviderStat
     super.dispose();
   }
 
-  static double _interval(double t, double a, double b, [Curve curve = Curves.linear]) =>
-      curve.transform(((t - a) / (b - a)).clamp(0.0, 1.0));
+  static double _interval(
+    double t,
+    double a,
+    double b, [
+    Curve curve = Curves.linear,
+  ]) => curve.transform(((t - a) / (b - a)).clamp(0.0, 1.0));
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +87,7 @@ class _BrandSplashState extends State<BrandSplash> with SingleTickerProviderStat
                         opacity: tileIn,
                         child: Transform.scale(
                           scale: 0.86 + 0.14 * tileIn,
-                          child: BrandTile(size: 104, progress: draw),
+                          child: BrandTile(size: 150, progress: draw),
                         ),
                       ),
                       const SizedBox(height: AppSpace.xl),
@@ -97,7 +102,9 @@ class _BrandSplashState extends State<BrandSplash> with SingleTickerProviderStat
                               Text(
                                 widget.tagline,
                                 textAlign: TextAlign.center,
-                                style: AppType.bodySmall.copyWith(color: p.textSecondary),
+                                style: AppType.bodySmall.copyWith(
+                                  color: p.textSecondary,
+                                ),
                               ),
                             ],
                           ),
