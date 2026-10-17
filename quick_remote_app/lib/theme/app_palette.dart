@@ -18,6 +18,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.textMuted,
     required this.primary,
     required this.primaryBright,
+    required this.primaryDeep,
     required this.onPrimary,
     required this.primaryText,
     required this.accent,
@@ -59,6 +60,9 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// Fill of primary buttons, with [primaryBright] as its gradient end.
   final Color primary;
   final Color primaryBright;
+
+  /// The dark end of the large Next key's gradient.
+  final Color primaryDeep;
   final Color onPrimary;
 
   /// Primary as text or an icon on [background] or [surface].
@@ -87,8 +91,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
   final Color shadow;
   final Color scrim;
 
-  /// The eraser tool shares the warning color.
-  Color get toolEraser => warning;
+  /// The eraser tool is neutral: it takes ink away.
+  Color get toolEraser => textSecondary;
 
   static const light = AppPalette(
     isDark: false,
@@ -103,6 +107,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     textMuted: AppColors.inkTextMuted,
     primary: AppColors.cobalt,
     primaryBright: AppColors.cobaltBright,
+    primaryDeep: AppColors.cobaltDeep,
     onPrimary: AppColors.white,
     primaryText: AppColors.cobalt,
     accent: AppColors.laser,
@@ -137,6 +142,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     textMuted: AppColors.paperTextMuted,
     primary: AppColors.cobalt,
     primaryBright: AppColors.cobaltBright,
+    primaryDeep: AppColors.cobaltDeep,
     onPrimary: AppColors.white,
     primaryText: AppColors.cobaltLight,
     accent: AppColors.laser,
@@ -165,6 +171,13 @@ class AppPalette extends ThemeExtension<AppPalette> {
         colors: [primaryBright, primary],
       );
 
+  /// The gradient of the green Start buttons, with [onSuccess] on it.
+  LinearGradient get successGradient => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark ? const [AppColors.successShade, AppColors.success] : const [AppColors.successDeep, AppColors.successShade],
+      );
+
   @override
   AppPalette copyWith() => this;
 
@@ -185,6 +198,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
       textMuted: c(textMuted, other.textMuted),
       primary: c(primary, other.primary),
       primaryBright: c(primaryBright, other.primaryBright),
+      primaryDeep: c(primaryDeep, other.primaryDeep),
       onPrimary: c(onPrimary, other.onPrimary),
       primaryText: c(primaryText, other.primaryText),
       accent: c(accent, other.accent),
