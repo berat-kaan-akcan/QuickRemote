@@ -11,9 +11,15 @@ abstract final class AppColors {
   static const cobalt = Color(0xFF2F4BE0); // primary fill; primary text on Paper
   static const cobaltBright = Color(0xFF3E63F5); // gradient end of primary fills
   static const cobaltLight = Color(0xFF8EA1FF); // primary text and icons on Ink
-  static const cobaltDeep = Color(0xFF1B28A3); // logo tile gradient end
+  static const cobaltDeep = Color(0xFF1B28A3); // end of the logo's Next key gradient
   static const laser = Color(0xFFFF6A3D); // the laser dot: the one warm accent
   static const laserDeep = Color(0xFFC8401C); // laser as text on Paper
+
+  // The logo's own (brand/tools/draw_logo.py): the dark tile's top and the
+  // small Previous key's border and chevron on it.
+  static const logoTileTop = Color(0xFF141A33);
+  static const logoKeyBorder = Color(0xFF323A62);
+  static const logoKeyChevron = Color(0xFFC9CEE6);
 
   // ── Neutrals, light theme ("Paper") ──────────────────────────────────────
   static const paper = Color(0xFFF4F5FA);
