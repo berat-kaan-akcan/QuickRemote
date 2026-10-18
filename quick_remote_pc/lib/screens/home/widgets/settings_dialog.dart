@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../l10n/app_language.dart';
+import '../../../providers/appearance_provider.dart';
 import '../../../providers/language_provider.dart';
 import '../../../widgets/ui/ui.dart';
 
@@ -41,6 +42,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final languages = context.watch<LanguageProvider>();
+    final appearance = context.watch<AppearanceProvider>();
     final p = context.palette;
     return AlertDialog(
       // A short window scrolls the content instead of cutting it off.
@@ -111,6 +113,38 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   ),
                 ),
               ],
+            ),
+            Divider(color: p.border, height: AppSpace.lg),
+            Row(
+              children: [
+                Icon(Icons.contrast_rounded, size: 20, color: p.textSecondary),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  child: Text(
+                    l10n.settingsAppearance,
+                    style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.sm - 3),
+            AppSegmented<ThemeMode>(
+              height: 40,
+              selected: appearance.mode,
+              onChanged: appearance.setMode,
+              segments: [
+                AppSegment(value: ThemeMode.system, label: l10n.appearanceSystem, icon: Icons.computer_rounded),
+                AppSegment(value: ThemeMode.light, label: l10n.appearanceLight, icon: Icons.light_mode_rounded),
+                AppSegment(value: ThemeMode.dark, label: l10n.appearanceDark, icon: Icons.dark_mode_rounded),
+              ],
+            ),
+            const SizedBox(height: AppSpace.xs + 1),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.appearanceNote,
+                style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
+              ),
             ),
           ],
         ),
