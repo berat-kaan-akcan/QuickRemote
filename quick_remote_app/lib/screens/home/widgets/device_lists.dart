@@ -6,7 +6,7 @@ import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 import 'spinning_refresh_icon.dart';
 
-/// PCs found over mDNS, then the ones connected to before.
+/// PCs found over mDNS, then the ones connected to before, each in a card.
 class DeviceLists extends StatelessWidget {
   const DeviceLists({
     super.key,
@@ -26,102 +26,125 @@ class DeviceLists extends StatelessWidget {
     return Consumer<DiscoveryService>(
       builder: (context, discovery, child) {
         final p = context.palette;
+        final empty = discovery.devices.isEmpty && !discovery.isDiscovering;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SectionHeader(
+            _ListCard(
+              icon: Icons.wifi_find_rounded,
               title: context.l10n.homeNetworkDevices,
-              icon: Icons.wifi_rounded,
-              count: discovery.devices.length,
+              centered: empty,
               trailing: Pressable(
-                onTap: discovery.isDiscovering ? null : () => discovery.startScanning(),
+                onTap: discovery.isDiscovering
+                    ? null
+                    : () => discovery.startScanning(),
                 dimWhenDisabled: false,
                 pressedScale: 0.9,
                 tooltip: context.l10n.homeRescan,
                 semanticLabel: context.l10n.homeRescan,
                 borderRadius: AppRadius.all(AppRadius.pill),
                 child: SizedBox.square(
-                  dimension: 40,
-                  child: Center(child: SpinningRefreshIcon(isSpinning: discovery.isDiscovering)),
-                ),
-              ),
-            ),
-            AnimatedSwitcher(
-              duration: AppMotion.of(context, AppMotion.base),
-              switchInCurve: AppMotion.enter,
-              child: discovery.devices.isEmpty
-                  ? discovery.isDiscovering
-                      ? const _SearchingPlaceholder(key: ValueKey('searching'))
-                      : AppCard(
-                          key: const ValueKey('empty'),
-                          padding: const EdgeInsets.symmetric(vertical: AppSpace.xl, horizontal: AppSpace.md),
-                          child: EmptyState(
-                            compact: true,
-                            icon: Icons.wifi_find_rounded,
-                            title: context.l10n.homeNoDevices,
-                            action: AppButton(
-                              label: context.l10n.homeRescan,
-                              icon: Icons.refresh_rounded,
-                              variant: AppButtonVariant.tonal,
-                              expand: false,
-                              height: 44,
-                              onPressed: () => discovery.startScanning(),
-                            ),
-                          ),
-                        )
-                  : Column(
-                      key: const ValueKey('devices'),
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final (i, dev) in discovery.devices.indexed)
-                          Padding(
-                            key: ValueKey('${dev.ip}:${dev.port}'),
-                            padding: const EdgeInsets.only(bottom: AppSpace.xs),
-                            child: FadeSlideIn(
-                              index: i,
-                              child: AppListTile(
-                                onTap: () => onDiscoveredTap(dev),
-                                leading: _OnlineBadge(color: p.primaryText),
-                                title: dev.name.isEmpty ? context.l10n.unknownPc : dev.name,
-                                subtitle: '${dev.ip}:${dev.port}',
-                                monoSubtitle: true,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-            ),
-            if (recentDevices.isNotEmpty) ...[
-              const SizedBox(height: AppSpace.xl),
-              SectionHeader(
-                title: context.l10n.homeRecent,
-                icon: Icons.history_rounded,
-                count: recentDevices.length,
-              ),
-              for (final (index, dev) in recentDevices.indexed)
-                Padding(
-                  key: ValueKey('recent_${dev['host']}:${dev['port']}'),
-                  padding: const EdgeInsets.only(bottom: AppSpace.xs),
-                  child: FadeSlideIn(
-                    index: index,
-                    child: AppListTile(
-                      onTap: () => onRecentTap(dev),
-                      icon: Icons.desktop_windows_rounded,
-                      iconColor: p.textSecondary,
-                      title: dev['name'] ?? dev['host'],
-                      subtitle: '${dev['host']}:${dev['port']}',
-                      monoSubtitle: true,
-                      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.xxs, AppSpace.sm),
-                      trailing: AppIconButton(
-                        icon: Icons.close_rounded,
-                        tooltip: context.l10n.homeRemoveFromHistory,
-                        iconSize: 20,
-                        color: p.textMuted,
-                        onPressed: () => onRecentRemove(index),
-                      ),
+                  dimension: 36,
+                  child: Center(
+                    child: SpinningRefreshIcon(
+                      isSpinning: discovery.isDiscovering,
                     ),
                   ),
                 ),
+              ),
+              child: AnimatedSwitcher(
+                duration: AppMotion.of(context, AppMotion.base),
+                switchInCurve: AppMotion.enter,
+                child: discovery.devices.isEmpty
+                    ? discovery.isDiscovering
+                          ? const _SearchingPlaceholder(
+                              key: ValueKey('searching'),
+                            )
+                          : _NothingFound(
+                              key: const ValueKey('empty'),
+                              onRescan: () => discovery.startScanning(),
+                            )
+                    : Column(
+                        key: const ValueKey('devices'),
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final (i, dev) in discovery.devices.indexed)
+                            Padding(
+                              key: ValueKey('${dev.ip}:${dev.port}'),
+                              padding: EdgeInsets.only(
+                                top: i == 0 ? 0 : AppSpace.xs,
+                              ),
+                              child: FadeSlideIn(
+                                index: i,
+                                child: _PcRow(
+                                  onTap: () => onDiscoveredTap(dev),
+                                  badge: IconBadge(
+                                    icon: Icons.computer_rounded,
+                                    color: p.primaryText,
+                                    size: 38,
+                                  ),
+                                  title: dev.name.isEmpty
+                                      ? context.l10n.unknownPc
+                                      : dev.name,
+                                  subtitle: '${dev.ip}:${dev.port}',
+                                  trailing: Icon(
+                                    Icons.arrow_forward_rounded,
+                                    color: p.primaryText,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+              ),
+            ),
+            if (recentDevices.isNotEmpty) ...[
+              const SizedBox(height: AppSpace.sm),
+              _ListCard(
+                icon: Icons.history_rounded,
+                title: context.l10n.homeRecent,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final (index, dev) in recentDevices.indexed)
+                      Padding(
+                        key: ValueKey('recent_${dev['host']}:${dev['port']}'),
+                        padding: EdgeInsets.only(
+                          top: index == 0 ? 0 : AppSpace.xs,
+                        ),
+                        child: FadeSlideIn(
+                          index: index,
+                          child: _PcRow(
+                            onTap: () => onRecentTap(dev),
+                            badge: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: p.surfaceSunken,
+                                borderRadius: AppRadius.all(AppRadius.sm),
+                              ),
+                              child: Icon(
+                                Icons.desktop_windows_rounded,
+                                color: p.textSecondary,
+                                size: 20,
+                              ),
+                            ),
+                            title: dev['name'] ?? dev['host'],
+                            subtitle: '${dev['host']}:${dev['port']}',
+                            trailing: AppIconButton(
+                              icon: Icons.close_rounded,
+                              tooltip: context.l10n.homeRemoveFromHistory,
+                              size: 36,
+                              iconSize: 20,
+                              color: p.textMuted,
+                              onPressed: () => onRecentRemove(index),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ],
         );
@@ -130,29 +153,192 @@ class DeviceLists extends StatelessWidget {
   }
 }
 
-/// A computer badge with a live dot: found on the network right now.
-class _OnlineBadge extends StatelessWidget {
-  const _OnlineBadge({required this.color});
+/// A card with an icon and capitals over its rows.
+class _ListCard extends StatelessWidget {
+  const _ListCard({
+    required this.icon,
+    required this.title,
+    required this.child,
+    this.trailing,
+    this.centered = false,
+  });
 
-  final Color color;
+  final IconData icon;
+  final String title;
+  final Widget child;
+  final Widget? trailing;
+
+  /// The heading in the middle, over a message rather than rows.
+  final bool centered;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return SizedBox.square(
-      dimension: 44,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          IconBadge(icon: Icons.computer_rounded, color: color),
-          Positioned(
-            right: -2,
-            bottom: -2,
-            child: Container(
-              padding: const EdgeInsets.all(2.5),
-              decoration: BoxDecoration(color: p.surface, shape: BoxShape.circle),
-              child: PulseDot(color: p.success, size: 9),
+    final header = Row(
+      mainAxisSize: centered ? MainAxisSize.min : MainAxisSize.max,
+      children: [
+        Icon(icon, color: p.primaryText, size: 18),
+        const SizedBox(width: AppSpace.xs),
+        Flexible(
+          fit: centered ? FlexFit.loose : FlexFit.tight,
+          child: Semantics(
+            header: true,
+            child: Text(
+              title.toUpperCase(),
+              style: AppType.overline.copyWith(color: p.textSecondary),
             ),
+          ),
+        ),
+        if (trailing != null) ...[
+          if (centered) const SizedBox(width: AppSpace.xs),
+          trailing!,
+        ],
+      ],
+    );
+    return Container(
+      padding: const EdgeInsets.all(AppSpace.sm),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: AppRadius.all(AppRadius.lg),
+        border: Border.all(color: p.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 36,
+            child: centered ? Center(child: header) : header,
+          ),
+          const SizedBox(height: AppSpace.xs),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// A PC in a list: its badge, name and address, and an action.
+class _PcRow extends StatelessWidget {
+  const _PcRow({
+    required this.onTap,
+    required this.badge,
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+  });
+
+  final VoidCallback onTap;
+  final Widget badge;
+  final String title;
+  final String subtitle;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final radius = AppRadius.all(AppRadius.md);
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: '$title, $subtitle',
+      pressedScale: 0.98,
+      borderRadius: radius,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
+        decoration: BoxDecoration(
+          color: p.surfaceRaised,
+          borderRadius: radius,
+          border: Border.all(color: p.border),
+        ),
+        child: Row(
+          children: [
+            ExcludeSemantics(child: badge),
+            const SizedBox(width: AppSpace.sm),
+            Expanded(
+              child: ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.titleSmall.copyWith(
+                        color: p.textPrimary,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.mono.copyWith(
+                        color: p.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            trailing,
+            const SizedBox(width: AppSpace.xxs),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Nothing found on the network, and why that may be.
+class _NothingFound extends StatelessWidget {
+  const _NothingFound({super.key, required this.onRescan});
+
+  final VoidCallback onRescan;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.xs,
+        0,
+        AppSpace.xs,
+        AppSpace.xs,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: p.surfaceSunken,
+              borderRadius: AppRadius.all(AppRadius.md),
+            ),
+            child: Icon(Icons.wifi_off_rounded, color: p.textMuted, size: 30),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          Text(
+            context.l10n.homeNoDevices,
+            textAlign: TextAlign.center,
+            style: AppType.titleSmall.copyWith(color: p.textPrimary),
+          ),
+          const SizedBox(height: AppSpace.xxs),
+          Text(
+            context.l10n.homeNoDevicesHint,
+            textAlign: TextAlign.center,
+            style: AppType.bodySmall.copyWith(
+              color: p.textSecondary,
+              fontSize: 12.5,
+            ),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          AppButton(
+            label: context.l10n.homeRescan,
+            icon: Icons.refresh_rounded,
+            variant: AppButtonVariant.tonal,
+            expand: false,
+            height: 42,
+            onPressed: onRescan,
           ),
         ],
       ),
@@ -160,7 +346,7 @@ class _OnlineBadge extends StatelessWidget {
   }
 }
 
-/// Two placeholder rows and a "searching" line while mDNS looks for PCs.
+/// A "searching" line and two placeholder rows while mDNS looks for PCs.
 class _SearchingPlaceholder extends StatelessWidget {
   const _SearchingPlaceholder({super.key});
 
@@ -168,39 +354,41 @@ class _SearchingPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     Widget row(double titleWidth) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSpace.xs),
-          child: AppCard(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm + 2),
-            child: Row(
-              children: [
-                const Skeleton(width: 44, height: 44, radius: 14),
-                const SizedBox(width: AppSpace.md - 2),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Skeleton(width: titleWidth, height: 14),
-                      const SizedBox(height: 8),
-                      const Skeleton(width: 120, height: 11),
-                    ],
-                  ),
-                ),
-              ],
+      padding: const EdgeInsets.only(top: AppSpace.xs),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: p.surfaceRaised,
+          borderRadius: AppRadius.all(AppRadius.md),
+          border: Border.all(color: p.border),
+        ),
+        child: Row(
+          children: [
+            const Skeleton(width: 38, height: 38, radius: 13),
+            const SizedBox(width: AppSpace.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Skeleton(width: titleWidth, height: 11),
+                  const SizedBox(height: 6),
+                  const Skeleton(width: 90, height: 9),
+                ],
+              ),
             ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        row(150),
-        row(110),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+          padding: const EdgeInsets.symmetric(horizontal: 2),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              PulseDot(color: p.primaryText, size: 8),
-              const SizedBox(width: AppSpace.sm),
+              Icon(Icons.radar_rounded, color: p.primaryText, size: 18),
+              const SizedBox(width: AppSpace.xs),
               Text(
                 context.l10n.homeSearching,
                 style: AppType.bodySmall.copyWith(color: p.textSecondary),
@@ -208,6 +396,8 @@ class _SearchingPlaceholder extends StatelessWidget {
             ],
           ),
         ),
+        row(150),
+        row(110),
       ],
     );
   }

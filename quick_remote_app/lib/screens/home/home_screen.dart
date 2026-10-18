@@ -156,105 +156,114 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Scaffold(
-      body: AmbientBackground(
-        child: SafeArea(
-          bottom: false,
-          child: ContentWidth(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.sm, AppSpace.sm + 4, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: HomeTopBar(
-                      onSettings: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpace.page,
-                    AppSpace.lg,
-                    AppSpace.page,
-                    MediaQuery.paddingOf(context).bottom + AppSpace.xl,
-                  ),
-                  sliver: SliverList.list(
-                    children: [
-                      FadeSlideIn(
-                        child: AppCard(
-                          elevated: true,
-                          radius: AppRadius.xl,
-                          tint: p.primary,
-                          padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, AppSpace.sm),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const RepaintBoundary(child: HomeBranding()),
-                              const SizedBox(height: AppSpace.xl),
-                              ConnectButtons(
-                                connecting: _connecting,
-                                onScan: _scanAndConnect,
-                                onBluetooth: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const BluetoothConnectScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: AppSpace.xxs),
-                              Center(
-                                child: TextButton.icon(
-                                  onPressed: () => _showManualConnect(context),
-                                  icon: const Icon(Icons.keyboard_alt_outlined, size: 18),
-                                  label: Text(context.l10n.homeManualConnection),
-                                  style: TextButton.styleFrom(foregroundColor: p.textSecondary),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Reveal(
-                        child: _error == null
-                            ? null
-                            : Padding(
-                                key: ValueKey(_error),
-                                padding: const EdgeInsets.only(top: AppSpace.md),
-                                child: InlineAlert(
-                                  message: _error!,
-                                  tone: AppTone.danger,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(height: AppSpace.xxl),
-                      FadeSlideIn(
-                        index: 2,
-                        child: DeviceLists(
-                          recentDevices: _recentDevices,
-                          onDiscoveredTap: (dev) => _showManualConnect(
-                            context,
-                            defaultIp: dev.ip,
-                            defaultPort: dev.port.toString(),
-                          ),
-                          onRecentTap: (dev) =>
-                              _executeConnection(dev['host'], dev['port'], dev['pin']),
-                          onRecentRemove: _removeRecentDevice,
-                        ),
-                      ),
+      body: Stack(
+        children: [
+          // A pool of light behind the top right corner.
+          Positioned(
+            top: -120,
+            right: -80,
+            child: IgnorePointer(
+              child: Container(
+                width: 360,
+                height: 360,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      p.primaryBright.withValues(alpha: p.isDark ? 0.32 : 0.16),
+                      p.primaryBright.withValues(alpha: 0),
                     ],
+                    stops: const [0, 0.65],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          SafeArea(
+            bottom: false,
+            child: ContentWidth(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        AppSpace.page,
+                        AppSpace.xs,
+                        AppSpace.page,
+                        MediaQuery.paddingOf(context).bottom + AppSpace.sm,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          HomeTopBar(
+                            onSettings: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: AppSpace.md),
+                          const FadeSlideIn(child: RepaintBoundary(child: HomeBranding())),
+                          const SizedBox(height: AppSpace.sm),
+                          FadeSlideIn(
+                            index: 1,
+                            child: ConnectButtons(
+                              connecting: _connecting,
+                              onScan: _scanAndConnect,
+                              onBluetooth: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => const BluetoothConnectScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                          Reveal(
+                            child: _error == null
+                                ? null
+                                : Padding(
+                                    key: ValueKey(_error),
+                                    padding: const EdgeInsets.only(top: AppSpace.sm),
+                                    child: InlineAlert(message: _error!, tone: AppTone.danger),
+                                  ),
+                          ),
+                          const SizedBox(height: AppSpace.sm),
+                          FadeSlideIn(
+                            index: 2,
+                            child: DeviceLists(
+                              recentDevices: _recentDevices,
+                              onDiscoveredTap: (dev) => _showManualConnect(
+                                context,
+                                defaultIp: dev.ip,
+                                defaultPort: dev.port.toString(),
+                              ),
+                              onRecentTap: (dev) => _executeConnection(dev['host'], dev['port'], dev['pin']),
+                              onRecentRemove: _removeRecentDevice,
+                            ),
+                          ),
+                          const Spacer(),
+                          const SizedBox(height: AppSpace.md),
+                          Center(
+                            child: TextButton.icon(
+                              onPressed: () => _showManualConnect(context),
+                              icon: const Icon(Icons.keyboard_alt_outlined, size: 18),
+                              label: Text(context.l10n.homeManualConnection),
+                              style: TextButton.styleFrom(
+                                foregroundColor: p.primaryText,
+                                textStyle: AppType.label.copyWith(fontSize: 13),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
