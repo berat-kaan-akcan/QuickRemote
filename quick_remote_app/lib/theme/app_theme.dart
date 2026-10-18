@@ -34,7 +34,7 @@ abstract final class AppTheme {
     final scheme = ColorScheme(
       brightness: brightness,
       primary: p.primaryText,
-      onPrimary: p.isDark ? AppColors.ink : AppColors.white,
+      onPrimary: readableOn(p.primaryText),
       primaryContainer: p.primary.withValues(alpha: p.isDark ? 0.28 : 0.12),
       onPrimaryContainer: p.primaryText,
       secondary: p.accent,
@@ -204,7 +204,7 @@ abstract final class AppTheme {
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? AppColors.white : p.textMuted,
+          (s) => s.contains(WidgetState.selected) ? p.onPrimary : p.textMuted,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected) ? p.primary : p.surfaceSunken,

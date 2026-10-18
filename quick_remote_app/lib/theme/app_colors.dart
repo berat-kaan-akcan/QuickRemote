@@ -134,7 +134,8 @@ abstract final class AppColors {
   static const mintPrimaryDeep = Color(0xFF0E9F77);
   static const mintOnPrimary = Color(0xFF032019);
 
-  // Violet: lively violet on a night purple.
+  // Violet: lively violet on a night purple. The bright end is darker than
+  // the design's so that white text on it reaches 4.5:1.
   static const violetBackground = Color(0xFF110D20);
   static const violetSurface = Color(0xFF1A142E);
   static const violetRaised = Color(0xFF1F1836);
@@ -145,11 +146,12 @@ abstract final class AppColors {
   static const violetTextSecondary = Color(0xFFB9B0D6);
   static const violetTextMuted = Color(0xFF8C82B0);
   static const violetPrimary = Color(0xFF7C4DFF);
-  static const violetPrimaryBright = Color(0xFF9B6BFF);
+  static const violetPrimaryBright = Color(0xFF874DFF);
   static const violetPrimaryDeep = Color(0xFF5E2FE0);
   static const violetPrimaryText = Color(0xFFC4A9FF);
 
-  // Sunset: cream and terracotta, light only.
+  // Sunset: cream and terracotta, light only. Primary and its bright end are
+  // darker than the design's so that white text on them reaches 4.5:1.
   static const sunsetBackground = Color(0xFFFBF5EE);
   static const sunsetSurface = Color(0xFFFFFFFF);
   static const sunsetSunken = Color(0xFFF3E9DD);
@@ -158,7 +160,7 @@ abstract final class AppColors {
   static const sunsetText = Color(0xFF2A1A12);
   static const sunsetTextSecondary = Color(0xFF6B5244);
   static const sunsetTextMuted = Color(0xFF8E7566);
-  static const sunsetPrimary = Color(0xFFD9482B);
-  static const sunsetPrimaryBright = Color(0xFFF0763B);
+  static const sunsetPrimary = Color(0xFFD24226);
+  static const sunsetPrimaryBright = Color(0xFFCA4C0F);
   static const sunsetPrimaryDeep = Color(0xFFB83A1F);
 }
