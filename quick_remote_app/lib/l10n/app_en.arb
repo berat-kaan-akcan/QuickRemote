@@ -313,5 +313,21 @@
   "certWarningNote": "If the codes differ, don't connect.",
   "homeNoDevicesHint": "QuickRemote PC must be open on the computer, on the same Wi-Fi.",
   "languageSystemNote": "System language follows the phone's language; if it is neither Turkish nor English, English is used.",
-  "historySwipeHint": "Swipe left to delete"
+  "historySwipeHint": "Swipe left to delete",
+  "settingsThemeTitle": "Theme",
+  "settingsThemeSubtitle": "{theme} · {mode}",
+  "themeModeHeader": "Light / Dark",
+  "themeModeSystem": "System",
+  "themeModeLight": "Light",
+  "themeModeDark": "Dark",
+  "themeColorHeader": "Color theme",
+  "themeCobaltNote": "Cobalt follows the system's light or dark mode; you can also pick one.",
+  "themeDarkOnlyNote": "This theme is dark only, made for a dark room.",
+  "themeLightOnlyNote": "Sunset is light only, for bright rooms.",
+  "themeCobalt": "Cobalt",
+  "themeOled": "OLED",
+  "themeHighContrast": "High contrast",
+  "themeMint": "Mint",
+  "themeViolet": "Violet",
+  "themeSunset": "Sunset"
 }

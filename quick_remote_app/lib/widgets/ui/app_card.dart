@@ -115,7 +115,7 @@ class IconBadge extends StatelessWidget {
   final Color color;
   final double size;
 
-  /// A solid gradient badge with a white icon, for the strongest emphasis.
+  /// A solid gradient badge, for the strongest emphasis.
   final bool filled;
 
   @override
@@ -136,7 +136,7 @@ class IconBadge extends StatelessWidget {
         borderRadius: AppRadius.all(size * 0.32),
         boxShadow: filled ? AppShadows.glow(color, strength: 0.5) : null,
       ),
-      child: Icon(icon, color: filled ? Colors.white : color, size: size * 0.5),
+      child: Icon(icon, color: filled ? readableOn(color) : color, size: size * 0.5),
     );
   }
 }

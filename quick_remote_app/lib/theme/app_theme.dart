@@ -11,6 +11,14 @@ abstract final class AppTheme {
   static final light = _build(AppPalette.light);
   static final dark = _build(AppPalette.dark);
 
+  static final _themes = <AppPalette, ThemeData>{
+    AppPalette.light: light,
+    AppPalette.dark: dark,
+  };
+
+  /// The theme of a color theme's palette, built once.
+  static ThemeData of(AppPalette p) => _themes.putIfAbsent(p, () => _build(p));
+
   /// Status and navigation bar icons that stay readable on [p.background].
   static SystemUiOverlayStyle overlayStyle(AppPalette p) => SystemUiOverlayStyle(
         statusBarColor: AppColors.white.withValues(alpha: 0),
@@ -26,7 +34,7 @@ abstract final class AppTheme {
     final scheme = ColorScheme(
       brightness: brightness,
       primary: p.primaryText,
-      onPrimary: p.isDark ? AppColors.ink : AppColors.white,
+      onPrimary: readableOn(p.primaryText),
       primaryContainer: p.primary.withValues(alpha: p.isDark ? 0.28 : 0.12),
       onPrimaryContainer: p.primaryText,
       secondary: p.accent,
@@ -196,7 +204,7 @@ abstract final class AppTheme {
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? AppColors.white : p.textMuted,
+          (s) => s.contains(WidgetState.selected) ? p.onPrimary : p.textMuted,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected) ? p.primary : p.surfaceSunken,

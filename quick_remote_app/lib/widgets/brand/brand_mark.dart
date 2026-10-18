@@ -18,6 +18,7 @@ class BrandColors {
     required this.keyChevron,
     required this.next,
     required this.nextGlow,
+    this.nextChevron = AppColors.white,
   });
 
   final Color tileTop;
@@ -35,6 +36,9 @@ class BrandColors {
   /// The large Next key's gradient, from its top left, and the glow under it.
   final List<Color> next;
   final Color nextGlow;
+
+  /// The chevron on the Next key: the color on the theme's primary.
+  final Color nextChevron;
 
   static final dark = BrandColors(
     tileTop: AppColors.logoTileTop,
@@ -67,8 +71,25 @@ class BrandColors {
     nextGlow: AppColors.cobaltBright.withValues(alpha: 0.45),
   );
 
-  static BrandColors of(BuildContext context) =>
-      context.palette.isDark ? dark : light;
+  /// The tile in the theme's colors: Cobalt's own, else made of the
+  /// palette (the Next key in its primary).
+  static BrandColors of(BuildContext context) {
+    final p = context.palette;
+    if (identical(p, AppPalette.dark)) return dark;
+    if (identical(p, AppPalette.light)) return light;
+    return BrandColors(
+      tileTop: Color.lerp(p.background, p.primaryBright, 0.08)!,
+      tileBottom: p.background,
+      tileLight: p.isDark ? p.primaryBright.withValues(alpha: 0.18) : null,
+      edge: p.isDark ? AppColors.white.withValues(alpha: 0.06) : p.border,
+      keyFill: p.surfaceRaised,
+      keyBorder: p.borderStrong,
+      keyChevron: p.textSecondary,
+      next: [p.primaryBright, p.primary, p.primaryDeep],
+      nextGlow: p.primaryBright.withValues(alpha: p.isDark ? 0.6 : 0.45),
+      nextChevron: p.onPrimary,
+    );
+  }
 }
 
 /// The app icon (brand/logo/app-icon.svg): the app's own Next key, large,
@@ -290,7 +311,7 @@ class BrandTilePainter extends CustomPainter {
             ..moveTo(c.dx - 22, c.dy - 44)
             ..lineTo(c.dx + 22, c.dy)
             ..lineTo(c.dx - 22, c.dy + 44),
-          _chevron(AppColors.white, 32),
+          _chevron(colors.nextChevron, 32),
         );
       },
     );
