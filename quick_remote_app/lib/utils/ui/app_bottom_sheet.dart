@@ -60,6 +60,24 @@ class AppBottomSheet {
     );
   }
 
+  /// A left-aligned sheet title with a plain icon before it.
+  static Widget buildHeader(String title, {required IconData icon, Color? iconColor}) {
+    return Builder(
+      builder: (context) {
+        final p = context.palette;
+        return Row(
+          children: [
+            Icon(icon, color: iconColor ?? p.primaryText, size: 24),
+            const SizedBox(width: AppSpace.sm),
+            Expanded(
+              child: Text(title, style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Bottom sheet'te kullanılan standart "İptal" butonu.
   static Widget buildCancelButton(BuildContext context, {String? text}) {
     return AppButton(
