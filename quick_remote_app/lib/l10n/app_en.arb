@@ -62,11 +62,9 @@
   "homeRemoveFromHistory": "Remove from History",
   "unknownPc": "Unknown PC",
   "verifyTitle": "Compare the Security Code",
-  "verifyContent": "This is your first connection to this PC. The security code on the PC screen should be:\n\n{code}\n\nIf the codes differ, don't connect: another device on the network may be pretending to be the PC. Scanning the QR code skips this step.",
   "verifyConfirm": "Codes Match, Connect",
   "cancelAction": "Cancel",
   "certWarningTitle": "Security Warning",
-  "certWarningContent": "This device's identity (certificate) differs from the one saved earlier.\n\nThis is normal if you reinstalled your PC or renewed the certificate. The security code on the PC screen should be:\n\n{code}\n\nIf the codes differ, don't connect.",
   "certWarningConfirm": "Connect Anyway and Update",
   "manualTitle": "Manual Connection",
   "manualIp": "IP Address",
@@ -308,5 +306,12 @@
   "btToolsFull": "Laser, pen, highlighter, eraser",
   "btToolsImpress": "Cursor, pen",
   "btImpressToolsNote": "Impress has no laser, highlighter or eraser shortcut; the cursor is the pointer.",
-  "btWpsToolsNote": "In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else."
+  "btWpsToolsNote": "In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else.",
+  "verifyIntro": "This is your first connection to this PC. The security code on the PC screen should be:",
+  "verifyNote": "If the codes differ, don't connect: another device on the network may be pretending to be the PC. Scanning the QR code skips this step.",
+  "certWarningIntro": "This device's identity (certificate) differs from the one saved earlier. This is normal if you reinstalled your PC or renewed the certificate. The security code on the PC screen should be:",
+  "certWarningNote": "If the codes differ, don't connect.",
+  "homeNoDevicesHint": "QuickRemote PC must be open on the computer, on the same Wi-Fi.",
+  "languageSystemNote": "System language follows the phone's language; if it is neither Turkish nor English, English is used.",
+  "historySwipeHint": "Swipe left to delete"
 }

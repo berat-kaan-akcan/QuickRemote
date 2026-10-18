@@ -77,42 +77,66 @@ class _BrandSplashState extends State<BrandSplash>
             // the yellow double underline.
             child: Material(
               color: p.background,
-              child: Center(
-                child: Transform.scale(
-                  scale: 1 + 0.06 * fadeOut,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Opacity(
-                        opacity: tileIn,
-                        child: Transform.scale(
-                          scale: 0.86 + 0.14 * tileIn,
-                          child: BrandTile(size: 150, progress: draw),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // A pool of light behind the icon.
+                  Opacity(
+                    opacity: tileIn,
+                    child: Container(
+                      width: 420,
+                      height: 420,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            p.primaryBright.withValues(
+                              alpha: p.isDark ? 0.35 : 0.18,
+                            ),
+                            p.primaryBright.withValues(alpha: 0),
+                          ],
+                          stops: const [0, 0.65],
                         ),
                       ),
-                      const SizedBox(height: AppSpace.xl),
-                      Opacity(
-                        opacity: textIn,
-                        child: Transform.translate(
-                          offset: Offset(0, 10 * (1 - textIn)),
-                          child: Column(
-                            children: [
-                              const BrandWordmark(fontSize: 30),
-                              const SizedBox(height: AppSpace.xs),
-                              Text(
-                                widget.tagline,
-                                textAlign: TextAlign.center,
-                                style: AppType.bodySmall.copyWith(
-                                  color: p.textSecondary,
-                                ),
-                              ),
-                            ],
+                    ),
+                  ),
+                  Transform.scale(
+                    scale: 1 + 0.06 * fadeOut,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Opacity(
+                          opacity: tileIn,
+                          child: Transform.scale(
+                            scale: 0.86 + 0.14 * tileIn,
+                            child: BrandTile(size: 112, progress: draw),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: AppSpace.md),
+                        Opacity(
+                          opacity: textIn,
+                          child: Transform.translate(
+                            offset: Offset(0, 10 * (1 - textIn)),
+                            child: Column(
+                              children: [
+                                const BrandWordmark(fontSize: 30),
+                                const SizedBox(height: AppSpace.md),
+                                Text(
+                                  widget.tagline,
+                                  textAlign: TextAlign.center,
+                                  style: AppType.body.copyWith(
+                                    color: p.textSecondary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

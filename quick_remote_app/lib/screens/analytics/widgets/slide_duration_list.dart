@@ -34,42 +34,44 @@ class SlideDurationList extends StatelessWidget {
         : tps.values.reduce((a, b) => a > b ? a : b);
 
     final longest = analytics.longestSlide;
-    final shortest = analytics.shortestSlide;
 
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final slideNum = sortedSlides[index];
-          final duration = tps[slideNum]!;
-          final ratio = maxDuration.inMilliseconds > 0
-              ? duration.inMilliseconds / maxDuration.inMilliseconds
-              : 0.0;
-
-          final isLongest = longest != null && slideNum == longest.key;
-          final isShortest = shortest != null && slideNum == shortest.key && !isLongest;
-
-          final Color barColor;
-          if (isLongest) {
-            barColor = p.accent;
-          } else if (isShortest) {
-            barColor = p.success;
-          } else {
-            barColor = p.primaryText;
-          }
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.page, vertical: AppSpace.xxs),
-            child: _SlideBar(
-              index: index,
-              label: 'S$slideNum',
-              value: Formatters.formatDurationShort(duration),
-              ratio: ratio.clamp(0.03, 1.0),
-              color: barColor,
-              semanticLabel: '${context.l10n.reportSlide(slideNum)}: ${Formatters.formatDuration(duration, context.l10n)}',
-            ),
-          );
-        },
-        childCount: sortedSlides.length,
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: AppSpace.sm),
+          decoration: BoxDecoration(
+            color: p.surface,
+            borderRadius: AppRadius.all(AppRadius.md),
+            border: Border.all(color: p.border),
+          ),
+          child: Column(
+            children: [
+              for (final (index, slideNum) in sortedSlides.indexed)
+                Builder(
+                  builder: (context) {
+                    final duration = tps[slideNum]!;
+                    final ratio = maxDuration.inMilliseconds > 0
+                        ? duration.inMilliseconds / maxDuration.inMilliseconds
+                        : 0.0;
+                    final isLongest = longest != null && slideNum == longest.key;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: _SlideBar(
+                        index: index,
+                        label: context.l10n.reportSlide(slideNum),
+                        value: Formatters.formatDurationShort(duration),
+                        ratio: ratio.clamp(0.03, 1.0),
+                        color: isLongest ? p.accent : p.primaryText,
+                        semanticLabel:
+                            '${context.l10n.reportSlide(slideNum)}: ${Formatters.formatDuration(duration, context.l10n)}',
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -96,81 +98,41 @@ class _SlideBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final valueStyle = AppType.mono.copyWith(fontSize: 11.5, fontWeight: FontWeight.w600);
-    const height = 30.0;
+    final text = AppType.bodySmall.copyWith(color: p.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w500);
     return Semantics(
       label: semanticLabel,
       child: ExcludeSemantics(
         child: Row(
           children: [
-            SizedBox(
-              width: 48,
-              child: Text(
-                label,
-                style: AppType.mono.copyWith(color: p.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
+            SizedBox(width: 64, child: Text(label, maxLines: 1, style: text)),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: AppRadius.all(5),
+                child: SizedBox(
+                  height: 10,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: ColoredBox(color: p.surfaceSunken)),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: AppMotion.reduced(context) ? ratio : 0, end: ratio),
+                        duration: AppMotion.of(context, AppMotion.slow + AppMotion.stagger * index.clamp(0, 10)),
+                        curve: AppMotion.standard,
+                        builder: (context, t, _) => FractionallySizedBox(
+                          widthFactor: t,
+                          heightFactor: 1,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(color: color, borderRadius: AppRadius.all(5)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final full = constraints.maxWidth;
-                  return TweenAnimationBuilder<double>(
-                    tween: Tween(begin: AppMotion.reduced(context) ? ratio : 0, end: ratio),
-                    duration: AppMotion.of(context, AppMotion.slow + AppMotion.stagger * index.clamp(0, 10)),
-                    curve: AppMotion.standard,
-                    builder: (context, t, _) {
-                      final width = full * t;
-                      // The value sits inside a long bar and right of a short one.
-                      final inside = t > 0.22;
-                      return SizedBox(
-                        height: height,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: p.surfaceSunken,
-                                  borderRadius: AppRadius.all(AppRadius.xs),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: width,
-                              height: height,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [color.withValues(alpha: 0.95), color.withValues(alpha: 0.65)],
-                                ),
-                                borderRadius: AppRadius.all(AppRadius.xs),
-                              ),
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: AppSpace.xs),
-                              child: inside
-                                  ? Text(
-                                      value,
-                                      maxLines: 1,
-                                      style: valueStyle.copyWith(
-                                        color: readableOn(color),
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            if (!inside)
-                              Positioned(
-                                left: width + AppSpace.xs,
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Text(value, style: valueStyle.copyWith(color: p.textSecondary)),
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+            SizedBox(
+              width: 44,
+              child: Text(value, textAlign: TextAlign.right, style: text.copyWith(color: p.textSecondary)),
             ),
           ],
         ),
