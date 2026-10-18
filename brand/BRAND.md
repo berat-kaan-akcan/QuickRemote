@@ -2,34 +2,44 @@
 
 QuickRemote'un logosu, renkleri, yazı tipleri ve arayüz dili. Telefon (`quick_remote_app`) ve PC (`quick_remote_pc`) uygulamaları bu rehbere göre çalışır. Koddaki karşılıkları her bölümde belirtiliyor.
 
-## Konsept: "Signal & Laser"
+## Konsept: "Sonraki tuşu ve lazer"
 
-QuickRemote ile sunum telefondan yönetilir. Kimliğin iki öğesi var:
+QuickRemote ile sunum telefondan yönetilir. Logo uygulamanın kendi parçalarından yapılır: en çok basılan tuş olan **Sonraki**, yanında küçük **Önceki** tuşu ve köşede **lazer noktası**. Kimliğin iki rengi var:
 
-- **Kobalt mavisi**: bağlantıyı ve kontrolü, yani güveni temsil eder. Arayüzün ana rengidir.
+- **Kobalt mavisi**: bağlantıyı ve kontrolü, yani güveni temsil eder. Arayüzün ana rengidir; logodaki büyük tuş uygulamadaki Sonraki tuşunun aynısıdır.
 - **Lazer turuncusu**: işaretçiyi ve aksiyonu temsil eder. Tek sıcak vurgu rengidir; az ve bilinçli kullanılır.
 
 ## Logo
 
-İşaret, yumuşak köşeli bir **"Q" halkasıdır**. Halka aynı zamanda bir slaydı ya da ekranı andırır. Q'nun kuyruğu halkanın sağ alt köşesinden çıkar ve bir **lazer noktasında** biter. Okunuşu: "Quick" (Q), "Remote" (işaretçi), sunum (çerçeve).
+İşaret (59A), uygulamanın koyu zemini (`#0A0D18`) üzerinde durur:
+
+- **Sonraki tuşu**: büyük, yuvarlak köşeli; kobalt gradyan (`#3E63F5` → `#2F4BE0` → `#1B28A3`), üstünde hafif parlaklık, altında mavi parıltı, ortasında beyaz ok.
+- **Önceki tuşu**: solunda küçük, koyu kart (`#1A1F36`, ince kenar), soluk ok.
+- **Lazer noktası**: sağ üst köşede `#FF6A3D`, çevresinde turuncu parıltı.
+
+Bütün SVG'ler `brand/tools/draw_logo.py` ile tek bir ölçü tanımından üretilir (yazı dosyaları hariç); elle düzenlenmez. Ölçüler 512 px'lik ikonun birimleriyle betikte yazılıdır.
 
 | Dosya (`brand/logo/`) | Kullanım |
 |---|---|
-| `app-icon.svg` | Uygulama ikonu: kobalt gradyan karo, beyaz işaret |
-| `app-icon-square.svg` | Köşesiz karo (Android adaptive arka plan kaynağı) |
-| `mark-color.svg` | Açık zemin: kobalt halka, turuncu nokta |
-| `mark-white.svg` | Koyu zemin ya da kobalt üzeri: beyaz halka, turuncu nokta |
-| `mark-mono.svg` | Tek renk (Android 13 temalı ikon, baskı) |
-| `lockup-light-bg.svg` / `lockup-dark-bg.svg` | İşaret ve yazı yan yana |
-| `wordmark-light-bg.svg` / `wordmark-dark-bg.svg` | Yalnızca yazı |
-| `favicon.svg` | 16–48 px için kalın çizgili, parıltısız sürüm |
+| `app-icon.svg` | Uygulama ikonu: koyu karo. Başlatıcı ikonu, Windows `.ico`, `logo.png` |
+| `app-icon-light.svg` / `app-icon-oled.svg` | Açık ve OLED siyah zeminli karo |
+| `adaptive-background.svg` / `adaptive-foreground.svg` | Android adaptive ikonun katmanları. İşaret, lazer noktası dahil 66 dp'lik güvenli alanın içindedir; hiçbir maske onu kesmez |
+| `adaptive-background-oled.svg` / `adaptive-foreground-oled.svg` | Saatin başlatıcı ikonu: siyah zeminde aynı işaret |
+| `adaptive-monochrome.svg` | Android 13 temalı ikonu |
+| `mark-mono.svg` | Tek renk: Önceki tuşu çerçeve, Sonraki tuşu dolu ve oku oyuk, nokta dolu (temalı ikon, baskı) |
+| `lockup-light-bg.svg` / `lockup-dark-bg.svg` | İkon ve yazı yan yana |
+| `wordmark-light-bg.svg` / `wordmark-dark-bg.svg` | Yalnızca yazı (elle hazırlanmış) |
+| `favicon.svg` | 16–48 px için parıltısız sürüm |
 
-- **Wordmark**: Space Grotesk ile "**Quick**" Bold, "Remote" Medium ve birincil renkte yazılır. Ad her zaman bitişik ve büyük harflerle "QuickRemote" olarak yazılır. PC uygulamasında yanına gri renkte "PC" eklenir.
-- **Boşluk**: İşaretin çevresinde en az lazer noktasının çapı kadar boşluk bırakılır.
-- **En küçük boyut**: İşaret 16 px. 24 px'in altında `favicon.svg` kullanılır.
-- **Yapılmaması gerekenler**: İşareti döndürmek, gerdirmek, gölge eklemek; lazer noktasını turuncu dışında bir renge boyamak (tek renk sürüm hariç); halkayı çembere çevirmek.
+Saatin bildirim ikonu (`quick_remote_wear/.../drawable/ic_presenting.xml`) da aynı betikle tek renk işaretten üretilir.
 
-Uygulamalarda logo görsel dosyası yerine kodla çizilir. Böylece her boyutta keskin kalır, iki temaya uyar ve animasyonlu açılabilir. Koddaki karşılıkları: `lib/widgets/brand/brand_mark.dart` içinde `BrandMark`, `BrandTile`, `BrandWordmark` ve `BrandLockup`.
+- **Wordmark**: Space Grotesk ile "**Quick**" Bold, "Remote" Medium ve birincil renkte yazılır. Ad her zaman bitişik ve büyük harflerle "QuickRemote" olarak yazılır. PC uygulamasında yanına gri renkte "PC" eklenir. İkonla yan yana yazıldığında yazı boyu ikon yüksekliğinin 0,53'ü, aradaki boşluk 0,22'sidir.
+- **Boşluk**: İkonun çevresinde en az lazer noktasının çapı kadar boşluk bırakılır.
+- **En küçük boyut**: İkon 16 px. 24 px'in altında `favicon.svg` kullanılır.
+- **Başlatıcı ikonu** her zaman koyu kobalt karodur. Uygulamanın içindeki ikon temayı izler: açık temada beyaz karo.
+- **Yapılmaması gerekenler**: İkonu döndürmek, gerdirmek; tuşların yerini ya da oranını değiştirmek; lazer noktasını turuncu dışında bir renge boyamak (tek renk sürüm hariç).
+
+Uygulamalarda logo görsel dosyası yerine kodla çizilir. Böylece her boyutta keskin kalır, temaya uyar ve animasyonlu açılabilir. Koddaki karşılıkları `lib/widgets/brand/brand_mark.dart` içinde: `BrandTile` (ikon; renkleri `BrandColors`), `BrandWordmark` ve `BrandLockup`. Ölçüleri `draw_logo.py` ile aynıdır; biri değişirse öbürü de değişir.
 
 ### Varlıkları yeniden üretmek
 
@@ -37,7 +47,7 @@ Uygulamalarda logo görsel dosyası yerine kodla çizilir. Böylece her boyutta 
 brand/tools/export_assets.sh   # rsvg-convert, ImageMagick 7 ve python3 gerekir
 ```
 
-Bu betik SVG'lerden şunları üretir: `brand/export/` (PNG'ler, favicon), telefon uygulamasının ikonları (`assets/images/logo.png`, Android mipmap'leri, adaptive ön plan/arka plan/monokrom katmanlar, Android 7–11 için `splash_logo.png`), PC uygulamasının `assets/images/logo.png` dosyası ve Windows `app_icon.ico`.
+Bu betik önce `draw_logo.py` ile SVG'leri yazar, sonra şunları üretir: `brand/export/` (PNG'ler, favicon), telefon uygulamasının ikonları (`assets/images/logo.png`, Android mipmap'leri, adaptive ön plan/arka plan/monokrom katmanlar, Android 7–11 için `splash_logo.png`), saatin adaptive katmanları, PC uygulamasının `assets/images/logo.png` dosyası ve Windows `app_icon.ico`.
 
 ## Renkler
 
@@ -50,7 +60,7 @@ Ham değerler `lib/theme/app_colors.dart` (`AppColors`) dosyasındadır. Ekranla
 | Cobalt | `#2F4BE0` | Birincil dolgu; açık temada birincil metin |
 | Cobalt Bright | `#3E63F5` | Birincil gradyanın ucu |
 | Cobalt Light | `#8EA1FF` | Koyu temada birincil metin ve ikon |
-| Cobalt Deep | `#1B28A3` | Logo karosunun gradyan ucu |
+| Cobalt Deep | `#1B28A3` | Logodaki Sonraki tuşunun gradyan ucu |
 | Laser | `#FF6A3D` | Vurgu: lazer noktası, aktif slayt, parıltı |
 | Laser Deep | `#C8401C` | Açık temada vurgu metni |
 
@@ -153,4 +163,4 @@ Bileşenler `lib/widgets/ui/` altındadır ve tek bir import ile gelir: `import 
 
 ## Tema
 
-İki uygulama da sistemin açık/koyu ayarını izler (`ThemeMode.system`). `AppTheme.light` ve `AppTheme.dark` tüm Material bileşenlerini (buton, input, diyalog, switch, slider, tooltip, sayfa geçişi) bu rehbere bağlar. Android 12 ve üstündeki sistem açılış ekranı temaya göre Paper ya da Ink zeminde uygulama ikonunu gösterir; ardından Flutter'daki `BrandSplash` logoyu çizerek bu ekranı devralır.
+İki uygulama da sistemin açık/koyu ayarını izler (`ThemeMode.system`). `AppTheme.light` ve `AppTheme.dark` tüm Material bileşenlerini (buton, input, diyalog, switch, slider, tooltip, sayfa geçişi) bu rehbere bağlar. Android 12 ve üstündeki sistem açılış ekranı temaya göre Paper ya da Ink zeminde uygulama ikonunu gösterir; ardından Flutter'daki `BrandSplash` ikonun tuşlarını ve lazer noktasını sırayla getirerek bu ekranı devralır.
