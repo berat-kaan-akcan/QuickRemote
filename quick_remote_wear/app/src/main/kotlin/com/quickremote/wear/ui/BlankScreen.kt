@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import com.quickremote.wear.R
@@ -66,12 +68,18 @@ fun BlankScreen(white: Boolean, onRestore: () -> Unit) {
                 color = text,
                 textAlign = TextAlign.Center,
             )
-            Text(
-                back,
-                style = MaterialTheme.typography.bodySmall,
-                color = hint,
-                textAlign = TextAlign.Center,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Icon(WearIcons.TouchApp, contentDescription = null, tint = hint, modifier = Modifier.size(screen * 0.046f))
+                Text(
+                    back,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = hint,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
