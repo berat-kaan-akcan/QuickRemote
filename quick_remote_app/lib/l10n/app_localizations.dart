@@ -1981,6 +1981,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Silmek için sola kaydırın'**
   String get historySwipeHint;
+
+  /// No description provided for @settingsThemeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tema'**
+  String get settingsThemeTitle;
+
+  /// No description provided for @settingsThemeSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{theme} · {mode}'**
+  String settingsThemeSubtitle(String theme, String mode);
+
+  /// No description provided for @themeModeHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık / Koyu'**
+  String get themeModeHeader;
+
+  /// No description provided for @themeModeSystem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem'**
+  String get themeModeSystem;
+
+  /// No description provided for @themeModeLight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get themeModeLight;
+
+  /// No description provided for @themeModeDark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu'**
+  String get themeModeDark;
+
+  /// No description provided for @themeColorHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renk teması'**
+  String get themeColorHeader;
+
+  /// No description provided for @themeCobaltNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kobalt sistemle birlikte açık ya da koyu olur; elle de seçilebilir.'**
+  String get themeCobaltNote;
+
+  /// No description provided for @themeDarkOnlyNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu tema yalnız koyu; karanlık salon için tasarlandı.'**
+  String get themeDarkOnlyNote;
+
+  /// No description provided for @themeLightOnlyNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün Batımı yalnız açık; aydınlık odalar için.'**
+  String get themeLightOnlyNote;
+
+  /// No description provided for @themeCobalt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kobalt'**
+  String get themeCobalt;
+
+  /// No description provided for @themeOled.
+  ///
+  /// In tr, this message translates to:
+  /// **'OLED'**
+  String get themeOled;
+
+  /// No description provided for @themeHighContrast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüksek kontrast'**
+  String get themeHighContrast;
+
+  /// No description provided for @themeMint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nane'**
+  String get themeMint;
+
+  /// No description provided for @themeViolet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mor'**
+  String get themeViolet;
+
+  /// No description provided for @themeSunset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün Batımı'**
+  String get themeSunset;
 }
 
 class _AppLocalizationsDelegate

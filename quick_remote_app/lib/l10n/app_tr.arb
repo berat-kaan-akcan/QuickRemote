@@ -580,5 +580,31 @@
   "certWarningNote": "Kodlar aynı değilse bağlanmayın.",
   "homeNoDevicesHint": "Bilgisayarda QuickRemote PC açık ve aynı Wi-Fi'da olmalı.",
   "languageSystemNote": "Sistem dili, telefonun dilini izler; Türkçe ya da İngilizce değilse İngilizce olur.",
-  "historySwipeHint": "Silmek için sola kaydırın"
+  "historySwipeHint": "Silmek için sola kaydırın",
+  "settingsThemeTitle": "Tema",
+  "settingsThemeSubtitle": "{theme} · {mode}",
+  "@settingsThemeSubtitle": {
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      },
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "themeModeHeader": "Açık / Koyu",
+  "themeModeSystem": "Sistem",
+  "themeModeLight": "Açık",
+  "themeModeDark": "Koyu",
+  "themeColorHeader": "Renk teması",
+  "themeCobaltNote": "Kobalt sistemle birlikte açık ya da koyu olur; elle de seçilebilir.",
+  "themeDarkOnlyNote": "Bu tema yalnız koyu; karanlık salon için tasarlandı.",
+  "themeLightOnlyNote": "Gün Batımı yalnız açık; aydınlık odalar için.",
+  "themeCobalt": "Kobalt",
+  "themeOled": "OLED",
+  "themeHighContrast": "Yüksek kontrast",
+  "themeMint": "Nane",
+  "themeViolet": "Mor",
+  "themeSunset": "Gün Batımı"
 }
