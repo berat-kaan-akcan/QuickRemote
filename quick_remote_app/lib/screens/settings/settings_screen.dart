@@ -5,6 +5,7 @@ import '../../providers/settings_provider.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
 import '../../utils/ui/app_top_bar.dart';
 import '../../widgets/ui/ui.dart';
+import 'theme_screen.dart';
 import 'timer_settings_screen.dart';
 import 'presentation_history_screen.dart';
 import 'widgets/settings_rows.dart';
@@ -88,6 +89,23 @@ class SettingsScreen extends StatelessWidget {
                       index: 3,
                       child: SettingsGroup(
                         children: [
+                          SettingsRow(
+                            icon: Icons.palette_outlined,
+                            iconColor: p.violetText,
+                            title: l10n.settingsThemeTitle,
+                            subtitle: settings.colorTheme.followsMode
+                                ? l10n.settingsThemeSubtitle(
+                                    colorThemeName(l10n, settings.colorTheme),
+                                    themeModeName(l10n, settings.themeMode),
+                                  )
+                                : colorThemeName(l10n, settings.colorTheme),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ThemeScreen(),
+                              ),
+                            ),
+                          ),
                           SettingsRow(
                             icon: Icons.language_rounded,
                             iconColor: p.info,
