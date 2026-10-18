@@ -1,16 +1,24 @@
 package com.quickremote.wear.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import com.quickremote.wear.R
 import com.quickremote.wear.phone.Show
 import com.quickremote.wear.phone.TalkClock
 import com.quickremote.wear.ui.theme.LocalWearPalette
+import com.quickremote.wear.ui.theme.WearFonts
 import java.util.Locale
 import kotlinx.coroutines.delay
 
@@ -51,13 +59,23 @@ fun ShowClock(clock: TalkClock?, modifier: Modifier = Modifier) {
         over -> elapsed - clock.target
         else -> clock.target - elapsed
     }
-    Text(
-        (if (over) "+" else "") + elapsedText(seconds * 1_000L),
-        style = MaterialTheme.typography.labelMedium,
-        color = if (over) palette.danger else palette.laser,
-        maxLines = 1,
+    val color = if (over) palette.danger else palette.laser
+    // With the phone's timer symbol, the figures in Space Grotesk.
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
         modifier = modifier,
-    )
+    ) {
+        Icon(WearIcons.Timer, contentDescription = null, tint = color, modifier = Modifier.size(13.dp))
+        Text(
+            (if (over) "+" else "") + elapsedText(seconds * 1_000L),
+            style = MaterialTheme.typography.labelMedium,
+            fontFamily = WearFonts.grotesk,
+            fontWeight = FontWeight.SemiBold,
+            color = color,
+            maxLines = 1,
+        )
+    }
 }
 
 /**

@@ -14,6 +14,7 @@
     <string name="state_connecting_title">The phone is connecting</string>
     <string name="state_connecting">Waiting for the computer.</string>
     <string name="state_connected">Connected</string>
+    <string name="connected_show">Connected · %1$s</string>
     <string name="open_on_phone">Open on phone</string>
     <string name="retry">Try again</string>
 
@@ -32,6 +33,7 @@
     <string name="action_laser">Laser pointer</string>
     <string name="laser_close">Close laser</string>
     <string name="laser_hint">Laser: drag to move the pointer</string>
+    <string name="drag_to_move">Drag to move</string>
     <!-- The laser where the program has none: Windows WPS's arrow, or the mouse cursor (Impress over Bluetooth). -->
     <string name="action_arrow">Arrow pointer</string>
     <string name="action_cursor">Mouse cursor</string>
