@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/presentation_analytics.dart';
 import '../l10n/app_language.dart';
 import '../services/bluetooth/bt_key_mapping.dart';
+import '../theme/app_color_theme.dart';
 
 class SettingsProvider extends ChangeNotifier {
   // Early Warning Haptic Feedback
@@ -33,6 +34,10 @@ class SettingsProvider extends ChangeNotifier {
   // UI language; system follows the phone (not sent to the PC)
   AppLanguage _language = AppLanguage.system;
 
+  // Color theme, and Cobalt's light/dark mode (the other themes have one look)
+  AppColorTheme _colorTheme = AppColorTheme.cobalt;
+  ThemeMode _themeMode = ThemeMode.system;
+
   // The program the user marked per PC (its address) in the remote's program
   // sheet. It only names the program while no show runs; the PC is not told.
   Map<String, String> _presenterByPc = {};
@@ -56,6 +61,11 @@ class SettingsProvider extends ChangeNotifier {
   BtTarget get btTarget => _btTarget;
   bool get keepInkOnSlideChange => _keepInkOnSlideChange;
   AppLanguage get language => _language;
+  AppColorTheme get colorTheme => _colorTheme;
+  ThemeMode get themeMode => _themeMode;
+
+  /// The mode the app is in: Cobalt's choice, or the theme's own look.
+  ThemeMode get effectiveThemeMode => _colorTheme.followsMode ? _themeMode : _colorTheme.fixedMode;
   String? presenterFor(String pc) => _presenterByPc[pc];
   List<PresentationAnalytics> get presentationHistory =>
       List.unmodifiable(_presentationHistory);
@@ -74,6 +84,11 @@ class SettingsProvider extends ChangeNotifier {
     _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
     _keepInkOnSlideChange = prefs.getBool('keep_ink_on_slide_change') ?? false;
     _language = AppLanguage.fromCode(prefs.getString('language'));
+    _colorTheme = AppColorTheme.fromName(prefs.getString('color_theme'));
+    _themeMode = ThemeMode.values.firstWhere(
+      (m) => m.name == prefs.getString('theme_mode'),
+      orElse: () => ThemeMode.system,
+    );
     final presenters = prefs.getString('presenter_by_pc');
     if (presenters != null) {
       try {
@@ -198,6 +213,20 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('keep_ink_on_slide_change', value);
+  }
+
+  Future<void> setColorTheme(AppColorTheme theme) async {
+    _colorTheme = theme;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('color_theme', theme.name);
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme_mode', mode.name);
   }
 
   Future<void> setPresenterFor(String pc, String presenter) async {
