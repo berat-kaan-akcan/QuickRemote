@@ -18,39 +18,80 @@ void showAddWarningTimeSheet(BuildContext context) {
 
       return StatefulBuilder(
         builder: (context, setState) {
+          final p = context.palette;
+          Widget unit(String label, bool minutes) {
+            final on = isMinutes == minutes;
+            return Expanded(
+              child: Pressable(
+                onTap: () => setState(() => isMinutes = minutes),
+                selected: on,
+                semanticLabel: label,
+                pressedScale: 0.97,
+                borderRadius: AppRadius.all(AppRadius.sm),
+                child: AnimatedContainer(
+                  duration: AppMotion.of(context, AppMotion.base),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: on ? p.surfaceRaised : p.surfaceRaised.withValues(alpha: 0),
+                    borderRadius: AppRadius.all(AppRadius.sm),
+                    boxShadow: on ? AppShadows.soft(p) : null,
+                  ),
+                  child: Text(
+                    label,
+                    style: AppType.labelSmall.copyWith(color: on ? p.textPrimary : p.textSecondary, fontSize: 12.5),
+                  ),
+                ),
+              ),
+            );
+          }
+
           return Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppBottomSheet.buildTitle(context.l10n.newWarningTime, icon: Icons.timer_rounded),
-              const SizedBox(height: 24),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                textAlign: TextAlign.center,
-                style: AppType.numeric.copyWith(color: context.palette.textPrimary, fontSize: 32),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: AppPopupTheme.inputDecoration(
-                  context: context,
-                  hintText: context.l10n.enterTime,
-                ).copyWith(
-                  hintStyle: AppType.body.copyWith(color: context.palette.textMuted),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.lg),
+              AppBottomSheet.buildHeader(context.l10n.newWarningTime, icon: Icons.timer_outlined, iconColor: p.warning),
+              const SizedBox(height: AppSpace.md),
+              SizedBox(
+                height: 58,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        style: AppType.numeric.copyWith(color: p.textPrimary, fontSize: 22, letterSpacing: 0),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: AppPopupTheme.inputDecoration(
+                          context: context,
+                          hintText: context.l10n.enterTime,
+                        ).copyWith(hintStyle: AppType.body.copyWith(color: p.textMuted)),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(color: p.surfaceSunken, borderRadius: AppRadius.all(AppRadius.md)),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            unit(context.l10n.unitMinutesLong, true),
+                            const SizedBox(width: 3),
+                            unit(context.l10n.unitSecondsLong, false),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpace.md),
-              AppSegmented<bool>(
-                segments: [
-                  AppSegment(value: false, label: context.l10n.unitSecondsLong),
-                  AppSegment(value: true, label: context.l10n.unitMinutesLong),
-                ],
-                selected: isMinutes,
-                onChanged: (value) => setState(() => isMinutes = value),
-              ),
-              const SizedBox(height: AppSpace.lg),
               Row(
                 children: [
                   Expanded(
+                    flex: 10,
                     child: AppButton(
                       label: context.l10n.cancel,
                       variant: AppButtonVariant.outline,
@@ -60,6 +101,7 @@ void showAddWarningTimeSheet(BuildContext context) {
                   ),
                   const SizedBox(width: AppSpace.sm),
                   Expanded(
+                    flex: 13,
                     child: AppButton(
                       label: context.l10n.add,
                       icon: Icons.add_rounded,
