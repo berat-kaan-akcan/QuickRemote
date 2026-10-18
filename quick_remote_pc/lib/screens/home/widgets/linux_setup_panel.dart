@@ -9,6 +9,7 @@ import '../../../widgets/status_snack_bar.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 import 'firewall_dialog.dart';
+import 'home_card.dart';
 import 'setup_status_row.dart';
 
 /// Linux-only status rows: input permission, Impress and WPS connections,
@@ -16,7 +17,13 @@ import 'setup_status_row.dart';
 class LinuxSetupPanel extends StatefulWidget {
   final WebSocketServerProvider provider;
 
-  const LinuxSetupPanel({super.key, required this.provider});
+  /// In a card of its own; in the wide window's side pane, without one.
+  final bool framed;
+
+  /// Space above the panel, only while it shows.
+  final double topGap;
+
+  const LinuxSetupPanel({super.key, required this.provider, this.framed = true, this.topGap = 0});
 
   @override
   State<LinuxSetupPanel> createState() => _LinuxSetupPanelState();
@@ -148,20 +155,22 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
           onTap: _openPorts,
         ),
     ];
+    if (rows.isEmpty) return const Reveal(child: null);
+    final column = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: widget.framed ? 2 : 0, bottom: 2),
+          child: HomeSectionLabel(context.l10n.linuxSetupHeader),
+        ),
+        for (final row in rows) ...[const SizedBox(height: 6), row],
+      ],
+    );
     return Reveal(
-      child: rows.isEmpty
-          ? null
-          : Padding(
-              padding: const EdgeInsets.only(bottom: AppSpace.sm),
-              child: Column(
-                children: [
-                  for (final (i, row) in rows.indexed) ...[
-                    if (i > 0) const SizedBox(height: 6),
-                    row,
-                  ],
-                ],
-              ),
-            ),
+      child: Padding(
+        padding: EdgeInsets.only(top: widget.topGap),
+        child: widget.framed ? HomeCard(padding: const EdgeInsets.all(AppSpace.sm), child: column) : column,
+      ),
     );
   }
 

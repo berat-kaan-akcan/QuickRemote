@@ -271,7 +271,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serverStoppedHint =>
-      'Telefonunuzdan bağlanmak ve sunumunuzu\nkontrol etmek için sunucuyu başlatın.';
+      'Telefonunuzdan bağlanmak ve sunumunuzu kontrol etmek için sunucuyu başlatın.';
 
   @override
   String get opensslMissing =>
@@ -284,4 +284,49 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get startServer => 'Sunucuyu Başlat';
+
+  @override
+  String get serverRunning => 'Sunucu Açık';
+
+  @override
+  String get serverStarting => 'Sunucu açılıyor';
+
+  @override
+  String get serverStoppedSubtitle => 'Telefondan bağlanmak için başlatın.';
+
+  @override
+  String get waitingForPhone => 'Telefon bekleniyor';
+
+  @override
+  String get linuxSetupHeader => 'Kurulum · Linux';
+
+  @override
+  String get settingsAppearance => 'Görünüm';
+
+  @override
+  String get appearanceSystem => 'Sistem';
+
+  @override
+  String get appearanceLight => 'Açık';
+
+  @override
+  String get appearanceDark => 'Koyu';
+
+  @override
+  String get appearanceNote =>
+      'Ekran projeksiyona yansıyorsa aydınlık salonda Açık daha iyi okunur.';
+
+  @override
+  String phonesConnected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count telefon bağlı',
+      one: '1 telefon bağlı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noPhonesYet => 'Henüz bağlanan telefon yok.';
 }

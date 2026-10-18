@@ -3,15 +3,24 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_remote_pc/l10n/app_language.dart';
+import 'package:quick_remote_pc/providers/appearance_provider.dart';
 import 'package:quick_remote_pc/providers/language_provider.dart';
 import 'package:quick_remote_pc/screens/home/widgets/settings_dialog.dart';
+import 'package:quick_remote_pc/theme/app_palette.dart';
+import 'package:quick_remote_pc/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Widget _app(LanguageProvider language) => ChangeNotifierProvider.value(
-      value: language,
-      child: Consumer<LanguageProvider>(
-        builder: (context, language, _) => MaterialApp(
+Widget _app(LanguageProvider language, [AppearanceProvider? appearance]) => MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: language),
+        ChangeNotifierProvider.value(value: appearance ?? AppearanceProvider()),
+      ],
+      child: Consumer2<LanguageProvider, AppearanceProvider>(
+        builder: (context, language, appearance, _) => MaterialApp(
           locale: language.language.locale,
+          themeMode: appearance.mode,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
           supportedLocales: supportedAppLocales,
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -40,5 +49,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Settings'), findsOneWidget);
     expect(language.language, AppLanguage.en);
+  });
+
+  testWidgets('picking Light switches the window to the light palette', (tester) async {
+    final language = LanguageProvider();
+    await language.setLanguage(AppLanguage.tr);
+    final appearance = AppearanceProvider();
+    await appearance.setMode(ThemeMode.dark);
+    await tester.pumpWidget(_app(language, appearance));
+    await tester.pumpAndSettle();
+    AppPalette palette() => Theme.of(tester.element(find.text('Ayarlar'))).extension<AppPalette>()!;
+    expect(palette().isDark, isTrue);
+
+    await tester.tap(find.text('Açık'));
+    await tester.pumpAndSettle();
+    expect(appearance.mode, ThemeMode.light);
+    expect(palette().isDark, isFalse);
   });
 }

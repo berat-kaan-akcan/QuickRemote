@@ -115,7 +115,7 @@
     }
   },
   "serverStopped": "Sunucu Kapalı",
-  "serverStoppedHint": "Telefonunuzdan bağlanmak ve sunumunuzu\nkontrol etmek için sunucuyu başlatın.",
+  "serverStoppedHint": "Telefonunuzdan bağlanmak ve sunumunuzu kontrol etmek için sunucuyu başlatın.",
   "opensslMissing": "openssl bulunamadı. TLS sertifikası için openssl paketini kurun.",
   "tlsKeyReadable": "TLS anahtarı başka kullanıcılar tarafından okunabiliyor: {path}",
   "@tlsKeyReadable": {
@@ -128,5 +128,24 @@
   "startServer": "Sunucuyu Başlat",
   "@startServer": {
     "description": "Button and tooltip that starts the server."
-  }
+  },
+  "serverRunning": "Sunucu Açık",
+  "serverStarting": "Sunucu açılıyor",
+  "serverStoppedSubtitle": "Telefondan bağlanmak için başlatın.",
+  "waitingForPhone": "Telefon bekleniyor",
+  "linuxSetupHeader": "Kurulum · Linux",
+  "settingsAppearance": "Görünüm",
+  "appearanceSystem": "Sistem",
+  "appearanceLight": "Açık",
+  "appearanceDark": "Koyu",
+  "appearanceNote": "Ekran projeksiyona yansıyorsa aydınlık salonda Açık daha iyi okunur.",
+  "phonesConnected": "{count, plural, =1{1 telefon bağlı} other{{count} telefon bağlı}}",
+  "@phonesConnected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noPhonesYet": "Henüz bağlanan telefon yok."
 }

@@ -26,21 +26,21 @@ class SetupStatusRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Container(
-      padding: const EdgeInsets.fromLTRB(AppSpace.sm, 6, 6, 6),
-      constraints: const BoxConstraints(minHeight: 44),
+      padding: const EdgeInsets.fromLTRB(11, 5, 6, 5),
+      constraints: const BoxConstraints(minHeight: 42),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: p.isDark ? 0.11 : 0.07),
-        borderRadius: AppRadius.all(AppRadius.md),
-        border: Border.all(color: color.withValues(alpha: p.isDark ? 0.28 : 0.22)),
+        color: color.withValues(alpha: p.isDark ? 0.09 : 0.07),
+        borderRadius: AppRadius.all(13),
+        border: Border.all(color: color.withValues(alpha: p.isDark ? 0.24 : 0.22)),
       ),
       child: Row(
         children: [
           Icon(icon, color: color, size: 18),
-          const SizedBox(width: AppSpace.sm - 2),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: AppType.labelSmall.copyWith(color: color, fontSize: 12.5, height: 1.35),
+              style: AppType.bodySmall.copyWith(color: color, fontSize: 12, fontWeight: FontWeight.w500, height: 1.35),
             ),
           ),
           if (action != null && onTap != null) ...[
@@ -51,12 +51,12 @@ class SetupStatusRow extends StatelessWidget {
               hoveredScale: 1.04,
               borderRadius: AppRadius.all(AppRadius.sm),
               child: Container(
-                height: 32,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                height: 30,
+                padding: const EdgeInsets.symmetric(horizontal: 11),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: p.isDark ? 0.2 : 0.14),
-                  borderRadius: AppRadius.all(AppRadius.sm),
+                  color: color.withValues(alpha: p.isDark ? 0.18 : 0.14),
+                  borderRadius: AppRadius.all(9),
                 ),
                 child: busy
                     ? SizedBox.square(
@@ -65,7 +65,7 @@ class SetupStatusRow extends StatelessWidget {
                       )
                     : Text(
                         action!,
-                        style: AppType.labelSmall.copyWith(color: color, fontWeight: FontWeight.w700),
+                        style: AppType.labelSmall.copyWith(color: color, fontSize: 11.5, fontWeight: FontWeight.w700),
                       ),
               ),
             ),

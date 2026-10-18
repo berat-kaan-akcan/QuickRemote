@@ -3,8 +3,8 @@ import 'ui/ui.dart';
 
 enum StatusKind { success, warning, error }
 
-/// Floating message styled like the status rows (tinted card, colored border,
-/// icon and text) instead of Material's solid snackbar.
+/// Floating message on the raised surface with a colored edge and icon,
+/// instead of Material's solid snackbar.
 void showStatusSnackBar(
   BuildContext context,
   String message, {
@@ -24,24 +24,26 @@ void showStatusSnackBar(
       behavior: SnackBarBehavior.floating,
       duration: duration,
       padding: EdgeInsets.zero,
+      // Just above the full-width Start/Stop key.
+      margin: const EdgeInsets.fromLTRB(18, 0, 18, 78),
       content: Semantics(
         liveRegion: true,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(AppSpace.sm, AppSpace.sm, AppSpace.md, AppSpace.sm),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
             color: p.surfaceRaised,
-            borderRadius: AppRadius.all(AppRadius.md),
-            border: Border.all(color: color.withValues(alpha: 0.35)),
+            borderRadius: AppRadius.all(14),
+            border: Border.all(color: color.withValues(alpha: 0.45)),
             boxShadow: AppShadows.raised(p),
           ),
           child: Row(
             children: [
-              IconBadge(icon: icon, color: color, size: 32),
-              const SizedBox(width: AppSpace.sm),
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   message,
-                  style: AppType.bodySmall.copyWith(color: p.textPrimary, fontWeight: FontWeight.w500),
+                  style: AppType.bodySmall.copyWith(color: p.textPrimary, fontSize: 13, fontWeight: FontWeight.w500, height: 1.35),
                 ),
               ),
             ],

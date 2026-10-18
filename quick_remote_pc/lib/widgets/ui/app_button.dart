@@ -73,9 +73,15 @@ class AppButton extends StatelessWidget {
         final disabled = onPressed == null;
         fg = disabled ? p.textMuted : onSolid;
         final glow = variant == AppButtonVariant.primary && !disabled;
+        // Primary and the green Start buttons are gradients.
+        final gradient = switch (tone) {
+          AppTone.primary => p.primaryGradient,
+          AppTone.success => p.successGradient,
+          _ => null,
+        };
         decoration = BoxDecoration(
-          color: disabled ? p.surfaceSunken : (tone == AppTone.primary && glow ? null : solidFill),
-          gradient: !disabled && tone == AppTone.primary && glow ? p.primaryGradient : null,
+          color: disabled ? p.surfaceSunken : (glow && gradient != null ? null : solidFill),
+          gradient: glow ? gradient : null,
           borderRadius: radius,
           border: disabled ? Border.all(color: p.border) : null,
           boxShadow: glow ? AppShadows.glow(solidFill, strength: 0.8) : null,
