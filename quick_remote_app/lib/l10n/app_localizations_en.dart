@@ -1102,4 +1102,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historySwipeHint => 'Swipe left to delete';
+
+  @override
+  String get settingsThemeTitle => 'Theme';
+
+  @override
+  String settingsThemeSubtitle(String theme, String mode) {
+    return '$theme · $mode';
+  }
+
+  @override
+  String get themeModeHeader => 'Light / Dark';
+
+  @override
+  String get themeModeSystem => 'System';
+
+  @override
+  String get themeModeLight => 'Light';
+
+  @override
+  String get themeModeDark => 'Dark';
+
+  @override
+  String get themeColorHeader => 'Color theme';
+
+  @override
+  String get themeCobaltNote =>
+      'Cobalt follows the system\'s light or dark mode; you can also pick one.';
+
+  @override
+  String get themeDarkOnlyNote =>
+      'This theme is dark only, made for a dark room.';
+
+  @override
+  String get themeLightOnlyNote => 'Sunset is light only, for bright rooms.';
+
+  @override
+  String get themeCobalt => 'Cobalt';
+
+  @override
+  String get themeOled => 'OLED';
+
+  @override
+  String get themeHighContrast => 'High contrast';
+
+  @override
+  String get themeMint => 'Mint';
+
+  @override
+  String get themeViolet => 'Violet';
+
+  @override
+  String get themeSunset => 'Sunset';
 }

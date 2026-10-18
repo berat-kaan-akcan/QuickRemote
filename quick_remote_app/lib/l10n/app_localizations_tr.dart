@@ -1102,4 +1102,57 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get historySwipeHint => 'Silmek için sola kaydırın';
+
+  @override
+  String get settingsThemeTitle => 'Tema';
+
+  @override
+  String settingsThemeSubtitle(String theme, String mode) {
+    return '$theme · $mode';
+  }
+
+  @override
+  String get themeModeHeader => 'Açık / Koyu';
+
+  @override
+  String get themeModeSystem => 'Sistem';
+
+  @override
+  String get themeModeLight => 'Açık';
+
+  @override
+  String get themeModeDark => 'Koyu';
+
+  @override
+  String get themeColorHeader => 'Renk teması';
+
+  @override
+  String get themeCobaltNote =>
+      'Kobalt sistemle birlikte açık ya da koyu olur; elle de seçilebilir.';
+
+  @override
+  String get themeDarkOnlyNote =>
+      'Bu tema yalnız koyu; karanlık salon için tasarlandı.';
+
+  @override
+  String get themeLightOnlyNote =>
+      'Gün Batımı yalnız açık; aydınlık odalar için.';
+
+  @override
+  String get themeCobalt => 'Kobalt';
+
+  @override
+  String get themeOled => 'OLED';
+
+  @override
+  String get themeHighContrast => 'Yüksek kontrast';
+
+  @override
+  String get themeMint => 'Nane';
+
+  @override
+  String get themeViolet => 'Mor';
+
+  @override
+  String get themeSunset => 'Gün Batımı';
 }

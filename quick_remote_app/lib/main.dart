@@ -69,10 +69,11 @@ class QuickRemoteApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           debugShowCheckedModeBanner: false,
-          // Light and dark follow the system setting.
-          themeMode: ThemeMode.system,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
+          // Cobalt follows the system setting unless the user picked light
+          // or dark; the other color themes have one look.
+          themeMode: settings.effectiveThemeMode,
+          theme: AppTheme.of(settings.colorTheme.light),
+          darkTheme: AppTheme.of(settings.colorTheme.dark),
           builder: (context, child) {
             BackgroundSession.notificationText = context.l10n.backgroundNotification;
             WearBridge.failureText = context.l10n.failure;
