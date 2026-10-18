@@ -69,48 +69,47 @@ class DurationPickerState extends State<DurationPicker> {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppBottomSheet.buildTitle(context.l10n.setPresentationTime, icon: Icons.timer_outlined),
-        const SizedBox(height: AppSpace.lg),
+        AppBottomSheet.buildHeader(context.l10n.setPresentationTime, icon: Icons.timer_outlined, iconColor: p.warning),
+        const SizedBox(height: AppSpace.md),
         Wrap(
           spacing: AppSpace.xs,
           runSpacing: AppSpace.xs,
-          alignment: WrapAlignment.center,
           children: [
             _DurationChip(label: context.l10n.noTimeLimit, selected: selected == 0, onTap: () => _select(0)),
             for (final m in _presetMinutes)
               _DurationChip(label: context.l10n.durationMinutes(m), selected: selected == m * 60, onTap: () => _select(m * 60)),
           ],
         ),
-        const SizedBox(height: AppSpace.lg),
+        const SizedBox(height: AppSpace.md),
         Row(
           children: [
             Expanded(child: _numberField(_minutes, context.l10n.unitMinutes, TextInputAction.next)),
-            const SizedBox(width: AppSpace.xs),
-            Expanded(child: _numberField(_seconds, context.l10n.unitSeconds, TextInputAction.done, maxValue: 59)),
             const SizedBox(width: AppSpace.sm),
-            AppButton(
-              label: settings.timerAutoStart ? context.l10n.actionStart : context.l10n.actionSet,
-              icon: settings.timerAutoStart ? Icons.play_arrow_rounded : Icons.check_rounded,
-              expand: false,
-              onPressed: _submitCustom,
-            ),
+            Expanded(child: _numberField(_seconds, context.l10n.unitSeconds, TextInputAction.done, maxValue: 59)),
           ],
         ),
-        const SizedBox(height: AppSpace.sm),
+        const SizedBox(height: AppSpace.xs),
         AppSwitchTile(
           flat: true,
           title: context.l10n.startWhenPicked,
           value: settings.timerAutoStart,
           onChanged: settings.setTimerAutoStart,
         ),
-        const SizedBox(height: AppSpace.xxs),
+        const SizedBox(height: AppSpace.xs),
+        AppButton(
+          label: settings.timerAutoStart ? context.l10n.actionStart : context.l10n.actionSet,
+          icon: settings.timerAutoStart ? Icons.play_arrow_rounded : Icons.check_rounded,
+          onPressed: _submitCustom,
+        ),
+        const SizedBox(height: AppSpace.sm),
         Text(
           context.l10n.timerHelp,
           textAlign: TextAlign.center,
-          style: AppType.bodySmall.copyWith(color: p.textMuted, fontSize: 12),
+          style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 11.5),
         ),
-        const SizedBox(height: AppSpace.xs),
+        const SizedBox(height: AppSpace.xxs),
       ],
     );
   }
@@ -129,7 +128,14 @@ class DurationPickerState extends State<DurationPicker> {
             (old, value) => (int.tryParse(value.text) ?? 0) > maxValue ? old : value,
           ),
       ],
-      decoration: AppPopupTheme.inputDecoration(context: context, hintText: '0').copyWith(suffixText: unit),
+      decoration: AppPopupTheme.inputDecoration(context: context, hintText: '0').copyWith(
+        // A suffix shows only while the field has focus; the unit always does.
+        suffixIcon: Padding(
+          padding: const EdgeInsets.only(right: AppSpace.md),
+          child: Text(unit, style: AppType.bodySmall.copyWith(color: context.palette.textSecondary)),
+        ),
+        suffixIconConstraints: const BoxConstraints(),
+      ),
       onSubmitted: action == TextInputAction.done ? (_) => _submitCustom() : null,
     );
   }
@@ -154,15 +160,18 @@ class _DurationChip extends StatelessWidget {
         duration: AppMotion.of(context, AppMotion.base),
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
-        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? p.primary : p.surfaceSunken,
+          color: selected ? p.primaryBright.withValues(alpha: 0.2) : p.surface,
           borderRadius: AppRadius.all(AppRadius.pill),
-          border: Border.all(color: selected ? p.primary : p.border),
+          border: Border.all(color: selected ? p.primaryBright : p.border),
         ),
-        child: Text(
-          label,
-          style: AppType.labelSmall.copyWith(color: selected ? p.onPrimary : p.textPrimary, fontSize: 13),
+        // Only as wide as the label: a Wrap lets children take the full row.
+        child: Center(
+          widthFactor: 1,
+          child: Text(
+            label,
+            style: AppType.labelSmall.copyWith(color: p.textPrimary, fontSize: 13),
+          ),
         ),
       ),
     );

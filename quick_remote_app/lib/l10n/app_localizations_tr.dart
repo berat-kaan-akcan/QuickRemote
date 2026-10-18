@@ -331,29 +331,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlantıyı kesmek ve ana ekrana dönmek istediğinize emin misiniz?';
 
   @override
-  String get notesTitle => 'Slayt Notları';
+  String get notesTitle => 'Konuşmacı Notları';
 
   @override
   String get notesEmpty => 'Bu slayt için not bulunmuyor.';
-
-  @override
-  String get startPresentation => 'Sunuma Başla';
-
-  @override
-  String slidePickerRange(int total) {
-    return 'Slayt (1-$total)';
-  }
-
-  @override
-  String get slidePickerHint => 'Slayt Numarası (Örn: 5)';
-
-  @override
-  String slidePickerMax(int total) {
-    return 'Maksimum $total slayt girebilirsiniz.';
-  }
-
-  @override
-  String get slidePickerEmpty => 'Boş bırakırsanız baştan başlar.';
 
   @override
   String get actionStart => 'Başlat';
@@ -372,9 +353,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get notes => 'Notlar';
-
-  @override
   String presentationNotOpen(String programs) {
     return 'Sunum Açık Değil, $programs\'i başlatın';
   }
@@ -389,13 +367,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get whiteScreen => 'Beyaz Ekran';
 
   @override
-  String get actionPrev => 'Geri';
+  String get actionPrev => 'Önceki';
 
   @override
-  String get actionNext => 'İleri';
-
-  @override
-  String get listOr => ' veya ';
+  String get actionNext => 'Sonraki';
 
   @override
   String get mediaControlTitle => 'Medya Kontrolü';
@@ -478,21 +453,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mediaRewind => 'Başa Sar';
 
   @override
-  String get toolHighlighter => 'Vurgulayıcı';
-
-  @override
   String tapForTool(String tool) {
     return 'Tek dokunuş → $tool';
   }
 
   @override
-  String get doubleTapSelected => 'Çift dokunuş → Seçili Araç';
+  String get doubleTapSelected => 'Çift dokunuş → Seçili araç';
 
   @override
   String get volumeMuted => 'Sessiz';
 
   @override
-  String get volumeOn => 'Açık';
+  String get volumeOn => 'Sesli';
 
   @override
   String get btUnsupportedLong =>
@@ -978,4 +950,108 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsSectionGeneral => 'Genel';
+
+  @override
+  String get remoteProgramHint => 'Sunum programını seç';
+
+  @override
+  String get programSheetTitle => 'Sunum programı';
+
+  @override
+  String programSheetBody(String pc) {
+    return '$pc şu programları kontrol edebilir. Gösterisi açık olan kendiliğinden kullanılır.';
+  }
+
+  @override
+  String programShowOpenSlide(int slide) {
+    return 'Gösteri açık · Slayt $slide';
+  }
+
+  @override
+  String get programShowOpen => 'Gösteri açık';
+
+  @override
+  String get programShowClosed => 'Gösteri açık değil';
+
+  @override
+  String get programPdfNote =>
+      'PDF\'ler ayrıca seçilmez; öndeki pencere PDF ise o kontrol edilir.';
+
+  @override
+  String get programBluetoothNote =>
+      'Bluetooth modunda program buradan seçilir (PowerPoint / Impress / WPS).';
+
+  @override
+  String get goToSlide => 'Slayta git';
+
+  @override
+  String goToSlideRange(int total) {
+    return '1–$total arası bir numara';
+  }
+
+  @override
+  String get goToSlideNumber => 'Slayt numarası';
+
+  @override
+  String get goAction => 'Git';
+
+  @override
+  String notesSlide(int slide) {
+    return 'Slayt $slide';
+  }
+
+  @override
+  String get notesOpenHint => 'Notun tamamını aç';
+
+  @override
+  String get unreadableShow =>
+      'WPS slayt numarasını bildirmiyor; tuşlar yine çalışır.';
+
+  @override
+  String get unreadableShowUserWps =>
+      'Bu WPS\'i QuickRemote açmadı: slayt numarası ve notlar gelmez, tuşlar WPS penceresi öndeyken çalışır.';
+
+  @override
+  String get drawToolsNeedShow =>
+      'Çizim araçları slayt gösterisi açıkken çalışır.';
+
+  @override
+  String get toolArrow => 'Ok';
+
+  @override
+  String get colorUnavailableTitle => 'Bu programda renk seçilemez.';
+
+  @override
+  String get colorUnavailableBody =>
+      'WPS\'i QuickRemote açmadığı için kalem WPS\'in kendi rengiyle çizer.';
+
+  @override
+  String slideMediaOnSlide(int slide, String suffix) {
+    String _temp0 = intl.Intl.selectLogic(suffix, {
+      'de': 'deki',
+      'da': 'daki',
+      'te': 'teki',
+      'ta': 'taki',
+      'other': 'deki',
+    });
+    return 'Slayt $slide\'$_temp0 medya';
+  }
+
+  @override
+  String get slideMediaPlaying => 'Oynatılıyor';
+
+  @override
+  String get slideMediaNotPlaying => 'Oynatılmıyor';
+
+  @override
+  String get slideMediaStateUnknown => 'WPS oynatma durumunu bildirmiyor';
+
+  @override
+  String get volumeDown => 'Sesi kıs';
+
+  @override
+  String get volumeUp => 'Sesi aç';
+
+  @override
+  String get mediaStop => 'Durdur';
 }

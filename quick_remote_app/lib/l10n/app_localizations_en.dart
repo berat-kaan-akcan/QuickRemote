@@ -334,29 +334,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disconnectContent => 'Disconnect and go back to the home screen?';
 
   @override
-  String get notesTitle => 'Slide Notes';
+  String get notesTitle => 'Speaker Notes';
 
   @override
   String get notesEmpty => 'This slide has no notes.';
-
-  @override
-  String get startPresentation => 'Start Presentation';
-
-  @override
-  String slidePickerRange(int total) {
-    return 'Slide (1-$total)';
-  }
-
-  @override
-  String get slidePickerHint => 'Slide Number (e.g. 5)';
-
-  @override
-  String slidePickerMax(int total) {
-    return 'You can enter up to slide $total.';
-  }
-
-  @override
-  String get slidePickerEmpty => 'Leave empty to start from the beginning.';
 
   @override
   String get actionStart => 'Start';
@@ -375,9 +356,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notes => 'Notes';
-
-  @override
   String presentationNotOpen(String programs) {
     return 'No Presentation Open, start $programs';
   }
@@ -392,13 +370,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whiteScreen => 'White Screen';
 
   @override
-  String get actionPrev => 'Back';
+  String get actionPrev => 'Previous';
 
   @override
   String get actionNext => 'Next';
-
-  @override
-  String get listOr => ' or ';
 
   @override
   String get mediaControlTitle => 'Media Control';
@@ -481,21 +456,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaRewind => 'Rewind';
 
   @override
-  String get toolHighlighter => 'Highlighter';
-
-  @override
   String tapForTool(String tool) {
     return 'Single tap → $tool';
   }
 
   @override
-  String get doubleTapSelected => 'Double tap → Selected Tool';
+  String get doubleTapSelected => 'Double tap → Selected tool';
 
   @override
   String get volumeMuted => 'Muted';
 
   @override
-  String get volumeOn => 'On';
+  String get volumeOn => 'Sound on';
 
   @override
   String get btUnsupportedLong =>
@@ -983,4 +955,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSectionGeneral => 'General';
+
+  @override
+  String get remoteProgramHint => 'Choose the presentation program';
+
+  @override
+  String get programSheetTitle => 'Presentation program';
+
+  @override
+  String programSheetBody(String pc) {
+    return '$pc can control these programs. The one running a slideshow is used automatically.';
+  }
+
+  @override
+  String programShowOpenSlide(int slide) {
+    return 'Slideshow running · Slide $slide';
+  }
+
+  @override
+  String get programShowOpen => 'Slideshow running';
+
+  @override
+  String get programShowClosed => 'No slideshow';
+
+  @override
+  String get programPdfNote =>
+      'PDFs are not chosen here; if the front window is a PDF, that is controlled.';
+
+  @override
+  String get programBluetoothNote =>
+      'In Bluetooth mode the program is chosen here (PowerPoint / Impress / WPS).';
+
+  @override
+  String get goToSlide => 'Go to slide';
+
+  @override
+  String goToSlideRange(int total) {
+    return 'A number from 1 to $total';
+  }
+
+  @override
+  String get goToSlideNumber => 'Slide number';
+
+  @override
+  String get goAction => 'Go';
+
+  @override
+  String notesSlide(int slide) {
+    return 'Slide $slide';
+  }
+
+  @override
+  String get notesOpenHint => 'Open the whole note';
+
+  @override
+  String get unreadableShow =>
+      'WPS does not report the slide number; the buttons still work.';
+
+  @override
+  String get unreadableShowUserWps =>
+      'QuickRemote did not open this WPS: no slide number or notes, and the buttons work while the WPS window is in front.';
+
+  @override
+  String get drawToolsNeedShow =>
+      'The drawing tools work while a slideshow is running.';
+
+  @override
+  String get toolArrow => 'Arrow';
+
+  @override
+  String get colorUnavailableTitle => 'No colors in this program.';
+
+  @override
+  String get colorUnavailableBody =>
+      'QuickRemote did not open this WPS, so the pen draws in WPS\'s own color.';
+
+  @override
+  String slideMediaOnSlide(int slide, String suffix) {
+    return 'Media on slide $slide';
+  }
+
+  @override
+  String get slideMediaPlaying => 'Playing';
+
+  @override
+  String get slideMediaNotPlaying => 'Not playing';
+
+  @override
+  String get slideMediaStateUnknown =>
+      'WPS does not report whether it is playing';
+
+  @override
+  String get volumeDown => 'Volume down';
+
+  @override
+  String get volumeUp => 'Volume up';
+
+  @override
+  String get mediaStop => 'Stop';
 }
