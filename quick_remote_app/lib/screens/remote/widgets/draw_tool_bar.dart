@@ -24,6 +24,9 @@ class DrawToolBar extends StatelessWidget {
   final String? laserLabel;
   final IconData? laserIcon;
 
+  /// The laser tool's color where it is something else (the cursor).
+  final Color? laserColor;
+
   /// The ink each tool was last given: the dot on its key.
   final Map<DrawTool, Color> inks;
 
@@ -44,6 +47,7 @@ class DrawToolBar extends StatelessWidget {
     },
     this.laserLabel,
     this.laserIcon,
+    this.laserColor,
     this.inks = const {},
     this.enabled = true,
   });
@@ -84,7 +88,7 @@ class DrawToolBar extends StatelessWidget {
     final isActive = activeTool == tool;
     final hasColors = tool == DrawTool.pen || tool == DrawTool.highlighter;
     final canPickColor = hasColors && onColorPickerRequested != null;
-    final activeColor = tool.colorIn(p);
+    final activeColor = tool == DrawTool.laser ? laserColor ?? tool.colorIn(p) : tool.colorIn(p);
     final ink = hasColors ? inks[tool] : null;
 
     return Expanded(

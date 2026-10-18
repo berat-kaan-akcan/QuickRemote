@@ -177,7 +177,6 @@
   "whiteScreen": "Beyaz Ekran",
   "actionPrev": "Önceki",
   "actionNext": "Sonraki",
-  "mediaControlTitle": "Medya Kontrolü",
   "nowPlaying": "Şu An Çalan",
   "systemVolume": "Sistem Sesi",
   "slideMedia": "Slayt Medyası",
@@ -253,7 +252,6 @@
   "btHostUnawareWaiting": "Bilgisayar kabul edince kumanda kendiliğinden açılır.",
   "btErrorRetry": "Bluetooth hatası. Tekrar deneyin.",
   "btWaitingPairing": "Eşleştirme bekleniyor...",
-  "btWaitingConnection": "Bağlantı bekleniyor...",
   "btPreparing": "Hazırlanıyor...",
   "btNotConnectedRetrying": "Bağlanılmadı, tekrar deneniyor",
   "btOnYourComputer": "Bilgisayarda bir kez eşleştirin",
@@ -263,7 +261,6 @@
   "btStepConfirm": "Telefonda ve bilgisayarda aynı 6 haneli kod çıkar. Kodlar aynıysa ikisinde de onaylayın.",
   "btWindowsStep1": "Ayarlar’ı açın (Windows tuşu + I).",
   "btWindowsStep2": "Bluetooth ve cihazlar → Cihaz ekle → Bluetooth’u seçin. Windows 10’da: Bluetooth ve diğer cihazlar → Bluetooth veya başka cihaz ekle.",
-  "btPairOnce": "Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.",
   "btPermissionAllow": "İzin ver",
   "btPermissionSettings": "Ayarları aç",
   "btPermissionSettingsHint": "İzin daha önce reddedildiği için artık yalnızca Ayarlar’dan verilebilir: İzinler → Yakındaki cihazlar → İzin ver.",
@@ -311,7 +308,6 @@
   "btNoMediaInfo": "BT modunda medya bilgisi alınamaz",
   "mediaPlayPause": "Oynat / Duraklat",
   "toolCursor": "İmleç",
-  "btTarget": "Hedef:",
   "durationHms": "{h}s {m}dk {s}sn",
   "@durationHms": {
     "placeholders": {
@@ -567,5 +563,33 @@
   "slideMediaStateUnknown": "WPS oynatma durumunu bildirmiyor",
   "volumeDown": "Sesi kıs",
   "volumeUp": "Sesi aç",
-  "mediaStop": "Durdur"
+  "mediaStop": "Durdur",
+  "btModeSubtitle": "Telefon, {device} için klavye ve fare",
+  "@btModeSubtitle": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "btScreenKeys": "Siyah · Beyaz ekran",
+  "btPreparingBody": "Telefon klavye ve fare olarak kaydediliyor.",
+  "btConnectingBody": "Bağlanınca kumanda kendiliğinden açılır.",
+  "btRetryingBody": "{device} açık ve Bluetooth'u açıksa birkaç saniye içinde bağlanır.",
+  "@btRetryingBody": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "btRetryingBodyUnknown": "Bilgisayar açık ve Bluetooth'u açıksa birkaç saniye içinde bağlanır.",
+  "btRefreshingBody": "Bilgisayar telefonun klavye kaydını yeniden okuyor.",
+  "btProgramSheetBody": "Bluetooth'ta bilgisayar programı bildiremez; tuşlar seçtiğiniz programın kısayollarıyla gönderilir.",
+  "btToolsFull": "Lazer, kalem, vurgula, silgi",
+  "btToolsImpress": "İmleç, kalem",
+  "btImpressToolsNote": "Impress'te lazer, vurgulayıcı ve silgi kısayolu yok; imleç işaretçi olur.",
+  "btWpsToolsNote": "WPS'te lazer Ctrl+R ile açılır; Windows'taki WPS'te Silgi başka bir iş yapabilir.",
+  "btPairOnce": "Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.",
+  "btWaitingConnection": "Bağlantı bekleniyor..."
 }

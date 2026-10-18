@@ -4,7 +4,6 @@ import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../services/websocket_service.dart';
 import '../../../services/presentation_timer_controller.dart';
 import '../../../services/websocket/presentation_state.dart';
-import '../../../theme/app_colors.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
 import '../utils/remote_dialogs.dart';
@@ -306,7 +305,7 @@ class SlideCard extends StatelessWidget {
           const SizedBox(height: AppSpace.sm),
           Row(
             children: [
-              _ScreenKey(
+              ScreenKey(
                 white: false,
                 label: context.l10n.blackScreen,
                 active: activeScreen == 'BLACK',
@@ -315,7 +314,7 @@ class SlideCard extends StatelessWidget {
                     : () => onScreen!(RemoteCommands.blackScreen),
               ),
               const SizedBox(width: 6),
-              _ScreenKey(
+              ScreenKey(
                 white: true,
                 label: context.l10n.whiteScreen,
                 active: activeScreen == 'WHITE',
@@ -431,59 +430,6 @@ class _NotePreview extends StatelessWidget {
               ),
               Icon(Icons.chevron_right_rounded, color: p.textMuted, size: 20),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A small black or white square: the color the audience will see.
-class _ScreenKey extends StatelessWidget {
-  const _ScreenKey({
-    required this.white,
-    required this.label,
-    required this.active,
-    this.onTap,
-  });
-
-  final bool white;
-  final String label;
-  final bool active;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final radius = AppRadius.all(AppRadius.sm);
-    return Pressable(
-      onTap: onTap,
-      semanticLabel: label,
-      tooltip: label,
-      selected: active,
-      pressedScale: 0.9,
-      borderRadius: radius,
-      child: AnimatedContainer(
-        duration: AppMotion.of(context, AppMotion.base),
-        width: 40,
-        height: 40,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: p.surfaceSunken,
-          borderRadius: radius,
-          border: Border.all(
-            color: active ? p.primaryText : p.border,
-            width: active ? 2 : 1,
-          ),
-        ),
-        child: Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: white ? AppColors.white : AppColors.black,
-            borderRadius: AppRadius.all(5),
-            // White needs an edge on the light theme's pale key.
-            border: white && p.isDark ? null : Border.all(color: p.borderStrong),
           ),
         ),
       ),

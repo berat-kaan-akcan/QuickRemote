@@ -373,9 +373,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get actionNext => 'Sonraki';
 
   @override
-  String get mediaControlTitle => 'Medya Kontrolü';
-
-  @override
   String get nowPlaying => 'Şu An Çalan';
 
   @override
@@ -540,9 +537,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get btWaitingPairing => 'Eşleştirme bekleniyor...';
 
   @override
-  String get btWaitingConnection => 'Bağlantı bekleniyor...';
-
-  @override
   String get btPreparing => 'Hazırlanıyor...';
 
   @override
@@ -573,10 +567,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get btWindowsStep2 =>
       'Bluetooth ve cihazlar → Cihaz ekle → Bluetooth’u seçin. Windows 10’da: Bluetooth ve diğer cihazlar → Bluetooth veya başka cihaz ekle.';
-
-  @override
-  String get btPairOnce =>
-      'Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.';
 
   @override
   String get btPermissionAllow => 'İzin ver';
@@ -692,9 +682,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get toolCursor => 'İmleç';
-
-  @override
-  String get btTarget => 'Hedef:';
 
   @override
   String durationHms(int h, int m, int s) {
@@ -1054,4 +1041,56 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get mediaStop => 'Durdur';
+
+  @override
+  String btModeSubtitle(String device) {
+    return 'Telefon, $device için klavye ve fare';
+  }
+
+  @override
+  String get btScreenKeys => 'Siyah · Beyaz ekran';
+
+  @override
+  String get btPreparingBody => 'Telefon klavye ve fare olarak kaydediliyor.';
+
+  @override
+  String get btConnectingBody => 'Bağlanınca kumanda kendiliğinden açılır.';
+
+  @override
+  String btRetryingBody(String device) {
+    return '$device açık ve Bluetooth\'u açıksa birkaç saniye içinde bağlanır.';
+  }
+
+  @override
+  String get btRetryingBodyUnknown =>
+      'Bilgisayar açık ve Bluetooth\'u açıksa birkaç saniye içinde bağlanır.';
+
+  @override
+  String get btRefreshingBody =>
+      'Bilgisayar telefonun klavye kaydını yeniden okuyor.';
+
+  @override
+  String get btProgramSheetBody =>
+      'Bluetooth\'ta bilgisayar programı bildiremez; tuşlar seçtiğiniz programın kısayollarıyla gönderilir.';
+
+  @override
+  String get btToolsFull => 'Lazer, kalem, vurgula, silgi';
+
+  @override
+  String get btToolsImpress => 'İmleç, kalem';
+
+  @override
+  String get btImpressToolsNote =>
+      'Impress\'te lazer, vurgulayıcı ve silgi kısayolu yok; imleç işaretçi olur.';
+
+  @override
+  String get btWpsToolsNote =>
+      'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.';
+
+  @override
+  String get btPairOnce =>
+      'Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.';
+
+  @override
+  String get btWaitingConnection => 'Bağlantı bekleniyor...';
 }

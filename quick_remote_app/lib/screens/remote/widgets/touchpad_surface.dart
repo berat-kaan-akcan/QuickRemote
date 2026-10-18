@@ -80,6 +80,7 @@ class TouchpadSurface extends StatelessWidget {
     this.selectedTool,
     this.laserLabel,
     this.laserIcon,
+    this.laserColor,
     this.touch,
     this.trail,
     this.enabled = true,
@@ -96,6 +97,7 @@ class TouchpadSurface extends StatelessWidget {
   /// Replaces "Laser" where the laser is the mouse cursor or the arrow.
   final String? laserLabel;
   final IconData? laserIcon;
+  final Color? laserColor;
 
   /// Where the finger is, in the surface's coordinates; repaints only the
   /// glow layer. Used without a [trail].
@@ -115,6 +117,9 @@ class TouchpadSurface extends StatelessWidget {
 
   IconData _icon(DrawTool tool) =>
       tool == DrawTool.laser ? laserIcon ?? tool.icon : tool.icon;
+
+  Color _color(AppPalette p, DrawTool tool) =>
+      tool == DrawTool.laser ? laserColor ?? tool.colorIn(p) : tool.colorIn(p);
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +151,7 @@ class TouchpadSurface extends StatelessWidget {
           RepaintBoundary(
             child: ClipRRect(
               borderRadius: radius,
-              child: CustomPaint(painter: _TrailPainter(trail!, p)),
+              child: CustomPaint(painter: _TrailPainter(trail!, p, laserColor)),
             ),
           )
         else if (touch != null)
@@ -154,7 +159,7 @@ class TouchpadSurface extends StatelessWidget {
             child: ClipRRect(
               borderRadius: radius,
               child: CustomPaint(
-                painter: _TouchGlowPainter(touch!, activeTool.colorIn(p)),
+                painter: _TouchGlowPainter(touch!, _color(p, activeTool)),
               ),
             ),
           ),
@@ -178,7 +183,7 @@ class TouchpadSurface extends StatelessWidget {
                       label: _label(context, chipTool),
                       color: chipTool == DrawTool.eraser
                           ? p.textSecondary
-                          : chipTool.colorIn(p),
+                          : _color(p, chipTool),
                       tinted: chipTool != DrawTool.eraser,
                     ),
                   ),
@@ -378,10 +383,12 @@ class _DotGridPainter extends CustomPainter {
 }
 
 class _TrailPainter extends CustomPainter {
-  _TrailPainter(this.trail, this.palette) : super(repaint: trail);
+  _TrailPainter(this.trail, this.palette, this.laserColor)
+    : super(repaint: trail);
 
   final TouchTrail trail;
   final AppPalette palette;
+  final Color? laserColor;
 
   // The laser's tail: its last points.
   static const _tail = 14;
@@ -392,7 +399,9 @@ class _TrailPainter extends CustomPainter {
     if (points.isEmpty) return;
     final alpha = 1 - trail.fade;
     if (alpha <= 0) return;
-    final color = trail.ink ?? trail.tool.colorIn(palette);
+    final color = trail.ink ??
+        (trail.tool == DrawTool.laser ? laserColor : null) ??
+        trail.tool.colorIn(palette);
     final at = points.last;
 
     switch (trail.tool) {
@@ -458,7 +467,9 @@ class _TrailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TrailPainter old) =>
-      old.trail != trail || old.palette != palette;
+      old.trail != trail ||
+      old.palette != palette ||
+      old.laserColor != laserColor;
 }
 
 class _TouchGlowPainter extends CustomPainter {
