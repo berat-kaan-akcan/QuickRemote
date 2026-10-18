@@ -8,7 +8,6 @@ import '../../../services/bluetooth/bt_key_mapping.dart';
 import '../../remote/widgets/shared_buttons.dart';
 import '../../remote/widgets/draw_tool_bar.dart';
 import '../../remote/widgets/touchpad_surface.dart';
-import '../widgets/bt_target_selector.dart';
 import '../../../models/draw_tool.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
@@ -27,7 +26,6 @@ class BtTouchpadView extends StatefulWidget {
   final Future<void> Function(String) send;
   final bool isConnected;
   final BtTarget target;
-  final ValueChanged<BtTarget> onTargetChanged;
 
   const BtTouchpadView({
     super.key,
@@ -35,14 +33,13 @@ class BtTouchpadView extends StatefulWidget {
     required this.send,
     required this.isConnected,
     required this.target,
-    required this.onTargetChanged,
   });
 
   @override
   State<BtTouchpadView> createState() => _BtTouchpadViewState();
 }
 
-class _BtTouchpadViewState extends State<BtTouchpadView> {
+class _BtTouchpadViewState extends State<BtTouchpadView> with SingleTickerProviderStateMixin {
   DrawTool _drawTool = DrawTool.laser;
 
   bool _isDrawActive = false;
@@ -61,8 +58,10 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   /// Son gönderilen mod — aynı modu tekrar göndermemek için.
   String? _lastSentMode;
 
-  /// Where the finger is, for the surface's glow only.
-  final _touch = ValueNotifier<Offset?>(null);
+  /// The finger's path, drawn on the surface and faded after it lifts.
+  final _trail = TouchTrail();
+  late final AnimationController _fade = AnimationController(vsync: this)
+    ..addListener(() => _trail.setFade(_fade.value));
 
   /// Impress has no laser shortcut: the "laser" is the mouse cursor.
   bool get _cursorLaser => widget.target == BtTarget.impress;
@@ -79,11 +78,14 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
 
   /// In Impress the "laser" is just the mouse cursor.
   String get _laserLabel => _cursorLaser ? context.l10n.toolCursor : context.l10n.toolLaser;
+  IconData? get _laserIcon => _cursorLaser ? Icons.north_west_rounded : null;
+  Color? get _laserColor => _cursorLaser ? context.palette.info : null;
 
   @override
   void dispose() {
     _throttleTimer?.cancel();
-    _touch.dispose();
+    _fade.dispose();
+    _trail.dispose();
     super.dispose();
   }
 
@@ -91,34 +93,20 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
   Widget build(BuildContext context) {
     final connected = widget.isConnected;
     final p = context.palette;
+    final note = switch (widget.target) {
+      BtTarget.impress => context.l10n.btImpressToolsNote,
+      BtTarget.wps => context.l10n.btWpsToolsNote,
+      BtTarget.powerpoint => null,
+    };
     return ContentWidth(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, AppSpace.sm),
+        padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xxs, AppSpace.page, AppSpace.sm),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: PillButton(
-                    icon: Icons.play_arrow_rounded,
-                    label: context.l10n.actionStart,
-                    color: p.success,
-                    onTap: !connected ? null : () => widget.send(RemoteCommands.start),
-                  ),
-                ),
-                const SizedBox(width: AppSpace.xs),
-                // Where the Wi-Fi remote shows the timer
-                const _BtBadge(),
-                const SizedBox(width: AppSpace.xs),
-                Expanded(
-                  child: PillButton(
-                    icon: Icons.stop_rounded,
-                    label: context.l10n.actionEnd,
-                    color: p.danger,
-                    onTap: !connected ? null : () => widget.send(RemoteCommands.end),
-                  ),
-                ),
-              ],
+            StartEndPair(
+              height: 46,
+              onStart: !connected ? null : () => widget.send(RemoteCommands.start),
+              onEnd: !connected ? null : () => widget.send(RemoteCommands.end),
             ),
             const SizedBox(height: AppSpace.sm),
             Expanded(
@@ -130,48 +118,47 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
                 child: TouchpadSurface(
                   isDrawActive: _isDrawActive,
                   activeTool: _activeTool,
+                  selectedTool: _selectedTool,
                   laserLabel: _laserLabel,
-                  touch: _touch,
+                  laserIcon: _laserIcon,
+                  laserColor: _laserColor,
+                  trail: _trail,
                 ),
               ),
             ),
+            if (note != null) ...[
+              const SizedBox(height: AppSpace.sm),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline_rounded, color: p.textMuted, size: 17),
+                    const SizedBox(width: AppSpace.xs),
+                    Expanded(child: Text(note, style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12))),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpace.sm),
             DrawToolBar(
               activeTool: _selectedTool,
               tools: _availableTools,
               laserLabel: _laserLabel,
+              laserIcon: _laserIcon,
+              laserColor: _laserColor,
               onToolSelected: (tool) => setState(() => _drawTool = tool),
               onClear: () {
                 HapticFeedback.mediumImpact();
                 widget.send(RemoteCommands.eraseAll);
               },
             ),
-            const SizedBox(height: AppSpace.xs),
-            BtTargetSelector(target: widget.target, onChanged: widget.onTargetChanged),
             const SizedBox(height: AppSpace.sm),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: SlideButton(
-                    icon: Icons.arrow_back_rounded,
-                    label: context.l10n.actionPrev,
-                    height: 72,
-                    onTap: !connected ? null : () => widget.send(RemoteCommands.prev),
-                  ),
-                ),
-                const SizedBox(width: AppSpace.sm),
-                Expanded(
-                  flex: 3,
-                  child: SlideButton(
-                    icon: Icons.arrow_forward_rounded,
-                    label: context.l10n.actionNext,
-                    isPrimary: true,
-                    height: 72,
-                    onTap: !connected ? null : () => widget.send(RemoteCommands.next),
-                  ),
-                ),
-              ],
+            SlideNavRow(
+              prevLabel: context.l10n.actionPrev,
+              nextLabel: context.l10n.actionNext,
+              onPrev: !connected ? null : () => widget.send(RemoteCommands.prev),
+              onNext: !connected ? null : () => widget.send(RemoteCommands.next),
             ),
           ],
         ),
@@ -198,8 +185,9 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
         (pos - _lastPointerUpPosition!).distance < 80;
 
     _isDrawActive = true;
-    _touch.value = pos;
     _activeTool = isDoubleTap ? _selectedTool : DrawTool.laser;
+    _fade.stop();
+    _trail.start(pos, _activeTool, null);
     final gesture = ++_gesture;
 
     // Reset pending deltas
@@ -231,7 +219,7 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
 
   void _onPointerMove(PointerMoveEvent event) {
     if (!_isDrawActive) return;
-    _touch.value = event.localPosition;
+    _trail.add(event.localPosition);
 
     // Accumulate deltas
     _pendingDx += event.delta.dx * _sensitivity;
@@ -317,7 +305,9 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
     }
 
     _isDrawActive = false;
-    _touch.value = null;
+    _trail.end();
+    _fade.duration = AppMotion.of(context, const Duration(seconds: 1));
+    _fade.forward(from: 0);
     setState(() {});
   }
 
@@ -333,31 +323,5 @@ class _BtTouchpadViewState extends State<BtTouchpadView> {
       case DrawTool.laser:
         return RemoteCommands.modeLaser;
     }
-  }
-}
-
-class _BtBadge extends StatelessWidget {
-  const _BtBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    return Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
-      decoration: BoxDecoration(
-        color: p.info.withValues(alpha: p.isDark ? 0.14 : 0.10),
-        borderRadius: AppRadius.all(AppRadius.pill),
-        border: Border.all(color: p.info.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.bluetooth_rounded, color: p.info, size: 16),
-          const SizedBox(width: 4),
-          Text('BT', style: AppType.labelSmall.copyWith(color: p.info)),
-        ],
-      ),
-    );
   }
 }

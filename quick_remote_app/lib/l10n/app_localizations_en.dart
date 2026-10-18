@@ -376,9 +376,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionNext => 'Next';
 
   @override
-  String get mediaControlTitle => 'Media Control';
-
-  @override
   String get nowPlaying => 'Now Playing';
 
   @override
@@ -545,9 +542,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get btWaitingPairing => 'Waiting for pairing...';
 
   @override
-  String get btWaitingConnection => 'Waiting for connection...';
-
-  @override
   String get btPreparing => 'Preparing...';
 
   @override
@@ -578,10 +572,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get btWindowsStep2 =>
       'Choose Bluetooth & devices → Add device → Bluetooth. On Windows 10: Bluetooth & other devices → Add Bluetooth or other device.';
-
-  @override
-  String get btPairOnce =>
-      'You pair only once. Next time, just open this screen: the phone connects to the computer by itself.';
 
   @override
   String get btPermissionAllow => 'Allow';
@@ -697,9 +687,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolCursor => 'Cursor';
-
-  @override
-  String get btTarget => 'Target:';
 
   @override
   String durationHms(int h, int m, int s) {
@@ -1053,4 +1040,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaStop => 'Stop';
+
+  @override
+  String btModeSubtitle(String device) {
+    return 'The phone is $device\'s keyboard and mouse';
+  }
+
+  @override
+  String get btScreenKeys => 'Black · White screen';
+
+  @override
+  String get btPreparingBody =>
+      'The phone is registering as a keyboard and mouse.';
+
+  @override
+  String get btConnectingBody => 'The remote opens by itself once connected.';
+
+  @override
+  String btRetryingBody(String device) {
+    return 'If $device is on with Bluetooth on, it connects within a few seconds.';
+  }
+
+  @override
+  String get btRetryingBodyUnknown =>
+      'If the computer is on with Bluetooth on, it connects within a few seconds.';
+
+  @override
+  String get btRefreshingBody =>
+      'The computer is reading the phone\'s keyboard record again.';
+
+  @override
+  String get btProgramSheetBody =>
+      'Over Bluetooth the computer cannot tell the program; keys are sent as the shortcuts of the program you pick.';
+
+  @override
+  String get btToolsFull => 'Laser, pen, highlighter, eraser';
+
+  @override
+  String get btToolsImpress => 'Cursor, pen';
+
+  @override
+  String get btImpressToolsNote =>
+      'Impress has no laser, highlighter or eraser shortcut; the cursor is the pointer.';
+
+  @override
+  String get btWpsToolsNote =>
+      'In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else.';
+
+  @override
+  String get btPairOnce =>
+      'You pair only once. Next time, just open this screen: the phone connects to the computer by itself.';
+
+  @override
+  String get btWaitingConnection => 'Waiting for connection...';
 }

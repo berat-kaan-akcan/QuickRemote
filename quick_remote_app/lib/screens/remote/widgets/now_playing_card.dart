@@ -210,15 +210,15 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _RoundKey(icon: Icons.skip_previous_rounded, label: context.l10n.actionPrev, onTap: connected ? widget.onPrev : null),
-                  _RoundKey(
+                  MediaRoundKey(icon: Icons.skip_previous_rounded, label: context.l10n.actionPrev, onTap: connected ? widget.onPrev : null),
+                  MediaRoundKey(
                     icon: widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     label: widget.isPlaying ? context.l10n.mediaPause : context.l10n.mediaPlay,
                     onTap: connected ? widget.onPlayPause : null,
                     main: true,
                   ),
-                  _RoundKey(icon: Icons.skip_next_rounded, label: context.l10n.actionNext, onTap: connected ? widget.onNext : null),
-                  _RoundKey(icon: Icons.stop_rounded, label: context.l10n.mediaStop, onTap: connected ? widget.onStop : null),
+                  MediaRoundKey(icon: Icons.skip_next_rounded, label: context.l10n.actionNext, onTap: connected ? widget.onNext : null),
+                  MediaRoundKey(icon: Icons.stop_rounded, label: context.l10n.mediaStop, onTap: connected ? widget.onStop : null),
                 ],
               ),
             ),
@@ -229,8 +229,9 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
   }
 }
 
-class _RoundKey extends StatelessWidget {
-  const _RoundKey({required this.icon, required this.label, this.onTap, this.main = false});
+/// A round media key; [main] is the large white play or pause.
+class MediaRoundKey extends StatelessWidget {
+  const MediaRoundKey({super.key, required this.icon, required this.label, this.onTap, this.main = false, this.both = false});
 
   final IconData icon;
   final String label;
@@ -238,6 +239,9 @@ class _RoundKey extends StatelessWidget {
 
   /// Play or pause: large, in the text color (white on the dark theme).
   final bool main;
+
+  /// Shows play and pause together, where the state is unknown.
+  final bool both;
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +269,16 @@ class _RoundKey extends StatelessWidget {
         child: AnimatedSwitcher(
           duration: AppMotion.of(context, AppMotion.fast),
           transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-          child: Icon(icon, key: ValueKey(icon), color: main ? p.background : p.textPrimary, size: main ? 32 : 24),
+          child: both
+              ? Row(
+                  key: const ValueKey('both'),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.play_arrow_rounded, color: main ? p.background : p.textPrimary, size: main ? 24 : 18),
+                    Icon(Icons.pause_rounded, color: main ? p.background : p.textPrimary, size: main ? 24 : 18),
+                  ],
+                )
+              : Icon(icon, key: ValueKey(icon), color: main ? p.background : p.textPrimary, size: main ? 32 : 24),
         ),
       ),
     );
