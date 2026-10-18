@@ -308,7 +308,5 @@
   "btToolsFull": "Laser, pen, highlighter, eraser",
   "btToolsImpress": "Cursor, pen",
   "btImpressToolsNote": "Impress has no laser, highlighter or eraser shortcut; the cursor is the pointer.",
-  "btWpsToolsNote": "In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else.",
-  "btPairOnce": "You pair only once. Next time, just open this screen: the phone connects to the computer by itself.",
-  "btWaitingConnection": "Waiting for connection..."
+  "btWpsToolsNote": "In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else."
 }

@@ -589,7 +589,5 @@
   "btToolsFull": "Lazer, kalem, vurgula, silgi",
   "btToolsImpress": "İmleç, kalem",
   "btImpressToolsNote": "Impress'te lazer, vurgulayıcı ve silgi kısayolu yok; imleç işaretçi olur.",
-  "btWpsToolsNote": "WPS'te lazer Ctrl+R ile açılır; Windows'taki WPS'te Silgi başka bir iş yapabilir.",
-  "btPairOnce": "Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.",
-  "btWaitingConnection": "Bağlantı bekleniyor..."
+  "btWpsToolsNote": "WPS'te lazer Ctrl+R ile açılır; Windows'taki WPS'te Silgi başka bir iş yapabilir."
 }
