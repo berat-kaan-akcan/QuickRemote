@@ -7,6 +7,8 @@ import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../analytics/analytics_report_screen.dart';
 import '../../l10n/app_language.dart';
+import '../../utils/ui/app_top_bar.dart';
+import '../../widgets/status_view.dart';
 import '../../widgets/ui/ui.dart';
 
 class PresentationHistoryScreen extends StatelessWidget {
@@ -16,59 +18,54 @@ class PresentationHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
 
+    final p = context.palette;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.settingsHistoryTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          if (settings.presentationHistory.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep_rounded),
-              tooltip: context.l10n.clearHistory,
-              onPressed: () => _showClearHistoryDialog(context),
-            ),
-          const SizedBox(width: AppSpace.xxs),
-        ],
+      appBar: AppTopBar(
+        title: context.l10n.settingsHistoryTitle,
+        action: settings.presentationHistory.isEmpty
+            ? null
+            : AppTopBarAction(
+                icon: Icons.delete_sweep_rounded,
+                tooltip: context.l10n.clearHistory,
+                onTap: () => _showClearHistoryDialog(context),
+              ),
       ),
       body: ContentWidth(
         child: AnimatedSwitcher(
           duration: AppMotion.of(context, AppMotion.base),
           child: settings.presentationHistory.isEmpty
-              ? Center(
+              ? Padding(
                   key: const ValueKey('empty'),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpace.xl),
-                    child: FadeSlideIn(
-                      child: EmptyState(
-                        icon: Icons.insights_rounded,
-                        tone: AppTone.accent,
-                        title: context.l10n.noHistory,
-                        message: context.l10n.noHistoryHint,
-                      ),
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
+                  child: StatusView(
+                    icon: Icons.insights_rounded,
+                    color: p.accentText,
+                    title: context.l10n.noHistory,
+                    message: context.l10n.noHistoryHint,
                   ),
                 )
-              : ListView.builder(
+              : ListView(
                   key: const ValueKey('list'),
                   padding: EdgeInsets.fromLTRB(
                     AppSpace.page,
-                    AppSpace.sm,
+                    0,
                     AppSpace.page,
                     MediaQuery.paddingOf(context).bottom + AppSpace.xl,
                   ),
-                  itemCount: settings.presentationHistory.length,
-                  itemBuilder: (context, index) {
-                    final analytics = settings.presentationHistory[index];
-                    return FadeSlideIn(
-                      key: Key(analytics.id),
-                      index: index,
-                      child: _buildHistoryTile(context, analytics, settings),
-                    );
-                  },
+                  children: [
+                    for (final (index, analytics) in settings.presentationHistory.indexed)
+                      FadeSlideIn(
+                        key: Key(analytics.id),
+                        index: index,
+                        child: _buildHistoryTile(context, analytics, settings),
+                      ),
+                    const SizedBox(height: AppSpace.xs),
+                    Text(
+                      context.l10n.historySwipeHint,
+                      textAlign: TextAlign.center,
+                      style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
+                    ),
+                  ],
                 ),
         ),
       ),
@@ -88,7 +85,7 @@ class PresentationHistoryScreen extends StatelessWidget {
           padding: const EdgeInsets.only(right: AppSpace.lg),
           decoration: BoxDecoration(
             color: p.danger.withValues(alpha: p.isDark ? 0.18 : 0.12),
-            borderRadius: AppRadius.all(AppRadius.lg),
+            borderRadius: AppRadius.all(AppRadius.md),
             border: Border.all(color: p.danger.withValues(alpha: 0.35)),
           ),
           child: Icon(Icons.delete_rounded, color: p.danger),
@@ -103,7 +100,8 @@ class PresentationHistoryScreen extends StatelessWidget {
           );
         },
         child: AppCard(
-          padding: const EdgeInsets.all(AppSpace.md),
+          radius: AppRadius.md,
+          padding: const EdgeInsets.all(AppSpace.sm),
           onTap: () {
             Navigator.push(
               context,
@@ -117,17 +115,17 @@ class PresentationHistoryScreen extends StatelessWidget {
           },
           child: Row(
             children: [
-              IconBadge(icon: Icons.slideshow_rounded, color: p.primaryText, size: 48),
-              const SizedBox(width: AppSpace.md - 2),
+              IconBadge(icon: Icons.slideshow_rounded, color: p.primaryText, size: 44),
+              const SizedBox(width: AppSpace.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       Formatters.formatDate(analytics.startTime, context.l10n),
-                      style: AppType.titleSmall.copyWith(color: p.textPrimary),
+                      style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 15),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
                     Wrap(
                       spacing: AppSpace.md,
                       runSpacing: AppSpace.xxs,
