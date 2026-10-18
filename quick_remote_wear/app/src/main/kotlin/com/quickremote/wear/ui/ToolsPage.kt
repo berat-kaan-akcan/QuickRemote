@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -50,13 +51,14 @@ import com.quickremote.wear.phone.Show
 import com.quickremote.wear.remote.RemoteAction
 import com.quickremote.wear.ui.theme.LocalWearPalette
 import com.quickremote.wear.ui.theme.WearColors
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import com.quickremote.wear.ui.theme.WearFonts
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sin
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /** The four quarters of the tools page, clockwise from the top. */
 private enum class Tool(val angle: Float) { LASER(-90f), WHITE(0f), END(90f), BLACK(180f) }
@@ -255,10 +257,15 @@ fun ToolsPage(
                         textAlign = TextAlign.Center,
                     )
                 } else {
-                    // The hole holds the slide number; a longer word is cut.
+                    // The hole holds the slide number, in the figures' face; a longer word is cut.
+                    val numbered = show != null && show.running && show.current > 0 && show.total > 0
                     Text(
                         showText(show),
-                        style = MaterialTheme.typography.labelSmall,
+                        style = if (numbered) {
+                            MaterialTheme.typography.labelMedium.copy(fontFamily = WearFonts.grotesk, fontWeight = FontWeight.SemiBold)
+                        } else {
+                            MaterialTheme.typography.labelSmall
+                        },
                         color = palette.textSecondary,
                         textAlign = TextAlign.Center,
                         maxLines = 1,

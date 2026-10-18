@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
@@ -55,7 +57,10 @@ import com.quickremote.wear.phone.Show
 import com.quickremote.wear.phone.TalkClock
 import com.quickremote.wear.remote.RemoteAction
 import com.quickremote.wear.ui.theme.LocalWearPalette
+import com.quickremote.wear.ui.theme.WearFonts
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 /** What the laser held on the Next button does: the same calls as the laser screen. */
 class HeldLaser(
@@ -250,17 +255,22 @@ private fun NextButton(pressed: Boolean, hint: String?, screen: Dp, modifier: Mo
             )
             Text(
                 stringResource(R.string.next_short),
-                style = MaterialTheme.typography.labelSmall,
-                color = palette.onAccent.copy(alpha = 0.85f),
+                fontSize = with(LocalDensity.current) { (screen * 0.06f).toSp() },
+                fontWeight = FontWeight.SemiBold,
+                color = palette.onAccent.copy(alpha = 0.88f),
                 maxLines = 1,
             )
             if (hint != null) {
                 Text(
                     hint,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = palette.onAccent.copy(alpha = 0.7f),
+                    fontSize = with(LocalDensity.current) { (screen * 0.049f).toSp() },
+                    fontWeight = FontWeight.SemiBold,
+                    color = palette.onAccent.copy(alpha = 0.95f),
                     maxLines = 1,
-                    modifier = Modifier.padding(top = screen * 0.015f),
+                    modifier = Modifier
+                        .padding(top = screen * 0.02f)
+                        .background(palette.onAccent.copy(alpha = 0.16f), CircleShape)
+                        .padding(horizontal = screen * 0.024f, vertical = screen * 0.005f),
                 )
             }
         }
@@ -312,33 +322,75 @@ private fun SlideNumber(show: Show?, screen: Dp) {
     Text(
         buildAnnotatedString {
             append(show.current.toString())
-            pushStyle(SpanStyle(fontSize = small, color = palette.muted))
+            pushStyle(SpanStyle(fontSize = small, color = palette.muted, fontWeight = FontWeight.SemiBold))
             append("/${show.total}")
             pop()
         },
         fontSize = big,
+        fontFamily = WearFonts.grotesk,
         fontWeight = FontWeight.Bold,
+        letterSpacing = (-0.02).em,
         color = palette.text,
         maxLines = 1,
     )
 }
 
-/** Slide progress along the upper half of the edge, while the slide number is known. */
+/**
+ * Slide progress along the upper edge, while the slide number is known, as
+ * the phone's segmented bar: a dot per slide, those passed in the theme's
+ * color, the current one the laser's. More than [MAX_DOTS] slides make a plain arc.
+ */
 @Composable
 private fun ProgressRing(show: Show?, modifier: Modifier) {
     if (show == null || !show.running || show.current <= 0 || show.total <= 0) return
     val palette = LocalWearPalette.current
-    val fraction = (show.current.toFloat() / show.total).coerceIn(0f, 1f)
     Canvas(modifier) {
-        val width = RING_WIDTH.toPx()
-        val inset = width / 2 + RING_INSET.toPx()
-        val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
-        val topLeft = Offset(inset, inset)
-        drawArc(palette.border, 180f, 180f, false, topLeft, arcSize, style = Stroke(width, cap = StrokeCap.Round))
-        drawArc(
-            palette.ring, 180f, 180f * fraction, false, topLeft, arcSize,
-            style = Stroke(width, cap = StrokeCap.Round),
-        )
+        val unit = size.minDimension / 100f
+        if (show.total > MAX_DOTS) {
+            val fraction = (show.current.toFloat() / show.total).coerceIn(0f, 1f)
+            val width = RING_WIDTH.toPx()
+            val inset = width / 2 + RING_INSET.toPx()
+            val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
+            val topLeft = Offset(inset, inset)
+            drawArc(palette.border, 180f, 180f, false, topLeft, arcSize, style = Stroke(width, cap = StrokeCap.Round))
+            drawArc(
+                palette.ring, 180f, 180f * fraction, false, topLeft, arcSize,
+                style = Stroke(width, cap = StrokeCap.Round),
+            )
+            return@Canvas
+        }
+        val radius = DOTS_RADIUS * unit
+        for (dot in slideDots(show.current, show.total)) {
+            val angle = Math.toRadians(dot.degrees.toDouble())
+            val at = Offset(
+                center.x + radius * cos(angle).toFloat(),
+                center.y + radius * sin(angle).toFloat(),
+            )
+            when (dot.kind) {
+                DotKind.CURRENT -> drawCircle(palette.laser, CURRENT_DOT * unit, at)
+                DotKind.PASSED -> drawCircle(palette.ring, DOT * unit, at)
+                DotKind.AHEAD -> drawCircle(palette.border, DOT * unit, at)
+            }
+        }
+    }
+}
+
+enum class DotKind { PASSED, CURRENT, AHEAD }
+
+/** A slide's dot: where along the edge ([degrees], 0 the right, clockwise) and how it is drawn. */
+data class SlideDot(val degrees: Float, val kind: DotKind)
+
+/** One dot per slide, spread evenly over the upper edge; none past [MAX_DOTS] slides. */
+fun slideDots(current: Int, total: Int): List<SlideDot> {
+    if (total <= 0 || total > MAX_DOTS) return emptyList()
+    return (1..total).map { slide ->
+        val degrees = if (total == 1) 270f else DOTS_FROM + (DOTS_TO - DOTS_FROM) * (slide - 1) / (total - 1)
+        val kind = when {
+            slide == current -> DotKind.CURRENT
+            slide < current -> DotKind.PASSED
+            else -> DotKind.AHEAD
+        }
+        SlideDot(degrees, kind)
     }
 }
 
@@ -362,3 +414,15 @@ private const val HOLD_MS = 350L
 
 private val RING_WIDTH = 3.dp
 private val RING_INSET = 2.dp
+
+/** The progress dots: up to this many slides, then a plain arc. */
+const val MAX_DOTS = 40
+
+/** Along the edge from left to right, in degrees (0 is the right, clockwise). */
+private const val DOTS_FROM = 188f
+private const val DOTS_TO = 352f
+
+/** In parts of the screen, as hundredths. */
+private const val DOTS_RADIUS = 48f
+private const val DOT = 0.95f
+private const val CURRENT_DOT = 1.45f
