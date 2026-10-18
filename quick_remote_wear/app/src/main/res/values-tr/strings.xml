@@ -10,6 +10,7 @@
     <string name="state_connecting_title">Telefon bağlanıyor</string>
     <string name="state_connecting">Bilgisayar bekleniyor.</string>
     <string name="state_connected">Bağlı</string>
+    <string name="connected_show">Bağlı · %1$s</string>
     <string name="open_on_phone">Telefonda aç</string>
     <string name="retry">Tekrar dene</string>
 
@@ -25,6 +26,7 @@
     <string name="action_laser">Lazer imleci</string>
     <string name="laser_close">Lazeri kapat</string>
     <string name="laser_hint">Lazer: imleci sürükleyerek taşı</string>
+    <string name="drag_to_move">Sürükleyerek taşı</string>
     <string name="action_arrow">Ok imleci</string>
     <string name="action_cursor">Fare imleci</string>
     <string name="arrow_hint">Ok: sürükleyerek taşı</string>
