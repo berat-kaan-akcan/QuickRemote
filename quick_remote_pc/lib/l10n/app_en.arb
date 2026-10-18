@@ -91,5 +91,6 @@
   "appearanceLight": "Light",
   "appearanceDark": "Dark",
   "appearanceNote": "When the screen is projected in a bright room, Light reads better.",
-  "phonesConnected": "{count, plural, =1{1 phone connected} other{{count} phones connected}}"
+  "phonesConnected": "{count, plural, =1{1 phone connected} other{{count} phones connected}}",
+  "noPhonesYet": "No phone has connected yet."
 }

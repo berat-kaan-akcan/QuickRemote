@@ -326,4 +326,7 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get noPhonesYet => 'Henüz bağlanan telefon yok.';
 }
