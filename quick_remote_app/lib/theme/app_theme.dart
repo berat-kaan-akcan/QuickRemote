@@ -11,6 +11,14 @@ abstract final class AppTheme {
   static final light = _build(AppPalette.light);
   static final dark = _build(AppPalette.dark);
 
+  static final _themes = <AppPalette, ThemeData>{
+    AppPalette.light: light,
+    AppPalette.dark: dark,
+  };
+
+  /// The theme of a color theme's palette, built once.
+  static ThemeData of(AppPalette p) => _themes.putIfAbsent(p, () => _build(p));
+
   /// Status and navigation bar icons that stay readable on [p.background].
   static SystemUiOverlayStyle overlayStyle(AppPalette p) => SystemUiOverlayStyle(
         statusBarColor: AppColors.white.withValues(alpha: 0),
