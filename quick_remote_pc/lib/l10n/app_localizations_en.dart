@@ -330,4 +330,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get noPhonesYet => 'No phone has connected yet.';
 }

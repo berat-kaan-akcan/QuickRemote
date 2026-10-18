@@ -25,10 +25,18 @@ class ConnectedClientsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final column = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionLabel(context.l10n.connectedDevices(clients.length)),
         const SizedBox(height: AppSpace.xxs),
+        if (clients.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              context.l10n.noPhonesYet,
+              style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12.5),
+            ),
+          ),
         for (final client in clients)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpace.xxs),
@@ -54,16 +62,12 @@ class ConnectedClientsList extends StatelessWidget {
                       right: -3,
                       bottom: -3,
                       child: Container(
-                        width: 12,
-                        height: 12,
+                        padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
-                          color: p.success,
+                          color: p.surface,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: p.surface,
-                            width: 2.5,
-                          ),
                         ),
+                        child: PulseDot(color: p.success, size: 8),
                       ),
                     ),
                   ],
