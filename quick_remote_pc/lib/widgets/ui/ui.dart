@@ -8,6 +8,7 @@ export '../../theme/app_typography.dart';
 export '../brand/brand_mark.dart';
 export 'app_button.dart';
 export 'app_card.dart';
+export 'app_segmented.dart';
 export 'entrance.dart';
 export 'feedback.dart';
 export 'pressable.dart';

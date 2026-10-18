@@ -8,6 +8,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'l10n/app_language.dart';
 import 'screens/home/home_screen.dart';
+import 'providers/appearance_provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/server_provider.dart';
 import 'services/linux/bluez_hid_repair.dart';
@@ -50,10 +51,11 @@ class QuickRemotePC extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => AppearanceProvider()),
         ChangeNotifierProvider(create: (_) => WebSocketServerProvider()),
       ],
-      child: Consumer<LanguageProvider>(
-        builder: (context, language, _) => MaterialApp(
+      child: Consumer2<LanguageProvider, AppearanceProvider>(
+        builder: (context, language, appearance, _) => MaterialApp(
           title: 'QuickRemote PC',
           locale: language.language.locale,
           supportedLocales: supportedAppLocales,
@@ -64,8 +66,8 @@ class QuickRemotePC extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           debugShowCheckedModeBanner: false,
-          // Light and dark follow the system setting.
-          themeMode: ThemeMode.system,
+          // The system's light or dark, unless Settings picks one.
+          themeMode: appearance.mode,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           builder: (context, child) => MinSize(child: child!),
