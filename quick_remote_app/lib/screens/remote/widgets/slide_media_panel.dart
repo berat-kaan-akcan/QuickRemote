@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../../../l10n/app_language.dart';
 import '../../../l10n/turkish_locative.dart';
-import '../../../theme/app_colors.dart';
 import '../../../widgets/ui/ui.dart';
 
 /// The media on the current slide (a video or a sound in the show): which
@@ -69,7 +68,7 @@ class SlideMediaPanel extends StatelessWidget {
                       stops: const [0, 0.6, 1],
                     ),
                   ),
-                  child: const Icon(Icons.perm_media_rounded, color: AppColors.white),
+                  child: Icon(Icons.perm_media_rounded, color: p.onPrimary),
                 ),
                 const SizedBox(width: AppSpace.sm),
                 Expanded(
