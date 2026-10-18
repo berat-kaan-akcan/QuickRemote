@@ -24,7 +24,7 @@ class RemoteHeader extends StatelessWidget {
   final bool isConnected;
   final bool isConnecting;
 
-  /// Shows a reconnect button when set.
+  /// Makes the "Disconnected" chip a reconnect button when set.
   final VoidCallback? onReconnect;
   final VoidCallback onClose;
 
@@ -86,19 +86,12 @@ class RemoteHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (onReconnect != null)
-          AppIconButton(
-            icon: Icons.refresh_rounded,
-            tooltip: context.l10n.remoteReconnect,
-            color: p.primaryText,
-            size: 40,
-            onPressed: onReconnect,
-          ),
         if (showStatus)
           _StatusChip(
             isConnected: isConnected,
             isConnecting: isConnecting,
             connectedColor: connectedColor ?? p.success,
+            onReconnect: onReconnect,
           ),
         const SizedBox(width: AppSpace.xxs),
         AppIconButton(
@@ -127,18 +120,27 @@ class RemoteHeader extends StatelessWidget {
 
 /// "Connected" on the surface with a status dot; tinted while it is not.
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.isConnected, required this.isConnecting, required this.connectedColor});
+  const _StatusChip({
+    required this.isConnected,
+    required this.isConnecting,
+    required this.connectedColor,
+    this.onReconnect,
+  });
 
   final bool isConnected;
   final bool isConnecting;
   final Color connectedColor;
 
+  /// While disconnected: a ↻ in place of the dot, and the chip reconnects.
+  final VoidCallback? onReconnect;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final reconnect = !isConnected && !isConnecting ? onReconnect : null;
     final color = isConnected
         ? connectedColor
-        : isConnecting
+        : isConnecting || reconnect != null
         ? p.warning
         : p.danger;
     final label = isConnected
@@ -148,7 +150,7 @@ class _StatusChip extends StatelessWidget {
         : context.l10n.statusDisconnected;
     // On narrow phones only the dot, with the label for screen readers.
     final compact = MediaQuery.sizeOf(context).width < 340;
-    return Semantics(
+    final chip = Semantics(
       label: label,
       liveRegion: true,
       child: ExcludeSemantics(
@@ -176,6 +178,8 @@ class _StatusChip extends StatelessWidget {
                     color: color,
                   ),
                 )
+              else if (reconnect != null)
+                Icon(Icons.refresh_rounded, color: p.primaryText, size: 17)
               else
                 Container(
                   width: 8,
@@ -206,6 +210,15 @@ class _StatusChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+    if (reconnect == null) return chip;
+    return Pressable(
+      onTap: reconnect,
+      semanticLabel: context.l10n.remoteReconnect,
+      tooltip: context.l10n.remoteReconnect,
+      pressedScale: 0.94,
+      borderRadius: AppRadius.all(AppRadius.pill),
+      child: chip,
     );
   }
 }

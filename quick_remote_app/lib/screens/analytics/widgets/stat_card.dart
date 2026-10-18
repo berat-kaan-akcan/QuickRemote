@@ -23,14 +23,18 @@ class StatCard extends StatelessWidget {
       child: Semantics(
         label: '$label: $value',
         child: ExcludeSemantics(
-          child: AppCard(
-            tint: color,
-            padding: const EdgeInsets.all(AppSpace.sm + 2),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpace.sm),
+            decoration: BoxDecoration(
+              color: p.surface,
+              borderRadius: AppRadius.all(AppRadius.md),
+              border: Border.all(color: p.border),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconBadge(icon: icon, color: color, size: 32),
-                const SizedBox(height: AppSpace.sm),
+                Icon(icon, color: color, size: 18),
+                const SizedBox(height: 6),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,

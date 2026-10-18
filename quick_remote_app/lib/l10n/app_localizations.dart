@@ -470,12 +470,6 @@ abstract class AppLocalizations {
   /// **'Güvenlik Kodunu Karşılaştırın'**
   String get verifyTitle;
 
-  /// No description provided for @verifyContent.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:\n\n{code}\n\nKodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.'**
-  String verifyContent(String code);
-
   /// No description provided for @verifyConfirm.
   ///
   /// In tr, this message translates to:
@@ -493,12 +487,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Güvenlik Uyarısı'**
   String get certWarningTitle;
-
-  /// No description provided for @certWarningContent.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı.\n\nPC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:\n\n{code}\n\nKodlar aynı değilse bağlanmayın.'**
-  String certWarningContent(String code);
 
   /// No description provided for @certWarningConfirm.
   ///
@@ -1951,6 +1939,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.'**
   String get btWpsToolsNote;
+
+  /// No description provided for @verifyIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:'**
+  String get verifyIntro;
+
+  /// No description provided for @verifyNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.'**
+  String get verifyNote;
+
+  /// No description provided for @certWarningIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı. PC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:'**
+  String get certWarningIntro;
+
+  /// No description provided for @certWarningNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kodlar aynı değilse bağlanmayın.'**
+  String get certWarningNote;
+
+  /// No description provided for @homeNoDevicesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayarda QuickRemote PC açık ve aynı Wi-Fi\'da olmalı.'**
+  String get homeNoDevicesHint;
+
+  /// No description provided for @languageSystemNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem dili, telefonun dilini izler; Türkçe ya da İngilizce değilse İngilizce olur.'**
+  String get languageSystemNote;
+
+  /// No description provided for @historySwipeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silmek için sola kaydırın'**
+  String get historySwipeHint;
 }
 
 class _AppLocalizationsDelegate
