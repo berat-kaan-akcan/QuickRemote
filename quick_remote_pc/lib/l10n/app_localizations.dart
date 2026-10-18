@@ -649,6 +649,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count, plural, =1{1 telefon bağlı} other{{count} telefon bağlı}}'**
   String phonesConnected(int count);
+
+  /// No description provided for @noPhonesYet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz bağlanan telefon yok.'**
+  String get noPhonesYet;
 }
 
 class _AppLocalizationsDelegate

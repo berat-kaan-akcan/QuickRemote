@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -64,7 +66,7 @@ class StoppedPanel extends StatelessWidget {
       children: [
         FadeSlideIn(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpace.xl),
+            padding: const EdgeInsets.all(AppSpace.xs),
             child: PowerButton(
               tooltip: context.l10n.startServer,
               onTap: () => startServerFromUi(context),
@@ -141,56 +143,123 @@ class ServerToggleButton extends StatelessWidget {
   }
 }
 
-/// The big round start button in two soft rings.
-class PowerButton extends StatelessWidget {
+/// The big round start button, with rings breathing around it.
+class PowerButton extends StatefulWidget {
   const PowerButton({super.key, required this.onTap, required this.tooltip});
 
   final VoidCallback onTap;
   final String tooltip;
 
-  static const size = 132.0;
+  @override
+  State<PowerButton> createState() => _PowerButtonState();
+}
+
+class _PowerButtonState extends State<PowerButton> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 3200),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.reduced(context)) {
+      _c.stop();
+      _c.value = 0.25;
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Pressable(
-      onTap: onTap,
-      tooltip: tooltip,
-      semanticLabel: tooltip,
-      pressedScale: 0.94,
-      hoveredScale: 1.05,
-      borderRadius: AppRadius.all(size / 2),
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [p.primaryBright, p.primary, p.primaryDeep],
-            stops: const [0, 0.55, 1],
+    const size = 132.0;
+    return SizedBox.square(
+      dimension: 220,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
+                animation: _c,
+                builder: (context, _) => CustomPaint(
+                  painter: _BreathPainter(_c.value, p.primaryText, inner: size / 2),
+                ),
+              ),
+            ),
           ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: p.primaryText.withValues(alpha: 0.07),
-              spreadRadius: 22,
+          Pressable(
+            onTap: widget.onTap,
+            tooltip: widget.tooltip,
+            semanticLabel: widget.tooltip,
+            pressedScale: 0.94,
+            hoveredScale: 1.05,
+            borderRadius: AppRadius.all(size / 2),
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                gradient: p.primaryGradient,
+                shape: BoxShape.circle,
+                boxShadow: AppShadows.glow(p.primary, strength: 1.4),
+              ),
+              foregroundDecoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  center: const Alignment(-0.5, -0.7),
+                  radius: 0.9,
+                  colors: [Colors.white.withValues(alpha: 0.22), Colors.white.withValues(alpha: 0)],
+                ),
+              ),
+              child: const Icon(
+                Icons.power_settings_new_rounded,
+                size: 60,
+                color: Colors.white,
+              ),
             ),
-            BoxShadow(
-              color: p.primaryText.withValues(alpha: 0.04),
-              spreadRadius: 44,
-            ),
-            ...AppShadows.glow(p.primaryBright, strength: 1.4),
-          ],
-        ),
-        child: Icon(
-          Icons.power_settings_new_rounded,
-          size: 60,
-          color: p.onPrimary,
-        ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _BreathPainter extends CustomPainter {
+  _BreathPainter(this.t, this.color, {required this.inner});
+
+  final double t;
+  final Color color;
+  final double inner;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final outer = size.width / 2;
+    for (var i = 0; i < 2; i++) {
+      final phase = (t + i / 2) % 1;
+      final r = inner + (outer - inner) * Curves.easeOut.transform(phase);
+      final alpha = 0.35 * math.sin(math.pi * phase);
+      canvas.drawCircle(
+        c,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5
+          ..color = color.withValues(alpha: alpha),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BreathPainter old) => old.t != t || old.color != color;
 }
 
 class _DashedBorderPainter extends CustomPainter {

@@ -134,7 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _clients(WebSocketServerProvider provider, {required bool framed}) =>
       Reveal(
-        child: provider.connectedClients.isEmpty || !provider.isRunning
+        // The side pane says when no phone has connected yet.
+        child: !provider.isRunning || (framed && provider.connectedClients.isEmpty)
             ? null
             : Padding(
                 padding: const EdgeInsets.only(top: AppSpace.sm),

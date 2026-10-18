@@ -130,6 +130,15 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('the wide side pane says when no phone has connected', (tester) async {
+    await _pump(tester, _FakeProvider(), const Size(1000, 640));
+    expect(find.text('Henüz bağlanan telefon yok.'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await _pump(tester, _FakeProvider(), const Size(440, 760));
+    expect(find.text('Henüz bağlanan telefon yok.'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a wide window puts the code beside the side pane', (tester) async {
     await _pump(tester, _FakeProvider(devices: 1), const Size(1000, 640));
     final code = tester.getRect(find.text('Bağlanmak için QR kodu tarayın'));

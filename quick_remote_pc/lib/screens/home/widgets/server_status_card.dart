@@ -95,7 +95,7 @@ class ServerStatusCard extends StatelessWidget {
                   ),
                 ),
                 if (trust != NetworkTrust.untrusted)
-                  Flexible(child: Text('  ·  $phones', maxLines: 1, overflow: TextOverflow.ellipsis, style: small)),
+                  Flexible(child: Text(' · $phones', maxLines: 1, overflow: TextOverflow.ellipsis, style: small)),
               ],
             ),
             if (trust == NetworkTrust.untrusted) Text(phones, maxLines: 1, overflow: TextOverflow.ellipsis, style: small),
