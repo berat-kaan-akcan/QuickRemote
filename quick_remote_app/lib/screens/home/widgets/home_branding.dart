@@ -15,7 +15,7 @@ class HomeTopBar extends StatelessWidget {
     return Row(
       children: [
         const Expanded(
-          child: Align(alignment: Alignment.centerLeft, child: BrandLockup(height: 30)),
+          child: Align(alignment: Alignment.centerLeft, child: BrandLockup()),
         ),
         AppIconButton(
           icon: Icons.settings_rounded,
