@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_app/theme/app_color_theme.dart';
@@ -23,6 +25,26 @@ void main() {
           base.info,
         ],
       );
+    }
+  });
+
+  test('Text on a primary fill reads at 4.5:1 in every theme', () {
+    double contrast(Color a, Color b) {
+      final (la, lb) = (a.computeLuminance(), b.computeLuminance());
+      return (max(la, lb) + 0.05) / (min(la, lb) + 0.05);
+    }
+
+    for (final theme in AppColorTheme.values) {
+      for (final p in {theme.light, theme.dark}) {
+        // Primary fills run from primaryBright to primary (and primaryDeep).
+        for (final fill in [p.primary, p.primaryBright, p.primaryDeep]) {
+          expect(
+            contrast(p.onPrimary, fill),
+            greaterThanOrEqualTo(4.5),
+            reason: '${theme.name}: onPrimary on $fill',
+          );
+        }
+      }
     }
   });
 
