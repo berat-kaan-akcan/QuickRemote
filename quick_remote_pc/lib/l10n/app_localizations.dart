@@ -563,7 +563,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverStoppedHint.
   ///
   /// In tr, this message translates to:
-  /// **'Telefonunuzdan bağlanmak ve sunumunuzu\nkontrol etmek için sunucuyu başlatın.'**
+  /// **'Telefonunuzdan bağlanmak ve sunumunuzu kontrol etmek için sunucuyu başlatın.'**
   String get serverStoppedHint;
 
   /// No description provided for @opensslMissing.
@@ -583,6 +583,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sunucuyu Başlat'**
   String get startServer;
+
+  /// No description provided for @serverRunning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Açık'**
+  String get serverRunning;
+
+  /// No description provided for @serverStarting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu açılıyor'**
+  String get serverStarting;
+
+  /// No description provided for @serverStoppedSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefondan bağlanmak için başlatın.'**
+  String get serverStoppedSubtitle;
+
+  /// No description provided for @waitingForPhone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon bekleniyor'**
+  String get waitingForPhone;
+
+  /// No description provided for @linuxSetupHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurulum · Linux'**
+  String get linuxSetupHeader;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm'**
+  String get settingsAppearance;
+
+  /// No description provided for @appearanceSystem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem'**
+  String get appearanceSystem;
+
+  /// No description provided for @appearanceLight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get appearanceLight;
+
+  /// No description provided for @appearanceDark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu'**
+  String get appearanceDark;
+
+  /// No description provided for @appearanceNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekran projeksiyona yansıyorsa aydınlık salonda Açık daha iyi okunur.'**
+  String get appearanceNote;
+
+  /// No description provided for @phonesConnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 telefon bağlı} other{{count} telefon bağlı}}'**
+  String phonesConnected(int count);
 }
 
 class _AppLocalizationsDelegate

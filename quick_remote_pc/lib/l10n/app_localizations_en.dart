@@ -275,7 +275,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverStoppedHint =>
-      'Start the server to connect from your phone\nand control your presentation.';
+      'Start the server to connect from your phone and control your presentation.';
 
   @override
   String get opensslMissing =>
@@ -288,4 +288,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startServer => 'Start Server';
+
+  @override
+  String get serverRunning => 'Server Running';
+
+  @override
+  String get serverStarting => 'Starting the server';
+
+  @override
+  String get serverStoppedSubtitle => 'Start it to connect from your phone.';
+
+  @override
+  String get waitingForPhone => 'Waiting for a phone';
+
+  @override
+  String get linuxSetupHeader => 'Setup · Linux';
+
+  @override
+  String get settingsAppearance => 'Appearance';
+
+  @override
+  String get appearanceSystem => 'System';
+
+  @override
+  String get appearanceLight => 'Light';
+
+  @override
+  String get appearanceDark => 'Dark';
+
+  @override
+  String get appearanceNote =>
+      'When the screen is projected in a bright room, Light reads better.';
+
+  @override
+  String phonesConnected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phones connected',
+      one: '1 phone connected',
+    );
+    return '$_temp0';
+  }
 }
