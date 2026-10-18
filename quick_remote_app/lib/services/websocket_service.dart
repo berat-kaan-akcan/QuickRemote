@@ -119,13 +119,18 @@ class WebSocketService extends ChangeNotifier {
   /// The connected PC's name; null from a PC that does not tell it.
   String? get pcName => isConnected ? _state.pcName : null;
 
+  /// What the remote calls the PC: its name, also while reconnecting, else
+  /// its address.
+  String get pcLabel => _state.pcName ?? serverAddress;
+
   // ─── Presentation State ─────────────────────────────────────────────────────
 
   int get currentSlide => _state.currentSlide;
   int get totalSlides => _state.totalSlides;
   String get slideNotes => _state.slideNotes;
   bool get isPptRunning => _state.isPptRunning;
-  List<String> get presenterNames => _state.presenterNames;
+  /// Every program the PC controls ('powerpoint', 'impress', 'wps').
+  List<String> get presenters => _state.presenters;
 
   /// The program running the show ('powerpoint', 'impress', 'wps').
   String get presenter => _state.presenter;

@@ -677,7 +677,7 @@ abstract class AppLocalizations {
   /// No description provided for @notesTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Slayt Notları'**
+  /// **'Konuşmacı Notları'**
   String get notesTitle;
 
   /// No description provided for @notesEmpty.
@@ -685,36 +685,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu slayt için not bulunmuyor.'**
   String get notesEmpty;
-
-  /// No description provided for @startPresentation.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sunuma Başla'**
-  String get startPresentation;
-
-  /// No description provided for @slidePickerRange.
-  ///
-  /// In tr, this message translates to:
-  /// **'Slayt (1-{total})'**
-  String slidePickerRange(int total);
-
-  /// No description provided for @slidePickerHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Slayt Numarası (Örn: 5)'**
-  String get slidePickerHint;
-
-  /// No description provided for @slidePickerMax.
-  ///
-  /// In tr, this message translates to:
-  /// **'Maksimum {total} slayt girebilirsiniz.'**
-  String slidePickerMax(int total);
-
-  /// No description provided for @slidePickerEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Boş bırakırsanız baştan başlar.'**
-  String get slidePickerEmpty;
 
   /// No description provided for @actionStart.
   ///
@@ -739,12 +709,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Slayt: {current} / {total}'**
   String slideCounter(int current, String total);
-
-  /// No description provided for @notes.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notlar'**
-  String get notes;
 
   /// No description provided for @presentationNotOpen.
   ///
@@ -773,20 +737,14 @@ abstract class AppLocalizations {
   /// No description provided for @actionPrev.
   ///
   /// In tr, this message translates to:
-  /// **'Geri'**
+  /// **'Önceki'**
   String get actionPrev;
 
   /// No description provided for @actionNext.
   ///
   /// In tr, this message translates to:
-  /// **'İleri'**
+  /// **'Sonraki'**
   String get actionNext;
-
-  /// Joins program names: "PowerPoint or WPS Office". Keep the spaces.
-  ///
-  /// In tr, this message translates to:
-  /// **' veya '**
-  String get listOr;
 
   /// No description provided for @mediaControlTitle.
   ///
@@ -944,12 +902,6 @@ abstract class AppLocalizations {
   /// **'Başa Sar'**
   String get mediaRewind;
 
-  /// No description provided for @toolHighlighter.
-  ///
-  /// In tr, this message translates to:
-  /// **'Vurgulayıcı'**
-  String get toolHighlighter;
-
   /// No description provided for @tapForTool.
   ///
   /// In tr, this message translates to:
@@ -959,7 +911,7 @@ abstract class AppLocalizations {
   /// No description provided for @doubleTapSelected.
   ///
   /// In tr, this message translates to:
-  /// **'Çift dokunuş → Seçili Araç'**
+  /// **'Çift dokunuş → Seçili araç'**
   String get doubleTapSelected;
 
   /// No description provided for @volumeMuted.
@@ -971,7 +923,7 @@ abstract class AppLocalizations {
   /// No description provided for @volumeOn.
   ///
   /// In tr, this message translates to:
-  /// **'Açık'**
+  /// **'Sesli'**
   String get volumeOn;
 
   /// No description provided for @btUnsupportedLong.
@@ -1789,6 +1741,168 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Genel'**
   String get settingsSectionGeneral;
+
+  /// Screen reader hint of the PC · program line in the remote header.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum programını seç'**
+  String get remoteProgramHint;
+
+  /// No description provided for @programSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum programı'**
+  String get programSheetTitle;
+
+  /// No description provided for @programSheetBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{pc} şu programları kontrol edebilir. Gösterisi açık olan kendiliğinden kullanılır.'**
+  String programSheetBody(String pc);
+
+  /// No description provided for @programShowOpenSlide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösteri açık · Slayt {slide}'**
+  String programShowOpenSlide(int slide);
+
+  /// No description provided for @programShowOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösteri açık'**
+  String get programShowOpen;
+
+  /// No description provided for @programShowClosed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösteri açık değil'**
+  String get programShowClosed;
+
+  /// No description provided for @programPdfNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF\'ler ayrıca seçilmez; öndeki pencere PDF ise o kontrol edilir.'**
+  String get programPdfNote;
+
+  /// No description provided for @programBluetoothNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth modunda program buradan seçilir (PowerPoint / Impress / WPS).'**
+  String get programBluetoothNote;
+
+  /// No description provided for @goToSlide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayta git'**
+  String get goToSlide;
+
+  /// No description provided for @goToSlideRange.
+  ///
+  /// In tr, this message translates to:
+  /// **'1–{total} arası bir numara'**
+  String goToSlideRange(int total);
+
+  /// No description provided for @goToSlideNumber.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt numarası'**
+  String get goToSlideNumber;
+
+  /// No description provided for @goAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Git'**
+  String get goAction;
+
+  /// No description provided for @notesSlide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt {slide}'**
+  String notesSlide(int slide);
+
+  /// Screen reader hint of the two-line note on the slide card.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun tamamını aç'**
+  String get notesOpenHint;
+
+  /// No description provided for @unreadableShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS slayt numarasını bildirmiyor; tuşlar yine çalışır.'**
+  String get unreadableShow;
+
+  /// No description provided for @unreadableShowUserWps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu WPS\'i QuickRemote açmadı: slayt numarası ve notlar gelmez, tuşlar WPS penceresi öndeyken çalışır.'**
+  String get unreadableShowUserWps;
+
+  /// No description provided for @drawToolsNeedShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizim araçları slayt gösterisi açıkken çalışır.'**
+  String get drawToolsNeedShow;
+
+  /// The laser tool where the program has no laser and the pointer arrow follows the phone (WPS on Windows).
+  ///
+  /// In tr, this message translates to:
+  /// **'Ok'**
+  String get toolArrow;
+
+  /// No description provided for @colorUnavailableTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu programda renk seçilemez.'**
+  String get colorUnavailableTitle;
+
+  /// No description provided for @colorUnavailableBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS\'i QuickRemote açmadığı için kalem WPS\'in kendi rengiyle çizer.'**
+  String get colorUnavailableBody;
+
+  /// suffix: the Turkish locative ending of the number (turkishLocative).
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt {slide}\'{suffix, select, de{deki} da{daki} te{teki} ta{taki} other{deki}} medya'**
+  String slideMediaOnSlide(int slide, String suffix);
+
+  /// No description provided for @slideMediaPlaying.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oynatılıyor'**
+  String get slideMediaPlaying;
+
+  /// No description provided for @slideMediaNotPlaying.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oynatılmıyor'**
+  String get slideMediaNotPlaying;
+
+  /// No description provided for @slideMediaStateUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS oynatma durumunu bildirmiyor'**
+  String get slideMediaStateUnknown;
+
+  /// No description provided for @volumeDown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesi kıs'**
+  String get volumeDown;
+
+  /// No description provided for @volumeUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesi aç'**
+  String get volumeUp;
+
+  /// No description provided for @mediaStop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Durdur'**
+  String get mediaStop;
 }
 
 class _AppLocalizationsDelegate

@@ -22,6 +22,10 @@ import 'views/main_controls_view.dart';
 import 'widgets/remote_chrome.dart';
 import 'views/touchpad_view.dart';
 import 'views/media_control_view.dart';
+import 'widgets/program_sheet.dart';
+import 'utils/show_info.dart';
+import '../../models/draw_tool.dart';
+import '../../services/websocket/presentation_state.dart';
 import '../../widgets/ui/ui.dart';
 
 /// Main remote control screen for presentation control.
@@ -38,6 +42,10 @@ class _RemoteScreenState extends State<RemoteScreen> {
   int _currentTab = 0;
   /// Shared by the tabs that show the timer, so switching tabs keeps it running.
   final PresentationTimerController _timer = PresentationTimerController();
+
+  /// The ink (BGR) last sent to the pen and the highlighter on this
+  /// connection; the PC does not tell its own.
+  final Map<DrawTool, int> _inks = {};
 
   late WebSocketService _wsRef;
   late WearBridge _wear;
@@ -166,6 +174,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
   @override
   Widget build(BuildContext context) {
     final ws = context.watch<WebSocketService>();
+    final program = remoteProgram(ws, context.watch<SettingsProvider>());
 
     Widget body;
     if (ws.connectionState == AppConnectionState.failed || _canPop) {
@@ -174,6 +183,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
       body = TouchpadView(
         ws: ws,
         timer: _timer,
+        inks: _inks,
+        onInk: (tool, bgr) => setState(() => _inks[tool] = bgr),
       );
     } else if (_currentTab == 2) {
       body = MediaControlView(ws: ws);
@@ -181,6 +192,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
       body = MainControlsView(
         ws: ws,
         timer: _timer,
+        program: program,
       );
     }
 
@@ -201,7 +213,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: _buildAppBar(ws),
+        appBar: _buildAppBar(ws, program),
         // Only the new tab fades in; the old one leaves at once, so it never
         // takes a touch meant for the new one.
         body: AnimatedSwitcher(
@@ -218,7 +230,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(WebSocketService ws) {
+  PreferredSizeWidget _buildAppBar(WebSocketService ws, String program) {
     final connecting = ws.connectionState == AppConnectionState.reconnecting ||
         ws.connectionState == AppConnectionState.connecting;
     return AppBar(
@@ -226,7 +238,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
       toolbarHeight: 64,
       titleSpacing: AppSpace.md,
       title: RemoteHeader(
-        subtitle: Text(ws.serverAddress),
+        subtitle: Text('${ws.pcLabel} · ${PresentationState.shortNameOf(program)}'),
+        onSubtitleTap: () => ProgramSheet.show(context),
         isConnected: ws.isConnected,
         isConnecting: connecting,
         onReconnect: !ws.isConnected && ws.connectionState != AppConnectionState.failed
