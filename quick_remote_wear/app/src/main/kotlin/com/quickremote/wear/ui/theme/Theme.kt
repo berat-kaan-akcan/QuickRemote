@@ -7,9 +7,15 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.edit
 import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.Typography
+import com.quickremote.wear.R
 
 /**
  * The brand palette (brand/BRAND.md), the dark ("Ink") values of the phone's
@@ -31,6 +37,9 @@ object WearColors {
     val paperTextSecondary = Color(0xFFA9AFCB)
     val paperTextMuted = Color(0xFF7D84A6)
     val danger = Color(0xFFFF5C77)
+
+    // Bluetooth, as on the phone's Bluetooth screens.
+    val info = Color(0xFF5CC8FF)
 
     // Starting a show: green in every theme, as on the phone (status colors do not follow the theme).
     val success = Color(0xFF3DDC97)
@@ -177,9 +186,43 @@ private fun WearPalette.scheme() = ColorScheme(
     onError = WearColors.ink,
 )
 
+/**
+ * The phone's type: Inter for text, Space Grotesk for figures and titles
+ * (both under the SIL Open Font License, assets/licenses).
+ */
+object WearFonts {
+    val inter = FontFamily(
+        Font(R.font.inter_400, FontWeight.Normal),
+        Font(R.font.inter_500, FontWeight.Medium),
+        Font(R.font.inter_600, FontWeight.SemiBold),
+        Font(R.font.inter_700, FontWeight.Bold),
+    )
+    val grotesk = FontFamily(
+        Font(R.font.space_grotesk_600, FontWeight.SemiBold),
+        Font(R.font.space_grotesk_700, FontWeight.Bold),
+    )
+}
+
+private val WearTypography: Typography = Typography(defaultFontFamily = WearFonts.inter).run {
+    fun TextStyle.grotesk() = copy(fontFamily = WearFonts.grotesk, fontWeight = FontWeight.Bold)
+    copy(
+        displayLarge = displayLarge.grotesk(),
+        displayMedium = displayMedium.grotesk(),
+        displaySmall = displaySmall.grotesk(),
+        titleLarge = titleLarge.grotesk(),
+        titleMedium = titleMedium.grotesk(),
+        titleSmall = titleSmall.grotesk(),
+        numeralExtraLarge = numeralExtraLarge.grotesk(),
+        numeralLarge = numeralLarge.grotesk(),
+        numeralMedium = numeralMedium.grotesk(),
+        numeralSmall = numeralSmall.grotesk(),
+        numeralExtraSmall = numeralExtraSmall.grotesk(),
+    )
+}
+
 @Composable
 fun QuickRemoteTheme(theme: WearTheme = WearTheme.COBALT, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalWearPalette provides theme.palette) {
-        MaterialTheme(colorScheme = theme.palette.scheme(), content = content)
+        MaterialTheme(colorScheme = theme.palette.scheme(), typography = WearTypography, content = content)
     }
 }
