@@ -81,24 +81,29 @@ class _MainControlsViewState extends State<MainControlsView> {
               child: Column(
                 children: [
                   FadeSlideIn(
-                    child: SlideCard(
-                      ws: ws,
-                      show: show,
-                      timer: PresentationTimer(controller: widget.timer),
-                      activeScreen: _activeScreen,
-                      onScreen: connected && show.running ? _send : null,
-                      onNotes: () => RemoteDialogs.showNotesDialog(
-                        context,
-                        ws.slideNotes,
-                        ws.currentSlide,
+                    child: AnimatedOpacity(
+                      duration: AppMotion.of(context, AppMotion.base),
+                      // The last state stays in view, faded, while the link is down.
+                      opacity: connected ? 1 : 0.55,
+                      child: SlideCard(
+                        ws: ws,
+                        show: show,
+                        timer: PresentationTimer(controller: widget.timer),
+                        activeScreen: _activeScreen,
+                        onScreen: connected && show.running ? _send : null,
+                        onNotes: () => RemoteDialogs.showNotesDialog(
+                          context,
+                          ws.slideNotes,
+                          ws.currentSlide,
+                        ),
+                        onGoTo: connected && show.canJump
+                            ? () => GoToSlideSheet.show(
+                                context,
+                                totalSlides: ws.totalSlides,
+                                onSend: _send,
+                              )
+                            : null,
                       ),
-                      onGoTo: connected && show.canJump
-                          ? () => GoToSlideSheet.show(
-                              context,
-                              totalSlides: ws.totalSlides,
-                              onSend: _send,
-                            )
-                          : null,
                     ),
                   ),
                   Reveal(

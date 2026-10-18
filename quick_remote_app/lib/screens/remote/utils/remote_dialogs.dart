@@ -14,7 +14,8 @@ class RemoteDialogs {
       confirmText: context.l10n.disconnectTitle,
       tone: AppTone.danger,
       icon: Icons.link_off_rounded,
-      iconTone: AppTone.warning,
+      iconTone: AppTone.danger,
+      actionsInRow: true,
     );
     if (result) HapticFeedback.mediumImpact();
     return result;
