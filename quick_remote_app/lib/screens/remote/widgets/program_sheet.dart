@@ -50,7 +50,7 @@ class _ProgramList extends StatelessWidget {
         ),
         const SizedBox(height: AppSpace.md),
         for (final program in ws.presenters) ...[
-          _ProgramOption(
+          ProgramOption(
             program: program,
             selected: program == marked,
             status: running && program == ws.presenter
@@ -88,12 +88,14 @@ class _ProgramList extends StatelessWidget {
   }
 }
 
-class _ProgramOption extends StatelessWidget {
-  const _ProgramOption({
+/// A program to pick: its icon, name, a line under it and a radio.
+class ProgramOption extends StatelessWidget {
+  const ProgramOption({
+    super.key,
     required this.program,
     required this.selected,
     required this.status,
-    required this.live,
+    this.live = false,
     this.onTap,
   });
 
@@ -101,7 +103,7 @@ class _ProgramOption extends StatelessWidget {
   final bool selected;
   final String status;
 
-  /// Its show runs: the status in green.
+  /// The status in green (its show runs).
   final bool live;
   final VoidCallback? onTap;
 
@@ -110,7 +112,7 @@ class _ProgramOption extends StatelessWidget {
     final p = context.palette;
     final (icon, color) = switch (program) {
       'wps' => (Icons.co_present_rounded, p.danger),
-      'impress' => (Icons.present_to_all_rounded, p.info),
+      'impress' => (Icons.present_to_all_rounded, p.success),
       _ => (Icons.slideshow_rounded, p.accent),
     };
     final radius = AppRadius.all(AppRadius.md);
