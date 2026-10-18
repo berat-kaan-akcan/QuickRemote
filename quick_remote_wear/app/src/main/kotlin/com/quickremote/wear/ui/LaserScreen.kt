@@ -1,12 +1,18 @@
 package com.quickremote.wear.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.runtime.Composable
@@ -18,20 +24,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.OutlinedIconButton
+import androidx.wear.compose.material3.Text
 import com.quickremote.wear.R
 import com.quickremote.wear.phone.Pointer
 import com.quickremote.wear.remote.RemoteAction
@@ -87,7 +97,8 @@ fun LaserScreen(
     var finger by remember { mutableStateOf<Offset?>(null) }
     val background = MaterialTheme.colorScheme.background
     val hint = MaterialTheme.colorScheme.surfaceContainerHigh
-    val laserColor = LocalWearPalette.current.laser
+    val palette = LocalWearPalette.current
+    val laserColor = palette.laser
     val label = stringResource(pointer.hint)
 
     BoxWithConstraints(
@@ -138,6 +149,40 @@ fun LaserScreen(
             } else {
                 drawLaserDot(at, radius * 1.4f, laserColor)
             }
+        }
+        // What the finger moves on the computer: the laser, the arrow or the cursor.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(screen * 0.02f),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = screen * 0.205f - screen * 0.045f)
+                .clip(CircleShape)
+                .background(palette.surface)
+                .border(1.dp, palette.border, CircleShape)
+                .padding(horizontal = screen * 0.037f, vertical = screen * 0.013f),
+        ) {
+            Canvas(Modifier.size(screen * 0.046f)) {
+                drawCircle(laserColor.copy(alpha = 0.3f))
+                drawCircle(laserColor, size.minDimension * 0.28f)
+            }
+            Text(
+                stringResource(pointer.word),
+                fontSize = with(LocalDensity.current) { (screen * 0.047f).toSp() },
+                fontWeight = FontWeight.SemiBold,
+                color = laserColor,
+                maxLines = 1,
+            )
+        }
+        if (finger == null) {
+            Text(
+                stringResource(R.string.drag_to_move),
+                fontSize = with(LocalDensity.current) { (screen * 0.052f).toSp() },
+                fontWeight = FontWeight.Medium,
+                color = palette.muted,
+                maxLines = 1,
+                modifier = Modifier.align(Alignment.TopCenter).offset(y = screen * 0.66f - screen * 0.035f),
+            )
         }
         OutlinedIconButton(
             onClick = onClose,
