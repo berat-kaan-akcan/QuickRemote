@@ -5,137 +5,92 @@ import '../../remote/widgets/shared_buttons.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Tab 0: Main Controls View  (WiFi MainControlsView ile aynı tasarım)
-// ═════════════════════════════════════════════════════════════════════════════
-
+/// The Bluetooth remote's controls: the Wi-Fi layout without what a keyboard
+/// cannot know (slide number, timer, go to slide), and Start and End apart.
 class BtMainControlsView extends StatelessWidget {
   final Future<void> Function(String) send;
   final bool isConnected;
   final String? activeScreen;
+
+  /// The computer the phone is the keyboard of.
+  final String pcName;
 
   const BtMainControlsView({
     super.key,
     required this.send,
     required this.isConnected,
     required this.activeScreen,
+    required this.pcName,
   });
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     return CustomScrollView(
       slivers: [
         SliverFillRemaining(
           hasScrollBody: false,
           child: ContentWidth(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xs, AppSpace.page, AppSpace.md),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.page,
+                AppSpace.xxs,
+                AppSpace.page,
+                AppSpace.sm,
+              ),
               child: Column(
                 children: [
-                  // BT bilgi bandı (slayt sayısı yerine)
                   FadeSlideIn(
-                    child: AppCard(
-                      tint: p.info,
-                      elevated: true,
-                      radius: AppRadius.xl,
-                      padding: const EdgeInsets.all(AppSpace.md),
-                      child: Row(
-                        children: [
-                          IconBadge(icon: Icons.bluetooth_connected_rounded, color: p.info, size: 48),
-                          const SizedBox(width: AppSpace.md - 2),
-                          Expanded(
-                            child: Text(
-                              context.l10n.btModeTitle,
-                              style: AppType.title.copyWith(color: p.textPrimary),
-                            ),
-                          ),
-                          StatusPill(
-                            color: isConnected ? p.success : p.danger,
-                            label: isConnected ? context.l10n.statusConnected : context.l10n.statusDisconnected,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  const SizedBox(height: AppSpace.xl),
-                  // Başlat / Bitir
-                  FadeSlideIn(
-                    index: 1,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ActionButton(
-                            icon: Icons.play_arrow_rounded,
-                            label: context.l10n.actionStart,
-                            color: p.success,
-                            onTap: !isConnected ? null : () => send(RemoteCommands.start),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpace.sm),
-                        Expanded(
-                          child: ActionButton(
-                            icon: Icons.stop_rounded,
-                            label: context.l10n.actionEnd,
-                            color: p.danger,
-                            onTap: !isConnected ? null : () => send(RemoteCommands.end),
-                          ),
-                        ),
-                      ],
+                    child: _ModeCard(
+                      isConnected: isConnected,
+                      pcName: pcName,
+                      activeScreen: activeScreen,
+                      send: send,
                     ),
                   ),
                   const SizedBox(height: AppSpace.sm),
-                  // Siyah Ekran / Beyaz Ekran
                   FadeSlideIn(
-                    index: 2,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ScreenToggleButton(
-                            label: context.l10n.blackScreen,
-                            white: false,
-                            isActive: activeScreen == 'BLACK',
-                            onTap: !isConnected ? null : () => send(RemoteCommands.blackScreen),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpace.sm),
-                        Expanded(
-                          child: ScreenToggleButton(
-                            label: context.l10n.whiteScreen,
-                            white: true,
-                            isActive: activeScreen == 'WHITE',
-                            onTap: !isConnected ? null : () => send(RemoteCommands.whiteScreen),
-                          ),
-                        ),
-                      ],
+                    index: 1,
+                    child: StartEndPair(
+                      onStart: !isConnected
+                          ? null
+                          : () => send(RemoteCommands.start),
+                      onEnd: !isConnected
+                          ? null
+                          : () => send(RemoteCommands.end),
                     ),
                   ),
-                  const SizedBox(height: AppSpace.md),
-                  // Geri / İleri
-                  FadeSlideIn(
-                    index: 3,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: SlideButton(
-                            icon: Icons.arrow_back_rounded,
-                            label: context.l10n.actionPrev,
-                            onTap: !isConnected ? null : () => send(RemoteCommands.prev),
-                          ),
+                  const SizedBox(height: AppSpace.sm),
+                  Expanded(
+                    child: FadeSlideIn(
+                      index: 2,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 150),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              width: 112,
+                              child: BigSlideButton(
+                                next: false,
+                                label: context.l10n.actionPrev,
+                                onTap: !isConnected
+                                    ? null
+                                    : () => send(RemoteCommands.prev),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpace.sm),
+                            Expanded(
+                              child: BigSlideButton(
+                                next: true,
+                                label: context.l10n.actionNext,
+                                onTap: !isConnected
+                                    ? null
+                                    : () => send(RemoteCommands.next),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: AppSpace.sm),
-                        Expanded(
-                          flex: 3,
-                          child: SlideButton(
-                            icon: Icons.arrow_forward_rounded,
-                            label: context.l10n.actionNext,
-                            isPrimary: true,
-                            onTap: !isConnected ? null : () => send(RemoteCommands.next),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
@@ -144,6 +99,110 @@ class BtMainControlsView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "Bluetooth HID mode": whose keyboard the phone is, and the black and
+/// white screen keys. Amber, without the keys, while the link is down.
+class _ModeCard extends StatelessWidget {
+  const _ModeCard({
+    required this.isConnected,
+    required this.pcName,
+    required this.activeScreen,
+    required this.send,
+  });
+
+  final bool isConnected;
+  final String pcName;
+  final String? activeScreen;
+  final Future<void> Function(String) send;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final tone = isConnected ? p.info : p.warning;
+    return AnimatedContainer(
+      duration: AppMotion.of(context, AppMotion.base),
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.md, 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: const Alignment(-0.6, -1),
+          end: const Alignment(0.6, 1),
+          colors: [Color.lerp(p.surfaceRaised, p.info, 0.08)!, p.surface],
+        ),
+        borderRadius: AppRadius.all(AppRadius.lg),
+        border: Border.all(color: p.border),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              IconBadge(
+                icon: isConnected
+                    ? Icons.bluetooth_connected_rounded
+                    : Icons.bluetooth_searching_rounded,
+                color: tone,
+                size: 46,
+              ),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.btModeTitle,
+                      style: AppType.titleSmall.copyWith(color: p.textPrimary),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isConnected
+                          ? context.l10n.btModeSubtitle(pcName)
+                          : context.l10n.statusDisconnected,
+                      style: AppType.bodySmall.copyWith(
+                        color: isConnected ? p.textSecondary : p.warning,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (isConnected) ...[
+            const SizedBox(height: AppSpace.sm),
+            Divider(height: 1, thickness: 1, color: p.border),
+            const SizedBox(height: AppSpace.sm),
+            Row(
+              children: [
+                ScreenKey(
+                  white: false,
+                  label: context.l10n.blackScreen,
+                  active: activeScreen == 'BLACK',
+                  onTap: () => send(RemoteCommands.blackScreen),
+                ),
+                const SizedBox(width: 6),
+                ScreenKey(
+                  white: true,
+                  label: context.l10n.whiteScreen,
+                  active: activeScreen == 'WHITE',
+                  onTap: () => send(RemoteCommands.whiteScreen),
+                ),
+                const SizedBox(width: AppSpace.xs),
+                Flexible(
+                  child: Text(
+                    context.l10n.btScreenKeys,
+                    style: AppType.bodySmall.copyWith(
+                      color: p.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

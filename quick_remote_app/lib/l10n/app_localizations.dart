@@ -746,12 +746,6 @@ abstract class AppLocalizations {
   /// **'Sonraki'**
   String get actionNext;
 
-  /// No description provided for @mediaControlTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Medya Kontrolü'**
-  String get mediaControlTitle;
-
   /// No description provided for @nowPlaying.
   ///
   /// In tr, this message translates to:
@@ -1034,12 +1028,6 @@ abstract class AppLocalizations {
   /// **'Eşleştirme bekleniyor...'**
   String get btWaitingPairing;
 
-  /// No description provided for @btWaitingConnection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bağlantı bekleniyor...'**
-  String get btWaitingConnection;
-
   /// No description provided for @btPreparing.
   ///
   /// In tr, this message translates to:
@@ -1093,12 +1081,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bluetooth ve cihazlar → Cihaz ekle → Bluetooth’u seçin. Windows 10’da: Bluetooth ve diğer cihazlar → Bluetooth veya başka cihaz ekle.'**
   String get btWindowsStep2;
-
-  /// No description provided for @btPairOnce.
-  ///
-  /// In tr, this message translates to:
-  /// **'Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.'**
-  String get btPairOnce;
 
   /// No description provided for @btPermissionAllow.
   ///
@@ -1297,12 +1279,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İmleç'**
   String get toolCursor;
-
-  /// No description provided for @btTarget.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hedef:'**
-  String get btTarget;
 
   /// No description provided for @durationHms.
   ///
@@ -1903,6 +1879,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Durdur'**
   String get mediaStop;
+
+  /// No description provided for @btModeSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon, {device} için klavye ve fare'**
+  String btModeSubtitle(String device);
+
+  /// No description provided for @btScreenKeys.
+  ///
+  /// In tr, this message translates to:
+  /// **'Siyah · Beyaz ekran'**
+  String get btScreenKeys;
+
+  /// No description provided for @btPreparingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon klavye ve fare olarak kaydediliyor.'**
+  String get btPreparingBody;
+
+  /// No description provided for @btConnectingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlanınca kumanda kendiliğinden açılır.'**
+  String get btConnectingBody;
+
+  /// No description provided for @btRetryingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{device} açık ve Bluetooth\'u açıksa birkaç saniye içinde bağlanır.'**
+  String btRetryingBody(String device);
+
+  /// No description provided for @btRetryingBodyUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayar açık ve Bluetooth\'u açıksa birkaç saniye içinde bağlanır.'**
+  String get btRetryingBodyUnknown;
+
+  /// No description provided for @btRefreshingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayar telefonun klavye kaydını yeniden okuyor.'**
+  String get btRefreshingBody;
+
+  /// No description provided for @btProgramSheetBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth\'ta bilgisayar programı bildiremez; tuşlar seçtiğiniz programın kısayollarıyla gönderilir.'**
+  String get btProgramSheetBody;
+
+  /// No description provided for @btToolsFull.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lazer, kalem, vurgula, silgi'**
+  String get btToolsFull;
+
+  /// No description provided for @btToolsImpress.
+  ///
+  /// In tr, this message translates to:
+  /// **'İmleç, kalem'**
+  String get btToolsImpress;
+
+  /// No description provided for @btImpressToolsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Impress\'te lazer, vurgulayıcı ve silgi kısayolu yok; imleç işaretçi olur.'**
+  String get btImpressToolsNote;
+
+  /// No description provided for @btWpsToolsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.'**
+  String get btWpsToolsNote;
 }
 
 class _AppLocalizationsDelegate

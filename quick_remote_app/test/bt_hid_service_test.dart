@@ -150,15 +150,24 @@ void main() {
     home: Scaffold(body: SingleChildScrollView(child: child)),
   );
 
+  // The pairing view scrolls by itself.
+  Widget page(Widget child) => MaterialApp(
+    locale: const Locale('tr'),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    theme: AppTheme.light,
+    home: Scaffold(body: child),
+  );
+
   testWidgets('the pairing guide names the phone as computers list it', (tester) async {
     messenger.setMockMethodCallHandler(methods, (call) async => call.method == 'localName' ? 'Galaxy S23 FE' : null);
-    await tester.pumpWidget(app(const BtPairingGuide()));
+    await tester.pumpWidget(page(const BtPairingView(key: ValueKey(1), dots: AlwaysStoppedAnimation(0), onCancel: _noop)));
     await tester.pumpAndSettle();
     expect(find.textContaining('“Galaxy S23 FE”'), findsOneWidget);
 
     // Without a name (Bluetooth off, no permission) it says what to look for.
     messenger.setMockMethodCallHandler(methods, (call) async => null);
-    await tester.pumpWidget(app(const BtPairingGuide(key: ValueKey(2))));
+    await tester.pumpWidget(page(const BtPairingView(key: ValueKey(2), dots: AlwaysStoppedAnimation(0), onCancel: _noop)));
     await tester.pumpAndSettle();
     expect(find.textContaining('telefonunuzun adını'), findsOneWidget);
     messenger.setMockMethodCallHandler(methods, null);
@@ -173,3 +182,5 @@ void main() {
     expect(find.textContaining('engeli kaldırın'), findsOneWidget);
   });
 }
+
+void _noop() {}
