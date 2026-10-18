@@ -15,6 +15,9 @@ class RemoteHeader extends StatelessWidget {
     this.isConnecting = false,
     this.onReconnect,
     this.onSubtitleTap,
+    this.subtitleColor,
+    this.connectedColor,
+    this.showStatus = true,
   });
 
   final Widget subtitle;
@@ -28,12 +31,20 @@ class RemoteHeader extends StatelessWidget {
   /// Makes the subtitle a button with an arrow: the program sheet.
   final VoidCallback? onSubtitleTap;
 
+  /// The subtitle's color (Bluetooth's light blue); muted text by default.
+  final Color? subtitleColor;
+
+  /// The status dot while connected; the success color by default.
+  final Color? connectedColor;
+  final bool showStatus;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final lineColor = subtitleColor ?? p.textMuted;
     final line = DefaultTextStyle.merge(
       style: AppType.bodySmall.copyWith(
-        color: p.textMuted,
+        color: lineColor,
         fontSize: 11.5,
         fontWeight: FontWeight.w500,
         height: 1.25,
@@ -41,7 +52,7 @@ class RemoteHeader extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       child: IconTheme.merge(
-        data: IconThemeData(color: p.textMuted, size: 15),
+        data: IconThemeData(color: lineColor, size: 15),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -83,7 +94,12 @@ class RemoteHeader extends StatelessWidget {
             size: 40,
             onPressed: onReconnect,
           ),
-        _StatusChip(isConnected: isConnected, isConnecting: isConnecting),
+        if (showStatus)
+          _StatusChip(
+            isConnected: isConnected,
+            isConnecting: isConnecting,
+            connectedColor: connectedColor ?? p.success,
+          ),
         const SizedBox(width: AppSpace.xxs),
         AppIconButton(
           icon: Icons.settings_rounded,
@@ -111,16 +127,17 @@ class RemoteHeader extends StatelessWidget {
 
 /// "Connected" on the surface with a status dot; tinted while it is not.
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.isConnected, required this.isConnecting});
+  const _StatusChip({required this.isConnected, required this.isConnecting, required this.connectedColor});
 
   final bool isConnected;
   final bool isConnecting;
+  final Color connectedColor;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     final color = isConnected
-        ? p.success
+        ? connectedColor
         : isConnecting
         ? p.warning
         : p.danger;

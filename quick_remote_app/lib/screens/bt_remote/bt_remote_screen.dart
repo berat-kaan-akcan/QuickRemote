@@ -11,6 +11,8 @@ import '../../providers/settings_provider.dart';
 import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../remote/widgets/remote_chrome.dart';
+import '../../services/websocket/presentation_state.dart';
+import 'widgets/bt_program_sheet.dart';
 import 'views/bt_main_controls_view.dart';
 import 'views/bt_touchpad_view.dart';
 import 'views/bt_media_view.dart';
@@ -43,6 +45,9 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
   String? _activeScreen; // 'BLACK' | 'WHITE' | null
   bool _isIntentionalDisconnect = false;
 
+  /// The computer's name, kept while the link is down.
+  String? _pcName;
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +78,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
 
   void _onBtState(BtHidConnectionState state) {
     if (!mounted) return;
-    setState(() {});
+    setState(() => _pcName = _bt.connectedDeviceName ?? _pcName);
     if (state == BtHidConnectionState.disconnected) {
       if (!_isIntentionalDisconnect) {
         AppSnackbar.show(
@@ -132,16 +137,16 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
   @override
   Widget build(BuildContext context) {
     final isConnected = _bt.isConnected;
+    final target = context.watch<SettingsProvider>().btTarget;
+    final pc = _bt.connectedDeviceName ?? _pcName ?? context.l10n.unknownDevice;
 
     Widget body;
     if (_currentTab == 1) {
-      final settings = context.watch<SettingsProvider>();
       body = BtTouchpadView(
         bt: _bt,
         send: _send,
         isConnected: isConnected,
-        target: settings.btTarget,
-        onTargetChanged: settings.setBtTarget,
+        target: target,
       );
     } else if (_currentTab == 2) {
       body = BtMediaView(send: _send, isConnected: isConnected);
@@ -150,6 +155,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
         send: _send,
         isConnected: isConnected,
         activeScreen: _activeScreen,
+        pcName: pc,
       );
     }
 
@@ -171,7 +177,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: _buildAppBar(isConnected),
+        appBar: _buildAppBar(isConnected, pc, target),
         // Only the new tab fades in; the old one leaves at once.
         body: AnimatedSwitcher(
           duration: AppMotion.of(context, AppMotion.base),
@@ -184,29 +190,32 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
     );
   }
 
-  PreferredSizeWidget _buildAppBar(bool isConnected) {
+  PreferredSizeWidget _buildAppBar(bool isConnected, String pc, BtTarget target) {
+    final p = context.palette;
     return AppBar(
       automaticallyImplyLeading: false,
       toolbarHeight: 64,
       titleSpacing: AppSpace.md,
       title: RemoteHeader(
         subtitle: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.bluetooth_rounded,
-              color: context.palette.info,
-              size: 12,
-            ),
-            const SizedBox(width: 4),
+            const Icon(Icons.bluetooth_rounded, size: 13),
+            const SizedBox(width: 3),
             Flexible(
               child: Text(
-                _bt.connectedDeviceName ?? 'Bluetooth HID',
+                '$pc · ${PresentationState.shortNameOf(target.name)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
+        subtitleColor: p.info,
+        connectedColor: p.info,
+        // A link that is down shows on the mode card instead.
+        showStatus: isConnected,
+        onSubtitleTap: () => BtProgramSheet.show(context),
         isConnected: isConnected,
         onClose: () async {
           final nav = Navigator.of(context);
@@ -239,7 +248,8 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       confirmText: context.l10n.disconnectTitle,
       tone: AppTone.danger,
       icon: Icons.bluetooth_disabled_rounded,
-      iconTone: AppTone.warning,
+      iconTone: AppTone.danger,
+      actionsInRow: true,
     );
     if (confirmed) HapticFeedback.mediumImpact();
     return confirmed;

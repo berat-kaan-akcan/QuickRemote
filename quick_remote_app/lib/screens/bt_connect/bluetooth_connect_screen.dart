@@ -5,9 +5,9 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../services/background_session.dart';
 import '../../services/bluetooth/bt_hid_service.dart';
 import '../bt_remote/bt_remote_screen.dart';
+import '../../utils/ui/app_top_bar.dart';
 import 'widgets/bt_pairing_guide.dart';
 import 'widgets/bt_status_views.dart';
-import 'widgets/glowing_dots.dart';
 import '../../l10n/app_language.dart';
 import '../../widgets/ui/ui.dart';
 
@@ -33,6 +33,10 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
   late AnimationController _pulseController;
 
   BtHidConnectionState _state = BtHidConnectionState.disconnected;
+
+  /// The phone has waited for a computer: a later disconnect means retrying,
+  /// not preparing.
+  bool _advertised = false;
   String? _errorMessage;
   bool _holdsBackground = false;
 
@@ -147,6 +151,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
     if (_permissionError) return;
     setState(() {
       _state = state;
+      if (state != BtHidConnectionState.disconnected) _advertised = true;
       if (state == BtHidConnectionState.error) {
         _errorMessage = switch (_bt.errorReason) {
           'hid_unavailable' => context.l10n.btHidUnavailable,
@@ -168,182 +173,112 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(context.l10n.homeConnectBluetooth),
-      ),
-      extendBodyBehindAppBar: true,
-      body: AmbientBackground(
-        accent: p.info,
-        child: SafeArea(child: ContentWidth(child: _buildBody())),
-      ),
+      appBar: AppTopBar(title: context.l10n.homeConnectBluetooth),
+      body: SafeArea(top: false, child: ContentWidth(child: _buildBody())),
     );
   }
 
   Widget _buildBody() {
+    final p = context.palette;
+    final l10n = context.l10n;
+    void cancel() => Navigator.of(context).pop();
+    final target = _bt.targetName;
     final body = switch (_state) {
-      BtHidConnectionState.unsupported => BtUnsupportedView(
-        message: _errorMessage,
+      BtHidConnectionState.unsupported => BtStateView(
+        icon: Icons.bluetooth_disabled_rounded,
+        color: p.textMuted,
+        neutral: true,
+        title: l10n.btUnsupported,
+        message: _errorMessage ?? l10n.btUnsupportedShort,
+        actions: [AppButton(label: l10n.btUseWifi, icon: Icons.wifi_rounded, onPressed: cancel)],
       ),
-      BtHidConnectionState.error => BtErrorView(
-        message: _errorMessage,
-        onRetry: _permanentlyDenied ? openAppSettings : _retry,
-        title: _permissionError ? context.l10n.btPermissionTitle : null,
-        actionLabel: !_permissionError
-            ? null
-            : _permanentlyDenied
-            ? context.l10n.btPermissionSettings
-            : context.l10n.btPermissionAllow,
-        actionIcon: !_permissionError
-            ? null
-            : _permanentlyDenied
-            ? Icons.settings_rounded
-            : Icons.bluetooth_rounded,
+      BtHidConnectionState.error when _permissionError => BtStateView(
+        icon: Icons.devices_other_rounded,
+        color: p.warning,
+        title: l10n.btPermissionTitle,
+        message: l10n.btPermissionDenied,
+        actions: [
+          _permanentlyDenied
+              ? AppButton(label: l10n.btPermissionSettings, icon: Icons.settings_rounded, onPressed: openAppSettings)
+              : AppButton(label: l10n.btPermissionAllow, onPressed: _retry),
+          if (_permanentlyDenied) BtActionHint(l10n.btPermissionSettingsHint),
+        ],
       ),
-      BtHidConnectionState.bluetoothOff => BtOffView(
-        onTurnOn: _bt.requestEnable,
+      BtHidConnectionState.error => BtStateView(
+        icon: Icons.error_rounded,
+        color: p.danger,
+        title: l10n.errorTitle,
+        message: _errorMessage ?? l10n.btErrorOccurred,
+        actions: [AppButton(label: l10n.tryAgain, icon: Icons.refresh_rounded, onPressed: _retry)],
       ),
-      BtHidConnectionState.connected => BtConnectedView(
-        deviceName: _bt.connectedDeviceName,
+      BtHidConnectionState.bluetoothOff => BtStateView(
+        icon: Icons.bluetooth_disabled_rounded,
+        color: p.textMuted,
+        neutral: true,
+        title: l10n.btOffTitle,
+        message: l10n.btOffBody,
+        actions: [
+          AppButton(label: l10n.btTurnOn, icon: Icons.bluetooth_rounded, tone: AppTone.info, onPressed: _bt.requestEnable),
+        ],
       ),
-      BtHidConnectionState.hostUnaware => const BtHostSetupView(),
-      _ => _buildWaiting(),
+      BtHidConnectionState.connected => BtStateView(
+        icon: Icons.check_circle_rounded,
+        color: p.success,
+        title: l10n.btConnected,
+        message: '${_bt.connectedDeviceName ?? l10n.unknownDevice} · ${l10n.btOpeningRemote}',
+      ),
+      BtHidConnectionState.hostUnaware => BtHostSetupView(dots: _pulseController),
+      BtHidConnectionState.refreshing => BtWaitingView(
+        icon: Icons.sync_rounded,
+        title: l10n.btHostRefreshing,
+        message: l10n.btRefreshingBody,
+        dots: _pulseController,
+        onCancel: cancel,
+      ),
+      // Trying a computer the phone knows.
+      BtHidConnectionState.advertising when target != null => BtWaitingView(
+        icon: Icons.bluetooth_connected_rounded,
+        title: l10n.btConnectingTo(target),
+        message: l10n.btConnectingBody,
+        dots: _pulseController,
+        onCancel: cancel,
+      ),
+      BtHidConnectionState.advertising => BtPairingView(dots: _pulseController, onCancel: cancel),
+      // Down after it was up: the phone tries again by itself.
+      _ when _advertised => BtWaitingView(
+        icon: Icons.bluetooth_searching_rounded,
+        title: l10n.btNotConnectedRetrying,
+        message: target != null ? l10n.btRetryingBody(target) : l10n.btRetryingBodyUnknown,
+        dots: _pulseController,
+        onCancel: cancel,
+      ),
+      _ => BtWaitingView(
+        icon: Icons.bluetooth_searching_rounded,
+        title: l10n.btPreparing,
+        message: l10n.btPreparingBody,
+        dots: _pulseController,
+        onCancel: cancel,
+      ),
     };
     return AnimatedSwitcher(
       duration: AppMotion.of(context, AppMotion.slow),
       switchInCurve: AppMotion.enter,
       switchOutCurve: AppMotion.exit,
       child: KeyedSubtree(
-        key: ValueKey(switch (_state) {
-          BtHidConnectionState.unsupported ||
-          BtHidConnectionState.error ||
-          BtHidConnectionState.bluetoothOff ||
-          BtHidConnectionState.connected ||
-          BtHidConnectionState.hostUnaware => _state,
-          _ => null,
-        }),
+        key: ValueKey((_state, _permissionError, _state == BtHidConnectionState.advertising && target != null)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
           child: body,
         ),
       ),
     );
   }
 
-  Widget _buildWaiting() {
-    final p = context.palette;
-    final retrying = _state == BtHidConnectionState.disconnected;
-    return CustomScrollView(
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Animated BT icon
-              Center(
-                child: RadarPulse(
-                  color: p.info,
-                  size: 220,
-                  child: Container(
-                    width: 108,
-                    height: 108,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          Color.lerp(p.info, Colors.white, 0.15)!,
-                          p.primary,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: AppShadows.glow(p.info),
-                    ),
-                    child: const Icon(
-                      Icons.bluetooth_rounded,
-                      color: Colors.white,
-                      size: 54,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Status text
-              Center(
-                child: Column(
-                  children: [
-                    AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, child) => Opacity(
-                        opacity: 0.6 + (_pulseController.value * 0.4),
-                        child: Text(
-                          _state == BtHidConnectionState.advertising
-                              ? (_bt.targetName != null
-                                    ? context.l10n.btConnectingTo(
-                                        _bt.targetName!,
-                                      )
-                                    : context.l10n.btWaitingPairing)
-                              : _state == BtHidConnectionState.refreshing
-                              ? context.l10n.btHostRefreshing
-                              : retrying
-                              ? context.l10n.btWaitingConnection
-                              : context.l10n.btPreparing,
-                          textAlign: TextAlign.center,
-                          style: AppType.headline.copyWith(
-                            color: retrying ? p.warning : p.textPrimary,
-                            fontSize: 22,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpace.sm),
-                    if (_state == BtHidConnectionState.advertising ||
-                        _state == BtHidConnectionState.refreshing)
-                      GlowingDots(animation: _pulseController)
-                    else if (retrying)
-                      StatusPill(
-                        color: p.warning,
-                        icon: Icons.warning_amber_rounded,
-                        label: context.l10n.btNotConnectedRetrying,
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpace.xl),
-
-              // Step-by-step pairing guide card (Windows / Linux)
-              const FadeSlideIn(index: 1, child: BtPairingGuide()),
-              const SizedBox(height: AppSpace.md),
-              const FadeSlideIn(index: 2, child: BtTroubleshooting()),
-
-              const Spacer(),
-              const SizedBox(height: AppSpace.lg),
-
-              // Cancel button
-              AppButton(
-                label: context.l10n.cancel,
-                variant: AppButtonVariant.outline,
-                tone: AppTone.neutral,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              const SizedBox(height: AppSpace.md),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   void _retry() {
     setState(() {
       _state = BtHidConnectionState.disconnected;
+      _advertised = false;
       _errorMessage = null;
       _permissionError = false;
       _permanentlyDenied = false;

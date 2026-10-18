@@ -22,6 +22,7 @@ class AppDialog {
     IconData? icon,
     AppTone? iconTone,
     bool barrierDismissible = true,
+    bool actionsInRow = false,
   }) async {
     final result = await AppPopupTheme.showAppDialog<bool>(
       context: context,
@@ -31,6 +32,7 @@ class AppDialog {
         iconTone: iconTone ?? tone,
         title: title,
         content: Text(content, textAlign: TextAlign.center),
+        actionsInRow: actionsInRow,
         actions: [
           AppButton(
             label: confirmText,
@@ -40,7 +42,7 @@ class AppDialog {
           ),
           AppButton(
             label: cancelText ?? context.l10n.cancel,
-            variant: AppButtonVariant.ghost,
+            variant: actionsInRow ? AppButtonVariant.outline : AppButtonVariant.ghost,
             tone: AppTone.neutral,
             onPressed: () => Navigator.of(ctx).pop(false),
           ),
@@ -90,6 +92,7 @@ class AppDialogFrame extends StatelessWidget {
     this.icon,
     this.iconTone = AppTone.primary,
     this.alignStart = false,
+    this.actionsInRow = false,
   });
 
   final String title;
@@ -100,6 +103,9 @@ class AppDialogFrame extends StatelessWidget {
 
   /// Left-aligns the title and content, for longer text.
   final bool alignStart;
+
+  /// Two actions side by side, the first on the right (cancel on the left).
+  final bool actionsInRow;
 
   @override
   Widget build(BuildContext context) {
@@ -133,10 +139,19 @@ class AppDialogFrame extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpace.xl),
-              for (final (i, action) in actions.indexed) ...[
-                if (i > 0) const SizedBox(height: AppSpace.xs),
-                action,
-              ],
+              if (actionsInRow && actions.length == 2)
+                Row(
+                  children: [
+                    Expanded(flex: 10, child: actions[1]),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(flex: 13, child: actions[0]),
+                  ],
+                )
+              else
+                for (final (i, action) in actions.indexed) ...[
+                  if (i > 0) const SizedBox(height: AppSpace.xs),
+                  action,
+                ],
             ],
           ),
         ),
