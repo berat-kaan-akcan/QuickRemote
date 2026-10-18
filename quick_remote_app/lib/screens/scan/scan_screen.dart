@@ -119,7 +119,7 @@ class _ScanScreenState extends State<ScanScreen> with SingleTickerProviderStateM
             // Header
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(AppSpace.md),
+                padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xs, AppSpace.md, 0),
                 child: Row(
                   children: [
                     _GlassCircleButton(
@@ -127,53 +127,28 @@ class _ScanScreenState extends State<ScanScreen> with SingleTickerProviderStateM
                       tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                       onTap: () => Navigator.of(context).pop(),
                     ),
+                    const SizedBox(width: AppSpace.sm),
                     Expanded(
                       child: Text(
                         context.l10n.scanTitle,
-                        textAlign: TextAlign.center,
-                        style: AppType.title.copyWith(color: AppColors.white),
+                        style: AppType.title.copyWith(color: AppColors.white, fontWeight: FontWeight.w700),
                       ),
                     ),
-                    const SizedBox(width: AppSpace.minTouch),
                   ],
                 ),
               ),
             ),
 
-            // Bottom instruction
+            // Under the frame, which the overlay centers 24 px above the middle.
             Positioned(
               left: AppSpace.xl,
               right: AppSpace.xl,
-              bottom: MediaQuery.paddingOf(context).bottom + AppSpace.xxl,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: FadeSlideIn(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm + 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.ink.withValues(alpha: 0.72),
-                        borderRadius: AppRadius.all(AppRadius.lg),
-                        border: Border.all(color: AppColors.white.withValues(alpha: 0.12)),
-                      ),
-                      child: Row(
-                        children: [
-                          const IconBadge(icon: Icons.qr_code_2_rounded, color: AppColors.cobaltLight, size: 40),
-                          const SizedBox(width: AppSpace.sm),
-                          Expanded(
-                            child: Text(
-                              context.l10n.scanHint,
-                              style: AppType.body.copyWith(
-                                color: AppColors.white.withValues(alpha: 0.9),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+              top: size.height / 2 - 24 + frame / 2 + AppSpace.lg,
+              child: FadeSlideIn(
+                child: Text(
+                  context.l10n.scanHint,
+                  textAlign: TextAlign.center,
+                  style: AppType.label.copyWith(color: AppColors.white),
                 ),
               ),
             ),
@@ -193,18 +168,27 @@ class _GlassCircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppIconButton(
-      icon: icon,
+    final radius = AppRadius.all(AppRadius.sm);
+    return Pressable(
+      onTap: onTap,
       tooltip: tooltip,
-      onPressed: onTap,
-      color: AppColors.white,
-      background: AppColors.ink.withValues(alpha: 0.55),
+      semanticLabel: tooltip,
+      pressedScale: 0.9,
+      borderRadius: radius,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.black.withValues(alpha: 0.4),
+          borderRadius: radius,
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.15)),
+        ),
+        child: Icon(icon, color: AppColors.white),
+      ),
     );
   }
 }
 
-/// Darkens the camera outside a rounded frame, draws the frame's corners in
-/// the brand color and a laser line at [sweep] (0 top, 1 bottom).
 class _ScannerOverlayPainter extends CustomPainter {
   _ScannerOverlayPainter({required this.frame, required this.sweep});
 

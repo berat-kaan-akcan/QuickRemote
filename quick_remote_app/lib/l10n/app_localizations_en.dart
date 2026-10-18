@@ -223,11 +223,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifyTitle => 'Compare the Security Code';
 
   @override
-  String verifyContent(String code) {
-    return 'This is your first connection to this PC. The security code on the PC screen should be:\n\n$code\n\nIf the codes differ, don\'t connect: another device on the network may be pretending to be the PC. Scanning the QR code skips this step.';
-  }
-
-  @override
   String get verifyConfirm => 'Codes Match, Connect';
 
   @override
@@ -235,11 +230,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get certWarningTitle => 'Security Warning';
-
-  @override
-  String certWarningContent(String code) {
-    return 'This device\'s identity (certificate) differs from the one saved earlier.\n\nThis is normal if you reinstalled your PC or renewed the certificate. The security code on the PC screen should be:\n\n$code\n\nIf the codes differ, don\'t connect.';
-  }
 
   @override
   String get certWarningConfirm => 'Connect Anyway and Update';
@@ -1086,4 +1076,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get btWpsToolsNote =>
       'In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else.';
+
+  @override
+  String get verifyIntro =>
+      'This is your first connection to this PC. The security code on the PC screen should be:';
+
+  @override
+  String get verifyNote =>
+      'If the codes differ, don\'t connect: another device on the network may be pretending to be the PC. Scanning the QR code skips this step.';
+
+  @override
+  String get certWarningIntro =>
+      'This device\'s identity (certificate) differs from the one saved earlier. This is normal if you reinstalled your PC or renewed the certificate. The security code on the PC screen should be:';
+
+  @override
+  String get certWarningNote => 'If the codes differ, don\'t connect.';
+
+  @override
+  String get homeNoDevicesHint =>
+      'QuickRemote PC must be open on the computer, on the same Wi-Fi.';
+
+  @override
+  String get languageSystemNote =>
+      'System language follows the phone\'s language; if it is neither Turkish nor English, English is used.';
+
+  @override
+  String get historySwipeHint => 'Swipe left to delete';
 }
