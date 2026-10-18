@@ -77,8 +77,20 @@
   "serverStartFailed": "Couldn't start the server: {error}",
   "portFallback": "Port 8090 is in use, so the server started on port {port}.",
   "serverStopped": "Server Stopped",
-  "serverStoppedHint": "Start the server to connect from your phone\nand control your presentation.",
+  "serverStoppedHint": "Start the server to connect from your phone and control your presentation.",
   "opensslMissing": "openssl was not found. Install the openssl package for the TLS certificate.",
   "tlsKeyReadable": "Other users can read the TLS key: {path}",
-  "startServer": "Start Server"
+  "startServer": "Start Server",
+  "serverRunning": "Server Running",
+  "serverStarting": "Starting the server",
+  "serverStoppedSubtitle": "Start it to connect from your phone.",
+  "waitingForPhone": "Waiting for a phone",
+  "linuxSetupHeader": "Setup · Linux",
+  "settingsAppearance": "Appearance",
+  "appearanceSystem": "System",
+  "appearanceLight": "Light",
+  "appearanceDark": "Dark",
+  "appearanceNote": "When the screen is projected in a bright room, Light reads better.",
+  "phonesConnected": "{count, plural, =1{1 phone connected} other{{count} phones connected}}",
+  "noPhonesYet": "No phone has connected yet."
 }
