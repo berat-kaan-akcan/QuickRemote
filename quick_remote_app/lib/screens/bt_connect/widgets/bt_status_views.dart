@@ -4,169 +4,193 @@ import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 import 'bt_make_visible_button.dart';
 import 'bt_pairing_guide.dart';
+import 'glowing_dots.dart';
 
-/// Shown for a moment before the remote opens.
-class BtConnectedView extends StatelessWidget {
-  const BtConnectedView({super.key, required this.deviceName});
+/// One state of the connect screen in the middle: a large icon, a title and
+/// a line, with its actions at the bottom (permission, Bluetooth off, error,
+/// unsupported, connected).
+class BtStateView extends StatelessWidget {
+  const BtStateView({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.message,
+    this.neutral = false,
+    this.actions = const [],
+  });
 
-  final String? deviceName;
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String message;
+
+  /// The icon on the plain surface, for states that are no one's fault.
+  final bool neutral;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: AppMotion.reduced(context) ? 1 : 0, end: 1),
-            duration: AppMotion.of(context, AppMotion.slow),
-            curve: Curves.easeOutBack,
-            builder: (context, t, child) => Transform.scale(scale: t, child: child),
-            child: Container(
-              width: 128,
-              height: 128,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: p.success.withValues(alpha: p.isDark ? 0.14 : 0.10),
-                border: Border.all(color: p.success.withValues(alpha: 0.4), width: 2),
-                boxShadow: AppShadows.glow(p.success),
-              ),
-              child: Icon(Icons.bluetooth_connected_rounded, color: p.success, size: 60),
-            ),
-          ),
-          const SizedBox(height: AppSpace.xl),
-          Text(
-            context.l10n.btConnected,
-            style: AppType.headline.copyWith(color: p.textPrimary),
-          ),
-          const SizedBox(height: AppSpace.xs),
-          Text(
-            deviceName ?? context.l10n.unknownDevice,
-            style: AppType.titleSmall.copyWith(color: p.textSecondary),
-          ),
-          const SizedBox(height: AppSpace.md),
-          Row(
-            mainAxisSize: MainAxisSize.min,
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox.square(
-                dimension: 14,
-                child: CircularProgressIndicator(strokeWidth: 2, color: p.textMuted),
+              Expanded(
+                child: FadeSlideIn(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          color: neutral
+                              ? p.surface
+                              : color.withValues(alpha: 0.12),
+                          borderRadius: AppRadius.all(AppRadius.xl),
+                          border: neutral ? Border.all(color: p.border) : null,
+                        ),
+                        child: Icon(icon, color: color, size: 52),
+                      ),
+                      const SizedBox(height: AppSpace.md),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: AppType.headline.copyWith(
+                          color: p.textPrimary,
+                          fontSize: 23,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpace.md),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.xs,
+                        ),
+                        child: Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: AppType.body.copyWith(
+                            color: p.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(width: AppSpace.xs),
-              Text(
-                context.l10n.btOpeningRemote,
-                style: AppType.bodySmall.copyWith(color: p.textMuted),
-              ),
+              for (final (i, action) in actions.indexed) ...[
+                SizedBox(height: i == 0 ? AppSpace.md : AppSpace.sm),
+                action,
+              ],
+              const SizedBox(height: AppSpace.md),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// The phone cannot act as a Bluetooth keyboard and mouse.
-class BtUnsupportedView extends StatelessWidget {
-  const BtUnsupportedView({super.key, required this.message});
+/// The small print under an action.
+class BtActionHint extends StatelessWidget {
+  const BtActionHint(this.text, {super.key});
 
-  final String? message;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: FadeSlideIn(
-          child: EmptyState(
-            icon: Icons.bluetooth_disabled_rounded,
-            tone: AppTone.neutral,
-            title: context.l10n.btUnsupported,
-            message: message ?? context.l10n.btUnsupportedShort,
-            action: AppButton(
-              label: context.l10n.btUseWifi,
-              icon: Icons.wifi_rounded,
-              variant: AppButtonVariant.tonal,
-              tone: AppTone.info,
-              expand: false,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-        ),
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: AppType.bodySmall.copyWith(
+        color: context.palette.textSecondary,
+        fontSize: 12,
       ),
     );
   }
 }
 
-/// The phone's Bluetooth is off. The screen goes on by itself once it is on.
-class BtOffView extends StatelessWidget {
-  const BtOffView({super.key, required this.onTurnOn});
-
-  final VoidCallback onTurnOn;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: FadeSlideIn(
-          child: EmptyState(
-            icon: Icons.bluetooth_disabled_rounded,
-            tone: AppTone.warning,
-            title: context.l10n.btOffTitle,
-            message: context.l10n.btOffBody,
-            action: AppButton(
-              label: context.l10n.btTurnOn,
-              icon: Icons.bluetooth_rounded,
-              variant: AppButtonVariant.solid,
-              tone: AppTone.info,
-              expand: false,
-              onPressed: onTurnOn,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Something went wrong; the user can try again, or do what [actionLabel]
-/// says (e.g. open the settings for a refused permission).
-class BtErrorView extends StatelessWidget {
-  const BtErrorView({
+/// Waiting for the phone or the computer: a pulsing Bluetooth icon, what is
+/// going on, the dots, and Cancel.
+class BtWaitingView extends StatelessWidget {
+  const BtWaitingView({
     super.key,
+    required this.icon,
+    required this.title,
     required this.message,
-    required this.onRetry,
-    this.title,
-    this.actionLabel,
-    this.actionIcon,
+    required this.dots,
+    required this.onCancel,
   });
 
-  final String? message;
-  final VoidCallback onRetry;
-  final String? title;
-  final String? actionLabel;
-  final IconData? actionIcon;
+  final IconData icon;
+  final String title;
+  final String message;
+  final Animation<double> dots;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: FadeSlideIn(
-          child: EmptyState(
-            icon: Icons.error_outline_rounded,
-            tone: AppTone.danger,
-            title: title ?? context.l10n.errorTitle,
-            message: message ?? context.l10n.btErrorOccurred,
-            action: AppButton(
-              label: actionLabel ?? context.l10n.tryAgain,
-              icon: actionIcon ?? Icons.refresh_rounded,
-              variant: AppButtonVariant.solid,
-              tone: AppTone.info,
-              expand: false,
-              onPressed: onRetry,
-            ),
+    final p = context.palette;
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RadarPulse(
+                      color: p.info,
+                      size: 240,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: p.info.withValues(alpha: 0.14),
+                        ),
+                        child: Icon(icon, color: p.info, size: 56),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.sm),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: AppType.headline.copyWith(
+                        color: p.textPrimary,
+                        fontSize: 23,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.md),
+                    GlowingDots(animation: dots),
+                    const SizedBox(height: AppSpace.md),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: AppType.bodySmall.copyWith(color: p.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              AppButton(
+                label: context.l10n.cancel,
+                variant: AppButtonVariant.outline,
+                tone: AppTone.neutral,
+                onPressed: onCancel,
+              ),
+              const SizedBox(height: AppSpace.md),
+            ],
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -175,7 +199,9 @@ class BtErrorView extends StatelessWidget {
 /// while QuickRemote was not open. The phone keeps trying, so the remote opens
 /// by itself once the user has done this on the computer.
 class BtHostSetupView extends StatefulWidget {
-  const BtHostSetupView({super.key});
+  const BtHostSetupView({super.key, required this.dots});
+
+  final Animation<double> dots;
 
   @override
   State<BtHostSetupView> createState() => _BtHostSetupViewState();
@@ -187,83 +213,127 @@ class _BtHostSetupViewState extends State<BtHostSetupView> {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: AppSpace.lg),
-        child: FadeSlideIn(
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              EmptyState(
-                icon: Icons.keyboard_rounded,
-                tone: AppTone.warning,
-                compact: true,
-                title: context.l10n.btHostUnawareTitle,
-                message: context.l10n.btHostUnawareBody,
-              ),
-              const SizedBox(height: AppSpace.lg),
-              AppCard(
-                elevated: true,
-                radius: AppRadius.xl,
-                padding: const EdgeInsets.all(AppSpace.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppSegmented<bool>(
-                      color: p.info,
-                      segments: const [
-                        AppSegment(value: false, label: 'Windows', icon: Icons.window_rounded),
-                        AppSegment(value: true, label: 'Linux', icon: Icons.terminal_rounded),
-                      ],
-                      selected: _linux,
-                      onChanged: (v) => setState(() => _linux = v),
-                    ),
-                    const SizedBox(height: AppSpace.md),
-                    Text(
-                      _linux ? context.l10n.btHostUnawareLinux : context.l10n.btHostUnawareWindows,
-                      style: AppType.body.copyWith(color: p.textSecondary, fontSize: 14),
-                    ),
-                    // Adding the phone again needs it visible.
-                    const SizedBox(height: AppSpace.md),
-                    const BtMakeVisibleButton(),
-                    if (_linux) ...[
-                      const SizedBox(height: AppSpace.md),
-                      InlineAlert(
-                        dense: true,
-                        tone: AppTone.info,
-                        icon: Icons.auto_fix_high_rounded,
-                        message: context.l10n.btHostUnawareAuto,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpace.md),
-              // The phone cannot tell why the computer refused: the same
-              // refusal comes from a blocked phone.
-              const BtTroubleshooting(),
-              const SizedBox(height: AppSpace.lg),
+              const SizedBox(height: AppSpace.xs),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox.square(
-                    dimension: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: p.textMuted),
+                  IconBadge(
+                    icon: Icons.keyboard_hide_rounded,
+                    color: p.warning,
+                    size: 42,
                   ),
-                  const SizedBox(width: AppSpace.xs),
-                  Flexible(
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(
                     child: Text(
-                      context.l10n.btHostUnawareWaiting,
-                      style: AppType.bodySmall.copyWith(color: p.textMuted),
+                      context.l10n.btHostUnawareTitle,
+                      style: AppType.titleSmall.copyWith(
+                        color: p.textPrimary,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpace.sm),
+              Text(
+                context.l10n.btHostUnawareBody,
+                style: AppType.bodySmall.copyWith(
+                  color: p.textSecondary,
+                  fontSize: 12.5,
+                ),
+              ),
+              const SizedBox(height: AppSpace.sm),
+              BtSystemTabs(
+                linux: _linux,
+                onChanged: (v) => setState(() => _linux = v),
+              ),
+              const SizedBox(height: AppSpace.sm),
+              Container(
+                padding: const EdgeInsets.all(AppSpace.sm),
+                decoration: BoxDecoration(
+                  color: p.surface,
+                  borderRadius: AppRadius.all(AppRadius.lg),
+                  border: Border.all(color: p.border),
+                ),
+                child: Text(
+                  _linux
+                      ? context.l10n.btHostUnawareLinux
+                      : context.l10n.btHostUnawareWindows,
+                  style: AppType.bodySmall.copyWith(
+                    color: p.textPrimary,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+              // Only QuickRemote PC on Linux makes the computer read the
+              // phone's records again (BtHidRepair).
+              if (_linux) ...[
+                const SizedBox(height: AppSpace.sm),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.auto_fix_high_rounded,
+                      color: p.success,
+                      size: 18,
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    Expanded(
+                      child: Text(
+                        context.l10n.btHostUnawareAuto,
+                        style: AppType.bodySmall.copyWith(
+                          color: p.textSecondary,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              // Adding the phone again needs it visible.
+              const SizedBox(height: AppSpace.md),
+              const BtMakeVisibleButton(),
+              const Spacer(),
+              const SizedBox(height: AppSpace.md),
+              // The phone cannot tell why the computer refused: the same
+              // refusal comes from a blocked phone.
+              const BtTroubleshooting(),
+              const SizedBox(height: AppSpace.sm),
+              Container(
+                padding: const EdgeInsets.all(AppSpace.md),
+                decoration: BoxDecoration(
+                  color: p.surface,
+                  borderRadius: AppRadius.all(AppRadius.lg),
+                  border: Border.all(color: p.border),
+                ),
+                child: Row(
+                  children: [
+                    GlowingDots(animation: widget.dots),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Text(
+                        context.l10n.btHostUnawareWaiting,
+                        style: AppType.bodySmall.copyWith(
+                          color: p.textSecondary,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpace.md),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 }
