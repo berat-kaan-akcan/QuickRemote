@@ -1086,11 +1086,4 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get btWpsToolsNote =>
       'In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else.';
-
-  @override
-  String get btPairOnce =>
-      'You pair only once. Next time, just open this screen: the phone connects to the computer by itself.';
-
-  @override
-  String get btWaitingConnection => 'Waiting for connection...';
 }

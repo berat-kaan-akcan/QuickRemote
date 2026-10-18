@@ -1086,11 +1086,4 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get btWpsToolsNote =>
       'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.';
-
-  @override
-  String get btPairOnce =>
-      'Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.';
-
-  @override
-  String get btWaitingConnection => 'Bağlantı bekleniyor...';
 }

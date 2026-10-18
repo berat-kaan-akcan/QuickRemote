@@ -1951,18 +1951,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.'**
   String get btWpsToolsNote;
-
-  /// No description provided for @btPairOnce.
-  ///
-  /// In tr, this message translates to:
-  /// **'Eşleştirme bir kez yapılır. Sonraki seferlerde bu ekranı açmanız yeterli: telefon bilgisayara kendisi bağlanır.'**
-  String get btPairOnce;
-
-  /// No description provided for @btWaitingConnection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bağlantı bekleniyor...'**
-  String get btWaitingConnection;
 }
 
 class _AppLocalizationsDelegate
