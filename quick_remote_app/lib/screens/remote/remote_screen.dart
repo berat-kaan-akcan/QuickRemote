@@ -26,6 +26,7 @@ import 'widgets/program_sheet.dart';
 import 'utils/show_info.dart';
 import '../../models/draw_tool.dart';
 import '../../services/websocket/presentation_state.dart';
+import '../../widgets/status_view.dart';
 import '../../widgets/ui/ui.dart';
 
 /// Main remote control screen for presentation control.
@@ -264,22 +265,22 @@ class _RemoteScreenState extends State<RemoteScreen> {
   }
 
   Widget _buildFailedView(WebSocketService ws) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpace.xl),
-        child: FadeSlideIn(
-          child: EmptyState(
-            icon: Icons.wifi_off_rounded,
-            tone: AppTone.danger,
-            title: context.l10n.remoteConnectFailedTitle,
-            message: _persistentError ?? context.l10n.remoteServerUnreachable,
-            action: AppButton(
+    final p = context.palette;
+    return ContentWidth(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
+        child: StatusView(
+          icon: Icons.wifi_off_rounded,
+          color: p.danger,
+          title: context.l10n.remoteConnectFailedTitle,
+          message: _persistentError ?? context.l10n.remoteServerUnreachable,
+          actions: [
+            AppButton(
               label: context.l10n.remoteBackHome,
               icon: Icons.home_rounded,
-              expand: false,
               onPressed: () => _performExit(skipDialog: true),
             ),
-          ),
+          ],
         ),
       ),
     );

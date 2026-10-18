@@ -7,6 +7,7 @@ import '../../services/bluetooth/bt_hid_service.dart';
 import '../bt_remote/bt_remote_screen.dart';
 import '../../utils/ui/app_top_bar.dart';
 import 'widgets/bt_pairing_guide.dart';
+import '../../widgets/status_view.dart';
 import 'widgets/bt_status_views.dart';
 import '../../l10n/app_language.dart';
 import '../../widgets/ui/ui.dart';
@@ -185,7 +186,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
     void cancel() => Navigator.of(context).pop();
     final target = _bt.targetName;
     final body = switch (_state) {
-      BtHidConnectionState.unsupported => BtStateView(
+      BtHidConnectionState.unsupported => StatusView(
         icon: Icons.bluetooth_disabled_rounded,
         color: p.textMuted,
         neutral: true,
@@ -193,7 +194,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
         message: _errorMessage ?? l10n.btUnsupportedShort,
         actions: [AppButton(label: l10n.btUseWifi, icon: Icons.wifi_rounded, onPressed: cancel)],
       ),
-      BtHidConnectionState.error when _permissionError => BtStateView(
+      BtHidConnectionState.error when _permissionError => StatusView(
         icon: Icons.devices_other_rounded,
         color: p.warning,
         title: l10n.btPermissionTitle,
@@ -205,14 +206,14 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
           if (_permanentlyDenied) BtActionHint(l10n.btPermissionSettingsHint),
         ],
       ),
-      BtHidConnectionState.error => BtStateView(
+      BtHidConnectionState.error => StatusView(
         icon: Icons.error_rounded,
         color: p.danger,
         title: l10n.errorTitle,
         message: _errorMessage ?? l10n.btErrorOccurred,
         actions: [AppButton(label: l10n.tryAgain, icon: Icons.refresh_rounded, onPressed: _retry)],
       ),
-      BtHidConnectionState.bluetoothOff => BtStateView(
+      BtHidConnectionState.bluetoothOff => StatusView(
         icon: Icons.bluetooth_disabled_rounded,
         color: p.textMuted,
         neutral: true,
@@ -222,7 +223,7 @@ class _BluetoothConnectScreenState extends State<BluetoothConnectScreen>
           AppButton(label: l10n.btTurnOn, icon: Icons.bluetooth_rounded, tone: AppTone.info, onPressed: _bt.requestEnable),
         ],
       ),
-      BtHidConnectionState.connected => BtStateView(
+      BtHidConnectionState.connected => StatusView(
         icon: Icons.check_circle_rounded,
         color: p.success,
         title: l10n.btConnected,

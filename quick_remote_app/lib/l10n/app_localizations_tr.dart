@@ -220,11 +220,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get verifyTitle => 'Güvenlik Kodunu Karşılaştırın';
 
   @override
-  String verifyContent(String code) {
-    return 'Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:\n\n$code\n\nKodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.';
-  }
-
-  @override
   String get verifyConfirm => 'Kodlar Aynı, Bağlan';
 
   @override
@@ -232,11 +227,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get certWarningTitle => 'Güvenlik Uyarısı';
-
-  @override
-  String certWarningContent(String code) {
-    return 'Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı.\n\nPC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:\n\n$code\n\nKodlar aynı değilse bağlanmayın.';
-  }
 
   @override
   String get certWarningConfirm => 'Yine de Bağlan ve Güncelle';
@@ -1086,4 +1076,30 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get btWpsToolsNote =>
       'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.';
+
+  @override
+  String get verifyIntro =>
+      'Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:';
+
+  @override
+  String get verifyNote =>
+      'Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.';
+
+  @override
+  String get certWarningIntro =>
+      'Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı. PC\'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:';
+
+  @override
+  String get certWarningNote => 'Kodlar aynı değilse bağlanmayın.';
+
+  @override
+  String get homeNoDevicesHint =>
+      'Bilgisayarda QuickRemote PC açık ve aynı Wi-Fi\'da olmalı.';
+
+  @override
+  String get languageSystemNote =>
+      'Sistem dili, telefonun dilini izler; Türkçe ya da İngilizce değilse İngilizce olur.';
+
+  @override
+  String get historySwipeHint => 'Silmek için sola kaydırın';
 }

@@ -93,25 +93,9 @@
   "homeRemoveFromHistory": "Geçmişten Sil",
   "unknownPc": "Bilinmeyen PC",
   "verifyTitle": "Güvenlik Kodunu Karşılaştırın",
-  "verifyContent": "Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:\n\n{code}\n\nKodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.",
-  "@verifyContent": {
-    "placeholders": {
-      "code": {
-        "type": "String"
-      }
-    }
-  },
   "verifyConfirm": "Kodlar Aynı, Bağlan",
   "cancelAction": "İptal Et",
   "certWarningTitle": "Güvenlik Uyarısı",
-  "certWarningContent": "Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı.\n\nPC'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:\n\n{code}\n\nKodlar aynı değilse bağlanmayın.",
-  "@certWarningContent": {
-    "placeholders": {
-      "code": {
-        "type": "String"
-      }
-    }
-  },
   "certWarningConfirm": "Yine de Bağlan ve Güncelle",
   "manualTitle": "Manuel Bağlantı",
   "manualIp": "IP Adresi",
@@ -589,5 +573,12 @@
   "btToolsFull": "Lazer, kalem, vurgula, silgi",
   "btToolsImpress": "İmleç, kalem",
   "btImpressToolsNote": "Impress'te lazer, vurgulayıcı ve silgi kısayolu yok; imleç işaretçi olur.",
-  "btWpsToolsNote": "WPS'te lazer Ctrl+R ile açılır; Windows'taki WPS'te Silgi başka bir iş yapabilir."
+  "btWpsToolsNote": "WPS'te lazer Ctrl+R ile açılır; Windows'taki WPS'te Silgi başka bir iş yapabilir.",
+  "verifyIntro": "Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:",
+  "verifyNote": "Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.",
+  "certWarningIntro": "Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı. PC'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:",
+  "certWarningNote": "Kodlar aynı değilse bağlanmayın.",
+  "homeNoDevicesHint": "Bilgisayarda QuickRemote PC açık ve aynı Wi-Fi'da olmalı.",
+  "languageSystemNote": "Sistem dili, telefonun dilini izler; Türkçe ya da İngilizce değilse İngilizce olur.",
+  "historySwipeHint": "Silmek için sola kaydırın"
 }
