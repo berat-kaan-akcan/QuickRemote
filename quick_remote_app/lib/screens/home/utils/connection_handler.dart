@@ -12,10 +12,14 @@ class ConnectAttemptResult {
   final String? errorMessage;
   final bool wasCancelled;
 
+  /// Why a failed attempt failed; null on success or when cancelled.
+  final ConnectionError? error;
+
   ConnectAttemptResult({
     required this.success,
     this.errorMessage,
     this.wasCancelled = false,
+    this.error,
   });
 }
 
@@ -61,6 +65,7 @@ class ConnectionHandler {
       return ConnectAttemptResult(
         success: false,
         errorMessage: context.l10n.connectionError(connResult.error, connResult.detail),
+        error: connResult.error,
       );
     }
   }
