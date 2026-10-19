@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/discovery_service.dart';
+import '../../services/websocket_service.dart';
 import '../../repositories/device_history_repository.dart';
 import '../scan/scan_screen.dart';
 import '../remote/remote_screen.dart';
@@ -95,7 +96,37 @@ class _HomeScreenState extends State<HomeScreen> {
     await _executeConnection(host, port, pin, certFingerprint: fingerprint);
   }
 
-  Future<void> _executeConnection(
+  /// A PC found on the network that is also a recent connection is opened
+  /// with the PIN that worked last time; the PIN dialog comes only when the
+  /// PC has a new one since.
+  Future<void> _connectDiscovered(DiscoveredDevice dev) async {
+    _clearError();
+    final recent = _recentDevices
+        .where((d) => d['host'] == dev.ip && d['port'] == dev.port)
+        .firstOrNull;
+    final pin = recent?['pin'] as String? ?? '';
+    if (pin.isEmpty) {
+      await _showManualConnect(
+        context,
+        defaultIp: dev.ip,
+        defaultPort: dev.port.toString(),
+      );
+      return;
+    }
+    final error = await _executeConnection(dev.ip, dev.port, pin);
+    if (!mounted) return;
+    if (error == ConnectionError.wrongPin) {
+      _clearError();
+      await _showManualConnect(
+        context,
+        defaultIp: dev.ip,
+        defaultPort: dev.port.toString(),
+      );
+    }
+  }
+
+  /// Returns the error of a failed attempt, null otherwise.
+  Future<ConnectionError?> _executeConnection(
     String host,
     int port,
     String pin, {
@@ -114,28 +145,22 @@ class _HomeScreenState extends State<HomeScreen> {
       certFingerprint: certFingerprint,
     );
 
-    if (!mounted) return;
+    if (!mounted) return null;
 
     if (connResult.success) {
       await _saveRecentDevice(host, port, pin);
-      if (!mounted) return;
+      if (!mounted) return null;
       setState(() => _connecting = false);
       Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const RemoteScreen()));
-    } else {
-      if (!connResult.wasCancelled) {
-        setState(() {
-          _connecting = false;
-          _error = connResult.errorMessage;
-        });
-      } else {
-        setState(() {
-          _connecting = false;
-          _error = null;
-        });
-      }
+      return null;
     }
+    setState(() {
+      _connecting = false;
+      _error = connResult.wasCancelled ? null : connResult.errorMessage;
+    });
+    return connResult.error;
   }
 
   Future<void> _showManualConnect(
@@ -241,11 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             index: 2,
                             child: DeviceLists(
                               recentDevices: _recentDevices,
-                              onDiscoveredTap: (dev) => _showManualConnect(
-                                context,
-                                defaultIp: dev.ip,
-                                defaultPort: dev.port.toString(),
-                              ),
+                              onDiscoveredTap: _connectDiscovered,
                               onRecentTap: (dev) => _executeConnection(dev['host'], dev['port'], dev['pin']),
                               onRecentRemove: _removeRecentDevice,
                             ),
