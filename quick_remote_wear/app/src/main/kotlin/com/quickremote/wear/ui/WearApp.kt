@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -120,7 +121,13 @@ fun WearApp(phone: PhoneLink, ambient: Boolean) {
 
     var lastClock by remember { mutableStateOf<TalkClock?>(null) }
     LaunchedEffect(connected?.clock) { connected?.clock?.let { lastClock = it } }
-    val clock = lastClock ?: startedAt?.let { TalkClock(target = 0, running = true, startedAt = it, elapsed = 0) }
+    // A State, not a plain value: the nav host keeps the destination it was
+    // made with, which kept the clock of when the remote opened (none, or the
+    // clock of a show that had ended). The phone's newest at once.
+    val clock by rememberUpdatedState(
+        connected?.clock ?: lastClock
+            ?: startedAt?.let { TalkClock(target = 0, running = true, startedAt = it, elapsed = 0) },
+    )
 
     // What the computer answered to a command, or the talk's clock's
     // warning (AlertService vibrates it), shown for a moment.

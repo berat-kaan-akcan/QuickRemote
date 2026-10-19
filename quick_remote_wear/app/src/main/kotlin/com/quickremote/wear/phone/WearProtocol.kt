@@ -37,6 +37,9 @@ object WearProtocol {
     const val KEY_TIMER_START = "timerStart"
     const val KEY_TIMER_ELAPSED = "timerElapsed"
 
+    /** When the phone wrote the state (ms since the epoch): the newest of several stored ones. */
+    const val KEY_STAMP = "stamp"
+
     /** [KEY_LINK]: the phone app is not running. */
     const val LINK_CLOSED = "closed"
     const val LINK_DISCONNECTED = "disconnected"

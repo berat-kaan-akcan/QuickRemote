@@ -62,6 +62,9 @@ class PhoneLink(context: Context) :
     private var reachable: Boolean? = null
     private var report: PhoneReport? = null
 
+    /** States the phone has written since the listener started. */
+    private var changes = 0
+
     /** Hellos sent since the phone last wrote its state. */
     private var unanswered = 0
 
@@ -85,10 +88,18 @@ class PhoneLink(context: Context) :
         capabilities.addListener(this, WearProtocol.CAPABILITY)
         if (awake) laserScreen(true)
         // The state from before the watch last looked, shown until the phone
-        // answers the hello: the remote opens at once.
+        // answers the hello: the remote opens at once. The newest one: there
+        // can be several (an old copy from another node), and the first was
+        // one with an old talk clock (it showed the time from a show that had
+        // ended). Not over one the phone has written meanwhile.
+        val asked = changes
         data.getDataItems(STATE_URI, DataClient.FILTER_LITERAL).addOnSuccessListener { items ->
             try {
-                items.firstOrNull()?.let { report = read(it) }
+                if (Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG, "Stored states: ${items.count}")
+                if (changes == asked) {
+                    items.maxByOrNull { DataMapItem.fromDataItem(it).dataMap.getLong(WearProtocol.KEY_STAMP, 0L) }
+                        ?.let { report = read(it) }
+                }
             } finally {
                 items.release()
             }
@@ -155,6 +166,7 @@ class PhoneLink(context: Context) :
     override fun onDataChanged(events: DataEventBuffer) {
         for (event in events) {
             if (event.dataItem.uri.path != WearProtocol.PATH_STATE) continue
+            changes++
             report = if (event.type == DataEvent.TYPE_CHANGED) read(event.dataItem) else null
             if (Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG, "State: $report")
             unanswered = 0
