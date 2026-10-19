@@ -311,6 +311,14 @@ void main() {
     ]);
   });
 
+  test('a MODE_LASER after the first movement does not toggle the laser off', () async {
+    ws.connect192();
+    // The movement came over the watch's socket, the command over the Data Layer.
+    await fromWatch('move', [3.0, 4.0]);
+    await fromWatch('command', RemoteCommands.modeLaser);
+    expect(ws.sent, [RemoteCommands.modeLaser, ('LASER', 3.0, 4.0)]);
+  });
+
   // testWidgets for its fake clock.
   testWidgets('the laser goes out when the watch falls silent, and comes back with movement', (tester) async {
     ws.connect192();

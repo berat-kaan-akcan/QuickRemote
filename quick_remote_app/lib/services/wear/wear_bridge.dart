@@ -189,6 +189,14 @@ class WearBridge {
     if (!watchCommands.contains(command) || !_hasPc) return;
     _commandAt = _now();
     if (command == RemoteCommands.modeLaser) {
+      // The first movement comes over the watch's socket and the command
+      // over the Data Layer, so the movement can come first and have turned
+      // the laser on already. A second MODE_LASER put it away: PowerPoint's
+      // Ctrl+L toggles, and the cursor showed in its place.
+      if (_laserOn) {
+        _armLaserTimer();
+        return;
+      }
       _laserOn = true;
       _mouseX = 0;
       _mouseY = 0;

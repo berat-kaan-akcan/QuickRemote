@@ -113,7 +113,9 @@ fun ConnectedScreen(
     val target = when {
         // The first connection opens on Start unless a show is known to run:
         // over Bluetooth nothing is known, and a talk begins with Start.
-        running == wasRunning -> page ?: if (running) Page.REMOTE else Page.START
+        // Without a show, a (re)connection opens on Start, not on the slide
+        // buttons left from an earlier show (only the tools page is kept).
+        running == wasRunning -> if (running) page ?: Page.REMOTE else page.takeIf { it == Page.TOOLS } ?: Page.START
         running -> Page.REMOTE.takeIf { page == null || page == Page.START } ?: page!!
         else -> Page.START
     }
