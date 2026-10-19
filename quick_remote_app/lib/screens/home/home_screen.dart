@@ -74,7 +74,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// A failed attempt's alert stays until the next one starts: the user
+  /// read an old "wrong PIN" as the answer to a QR scan that then connected.
+  void _clearError() {
+    if (_error != null) setState(() => _error = null);
+  }
+
   Future<void> _scanAndConnect() async {
+    _clearError();
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(builder: (_) => const ScanScreen()),
     );
@@ -136,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String? defaultIp,
     String? defaultPort,
   }) async {
+    _clearError();
     String? resolvedPort = defaultPort;
     if (resolvedPort == null && _recentDevices.isNotEmpty) {
       resolvedPort = _recentDevices.first['port']?.toString();
