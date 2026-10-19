@@ -40,7 +40,9 @@ try {
                     if ($placeholder -eq 2 -or ($placeholder -eq -1 -and $shape.HasTextFrame)) {
                         $text = $shape.TextFrame.TextRange.Text
                         if ($text -ne $null -and $text.Trim() -ne "") {
-                            $notes += $text + "`n"
+                            # Paragraphs end in CR, Shift+Enter breaks are VT:
+                            # the phone drew both as boxes.
+                            $notes += ($text -replace '\r\n?|\x0B', "`n") + "`n"
                         }
                     }
                 }

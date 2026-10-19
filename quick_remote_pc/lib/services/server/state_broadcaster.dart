@@ -111,6 +111,13 @@ class StateBroadcaster {
     _lastThumbnail = _noThumbnail;
   }
 
+  /// The next slide state goes out even if unchanged: a client that just
+  /// connected during a show otherwise saw it as running with no slide
+  /// number until the slide changed.
+  void resendSlideState() {
+    _lastSlideState = null;
+  }
+
   Future<void> fetchAndBroadcastSlideState() async {
     if (!hasClients()) return;
 

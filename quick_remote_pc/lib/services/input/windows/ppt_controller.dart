@@ -76,12 +76,16 @@ class PptController {
   /// or of either when null. COM gives no handle: SlideShowWindow.HWND is
   /// missing in PowerPoint 365 (DISP_E_MEMBERNOTFOUND) and empty in WPS. The
   /// largest, since WPS's show toolbar may be a window of the same class.
-  static HWND? _findShowWindow([String? kind]) {
+  static HWND? _findShowWindow([String? kind]) => _findWindow(_showWindowKind, kind);
+
+  /// The largest visible window that [kindOf] gives [kind] (any kind when
+  /// null).
+  static HWND? _findWindow(String? Function(HWND) kindOf, [String? kind]) {
     final found = <HWND>[];
     int visit(Pointer hwnd, int lParam) {
       final window = HWND(hwnd);
       if (IsWindowVisible(window)) {
-        final windowKind = _showWindowKind(window);
+        final windowKind = kindOf(window);
         if (windowKind != null && (kind == null || windowKind == kind)) found.add(window);
       }
       return TRUE;
@@ -167,6 +171,7 @@ try {
   }
 
   static Future<void> _startPresenter() async {
+    String? presenter;
     try {
       final script = '${PresenterCom.lookup}'
           r'''
@@ -178,13 +183,42 @@ try {
 } catch {
     Write-Error $_.Exception.Message
 }
+Write-Output $qrPresenter
 ''';
-      await PowerShellRunner.execute(script);
+      final output = (await PowerShellRunner.execute(script)).trim();
+      if (output == 'powerpoint' || output == 'wps') presenter = output;
     } catch (e) {
       debugPrint('Exception in slideStart: $e');
     }
+    // F5 goes to the window in front. With this app or a chat in front (the
+    // user just started the server) it did nothing, and the phone heard
+    // nothing: the presentation's editor is brought forward first.
+    if (!await _focusPresenter(presenter)) {
+      debugPrint('START skipped: no presentation window could get the focus');
+      InputSimulator.onCommandError?.call(RemoteError.slideshowStartFailed);
+      return;
+    }
     // Both PowerPoint and WPS start the show from the first slide with F5.
     KeyboardSimulator.pressKey(VK_F5);
+  }
+
+  /// Gives the focus to the show or editor of [kind] ('powerpoint', 'wps';
+  /// either when null), unless one is in front already. Returns whether one
+  /// has it.
+  static Future<bool> _focusPresenter(String? kind) async {
+    final front = GetForegroundWindow();
+    if (_showWindowKind(front) != null || _editorWindowKind(front) != null) return true;
+    final window = _findWindow(_editorWindowKind, kind) ?? _findWindow(_showWindowKind, kind);
+    return window != null && await _focusWindow(window);
+  }
+
+  /// 'powerpoint' or 'wps' when [hwnd] is that program's editor window
+  /// (PowerPoint 365: 'PPTFrameClass'; WPS 12.2: 'PP12FrameClass' of wps.exe).
+  static String? _editorWindowKind(HWND hwnd) {
+    final exe = _windowExecutable(hwnd);
+    if (exe.endsWith(r'\powerpnt.exe')) return _className(hwnd) == 'PPTFrameClass' ? 'powerpoint' : null;
+    if (exe.endsWith(r'\wps.exe')) return _className(hwnd) == 'PP12FrameClass' ? 'wps' : null;
+    return null;
   }
 
   /// Starts the show and jumps to [slideNumber] through COM. Typing the

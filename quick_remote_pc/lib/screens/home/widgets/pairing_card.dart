@@ -383,14 +383,20 @@ class _HostName extends StatelessWidget {
       children: [
         Icon(Icons.computer_outlined, size: 17, color: p.textMuted),
         const SizedBox(width: 6),
+        // The phone lists the PC by this name, so it shrinks rather than
+        // losing its end: Windows' default names (DESKTOP-XXXXXXX) are 15
+        // characters, one too many for the narrow window's card.
         Flexible(
-          child: Text(
-            Platform.localHostname,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppType.title.copyWith(
-              color: p.textPrimary,
-              fontSize: fontSize,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              Platform.localHostname,
+              maxLines: 1,
+              style: AppType.title.copyWith(
+                color: p.textPrimary,
+                fontSize: fontSize,
+              ),
             ),
           ),
         ),

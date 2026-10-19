@@ -583,6 +583,7 @@ class WebSocketServer {
 
     debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
     _stateBroadcaster.resendSmtcInFull();
+    _stateBroadcaster.resendSlideState();
     triggerSlideStateUpdate();
 
     Future.delayed(
@@ -813,6 +814,10 @@ class WebSocketServer {
       }
     } else if (_mediaCommands.contains(command)) {
       triggerSlideStateUpdate(const Duration(milliseconds: 350));
+      // The command runs in another PowerShell than the state check: a check
+      // that came first left the phone on "playing" after a pause until the
+      // next poll round (3-4 s).
+      triggerSlideStateUpdate(const Duration(milliseconds: 1500));
     } else if (command == RemoteCommands.refreshState) {
       triggerSlideStateUpdate();
       if (_stateBroadcaster.lastBroadcastVolume >= 0) {
