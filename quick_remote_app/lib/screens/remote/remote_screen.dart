@@ -250,14 +250,8 @@ class _RemoteScreenState extends State<RemoteScreen> {
       toolbarHeight: 64,
       titleSpacing: AppSpace.md,
       title: RemoteHeader(
-        // A long PC name gives way, the program name stays whole.
-        subtitle: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(child: Text(ws.pcLabel)),
-            Text(' · ${PresentationState.shortNameOf(program)}'),
-          ],
-        ),
+        title: ws.pcLabel,
+        subtitle: Text(PresentationState.shortNameOf(program)),
         onSubtitleTap: () => ProgramSheet.show(context),
         isConnected: ws.isConnected,
         isConnecting: connecting,

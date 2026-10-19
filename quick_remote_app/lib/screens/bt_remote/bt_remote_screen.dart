@@ -197,6 +197,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
       toolbarHeight: 64,
       titleSpacing: AppSpace.md,
       title: RemoteHeader(
+        title: pc,
         subtitle: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -204,7 +205,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
             const SizedBox(width: 3),
             Flexible(
               child: Text(
-                '$pc · ${PresentationState.shortNameOf(target.name)}',
+                PresentationState.shortNameOf(target.name),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
