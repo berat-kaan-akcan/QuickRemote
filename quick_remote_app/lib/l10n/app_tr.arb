@@ -7,6 +7,20 @@
   "settingsHistorySubtitle": "Önceki sunum istatistikleri ve notları",
   "settingsKeepInkTitle": "Slayt Değişince Çizimleri Koru",
   "settingsKeepInkSubtitle": "Çizimler kendi slaytında kalır, o slayta dönünce yeniden görünür. Kapalıyken ileri veya geri gidince kalemle çizilenler silinir.",
+  "settingsSlidePreviewTitle": "Slayt Önizlemesi",
+  "settingsSlidePreviewSubtitle": "Bilgisayardaki slaydın resmi kumandada görünür. Resim slaydın kaydedilmiş hâlidir: animasyonun o anki adımı, çizimler ve oynayan video görünmez.",
+  "presenterViewTitle": "Sunucu görünümü",
+  "presenterViewOpenHint": "Sunucu görünümünü aç",
+  "presenterNextUp": "Sıradaki",
+  "presenterLastSlide": "Son slayt",
+  "slidePreviewLabel": "Slayt {slide} önizlemesi",
+  "@slidePreviewLabel": {
+    "placeholders": {
+      "slide": {
+        "type": "int"
+      }
+    }
+  },
   "settingsLanguageTitle": "Dil",
   "languageSystem": "Sistem dili",
   "@languageSystem": {

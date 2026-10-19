@@ -33,6 +33,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Drawings stay on their slide and reappear when you return to it. When off, pen drawings are erased as you go forward or back.';
 
   @override
+  String get settingsSlidePreviewTitle => 'Slide Preview';
+
+  @override
+  String get settingsSlidePreviewSubtitle =>
+      'Shows a picture of the slide on the remote. It is the slide as saved: the current animation step, drawings and a playing video do not show.';
+
+  @override
+  String get presenterViewTitle => 'Presenter view';
+
+  @override
+  String get presenterViewOpenHint => 'Open the presenter view';
+
+  @override
+  String get presenterNextUp => 'Next up';
+
+  @override
+  String get presenterLastSlide => 'Last slide';
+
+  @override
+  String slidePreviewLabel(int slide) {
+    return 'Preview of slide $slide';
+  }
+
+  @override
   String get settingsLanguageTitle => 'Language';
 
   @override

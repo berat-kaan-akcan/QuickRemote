@@ -31,6 +31,9 @@ class SettingsProvider extends ChangeNotifier {
   // Keep pen ink on its slide when the slide changes (sent to the PC)
   bool _keepInkOnSlideChange = false;
 
+  // The slide's picture on the remote (sent to the PC)
+  bool _slidePreview = true;
+
   // UI language; system follows the phone (not sent to the PC)
   AppLanguage _language = AppLanguage.system;
 
@@ -60,6 +63,7 @@ class SettingsProvider extends ChangeNotifier {
   int get talkDuration => _talkDuration;
   BtTarget get btTarget => _btTarget;
   bool get keepInkOnSlideChange => _keepInkOnSlideChange;
+  bool get slidePreview => _slidePreview;
   AppLanguage get language => _language;
   AppColorTheme get colorTheme => _colorTheme;
   ThemeMode get themeMode => _themeMode;
@@ -83,6 +87,7 @@ class SettingsProvider extends ChangeNotifier {
     _talkDuration = prefs.getInt('talk_duration') ?? 0;
     _btTarget = BtTarget.fromName(prefs.getString('bt_target'));
     _keepInkOnSlideChange = prefs.getBool('keep_ink_on_slide_change') ?? false;
+    _slidePreview = prefs.getBool('slide_preview') ?? true;
     _language = AppLanguage.fromCode(prefs.getString('language'));
     _colorTheme = AppColorTheme.fromName(prefs.getString('color_theme'));
     _themeMode = ThemeMode.values.firstWhere(
@@ -213,6 +218,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('keep_ink_on_slide_change', value);
+  }
+
+  Future<void> setSlidePreview(bool value) async {
+    _slidePreview = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('slide_preview', value);
   }
 
   Future<void> setColorTheme(AppColorTheme theme) async {

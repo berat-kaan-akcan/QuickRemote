@@ -33,6 +33,30 @@ class AppLocalizationsTr extends AppLocalizations {
       'Çizimler kendi slaytında kalır, o slayta dönünce yeniden görünür. Kapalıyken ileri veya geri gidince kalemle çizilenler silinir.';
 
   @override
+  String get settingsSlidePreviewTitle => 'Slayt Önizlemesi';
+
+  @override
+  String get settingsSlidePreviewSubtitle =>
+      'Bilgisayardaki slaydın resmi kumandada görünür. Resim slaydın kaydedilmiş hâlidir: animasyonun o anki adımı, çizimler ve oynayan video görünmez.';
+
+  @override
+  String get presenterViewTitle => 'Sunucu görünümü';
+
+  @override
+  String get presenterViewOpenHint => 'Sunucu görünümünü aç';
+
+  @override
+  String get presenterNextUp => 'Sıradaki';
+
+  @override
+  String get presenterLastSlide => 'Son slayt';
+
+  @override
+  String slidePreviewLabel(int slide) {
+    return 'Slayt $slide önizlemesi';
+  }
+
+  @override
   String get settingsLanguageTitle => 'Dil';
 
   @override

@@ -33,7 +33,9 @@ class QuickRemoteApp extends StatelessWidget {
         ChangeNotifierProxyProvider<SettingsProvider, WebSocketService>(
           create: (_) => WebSocketService(),
           update: (_, settings, service) =>
-              service!..setKeepInkOnSlideChange(settings.keepInkOnSlideChange),
+              service!
+                ..setKeepInkOnSlideChange(settings.keepInkOnSlideChange)
+                ..setSlidePreview(settings.slidePreview),
         ),
         ChangeNotifierProvider(create: (_) => DiscoveryService()),
         // The watch app's way to the PC; it listens from the start.

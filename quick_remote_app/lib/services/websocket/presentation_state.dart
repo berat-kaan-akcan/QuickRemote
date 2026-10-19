@@ -1,3 +1,8 @@
+import 'dart:collection';
+import 'dart:typed_data';
+
+import 'package:quick_remote_shared/quick_remote_shared.dart';
+
 class PresentationState {
   int currentSlide = 0;
   int totalSlides = 0;
@@ -43,6 +48,64 @@ class PresentationState {
     presenters = list is List && list.isNotEmpty ? list.whereType<String>().toList() : [presenter];
     pcName = cleanName(authReply['name']);
     platform = authReply['platform'] as String?;
+    previewsSupported = authReply['previews'] == true;
+  }
+
+  // ── Slide pictures (SlideImageFrame) ──
+
+  /// Whether the PC sends slide pictures (`previews` in its auth reply).
+  bool previewsSupported = false;
+
+  /// The deck the pictures belong to (SLIDE_STATE's `deck`); null from a PC
+  /// that does not send one.
+  int? deck;
+
+  /// Pictures kept per size, least recently used first: a few large and
+  /// medium ones to go back to, and the slide list's thumbnails.
+  static const maxLargeImages = 6;
+  static const maxMediumImages = 6;
+  static const maxThumbnails = 200;
+
+  final LinkedHashMap<int, Uint8List> _large = LinkedHashMap();
+  final LinkedHashMap<int, Uint8List> _medium = LinkedHashMap();
+  final LinkedHashMap<int, Uint8List> _thumbnails = LinkedHashMap();
+
+  /// Keeps [frame] when it belongs to the deck on screen; false otherwise.
+  bool addImage(SlideImageFrame frame) {
+    if (deck != null && frame.deck != deck) return false;
+    final (images, max) = switch (frame.kind) {
+      SlideImageKind.current => (_large, maxLargeImages),
+      SlideImageKind.next => (_medium, maxMediumImages),
+      SlideImageKind.thumbnail => (_thumbnails, maxThumbnails),
+    };
+    images.remove(frame.slide);
+    images[frame.slide] = frame.jpeg;
+    while (images.length > max) {
+      images.remove(images.keys.first);
+    }
+    return true;
+  }
+
+  /// The picture of the slide on screen: the large one, else the medium one
+  /// sent as "next" before the slide changed (shown at once on NEXT).
+  Uint8List? get currentSlideImage => imageOf(currentSlide);
+
+  Uint8List? get nextSlideImage => currentSlide < 1 || currentSlide >= totalSlides
+      ? null
+      : _medium[currentSlide + 1] ?? _large[currentSlide + 1] ?? _thumbnails[currentSlide + 1];
+
+  /// The best picture of slide [slide] there is.
+  Uint8List? imageOf(int slide) => _large[slide] ?? _medium[slide] ?? _thumbnails[slide];
+
+  /// A thumbnail for the slide list (a larger picture does as well).
+  Uint8List? thumbnail(int slide) => _thumbnails[slide] ?? _medium[slide] ?? _large[slide];
+
+  bool get hasSlideImages => _large.isNotEmpty || _medium.isNotEmpty || _thumbnails.isNotEmpty;
+
+  void clearImages() {
+    _large.clear();
+    _medium.clear();
+    _thumbnails.clear();
   }
 
   /// Makes the PC's name safe to show, as the PC does with a phone's
@@ -90,6 +153,8 @@ class PresentationState {
     isPlaying = false;
     systemVolume = -1;
     systemMuted = false;
+    deck = null;
+    clearImages();
   }
 
   bool pptHasMedia = false;
@@ -105,6 +170,12 @@ class PresentationState {
     }
     currentSlide = newSlide;
     totalSlides = message['total'] as int? ?? 0;
+    final newDeck = message['deck'] as int?;
+    if (newDeck != deck) {
+      // Another presentation (or one saved since): the pictures are stale.
+      deck = newDeck;
+      clearImages();
+    }
     slideNotes = message['notes'] as String? ?? '';
     pptHasMedia = message['hasMedia'] as bool? ?? false;
     
