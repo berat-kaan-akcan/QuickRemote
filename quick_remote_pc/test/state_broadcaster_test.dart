@@ -64,6 +64,18 @@ void main() {
     expect(sent.last['thumbnail'], 'COVER');
   });
 
+  test('resendSlideState repeats an unchanged slide for a new client', () async {
+    input.slideState = {'current': 3, 'total': 7, 'notes': 'Note', 'presenter': 'powerpoint'};
+    await broadcaster.fetchAndBroadcastSlideState();
+    await broadcaster.fetchAndBroadcastSlideState(); // nothing changed
+    expect(sent, hasLength(1));
+
+    broadcaster.resendSlideState();
+    await broadcaster.fetchAndBroadcastSlideState();
+    expect(sent, hasLength(2));
+    expect(sent.last, containsPair('current', 3));
+  });
+
   test('the slide state names the program running the show', () async {
     input.slideState = {'current': 2, 'total': 5, 'notes': '', 'presenter': 'wps'};
     await broadcaster.fetchAndBroadcastSlideState();
