@@ -4,6 +4,7 @@ import 'keyboard_simulator.dart';
 import 'mouse_simulator.dart';
 import 'ppt_controller.dart';
 import 'presenter_com.dart';
+import 'slide_exporter.dart';
 import 'slide_state_controller.dart';
 import 'smtc_controller.dart';
 import 'volume_controller.dart';
@@ -26,6 +27,9 @@ class WindowsInputService implements InputService {
 
   @override
   Future<VolumeState?> getVolumeState() => VolumeController.getVolumeState();
+
+  @override
+  Future<SlideImage?> exportSlide(int index, int width) => SlideExporter.export(index, width);
   @override
   void volumeUp() => VolumeController.volumeUp();
   @override

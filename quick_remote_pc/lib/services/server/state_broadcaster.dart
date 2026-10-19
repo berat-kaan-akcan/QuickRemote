@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
+
 import '../input_simulator.dart';
+import 'slide_previewer.dart';
 
 class StateBroadcaster {
   bool _isPolling = false;
@@ -22,7 +25,15 @@ class StateBroadcaster {
   final void Function(Map<String, dynamic> message) onBroadcast;
   final bool Function() hasClients;
 
-  StateBroadcaster({required this.onBroadcast, required this.hasClients});
+  /// Every slide state read: the show on screen, or null without one.
+  final void Function(ShownSlide? shown)? onShow;
+
+  StateBroadcaster({required this.onBroadcast, required this.hasClients, this.onShow});
+
+  /// The deck id of a slide state: from the platform's `deckKey` (the file's
+  /// path and when it was last saved) and the slide count.
+  static int deckOf(Map<String, dynamic> state) =>
+      SlideImageFrame.deckId('${state['deckKey'] ?? ''}|${state['total']}');
 
   void startSlideStatePoller() {
     if (_isPolling) return;
@@ -125,6 +136,7 @@ class StateBroadcaster {
     if (state != null) {
       if (state['error'] == 'POWERPOINT_NOT_RUNNING') {
         _pptNotRunningSkipCount = 3;
+        onShow?.call(null);
         if (_lastSlideState == null || _lastSlideState!['error'] != 'POWERPOINT_NOT_RUNNING') {
           _lastSlideState = state;
           onBroadcast({
@@ -144,6 +156,10 @@ class StateBroadcaster {
       final current = state['current'];
       final total = state['total'];
       final notes = state['notes'];
+      final deck = deckOf(state);
+      onShow?.call(
+        current is int && total is int ? (deck: deck, current: current, total: total) : null,
+      );
 
       if (_lastSlideState == null ||
           _lastSlideState!['current'] != current ||
@@ -152,6 +168,7 @@ class StateBroadcaster {
           _lastSlideState!['hasMedia'] != state['hasMedia'] ||
           _lastSlideState!['isMediaPlaying'] != state['isMediaPlaying'] ||
           _lastSlideState!['presenter'] != state['presenter'] ||
+          _lastSlideState!['deckKey'] != state['deckKey'] ||
           _lastSlideState!['error'] != null) {
         
         _lastSlideState = state;
@@ -164,6 +181,7 @@ class StateBroadcaster {
           'hasMedia': state['hasMedia'] ?? false,
           'isMediaPlaying': state['isMediaPlaying'] ?? false,
           if (state['presenter'] != null) 'presenter': state['presenter'],
+          'deck': deck,
         });
       }
     }

@@ -4,6 +4,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
+import 'package:quick_remote_pc/services/input/input_service.dart';
 import 'package:quick_remote_pc/services/input_simulator.dart';
 import 'package:quick_remote_pc/services/websocket_server.dart';
 
@@ -371,6 +373,108 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 350));
       b.command('NEXT');
       await eventually(() => count('slideNext') == 2);
+    });
+  });
+
+  group('slide previews', () {
+    SlideImage picture(int index, int width) =>
+        (jpeg: Uint8List.fromList([0xFF, 0xD8, index, 0xFF, 0xD9]), width: width, height: width * 9 ~/ 16);
+
+    List<SlideImageFrame> frames(TestClient c) =>
+        c.received.whereType<Uint8List>().map(SlideImageFrame.decode).nonNulls.toList();
+
+    Future<TestClient> inAShow() async {
+      input.slideState = {'current': 2, 'total': 5, 'notes': '', 'deckKey': 'talk.pptx'};
+      input.exporter = picture;
+      final client = await authed();
+      await client.next('SLIDE_STATE');
+      return client;
+    }
+
+    test('the auth reply and the slide state announce them', () async {
+      final client = await connect();
+      input.slideState = {'current': 2, 'total': 5, 'notes': '', 'deckKey': 'talk.pptx'};
+      client.send({'auth': server.pin.value});
+      expect(await client.next('auth'), containsPair('previews', true));
+      expect((await client.next('SLIDE_STATE'))['deck'], SlideImageFrame.deckId('talk.pptx|5'));
+    });
+
+    test('a phone that did not turn them on gets no binary frame', () async {
+      final client = await inAShow();
+      client.command(RemoteCommands.slideThumb(1));
+      server.triggerSlideStateUpdate();
+      await settle();
+      expect(client.received.whereType<List<int>>(), isEmpty);
+      expect(input.exports, isEmpty);
+    });
+
+    test('turned on, the current and the next slide arrive', () async {
+      final client = await inAShow();
+      client.command(RemoteCommands.slidePreview(true));
+      final got = await eventually(() => frames(client).length == 2 ? frames(client) : null);
+      expect(got.map((f) => (f.kind, f.slide, f.width)), [
+        (SlideImageKind.current, 2, 1280),
+        (SlideImageKind.next, 3, 640),
+      ]);
+      expect(got.first.deck, SlideImageFrame.deckId('talk.pptx|5'));
+
+      // A changed slide sends the new pair, once.
+      input.slideState = {'current': 3, 'total': 5, 'notes': '', 'deckKey': 'talk.pptx'};
+      server.triggerSlideStateUpdate();
+      await eventually(() => frames(client).length == 4);
+      server.triggerSlideStateUpdate();
+      await settle();
+      expect(frames(client).skip(2).map((f) => (f.kind, f.slide)), [
+        (SlideImageKind.current, 3),
+        (SlideImageKind.next, 4),
+      ]);
+    });
+
+    test('SLIDE_THUMB answers with that slide\'s thumbnail', () async {
+      final client = await inAShow();
+      client.command(RemoteCommands.slidePreview(true));
+      await eventually(() => frames(client).length == 2);
+      client.command(RemoteCommands.slideThumb(4));
+      client.command(RemoteCommands.slideThumb(9)); // past the end: nothing
+      final thumb = await eventually(
+        () => frames(client).where((f) => f.kind == SlideImageKind.thumbnail).firstOrNull,
+      );
+      expect((thumb.slide, thumb.width, thumb.jpeg[2]), (4, 320, 4));
+      await settle();
+      expect(frames(client).where((f) => f.kind == SlideImageKind.thumbnail), hasLength(1));
+    });
+
+    test('a quick run of slide changes sends only the last slide', () async {
+      final client = await inAShow();
+      final gate = Completer<void>();
+      input.exportGate = gate.future;
+      client.command(RemoteCommands.slidePreview(true));
+      await eventually(() => input.exports.isNotEmpty); // slide 2, held
+      for (final slide in [3, 4]) {
+        input.slideState = {'current': slide, 'total': 5, 'notes': '', 'deckKey': 'talk.pptx'};
+        await server.refreshSlideStateForTesting();
+      }
+      input.exportGate = null;
+      gate.complete();
+      await eventually(() => frames(client).length == 2);
+      await settle();
+      expect(frames(client).map((f) => (f.kind, f.slide)), [
+        (SlideImageKind.current, 4),
+        (SlideImageKind.next, 5),
+      ]);
+      expect(input.exports.map((e) => e.$1), [2, 4, 5]);
+    });
+
+    test('turned off, nothing more arrives', () async {
+      final client = await inAShow();
+      client.command(RemoteCommands.slidePreview(true));
+      await eventually(() => frames(client).length == 2);
+      client.command(RemoteCommands.slidePreview(false));
+      await eventually(() => client.received.any((m) => m is Map && m['command'] == 'SLIDE_PREVIEW:0'));
+      input.slideState = {'current': 3, 'total': 5, 'notes': '', 'deckKey': 'talk.pptx'};
+      server.triggerSlideStateUpdate();
+      await settle();
+      expect(frames(client), hasLength(2));
     });
   });
 
