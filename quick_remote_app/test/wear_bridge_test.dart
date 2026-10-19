@@ -245,17 +245,12 @@ void main() {
     expect(states().last['pc'], 'berat-cachyos');
   });
 
-  test('the watch is told when the laser is Windows WPS\'s arrow', () async {
+  test('Windows WPS has a laser too', () async {
     await fromWatch('hello');
     ws
       ..platform = 'windows'
       ..showProgram = 'wps'
       ..connect192();
-    expect(states().last['pointer'], 'arrow');
-
-    ws
-      ..platform = 'linux'
-      ..change();
     expect(states().last['pointer'], 'laser');
   });
 
