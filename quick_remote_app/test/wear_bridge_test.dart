@@ -469,6 +469,23 @@ void main() {
       expect(states().last, containsPair('timerRunning', false));
     });
 
+    test('a show started again runs from its own start', () async {
+      await fromWatch('hello');
+      ws
+        ..connect192()
+        ..running = true
+        ..change();
+      ws
+        ..running = false
+        ..change();
+      clock = clock.add(const Duration(minutes: 18));
+      ws
+        ..running = true
+        ..change();
+      expect(states().last, containsPair('timerRunning', true));
+      expect(states().last, containsPair('timerStart', clock.millisecondsSinceEpoch));
+    });
+
     test('over Bluetooth it runs from the watch\'s start to its end', () async {
       keyboard.set(BtHidConnectionState.connected, computer: 'PC');
       await fromWatch('hello');
