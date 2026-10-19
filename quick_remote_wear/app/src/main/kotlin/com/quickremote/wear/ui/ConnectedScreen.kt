@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -27,7 +26,6 @@ import com.quickremote.wear.phone.Show
 import com.quickremote.wear.phone.TalkClock
 import com.quickremote.wear.remote.RemoteAction
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /** The pages of a connected watch, in their order. */
 enum class Page { START, TOOLS, REMOTE }
@@ -64,7 +62,6 @@ fun ConnectedScreen(
     onPageChange: (Page) -> Unit,
 ) {
     val haptics = rememberHaptics()
-    val scope = rememberCoroutineScope()
     // Over Bluetooth the computer tells nothing: the talk's clock, which runs
     // from the watch's Start to its End, stands in for the show.
     val running = show?.running ?: (clock?.running == true)
@@ -96,6 +93,17 @@ fun ConnectedScreen(
     }
 
     LaunchedEffect(show?.current, running) { blank = null }
+
+    // After Start, a show that does not come is said: the page stays on Start.
+    var startedAt by remember { mutableStateOf<Long?>(null) }
+    val notStarted = stringResource(R.string.show_not_started)
+    LaunchedEffect(startedAt, running) {
+        if (running) startedAt = null
+        if (startedAt == null) return@LaunchedEffect
+        delay(START_WAIT_MS)
+        if (!running) tip = Notice(notStarted)
+        startedAt = null
+    }
 
     // Start is a page only while no show runs; the pages are made anew when
     // that changes. A show that starts keeps the page (Start becomes the
@@ -140,14 +148,15 @@ fun ConnectedScreen(
                     rotaryScrollableBehavior = null,
                 ) { index ->
                     when (pages[index]) {
+                        // Start stays on this page: the slide buttons come
+                        // when the show is known to run (the pages are made
+                        // anew then, see target). Moving at once left the
+                        // user on Next with no show when START did nothing.
                         Page.START -> StartPage(
                             show = show,
                             onPress = { action ->
                                 press(action)
-                                onPageChange(Page.REMOTE)
-                                scope.launch {
-                                    pagerState.animateScrollToPage(pages.indexOf(Page.REMOTE), animationSpec = PAGE_SNAP)
-                                }
+                                if (action == RemoteAction.START) startedAt = System.currentTimeMillis()
                             },
                             duration = duration,
                             onEditDuration = onEditDuration,
@@ -183,5 +192,8 @@ fun ConnectedScreen(
 
 /** How long "only while a slideshow runs" stays. */
 private const val TIP_MS = 2_500L
+
+/** How long Start waits for the show before saying it did not start (PowerPoint can take seconds). */
+private const val START_WAIT_MS = 8_000L
 
 private val PAGE_SNAP = spring<Float>(stiffness = Spring.StiffnessMedium)
