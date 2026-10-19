@@ -36,6 +36,7 @@ class WearProtocolTest {
             "KEY_TIMER_RUNNING" to WearProtocol.KEY_TIMER_RUNNING,
             "KEY_TIMER_START" to WearProtocol.KEY_TIMER_START,
             "KEY_TIMER_ELAPSED" to WearProtocol.KEY_TIMER_ELAPSED,
+            "KEY_STAMP" to WearProtocol.KEY_STAMP,
             "PATH_DURATION" to WearProtocol.PATH_DURATION,
             "PATH_ALERT" to WearProtocol.PATH_ALERT,
             "LINK_CLOSED" to WearProtocol.LINK_CLOSED,
