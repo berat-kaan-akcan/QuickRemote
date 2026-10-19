@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../input_service.dart';
 import '../pdf_viewers.dart';
+import '../slide_files.dart';
 import 'evdev_keys.dart';
 import 'impress_bridge.dart';
 import 'mpris_controller.dart';
@@ -71,6 +72,10 @@ class LinuxInputService implements InputService {
   /// The highlighter mode being chosen; the button waits for it, since it
   /// either draws ink or starts a stroke.
   Future<void>? _highlighterMode;
+
+  /// The program whose show the last state read ('impress', 'wps' for the
+  /// bridge's WPS), or null: slide pictures come from it.
+  String? _showBy;
 
   /// pid of the WPS the bridge controls, from its last reply.
   int? _wpsRpcPid;
@@ -189,12 +194,17 @@ class LinuxInputService implements InputService {
   Future<Map<String, dynamic>?> getSlideState() async {
     final impress = await _impress.request('state');
     if (impress['ok'] == true && impress['state'] == 'RUNNING') {
+      _showBy = 'impress';
       return _slideState(impress, 'impress');
     }
+    _showBy = null;
     _laserViaImpress = false;
     _endStrokes();
     final wps = await _wpsRequest('state');
-    if (wps['ok'] == true && wps['state'] == 'RUNNING') return _slideState(wps, 'wps');
+    if (wps['ok'] == true && wps['state'] == 'RUNNING') {
+      _showBy = 'wps';
+      return _slideState(wps, 'wps');
+    }
     if (_wpsShowOnScreen()) {
       // A WPS the bridge cannot reach: the show runs, its slide is unknown.
       return {
@@ -220,10 +230,31 @@ class LinuxInputService implements InputService {
         'isMediaPlaying': reply['isMediaPlaying'],
         'isBlackScreen': reply['isBlackScreen'] ?? false,
         'presenter': presenter,
+        'deckKey': reply['deckKey'],
       };
 
   @override
   Future<VolumeState?> getVolumeState() => _volume.getState();
+
+  /// The program running the show exports the slide (its bridge's
+  /// `export`): Impress, or the WPS the bridge opened. The WPS the user
+  /// started cannot be reached, and PDF viewers have no slides to export.
+  @override
+  Future<SlideImage?> exportSlide(int index, int width) async {
+    final by = _showBy;
+    if (by == null) return null;
+    final path = await SlideFiles.path(index, width);
+    final args = {'index': index, 'width': width, 'path': path};
+    final reply = by == 'impress'
+        ? await _impress.request('export', args, const Duration(seconds: 5))
+        : await _wpsRequest('export', args);
+    final height = reply['height'];
+    if (reply['ok'] != true || height is! int || height < 1) {
+      await SlideFiles.discard(path);
+      return null;
+    }
+    return SlideFiles.read(path, width, height);
+  }
 
   // ── Volume ──
   @override

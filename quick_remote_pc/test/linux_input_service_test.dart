@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quick_remote_pc/services/input/slide_files.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:quick_remote_pc/services/input/linux/evdev_keys.dart';
 import 'package:quick_remote_pc/services/input/linux/linux_input_service.dart';
@@ -39,6 +42,23 @@ class FakeBridge extends ScriptBridge {
 }
 
 const _ok = {'ok': true};
+
+/// An Impress bridge whose `export` writes [jpeg] where it is asked to.
+class ExportingBridge extends FakeBridge {
+  ExportingBridge(super.replies, {this.jpeg = const [0xFF, 0xD8, 0xFF, 0xD9]});
+
+  final List<int> jpeg;
+
+  @override
+  Future<Map<String, dynamic>> request(
+    String cmd, [
+    Map<String, Object?> args = const {},
+    Duration timeout = const Duration(seconds: 6),
+  ]) async {
+    if (cmd == 'export') File(args['path']! as String).writeAsBytesSync(jpeg);
+    return super.request(cmd, args, timeout);
+  }
+}
 
 void main() {
   late FakeBridge impress;
@@ -118,6 +138,74 @@ void main() {
       await s.slideStart();
       expect(wps.commands, contains('start'));
       expect(keys, isEmpty);
+    });
+  });
+
+  group('slide pictures', () {
+    late Directory dir;
+
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('slide-previews');
+      SlideFiles.directoryOverride = dir;
+    });
+    tearDown(() {
+      SlideFiles.directoryOverride = null;
+      dir.deleteSync(recursive: true);
+    });
+
+    const impressShow = {'ok': true, 'state': 'RUNNING', 'current': 2, 'total': 5, 'deckKey': 'file:///talk.odp|1'};
+
+    test('Impress exports the slide of its show', () async {
+      impress = ExportingBridge({
+        'state': impressShow,
+        'export': {'ok': true, 'height': 360},
+      });
+      final s = service();
+      expect(await s.getSlideState(), containsPair('deckKey', 'file:///talk.odp|1'));
+      final image = await s.exportSlide(3, 640);
+      expect(image, isNotNull);
+      expect((image!.width, image.height), (640, 360));
+      expect(image.jpeg.take(2), [0xFF, 0xD8]);
+      final (_, args) = impress.requests.last;
+      expect(args, containsPair('index', 3));
+      expect(args, containsPair('width', 640));
+      expect(args['path'] as String, startsWith(dir.path));
+      expect(dir.listSync(), isEmpty, reason: 'the file is deleted once read');
+    });
+
+    test('a failed export leaves no file and no picture', () async {
+      impress = ExportingBridge({
+        'state': impressShow,
+        'export': {'ok': false, 'error': 'BUSY'},
+      });
+      final s = service();
+      await s.getSlideState();
+      expect(await s.exportSlide(1, 320), isNull);
+      expect(dir.listSync(), isEmpty);
+    });
+
+    test('the WPS the bridge opened exports the slide of its show', () async {
+      wps = ExportingBridge({
+        'state': {'ok': true, 'state': 'RUNNING', 'current': 3, 'total': 9, 'pid': 200},
+        'export': {'ok': true, 'height': 180},
+      });
+      final s = service();
+      await s.getSlideState();
+      final image = await s.exportSlide(4, 320);
+      expect((image?.width, image?.height), (320, 180));
+      expect(impress.commands, isNot(contains('export')));
+    });
+
+    test('nothing is exported from a WPS the user started, or without a show', () async {
+      windows = const [wpsShow];
+      final s = service();
+      expect(await s.getSlideState(), containsPair('current', 0));
+      expect(await s.exportSlide(1, 320), isNull);
+      windows = const [];
+      await s.getSlideState();
+      expect(await s.exportSlide(1, 320), isNull);
+      expect(impress.commands, isNot(contains('export')));
+      expect(wps.commands, isNot(contains('export')));
     });
   });
 

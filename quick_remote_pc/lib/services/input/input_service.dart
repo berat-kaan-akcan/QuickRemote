@@ -1,8 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 export 'package:quick_remote_shared/quick_remote_shared.dart' show RemoteError;
 
 typedef VolumeState = ({int volume, bool muted});
+
+/// A slide exported as a JPEG, [width] × [height] pixels.
+typedef SlideImage = ({Uint8List jpeg, int width, int height});
 
 /// Reports a failed command to the phones; [info] is untranslated detail.
 typedef CommandErrorHandler = void Function(RemoteError error, [String? info]);
@@ -22,6 +27,11 @@ abstract class InputService {
   Future<Map<String, dynamic>?> getSmtcState();
   Future<Map<String, dynamic>?> getSlideState();
   Future<VolumeState?> getVolumeState();
+
+  /// Slide [index] (from 1) of the running show as a JPEG [width] pixels
+  /// wide: the slide as saved, without the animation step, ink or video on
+  /// screen. Null where the program cannot export.
+  Future<SlideImage?> exportSlide(int index, int width);
 
   // Volume
   void volumeUp();

@@ -30,6 +30,20 @@ class FakeInputService implements InputService {
   @override
   Future<VolumeState?> getVolumeState() async => null;
 
+  /// Answers [exportSlide]; null exports nothing.
+  SlideImage? Function(int index, int width)? exporter;
+  /// Every exportSlide call as (index, width).
+  final List<(int, int)> exports = [];
+  /// Completes each export only when this future does, when set.
+  Future<void>? exportGate;
+
+  @override
+  Future<SlideImage?> exportSlide(int index, int width) async {
+    exports.add((index, width));
+    if (exportGate != null) await exportGate;
+    return exporter?.call(index, width);
+  }
+
   @override
   Future<void> slideStartAt(int slideNumber) async => calls.add('slideStartAt:$slideNumber');
   @override

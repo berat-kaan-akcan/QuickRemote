@@ -72,7 +72,13 @@ try {
             }
         }
 
+        # The deck id the phone's slide pictures belong to: the file and when
+        # it was last saved (an unsaved presentation has no file).
+        $deckKey = "$($presentation.FullName)"
+        try { $deckKey += "|" + (Get-Item -LiteralPath $presentation.FullName).LastWriteTimeUtc.Ticks } catch {}
+
         $data = @{
+            deckKey = $deckKey
             current = $current
             total = $total
             notes = $notes.Trim()

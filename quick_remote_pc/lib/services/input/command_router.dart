@@ -35,6 +35,11 @@ class CommandRouter {
       return;
     }
 
+    if (command.startsWith('SLIDE_PREVIEW:') || command.startsWith('SLIDE_THUMB:')) {
+      // Per phone: the server handles them (previewSwitch, thumbSlide).
+      return;
+    }
+
     if (command.startsWith('VOLUME_SET:')) {
       final level = parseIntArg(command, min: 0, max: 100);
       if (level != null) {
@@ -116,6 +121,19 @@ class CommandRouter {
       default:
         debugPrint('Unknown command: $command');
     }
+  }
+
+  /// The value of `SLIDE_PREVIEW:0/1`; null for any other command.
+  static bool? previewSwitch(String command) {
+    if (!command.startsWith('SLIDE_PREVIEW:')) return null;
+    final on = parseIntArg(command, min: 0, max: 1);
+    return on == null ? null : on == 1;
+  }
+
+  /// The slide of `SLIDE_THUMB:n`; null for any other command or a bad n.
+  static int? thumbSlide(String command) {
+    if (!command.startsWith('SLIDE_THUMB:')) return null;
+    return parseIntArg(command, min: 1, max: 9999);
   }
 
   /// Parses the integer after the first ':' of a `PREFIX:value` command.

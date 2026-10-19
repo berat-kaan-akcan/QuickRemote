@@ -472,5 +472,67 @@ class PipeIsTrustedTest(unittest.TestCase):
         target.close()
 
 
+class ExportTest(unittest.TestCase):
+    def test_height_keeps_the_slide_proportions(self):
+        self.assertEqual(bridge.export_height(28000, 15750, 1280), 720)
+        self.assertEqual(bridge.export_height(28000, 21000, 640), 480)
+        self.assertEqual(bridge.export_height(0, 0, 320), 180)
+
+    def test_request_needs_a_slide_of_the_show_and_an_absolute_jpg(self):
+        good = {"index": 2, "width": 640, "path": "/tmp/slide-2-640.jpg"}
+        self.assertEqual(bridge.export_request(good, 3), (2, 640, "/tmp/slide-2-640.jpg"))
+        for bad in ({"index": 4}, {"index": 0}, {"index": True}, {"index": "2"},
+                    {"width": 8}, {"width": 5000}, {"path": "slide.jpg"},
+                    {"path": "/tmp/slide.png"}, {"path": "/tmp/a\0.jpg"}, {"path": None}):
+            self.assertIsNone(bridge.export_request(dict(good, **bad), 3), bad)
+
+    def test_deck_key_names_the_file_and_its_save(self):
+        self.assertEqual(bridge.deck_key(""), "")
+        if bridge.uno is None:
+            return
+        with tempfile.NamedTemporaryFile(suffix=".odp") as f:
+            url = bridge.uno.systemPathToFileUrl(f.name)
+            first = bridge.deck_key(url)
+            self.assertTrue(first.startswith(url + "|"))
+            os.utime(f.name, (1, 2))
+            self.assertNotEqual(bridge.deck_key(url), first)
+        self.assertEqual(bridge.deck_key("vnd.sun.star.tdoc:/1"), "vnd.sun.star.tdoc:/1")
+
+    def test_newest_export_runs_once_nothing_else_waits(self):
+        exports = [{"id": 1}, {"id": 2}]
+        self.assertEqual(bridge.next_export(exports, True), (None, []))
+        self.assertEqual(len(exports), 2, "kept for later")
+        self.assertEqual(bridge.next_export(exports, False), ({"id": 2}, [{"id": 1}]))
+        self.assertEqual(exports, [])
+        self.assertEqual(bridge.next_export(exports, False), (None, []))
+
+    def test_refused_while_a_stroke_is_drawn(self):
+        impress = bridge.Impress()
+        impress.stroke = {"shape": object()}
+        with self.assertRaises(bridge.BridgeError) as caught:
+            impress.export({"index": 1, "width": 640, "path": "/tmp/a.jpg"})
+        self.assertEqual(str(caught.exception), "BUSY")
+
+    def test_refuses_a_bad_request(self):
+        impress = bridge.Impress()
+
+        class Ctrl:
+            def getSlideCount(self):
+                return 2
+
+        impress._require_running = lambda: (None, None, Ctrl())
+        with self.assertRaises(bridge.BridgeError) as caught:
+            impress.export({"index": 3, "width": 640, "path": "/tmp/a.jpg"})
+        self.assertEqual(str(caught.exception), "BAD_REQUEST")
+
+    def test_waits_for_a_redraw_first(self):
+        impress = FakeImpress()
+        impress.export = lambda _request: {"height": 360}
+        reply = bridge.handle(impress, {"cmd": "export"}) if bridge.uno is not None else None
+        if reply is not None:
+            self.assertEqual(reply, {"height": 360, "ok": True})
+            self.assertEqual(impress.called, ["settle"])
+
+
 if __name__ == "__main__":
     unittest.main()

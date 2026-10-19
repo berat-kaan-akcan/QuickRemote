@@ -136,6 +136,43 @@ PRESENTATION_DOC = "com.sun.star.presentation.PresentationDocument"
 DRAWING_DOC = "com.sun.star.drawing.DrawingDocument"
 # Opens a PDF in Impress, one slide per page (LibreOffice opens PDFs in Draw).
 PDF_IMPORT_FILTER = "impress_pdf_import"
+# Slide pictures for the phone (export): the widths the server asks for are
+# 320 to 1280 px; JPEG quality in percent.
+EXPORT_MIN_WIDTH = 16
+EXPORT_MAX_WIDTH = 4096
+EXPORT_QUALITY = 85
+
+
+def deck_key(url):
+    """What tells the presentation's slide pictures apart: its file and when
+    the file was last saved. An unsaved document has no URL; its pictures
+    are told apart by the slide count only (the server adds it)."""
+    if not url:
+        return ""
+    try:
+        mtime = os.path.getmtime(uno.fileUrlToSystemPath(url))
+    except Exception:  # noqa: BLE001 - not a local file, or gone
+        return url
+    return "%s|%d" % (url, int(mtime * 1000))
+
+
+def export_height(slide_width, slide_height, width):
+    """The pixel height of a slide exported width pixels wide."""
+    if slide_width <= 0 or slide_height <= 0:
+        return round(width * 9 / 16)
+    return max(1, round(width * slide_height / slide_width))
+
+
+def export_request(args, total):
+    """(index, width, path) of a valid export request for a show of total
+    slides, else None. The path must be an absolute .jpg file name."""
+    index, width, path = args.get("index"), args.get("width"), args.get("path")
+    if (not isinstance(index, int) or not isinstance(width, int) or isinstance(index, bool)
+            or not 1 <= index <= total or not EXPORT_MIN_WIDTH <= width <= EXPORT_MAX_WIDTH
+            or not isinstance(path, str) or not os.path.isabs(path)
+            or not path.endswith(".jpg") or "\0" in path):
+        return None
+    return index, width, path
 
 
 def is_pdf_url(url):
@@ -454,6 +491,7 @@ class Impress:
             "hasMedia": has_media,
             "isMediaPlaying": self._media_playing(ctrl, index)[2] if has_media else None,
             "isBlackScreen": at_end or bool(ctrl.isPaused()),
+            "deckKey": deck_key(doc.getURL()),
         }
 
     @staticmethod
@@ -1255,6 +1293,45 @@ class Impress:
         self._click_media(doc, slide, shape, double=True)
         self._media_playing(ctrl, ctrl.getCurrentSlideIndex())[2] = False
 
+    # ── Slide pictures ──
+    def export(self, args):
+        """Writes slide "index" (from 1, as state() counts: hidden slides and
+        custom shows are skipped) of the running show to "path" as a JPEG
+        "width" pixels wide, and answers its height. The picture is the slide
+        as the document holds it: the animation step, ink and a playing video
+        do not show. The highlighter strokes (HIGHLIGHT_NAME) do, as on
+        screen: hiding them would make the show draw the slide again. The
+        media triggers are animations, not shapes, and leave no mark.
+        Refused while a highlighter stroke is drawn (handle() waits for a
+        redraw first, see settle)."""
+        if self.stroke is not None:
+            raise BridgeError("BUSY")
+        ctrl = self._require_running()[2]
+        request = export_request(args, ctrl.getSlideCount())
+        if request is None:
+            raise BridgeError("BAD_REQUEST")
+        index, width, path = request
+        slide = ctrl.getSlideByIndex(index - 1)
+        height = export_height(slide.Width, slide.Height, width)
+        data = (self._property("PixelWidth", width), self._property("PixelHeight", height),
+                self._property("Quality", EXPORT_QUALITY))
+        export = self.ctx.ServiceManager.createInstanceWithContext(
+            "com.sun.star.drawing.GraphicExportFilter", self.ctx)
+        export.setSourceDocument(slide)
+        export.filter((
+            self._property("URL", uno.systemPathToFileUrl(path)),
+            self._property("MediaType", "image/jpeg"),
+            self._property("FilterData", uno.Any("[]com.sun.star.beans.PropertyValue", data)),
+        ))
+        return {"height": height}
+
+    @staticmethod
+    def _property(name, value):
+        prop = uno.createUnoStruct("com.sun.star.beans.PropertyValue")
+        prop.Name = name
+        prop.Value = value
+        return prop
+
     def ping(self, _args):
         return {"connected": True}
 
@@ -1263,13 +1340,14 @@ COMMANDS = {
     "state", "next", "prev", "start", "startAt", "end", "blank",
     "arrow", "pen", "highlighter", "eraser", "eraseAll", "penColor", "highlighterColor",
     "laserOn", "laserOff", "pointer", "strokeBegin", "strokeEnd", "mediaToggle", "mediaRewind",
-    "ping",
+    "export", "ping",
 }
 
 
 SLOW_COMMANDS = {"start", "startAt"}
-# Commands that move the show, which a redraw of the slide would swallow.
-MOVES = {"next", "prev", "start", "startAt"}
+# Commands that move the show, which a redraw of the slide would swallow,
+# and the export, which would catch the slide half drawn.
+MOVES = {"next", "prev", "start", "startAt", "export"}
 
 
 def handle(impress, request):
@@ -1301,6 +1379,21 @@ def handle(impress, request):
 
 # Queued in place of pointer updates; stands for the newest one.
 _POINTER = object()
+# Queued in place of an export, which runs only when no other request waits.
+_EXPORT = object()
+
+
+def next_export(exports, work_waiting):
+    """The export to run when the worker reaches an _EXPORT marker: None
+    while other requests wait (the marker goes to the back of the queue),
+    else the newest export; older ones are answered as skipped. Returns
+    (export or None, skipped exports)."""
+    if work_waiting or not exports:
+        return None, []
+    newest = exports.pop()
+    skipped = list(exports)
+    exports.clear()
+    return newest, skipped
 
 
 def main():
@@ -1308,6 +1401,10 @@ def main():
     work = queue.SimpleQueue()
     lock = threading.Lock()
     newest_pointer = [None]
+    exports = []
+    # Whether an _EXPORT marker is in the queue; there is never more than one,
+    # so the marker never waits for another marker.
+    export_queued = [False]
 
     def read_requests():
         for line in sys.stdin:
@@ -1329,6 +1426,14 @@ def main():
                     newest_pointer[0] = request
                 if not waiting:
                     work.put(_POINTER)
+            elif request.get("cmd") == "export":
+                # Never ahead of NEXT and PREV: see next_export.
+                with lock:
+                    exports.append(request)
+                    queue_marker = not export_queued[0]
+                    export_queued[0] = True
+                if queue_marker:
+                    work.put(_EXPORT)
             else:
                 work.put(request)
         work.put(None)
@@ -1340,6 +1445,10 @@ def main():
             impress.on_main_thread(impress.release_if_ended)
         except Exception:  # noqa: BLE001 - LibreOffice gone or busy: try later
             pass
+
+    def write(reply):
+        sys.stdout.write(json.dumps(reply) + "\n")
+        sys.stdout.flush()
 
     threading.Thread(target=read_requests, daemon=True).start()
     while True:
@@ -1354,6 +1463,16 @@ def main():
         if request is _POINTER:
             with lock:
                 request, newest_pointer[0] = newest_pointer[0], None
+        elif request is _EXPORT:
+            with lock:
+                request, skipped = next_export(exports, not work.empty())
+                export_queued[0] = request is None and bool(exports)
+            for old in skipped:
+                write({"id": old.get("id"), "ok": False, "error": "SKIPPED"})
+            if request is None:
+                if export_queued[0]:
+                    work.put(_EXPORT)
+                continue
         reply = handle(impress, request)
         if request.get("noreply"):
             # Pointer updates answer only to move the cursor (_follow_laser).
@@ -1362,8 +1481,7 @@ def main():
             reply = {key: value for key, value in reply.items() if key != "ok"}
         else:
             reply["id"] = request.get("id")
-        sys.stdout.write(json.dumps(reply) + "\n")
-        sys.stdout.flush()
+        write(reply)
 
 
 if __name__ == "__main__":
