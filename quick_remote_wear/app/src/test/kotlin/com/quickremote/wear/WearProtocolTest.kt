@@ -52,7 +52,8 @@ class WearProtocolTest {
     @Test
     fun `the laser's own socket is the one the phone listens on`() {
         val direct = phone.resolve("android/app/src/main/kotlin/com/quickremote/quick_remote_app/WearDirect.kt").readText()
-        fun value(name: String) = Regex("""const val $name = "?([^"\n]+)"?""").find(direct)!!.groupValues[1]
+        // \r too: a Windows checkout has CRLF line ends.
+        fun value(name: String) = Regex("""const val $name = "?([^"\r\n]+)"?""").find(direct)!!.groupValues[1]
         assertEquals(value("DIRECT_UUID"), WearProtocol.DIRECT_UUID)
         mapOf(
             "FRAME_SIZE" to WearProtocol.FRAME_SIZE,

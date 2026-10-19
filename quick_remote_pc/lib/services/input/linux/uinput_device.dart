@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'evdev_keys.dart';
@@ -84,6 +85,8 @@ class UinputDevice {
   /// a later permission fix is picked up without restarting the app.
   bool ensureOpen() {
     if (_fd >= 0) return true;
+    // libc's open is missing elsewhere: the Linux tests run on Windows too.
+    if (!Platform.isLinux) return false;
     final now = DateTime.now();
     if (_lastAttempt != null && now.difference(_lastAttempt!) < const Duration(seconds: 2)) {
       return false;
