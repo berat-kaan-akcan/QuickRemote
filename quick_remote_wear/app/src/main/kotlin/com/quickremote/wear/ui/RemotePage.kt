@@ -380,11 +380,17 @@ enum class DotKind { PASSED, CURRENT, AHEAD }
 /** A slide's dot: where along the edge ([degrees], 0 the right, clockwise) and how it is drawn. */
 data class SlideDot(val degrees: Float, val kind: DotKind)
 
-/** One dot per slide, spread evenly over the upper edge; none past [MAX_DOTS] slides. */
+/**
+ * One dot per slide, spread evenly over the upper edge but for the time at its
+ * top ([TIME_GAP]); none past [MAX_DOTS] slides.
+ */
 fun slideDots(current: Int, total: Int): List<SlideDot> {
     if (total <= 0 || total > MAX_DOTS) return emptyList()
+    val span = DOTS_TO - DOTS_FROM - 2 * TIME_GAP
     return (1..total).map { slide ->
-        val degrees = if (total == 1) 270f else DOTS_FROM + (DOTS_TO - DOTS_FROM) * (slide - 1) / (total - 1)
+        val along = if (total == 1) 0f else span * (slide - 1) / (total - 1)
+        val beforeGap = DOTS_FROM + along < 270f - TIME_GAP
+        val degrees = DOTS_FROM + along + if (beforeGap) 0f else 2 * TIME_GAP
         val kind = when {
             slide == current -> DotKind.CURRENT
             slide < current -> DotKind.PASSED
@@ -421,6 +427,13 @@ const val MAX_DOTS = 40
 /** Along the edge from left to right, in degrees (0 is the right, clockwise). */
 private const val DOTS_FROM = 188f
 private const val DOTS_TO = 352f
+
+/**
+ * No dot within this many degrees of the top, where the time is: the current
+ * slide's dot hid half under it (Galaxy Watch 6, 7 slides, the 4th), and
+ * at 14 degrees it still touched the time's last digit.
+ */
+const val TIME_GAP = 22f
 
 /** In parts of the screen, as hundredths. */
 private const val DOTS_RADIUS = 48f
