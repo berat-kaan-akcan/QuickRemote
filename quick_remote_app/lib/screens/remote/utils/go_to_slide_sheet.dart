@@ -5,10 +5,15 @@ import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../utils/ui/app_popup_theme.dart';
 import '../../../utils/ui/app_snackbar.dart';
 import '../../../l10n/app_language.dart';
+import '../../../services/websocket_service.dart';
 import '../../../widgets/ui/ui.dart';
+import '../widgets/slide_image.dart';
 
 /// "Go to slide": a slide number on the phone's own number keyboard. A
 /// running show jumps there; otherwise the show starts from it.
+///
+/// While the PC sends pictures of the running deck, a grid of the slides'
+/// thumbnails takes the keyboard's place.
 class GoToSlideSheet {
   GoToSlideSheet._();
 
@@ -16,10 +21,165 @@ class GoToSlideSheet {
     BuildContext context, {
     required int totalSlides,
     required void Function(String command) onSend,
+    WebSocketService? ws,
   }) {
     return AppBottomSheet.show(
       context: context,
-      builder: (ctx) => _GoToSlide(totalSlides: totalSlides, onSend: onSend),
+      builder: (ctx) => ws != null && showsGrid(ws)
+          ? _SlideGrid(ws: ws, onSend: onSend)
+          : _GoToSlide(totalSlides: totalSlides, onSend: onSend),
+    );
+  }
+
+  static bool showsGrid(WebSocketService ws) =>
+      ws.isPptRunning && ws.totalSlides > 0 && ws.hasSlideImages;
+}
+
+class _SlideGrid extends StatefulWidget {
+  const _SlideGrid({required this.ws, required this.onSend});
+
+  final WebSocketService ws;
+  final void Function(String command) onSend;
+
+  @override
+  State<_SlideGrid> createState() => _SlideGridState();
+}
+
+class _SlideGridState extends State<_SlideGrid> {
+  ScrollController? _scroll;
+
+  @override
+  void dispose() {
+    _scroll?.dispose();
+    super.dispose();
+  }
+
+  void _pick(int slide) {
+    HapticFeedback.mediumImpact();
+    widget.onSend(RemoteCommands.startAt(slide));
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ws = widget.ws;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppBottomSheet.buildHeader(context.l10n.goToSlide, icon: Icons.grid_view_rounded),
+        const SizedBox(height: AppSpace.sm),
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.6,
+          // Not under a SliverFillRemaining: a LayoutBuilder is fine here.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 400 ? 3 : 2;
+              const gap = AppSpace.sm;
+              final cellWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+              final rowExtent = cellWidth * 9 / 16 + 28;
+              final total = ws.totalSlides;
+              // Opens at the slide on screen.
+              _scroll ??= ScrollController(
+                initialScrollOffset: ((ws.currentSlide - 1) ~/ columns) * (rowExtent + gap),
+              );
+              return ListenableBuilder(
+                listenable: ws,
+                builder: (context, _) => GridView.builder(
+                  controller: _scroll,
+                  itemCount: total,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    mainAxisSpacing: gap,
+                    crossAxisSpacing: gap,
+                    mainAxisExtent: rowExtent,
+                  ),
+                  itemBuilder: (context, index) => _ThumbnailCell(
+                    key: ValueKey(index + 1),
+                    ws: ws,
+                    slide: index + 1,
+                    current: index + 1 == ws.currentSlide,
+                    onTap: () => _pick(index + 1),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One slide of the grid: its thumbnail (a skeleton until it comes, the
+/// empty frame when it cannot) and its number.
+class _ThumbnailCell extends StatefulWidget {
+  const _ThumbnailCell({
+    super.key,
+    required this.ws,
+    required this.slide,
+    required this.current,
+    required this.onTap,
+  });
+
+  final WebSocketService ws;
+  final int slide;
+  final bool current;
+  final VoidCallback onTap;
+
+  @override
+  State<_ThumbnailCell> createState() => _ThumbnailCellState();
+}
+
+class _ThumbnailCellState extends State<_ThumbnailCell> {
+  @override
+  void initState() {
+    super.initState();
+    widget.ws.requestThumbnail(widget.slide);
+  }
+
+  @override
+  void dispose() {
+    widget.ws.cancelThumbnail(widget.slide);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final ws = widget.ws;
+    final image = ws.thumbnail(widget.slide);
+    final loading = image == null && !ws.thumbnailFailed(widget.slide);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            borderRadius: AppRadius.all(AppRadius.sm),
+            border: widget.current ? Border.all(color: p.accent, width: 2) : null,
+          ),
+          child: loading
+              ? Semantics(
+                  button: true,
+                  label: context.l10n.slidePreviewLabel(widget.slide),
+                  child: GestureDetector(
+                    onTap: widget.onTap,
+                    child: const AspectRatio(aspectRatio: 16 / 9, child: Skeleton(height: double.infinity)),
+                  ),
+                )
+              : SlideImage(slide: widget.slide, image: image, onTap: widget.onTap),
+        ),
+        const SizedBox(height: AppSpace.xxs),
+        Text(
+          '${widget.slide}',
+          textAlign: TextAlign.center,
+          style: AppType.labelSmall.copyWith(
+            color: widget.current ? p.accent : p.textSecondary,
+            fontSize: 13,
+          ),
+        ),
+      ],
     );
   }
 }

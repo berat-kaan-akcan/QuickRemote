@@ -6,6 +6,8 @@ import '../../../services/presentation_timer_controller.dart';
 import '../../../services/websocket/presentation_state.dart';
 import '../../../widgets/presentation_timer.dart';
 import '../widgets/shared_buttons.dart';
+import '../widgets/slide_image.dart';
+import '../presenter_view_screen.dart';
 import '../utils/remote_dialogs.dart';
 import '../utils/go_to_slide_sheet.dart';
 import '../utils/show_info.dart';
@@ -66,6 +68,9 @@ class _MainControlsViewState extends State<MainControlsView> {
     final ws = widget.ws;
     final show = ShowInfo.of(ws);
     final connected = ws.isConnected;
+    // With the slide's picture on the card, it and the note open the
+    // presenter view; without, the note opens on its own.
+    void openPresenterView() => PresenterViewScreen.open(context, timer: widget.timer, onSend: _send);
     return CustomScrollView(
       slivers: [
         SliverFillRemaining(
@@ -91,16 +96,20 @@ class _MainControlsViewState extends State<MainControlsView> {
                         timer: PresentationTimer(controller: widget.timer),
                         activeScreen: _activeScreen,
                         onScreen: connected && show.running ? _send : null,
-                        onNotes: () => RemoteDialogs.showNotesDialog(
-                          context,
-                          ws.slideNotes,
-                          ws.currentSlide,
-                        ),
+                        onNotes: SlideCard.showsPreview(ws, show)
+                            ? openPresenterView
+                            : () => RemoteDialogs.showNotesDialog(
+                                context,
+                                ws.slideNotes,
+                                ws.currentSlide,
+                              ),
+                        onPreview: openPresenterView,
                         onGoTo: connected && show.canJump
                             ? () => GoToSlideSheet.show(
                                 context,
                                 totalSlides: ws.totalSlides,
                                 onSend: _send,
+                                ws: ws,
                               )
                             : null,
                       ),
@@ -196,6 +205,7 @@ class SlideCard extends StatelessWidget {
     required this.onNotes,
     this.onScreen,
     this.onGoTo,
+    this.onPreview,
   });
 
   final WebSocketService ws;
@@ -212,12 +222,25 @@ class SlideCard extends StatelessWidget {
   /// Opens the go-to-slide sheet; null fades the key.
   final VoidCallback? onGoTo;
 
+  /// Called on a tap on the slide's picture.
+  final VoidCallback? onPreview;
+
+  /// Width of the slide's picture beside the slide number.
+  static const previewWidth = 120.0;
+
+  /// Whether the card shows the slide's picture. Its place stays while the
+  /// next slide's picture loads; with none of this deck yet the card looks as
+  /// without previews.
+  static bool showsPreview(WebSocketService ws, ShowInfo show) =>
+      show.running && !show.unreadable && ws.currentSlide > 0 && ws.hasSlideImages;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     final current = ws.currentSlide;
     final total = ws.totalSlides > 0 ? ws.totalSlides.toString() : '?';
     final notes = ws.slideNotes.trim();
+    final preview = showsPreview(ws, show);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -258,44 +281,67 @@ class SlideCard extends StatelessWidget {
               timer,
             ],
           ),
-          Semantics(
-            label: show.unreadable
-                ? context.l10n.slideshowOpen
-                : context.l10n.slideCounter(current, total),
-            liveRegion: true,
-            child: ExcludeSemantics(
-              child: show.unreadable
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: AppSpace.xs),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.slideshowOpen,
-                            style: AppType.headline.copyWith(
-                              color: p.textPrimary,
-                              fontSize: 26,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Semantics(
+                  label: show.unreadable
+                      ? context.l10n.slideshowOpen
+                      : context.l10n.slideCounter(current, total),
+                  liveRegion: true,
+                  child: ExcludeSemantics(
+                    child: show.unreadable
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: AppSpace.xs),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.l10n.slideshowOpen,
+                                  style: AppType.headline.copyWith(
+                                    color: p.textPrimary,
+                                    fontSize: 26,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpace.xxs),
+                                Text(
+                                  show.userWps
+                                      ? context.l10n.unreadableShowUserWps
+                                      : context.l10n.unreadableShow,
+                                  style: AppType.bodySmall.copyWith(
+                                    color: p.textSecondary,
+                                    fontSize: 12.5,
+                                  ),
+                                ),
+                              ],
                             ),
+                          )
+                        : _SlideNumber(
+                            current: current,
+                            total: total,
+                            running: show.running,
                           ),
-                          const SizedBox(height: AppSpace.xxs),
-                          Text(
-                            show.userWps
-                                ? context.l10n.unreadableShowUserWps
-                                : context.l10n.unreadableShow,
-                            style: AppType.bodySmall.copyWith(
-                              color: p.textSecondary,
-                              fontSize: 12.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : _SlideNumber(
-                      current: current,
-                      total: total,
-                      running: show.running,
+                  ),
+                ),
+              ),
+              if (preview) ...[
+                const SizedBox(width: AppSpace.sm),
+                SizedBox(
+                  width: previewWidth,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppSpace.xs),
+                    child: SlideImage(
+                      slide: current,
+                      image: ws.currentSlideImage,
+                      cover: activeScreen,
+                      onTap: onPreview,
+                      tooltip: context.l10n.presenterViewOpenHint,
                     ),
-            ),
+                  ),
+                ),
+              ],
+            ],
           ),
           if (!show.unreadable) ...[
             const SizedBox(height: AppSpace.sm),
@@ -303,7 +349,11 @@ class SlideCard extends StatelessWidget {
           ],
           if (show.running && notes.isNotEmpty) ...[
             const SizedBox(height: AppSpace.sm),
-            _NotePreview(notes: notes, onTap: onNotes),
+            _NotePreview(
+              notes: notes,
+              onTap: onNotes,
+              tooltip: preview ? context.l10n.presenterViewOpenHint : context.l10n.notesOpenHint,
+            ),
           ],
           const SizedBox(height: AppSpace.sm),
           Divider(height: 1, thickness: 1, color: p.border),
@@ -393,10 +443,11 @@ class _SlideNumber extends StatelessWidget {
 
 /// The first two lines of the slide's note; a tap shows all of it.
 class _NotePreview extends StatelessWidget {
-  const _NotePreview({required this.notes, required this.onTap});
+  const _NotePreview({required this.notes, required this.onTap, required this.tooltip});
 
   final String notes;
   final VoidCallback onTap;
+  final String tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -405,7 +456,7 @@ class _NotePreview extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       semanticLabel: notes,
-      tooltip: context.l10n.notesOpenHint,
+      tooltip: tooltip,
       pressedScale: 0.98,
       borderRadius: radius,
       child: Container(
