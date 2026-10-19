@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:crypto/crypto.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../device_name.dart';
@@ -29,11 +30,14 @@ class WebSocketClient {
   // Callbacks
   final void Function(AppConnectionState) onConnectionStateChanged;
   final void Function(Map<String, dynamic>) onMessage;
+  /// A slide picture; the PC sends them only after SLIDE_PREVIEW:1.
+  final void Function(SlideImageFrame) onImage;
   final void Function(ConnectionFailure?) onAuthResolved;
 
   WebSocketClient({
     required this.onConnectionStateChanged,
     required this.onMessage,
+    required this.onImage,
     required this.onAuthResolved,
   });
 
@@ -162,6 +166,11 @@ class WebSocketClient {
       _streamSubscription = _channel!.stream.listen(
         (data) {
           try {
+            if (data is List<int>) {
+              final frame = SlideImageFrame.decode(data);
+              if (frame != null && authResolved) onImage(frame);
+              return;
+            }
             final message = jsonDecode(data as String);
             if (message['type'] == 'auth') {
               if (message['status'] == 'fail') {

@@ -65,6 +65,15 @@ class SettingsScreen extends StatelessWidget {
                             onChanged: settings.setKeepInkOnSlideChange,
                           ),
                           SettingsRow(
+                            icon: Icons.image_outlined,
+                            iconColor: p.info,
+                            title: l10n.settingsSlidePreviewTitle,
+                            subtitle: l10n.settingsSlidePreviewSubtitle,
+                            alignTop: true,
+                            value: settings.slidePreview,
+                            onChanged: settings.setSlidePreview,
+                          ),
+                          SettingsRow(
                             icon: Icons.insights_rounded,
                             iconColor: p.accentText,
                             title: l10n.settingsHistoryTitle,

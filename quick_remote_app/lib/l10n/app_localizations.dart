@@ -140,6 +140,48 @@ abstract class AppLocalizations {
   /// **'Çizimler kendi slaytında kalır, o slayta dönünce yeniden görünür. Kapalıyken ileri veya geri gidince kalemle çizilenler silinir.'**
   String get settingsKeepInkSubtitle;
 
+  /// No description provided for @settingsSlidePreviewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt Önizlemesi'**
+  String get settingsSlidePreviewTitle;
+
+  /// No description provided for @settingsSlidePreviewSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayardaki slaydın resmi kumandada görünür. Resim slaydın kaydedilmiş hâlidir: animasyonun o anki adımı, çizimler ve oynayan video görünmez.'**
+  String get settingsSlidePreviewSubtitle;
+
+  /// No description provided for @presenterViewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu görünümü'**
+  String get presenterViewTitle;
+
+  /// No description provided for @presenterViewOpenHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu görünümünü aç'**
+  String get presenterViewOpenHint;
+
+  /// No description provided for @presenterNextUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıradaki'**
+  String get presenterNextUp;
+
+  /// No description provided for @presenterLastSlide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son slayt'**
+  String get presenterLastSlide;
+
+  /// No description provided for @slidePreviewLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt {slide} önizlemesi'**
+  String slidePreviewLabel(int slide);
+
   /// No description provided for @settingsLanguageTitle.
   ///
   /// In tr, this message translates to:

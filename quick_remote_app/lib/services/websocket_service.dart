@@ -7,6 +7,7 @@ import 'websocket/websocket_client.dart';
 import 'websocket/presentation_state.dart';
 import 'websocket/analytics_tracker.dart';
 import 'websocket/failure.dart';
+import 'websocket/thumbnail_requests.dart';
 
 export 'websocket/failure.dart';
 
@@ -88,19 +89,28 @@ class WebSocketService extends ChangeNotifier {
 
   // The PC does not store this setting: it is sent after every connect.
   bool _keepInkOnSlideChange = false;
+  // Slide pictures, also sent after every connect.
+  bool _slidePreview = true;
+
+  late final ThumbnailRequests _thumbnails = ThumbnailRequests(
+    send: (slide) => sendDirect(RemoteCommands.slideThumb(slide)),
+    onFailed: notifyListeners,
+  );
 
   WebSocketService() {
     _client = WebSocketClient(
       onConnectionStateChanged: (state) {
         if (state == AppConnectionState.disconnected || state == AppConnectionState.failed) {
           _state.reset();
+          _thumbnails.reset();
         } else if (state == AppConnectionState.connected) {
           // Not on the auth message: the client counts as connected only after it.
-          _client.sendCommand(RemoteCommands.keepInk(_keepInkOnSlideChange));
+          sendSettings();
         }
         notifyListeners();
       },
       onMessage: _handleMessage,
+      onImage: handleImage,
       onAuthResolved: (error) {
         if (error != null) {
           _lastCommandError = error;
@@ -149,6 +159,31 @@ class WebSocketService extends ChangeNotifier {
   bool get isPlaying => _state.isPlaying;
   int get systemVolume => _state.systemVolume;
   bool get systemMuted => _state.systemMuted;
+
+  // 🖼️ Slide pictures 🖼️
+
+  /// Whether slide pictures can come: the PC sends them and the setting is on.
+  bool get previewsAvailable => _state.previewsSupported && _slidePreview;
+  Uint8List? get currentSlideImage => previewsAvailable ? _state.currentSlideImage : null;
+  Uint8List? get nextSlideImage => previewsAvailable ? _state.nextSlideImage : null;
+  Uint8List? thumbnail(int slide) => previewsAvailable ? _state.thumbnail(slide) : null;
+
+  /// Asks the PC for slide [slide]'s thumbnail unless there is a picture of
+  /// it; it comes through [thumbnail] and a notification.
+  void requestThumbnail(int slide) {
+    if (!previewsAvailable || _state.thumbnail(slide) != null) return;
+    _thumbnails.request(slide);
+  }
+
+  /// The slide list no longer shows [slide].
+  void cancelThumbnail(int slide) => _thumbnails.cancel(slide);
+
+  /// Whether slide [slide]'s thumbnail did not come in time.
+  bool thumbnailFailed(int slide) => _thumbnails.failed(slide);
+
+  /// Whether a picture of this deck has come, so its place stays in the
+  /// layout while the next one loads.
+  bool get hasSlideImages => previewsAvailable && _state.hasSlideImages;
 
   // 📈 Analytics Tracker 📈
 
@@ -202,12 +237,15 @@ class WebSocketService extends ChangeNotifier {
         // Presentation ended (slideshow closed)
         _autoStopTracking();
         _state.reset();
+        _thumbnails.reset();
         notifyListeners();
         return;
       }
       
       final oldSlide = _state.currentSlide;
+      final oldDeck = _state.deck;
       _state.updateFromSlideState(message);
+      if (_state.deck != oldDeck) _thumbnails.reset();
       
       if (!_analytics.isTracking) {
         _analytics.startTracking(_state.totalSlides, _state.currentSlide);
@@ -248,7 +286,40 @@ class WebSocketService extends ChangeNotifier {
   void setKeepInkOnSlideChange(bool keep) {
     if (keep == _keepInkOnSlideChange) return;
     _keepInkOnSlideChange = keep;
-    _client.sendCommand(RemoteCommands.keepInk(keep));
+    sendDirect(RemoteCommands.keepInk(keep));
+  }
+
+  /// The phone's PC-side settings, which the PC does not store: sent after
+  /// every connect.
+  @visibleForTesting
+  void sendSettings() {
+    sendDirect(RemoteCommands.keepInk(_keepInkOnSlideChange));
+    // A PC without previews would only log an unknown command.
+    if (_state.previewsSupported) sendDirect(RemoteCommands.slidePreview(_slidePreview));
+  }
+
+  /// Sends a command without [sendCommand]'s optimistic state changes (a
+  /// setting, a thumbnail request); nothing goes out while disconnected.
+  @protected
+  void sendDirect(String command) => _client.sendCommand(command);
+
+  @visibleForTesting
+  void handleMessage(Map<String, dynamic> message) => _handleMessage(message);
+
+  @visibleForTesting
+  void handleImage(SlideImageFrame frame) {
+    _thumbnails.arrived(frame.slide);
+    if (_state.addImage(frame)) notifyListeners();
+  }
+
+  /// Turns the slide pictures on or off, and tells the PC when it changed
+  /// while connected.
+  void setSlidePreview(bool on) {
+    if (on == _slidePreview) return;
+    _slidePreview = on;
+    if (!on) _state.clearImages();
+    if (_state.previewsSupported) sendDirect(RemoteCommands.slidePreview(on));
+    notifyListeners();
   }
 
   /// Send a command to the PC.
@@ -283,6 +354,7 @@ class WebSocketService extends ChangeNotifier {
     _lastCommandError = null;
     await _client.disconnect();
     _state.reset();
+    _thumbnails.reset();
     notifyListeners();
   }
 
@@ -311,6 +383,7 @@ class WebSocketService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _thumbnails.reset();
     _client.disconnect();
     super.dispose();
   }
