@@ -400,11 +400,11 @@ class WearBridge {
   }
 
   /// What the watch's laser shows on the computer, so that it names it:
-  /// 'laser', or 'arrow' (Windows WPS has no laser, its arrow follows the
-  /// watch), or 'cursor' (Impress has no laser shortcut: over Bluetooth the
-  /// laser is the mouse).
+  /// 'laser', or 'cursor' (Impress has no laser shortcut: over Bluetooth the
+  /// laser is the mouse). The watch also knows 'arrow', which the phone sent
+  /// for Windows WPS before its laser pen (Ctrl+R) was found.
   String _pointer({required bool wifi}) {
-    if (wifi) return _ws.presenter == 'wps' && _ws.pcPlatform == 'windows' ? 'arrow' : 'laser';
+    if (wifi) return 'laser';
     return _btTarget() == BtTarget.impress ? 'cursor' : 'laser';
   }
 

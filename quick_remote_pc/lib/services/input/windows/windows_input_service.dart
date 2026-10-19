@@ -77,12 +77,12 @@ class WindowsInputService implements InputService {
   @override
   void toggleLaserCursor() => PptController.toggleLaserCursor();
   // PowerPoint's Ctrl shortcuts. WPS gets the pointer type through COM
-  // instead: its Ctrl+L and Ctrl+E do something else, and it has no laser
-  // (the visible arrow follows the phone). Its highlighter has only Ctrl+I.
+  // instead (its Ctrl+L and Ctrl+E do something else), its laser pen Ctrl+R
+  // (PptController.wpsLaser). Its highlighter has only Ctrl+I.
   @override
   void modeArrow() => _switchMode(0x41, laser: false, wpsPointer: PptController.pointerAutoArrow); // Ctrl + A
   @override
-  void modeLaser() => _switchMode(0x4C, laser: true, wpsPointer: PptController.pointerArrow); // Ctrl + L
+  void modeLaser() => _switchMode(0x4C, laser: true); // Ctrl + L
   @override
   void modePen() => _switchMode(0x50,
       laser: false,
@@ -96,16 +96,25 @@ class WindowsInputService implements InputService {
   void laserOff() => _switchMode(0x41, laser: false, wpsPointer: PptController.pointerAutoArrow); // Ctrl + A
 
   Future<void> _switchMode(int key, {required bool laser, int? color, int? wpsPointer}) async {
-    final switched = PresenterCom.wpsActive && wpsPointer != null
-        ? await PptController.setPointerType(wpsPointer)
-        : await PptController.pressInSlideShow([VK_CONTROL, key]);
+    final bool switched;
+    if (PresenterCom.wpsActive && laser) {
+      switched = await PptController.wpsLaser(true);
+    } else if (PresenterCom.wpsActive) {
+      // The pointer types leave WPS's laser pen on: Ctrl+A puts it away.
+      if (PptController.laserActive) await PptController.wpsLaser(false);
+      switched = wpsPointer != null
+          ? await PptController.setPointerType(wpsPointer)
+          : await PptController.pressInSlideShow([VK_CONTROL, key]);
+    } else {
+      switched = await PptController.pressInSlideShow([VK_CONTROL, key]);
+    }
     if (switched) {
       PptController.setLaserActive(laser);
       if (color != null) await PptController.setPointerColor(color);
     }
   }
 
-  // PowerPoint's own laser, and WPS's arrow, follow the OS cursor.
+  // PowerPoint's and WPS's lasers follow the OS cursor.
   @override
   bool get handlesLaserPointer => false;
   @override

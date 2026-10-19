@@ -60,8 +60,6 @@ class _TouchpadViewState extends State<TouchpadView> {
               if (swatches[bgr] != null) tool: swatches[bgr]!,
           }
         : const <DrawTool, Color>{};
-    final laserLabel = show.windowsWps ? context.l10n.toolArrow : null;
-    final laserIcon = show.windowsWps ? Icons.near_me_rounded : null;
     final popoverFor = show.running ? _popoverFor : null;
 
     return ContentWidth(
@@ -104,8 +102,6 @@ class _TouchpadViewState extends State<TouchpadView> {
                 sensitivity: _sensitivity,
                 drawTool: _drawTool,
                 inks: inks,
-                laserLabel: laserLabel,
-                laserIcon: laserIcon,
                 enabled: show.running,
                 onSendCommand: (cmd) => widget.ws.sendCommand(cmd),
                 onSendTouchOrLaser: (type, dx, dy) =>
@@ -141,8 +137,6 @@ class _TouchpadViewState extends State<TouchpadView> {
             DrawToolBar(
               activeTool: _drawTool,
               inks: inks,
-              laserLabel: laserLabel,
-              laserIcon: laserIcon,
               enabled: show.running,
               onToolSelected: (tool) => setState(() {
                 _drawTool = tool;

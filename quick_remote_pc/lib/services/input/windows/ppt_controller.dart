@@ -337,8 +337,7 @@ try {
   static Future<void> toggleLaserCursor() async {
     final laser = !_isLaserActive;
     if (PresenterCom.wpsActive) {
-      // WPS has no laser: the visible arrow follows the phone instead.
-      if (await setPointerType(laser ? pointerArrow : pointerAutoArrow)) _isLaserActive = laser;
+      if (await wpsLaser(laser)) _isLaserActive = laser;
       return;
     }
     if (await pressInSlideShow([VK_CONTROL, laser ? 0x4C : 0x41])) _isLaserActive = laser;
@@ -359,6 +358,23 @@ try {
 
   static void setLaserActive(bool active) {
     _isLaserActive = active;
+  }
+
+  static bool get laserActive => _isLaserActive;
+
+  /// WPS's laser pen: Ctrl+R in its show (WPS 12.1 on Windows, measured), as
+  /// on Linux. It is not in the object model (PpSlideShowPointerType), so it
+  /// reaches only a focused show, and only Ctrl+A puts it away. Ctrl+A first,
+  /// so the laser comes on whatever tool was on. Returns whether the keys went.
+  static Future<bool> wpsLaser(bool on) async {
+    if (!await pressInSlideShow([VK_CONTROL, 0x41])) return false; // Ctrl + A
+    if (on) {
+      // Right after Ctrl+A, WPS drops the Ctrl+R (measured: both in one
+      // SendInput gave no laser).
+      await Future.delayed(const Duration(milliseconds: 150));
+      KeyboardSimulator.pressKeyCombo([VK_CONTROL, 0x52]); // Ctrl + R
+    }
+    return true;
   }
 
   /// Sets the show's pointer (PpSlideShowPointerType) through COM, which
