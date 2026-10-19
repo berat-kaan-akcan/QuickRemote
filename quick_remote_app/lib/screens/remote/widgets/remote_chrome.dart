@@ -4,11 +4,12 @@ import '../../settings/settings_screen.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
-/// The app bar row of the Wi-Fi and Bluetooth remotes: logo, the PC and
-/// program line, status chip, settings and close.
+/// The app bar row of the Wi-Fi and Bluetooth remotes: logo, the PC's name
+/// over the program line, status chip, settings and close.
 class RemoteHeader extends StatelessWidget {
   const RemoteHeader({
     super.key,
+    required this.title,
     required this.subtitle,
     required this.isConnected,
     required this.onClose,
@@ -20,6 +21,8 @@ class RemoteHeader extends StatelessWidget {
     this.showStatus = true,
   });
 
+  /// The computer the remote controls: the one thing to check before a talk.
+  final String title;
   final Widget subtitle;
   final bool isConnected;
   final bool isConnecting;
@@ -71,7 +74,16 @@ class RemoteHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const BrandWordmark(fontSize: 16),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppType.title.copyWith(
+                  color: p.textPrimary,
+                  fontSize: 16,
+                  height: 1.1,
+                ),
+              ),
               const SizedBox(height: 2),
               if (onSubtitleTap == null)
                 line
