@@ -35,7 +35,7 @@ cd packages/quick_remote_shared && dart test
 python3 -m unittest discover -s quick_remote_pc/test/python   # from the repo root; no LibreOffice or WPS needed (on Windows: python; Unix-only tests are skipped)
 ```
 
-The watch app (wireless adb drops when the watch dozes and its port changes every time; run adb with `timeout`):
+The watch app (wireless adb drops when the watch dozes and its port changes every time; run adb with `timeout`. For a longer session keep it up with `settings put global cw_disable_wifimediator 1` (Wi-Fi stays on with the screen off), `dumpsys deviceidle disable` and a longer `screen_off_timeout`, plus an `adb shell true` every 10 s; restore them after, they cost battery):
 
 ```bash
 cd quick_remote_wear && JAVA_HOME=~/.jdks/jdk-21.0.12.1+1 sh ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease
