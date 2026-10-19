@@ -45,6 +45,7 @@
     <string name="hold_for_cursor">Hold: cursor</string>
     <!-- A tool tapped while no slideshow runs: the computer ignores it then. -->
     <string name="needs_show">Only while a slideshow runs</string>
+    <string name="show_not_started">The slideshow did not start</string>
 
     <!-- Under the arrow of the large Next button. -->
     <string name="next_short">Next</string>
