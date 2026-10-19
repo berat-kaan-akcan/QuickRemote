@@ -10,7 +10,7 @@ import '../widgets/volume_panel.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
-/// Slide media, the PC's volume and what plays on the PC, in that order.
+/// The PC's volume, what plays on the PC and slide media, in that order.
 class MediaControlView extends StatefulWidget {
   final WebSocketService ws;
 
@@ -40,85 +40,96 @@ class _MediaControlViewState extends State<MediaControlView> {
     final show = ShowInfo.of(ws);
     // Without a slideshow the PC ignores slide media.
     final slideMedia = ws.isConnected && show.running;
+    const padding = EdgeInsets.fromLTRB(
+      AppSpace.page,
+      AppSpace.xxs,
+      AppSpace.page,
+      AppSpace.lg,
+    );
     return ContentWidth(
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          AppSpace.page,
-          AppSpace.xxs,
-          AppSpace.page,
-          AppSpace.lg,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            FadeSlideIn(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  MediaSectionHeader(
-                    icon: Icons.smart_display_rounded,
-                    label: context.l10n.slideMedia,
-                  ),
-                  const SizedBox(height: AppSpace.sm),
-                  SlideMediaPanel(
-                    slide: ws.currentSlide,
-                    hasMedia: show.running && ws.pptHasMedia,
-                    isPlaying: ws.pptIsMediaPlaying,
-                    playStateKnown: !show.windowsWps,
-                    canRewind: !show.windowsWps,
-                    onPlayPause: slideMedia
-                        ? () => _send(RemoteCommands.mediaPlayPause)
-                        : null,
-                    onRewind: slideMedia
-                        ? () => _send(RemoteCommands.mediaRewind)
-                        : null,
-                  ),
-                ],
-              ),
+      // The panels sit in the middle of a tall screen and scroll on a short one.
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: padding,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: (constraints.maxHeight - padding.vertical)
+                  .clamp(0.0, double.infinity),
             ),
-            const SizedBox(height: AppSpace.lg),
-            FadeSlideIn(
-              index: 1,
-              child: VolumePanel(
-                isConnected: ws.isConnected,
-                volume: ws.systemVolume,
-                muted: ws.systemMuted,
-                onVolumeUp: () => _send(RemoteCommands.volumeUp),
-                onVolumeDown: () => _send(RemoteCommands.volumeDown),
-                onMute: () => _send(RemoteCommands.volumeMute),
-                onSetVolume: (v) => _send(RemoteCommands.volumeSet(v)),
-              ),
-            ),
-            const SizedBox(height: AppSpace.lg),
-            FadeSlideIn(
-              index: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  MediaSectionHeader(
-                    icon: Icons.album_rounded,
-                    label: context.l10n.nowPlaying,
-                  ),
-                  const SizedBox(height: AppSpace.sm),
-                  NowPlayingCard(
-                    hasMedia: ws.hasMedia,
-                    title: ws.mediaTitle,
-                    artist: ws.mediaArtist,
-                    thumbnailBase64: ws.mediaThumbnailBase64,
-                    positionMs: ws.positionMs,
-                    durationMs: ws.durationMs,
-                    isPlaying: ws.isPlaying,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FadeSlideIn(
+                  child: VolumePanel(
                     isConnected: ws.isConnected,
-                    onPlayPause: () => _send(RemoteCommands.sysMediaPlayPause),
-                    onNext: () => _send(RemoteCommands.sysMediaNext),
-                    onPrev: () => _send(RemoteCommands.sysMediaPrev),
-                    onStop: () => _send(RemoteCommands.sysMediaStop),
+                    volume: ws.systemVolume,
+                    muted: ws.systemMuted,
+                    onVolumeUp: () => _send(RemoteCommands.volumeUp),
+                    onVolumeDown: () => _send(RemoteCommands.volumeDown),
+                    onMute: () => _send(RemoteCommands.volumeMute),
+                    onSetVolume: (v) => _send(RemoteCommands.volumeSet(v)),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: AppSpace.lg),
+                FadeSlideIn(
+                  index: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      MediaSectionHeader(
+                        icon: Icons.album_rounded,
+                        label: context.l10n.nowPlaying,
+                      ),
+                      const SizedBox(height: AppSpace.sm),
+                      NowPlayingCard(
+                        hasMedia: ws.hasMedia,
+                        title: ws.mediaTitle,
+                        artist: ws.mediaArtist,
+                        thumbnailBase64: ws.mediaThumbnailBase64,
+                        positionMs: ws.positionMs,
+                        durationMs: ws.durationMs,
+                        isPlaying: ws.isPlaying,
+                        isConnected: ws.isConnected,
+                        onPlayPause: () => _send(RemoteCommands.sysMediaPlayPause),
+                        onNext: () => _send(RemoteCommands.sysMediaNext),
+                        onPrev: () => _send(RemoteCommands.sysMediaPrev),
+                        onStop: () => _send(RemoteCommands.sysMediaStop),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpace.lg),
+                FadeSlideIn(
+                  index: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      MediaSectionHeader(
+                        icon: Icons.smart_display_rounded,
+                        label: context.l10n.slideMedia,
+                      ),
+                      const SizedBox(height: AppSpace.sm),
+                      SlideMediaPanel(
+                        slide: ws.currentSlide,
+                        hasMedia: show.running && ws.pptHasMedia,
+                        isPlaying: ws.pptIsMediaPlaying,
+                        playStateKnown: !show.windowsWps,
+                        canRewind: !show.windowsWps,
+                        onPlayPause: slideMedia
+                            ? () => _send(RemoteCommands.mediaPlayPause)
+                            : null,
+                        onRewind: slideMedia
+                            ? () => _send(RemoteCommands.mediaRewind)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
