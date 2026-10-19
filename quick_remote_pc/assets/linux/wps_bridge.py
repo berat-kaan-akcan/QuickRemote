@@ -38,8 +38,43 @@ PLACEHOLDER_BODY = 2
 MSO_TRUE = -1
 
 
+# Slide pictures for the phone (export).
+EXPORT_MIN_WIDTH = 16
+EXPORT_MAX_WIDTH = 4096
+
+
 class BridgeError(Exception):
     pass
+
+
+def export_height(slide_width, slide_height, width):
+    """The pixel height of a slide exported width pixels wide."""
+    if not slide_width or not slide_height or slide_width <= 0 or slide_height <= 0:
+        return round(width * 9 / 16)
+    return max(1, round(width * slide_height / slide_width))
+
+
+def export_request(args, total):
+    """(index, width, path) of a valid export request for a show of total
+    slides, else None. The path must be an absolute .jpg file name."""
+    index, width, path = args.get("index"), args.get("width"), args.get("path")
+    if (not isinstance(index, int) or not isinstance(width, int) or isinstance(index, bool)
+            or not 1 <= index <= total or not EXPORT_MIN_WIDTH <= width <= EXPORT_MAX_WIDTH
+            or not isinstance(path, str) or not os.path.isabs(path)
+            or not path.endswith(".jpg") or "\0" in path):
+        return None
+    return index, width, path
+
+
+def deck_key(path):
+    """What tells the presentation's slide pictures apart: its file and when
+    the file was last saved ("" for a presentation never saved)."""
+    if not path:
+        return ""
+    try:
+        return "%s|%d" % (path, int(os.path.getmtime(path) * 1000))
+    except OSError:
+        return path
 
 
 def call(obj, name, *args):
@@ -245,7 +280,36 @@ class Wps:
             "isMediaPlaying": playing,
             "isBlackScreen": at_end or show_state in (SHOW_BLACK, SHOW_WHITE),
             "pid": self.pid,
+            "deckKey": self._deck_key(pres),
         }
+
+    @staticmethod
+    def _deck_key(pres):
+        try:
+            return deck_key(call(pres, "get_FullName"))
+        except Exception:  # noqa: BLE001 - the slide state matters more than the id
+            return ""
+
+    def export(self, args):
+        """Writes slide "index" of the running show to "path" as a JPEG
+        "width" pixels wide (Slide.Export, verified on WPS 11.1.0.11723) and
+        answers its height. The picture is the slide as the document holds
+        it: the animation step, ink and a playing video do not show."""
+        pres = self._require_show()[2]
+        slides = call(pres, "get_Slides")
+        request = export_request(args, call(slides, "get_Count"))
+        if request is None:
+            raise BridgeError("BAD_REQUEST")
+        index, width, path = request
+        setup = call(pres, "get_PageSetup")
+        height = export_height(call(setup, "get_SlideWidth"), call(setup, "get_SlideHeight"), width)
+        if os.path.exists(path):
+            os.remove(path)
+        call(item(slides, index), "Export", path, "JPG", width, height)
+        # A call can succeed without doing anything (WPS's Player does).
+        if not os.path.isfile(path):
+            raise BridgeError("NOT_EXPORTED")
+        return {"height": height}
 
     @staticmethod
     def _player(view, shape):
@@ -376,7 +440,7 @@ class Wps:
 COMMANDS = {
     "ping", "open", "state", "next", "prev", "start", "startAt", "end", "blank",
     "arrow", "pen", "eraser", "eraseAll", "laserOn", "laserOff", "penColor",
-    "pointerColor", "mediaToggle", "mediaRewind",
+    "pointerColor", "mediaToggle", "mediaRewind", "export",
 }
 
 

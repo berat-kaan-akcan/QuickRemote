@@ -47,4 +47,5 @@ class InputSimulator {
   static Future<Map<String, dynamic>?> getSmtcState() => _instance.getSmtcState();
   static Future<Map<String, dynamic>?> getSlideState() => _instance.getSlideState();
   static Future<VolumeState?> getVolumeState() => _instance.getVolumeState();
+  static Future<SlideImage?> exportSlide(int index, int width) => _instance.exportSlide(index, width);
 }

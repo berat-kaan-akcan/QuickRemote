@@ -9,12 +9,17 @@ void main() {
       RemoteCommands.highlighterColor(0xFFFF),
       RemoteCommands.volumeSet(40),
       RemoteCommands.keepInk(true),
+      RemoteCommands.slidePreview(true),
+      RemoteCommands.slideThumb(4),
     ]) {
       expect(RemoteCommands.allowedPrefixes, contains(command.split(':').first), reason: command);
     }
     expect(RemoteCommands.startAt(3), 'START_AT:3');
     expect(RemoteCommands.keepInk(true), 'SET_KEEP_INK:1');
     expect(RemoteCommands.keepInk(false), 'SET_KEEP_INK:0');
+    expect(RemoteCommands.slidePreview(true), 'SLIDE_PREVIEW:1');
+    expect(RemoteCommands.slidePreview(false), 'SLIDE_PREVIEW:0');
+    expect(RemoteCommands.slideThumb(4), 'SLIDE_THUMB:4');
   });
 
   test('plain commands and prefixes do not overlap', () {

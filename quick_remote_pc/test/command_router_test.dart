@@ -47,6 +47,18 @@ void main() {
       expect(PresenterSettings.keepInkOnSlideChange, isFalse);
     });
 
+    test('SLIDE_PREVIEW and SLIDE_THUMB are parsed for the server, not routed', () {
+      expect(run(RemoteCommands.slidePreview(true)), isEmpty);
+      expect(run(RemoteCommands.slideThumb(3)), isEmpty);
+      expect(CommandRouter.previewSwitch('SLIDE_PREVIEW:1'), isTrue);
+      expect(CommandRouter.previewSwitch('SLIDE_PREVIEW:0'), isFalse);
+      expect(CommandRouter.previewSwitch('SLIDE_PREVIEW:2'), isNull);
+      expect(CommandRouter.previewSwitch('NEXT'), isNull);
+      expect(CommandRouter.thumbSlide('SLIDE_THUMB:12'), 12);
+      expect(CommandRouter.thumbSlide('SLIDE_THUMB:0'), isNull);
+      expect(CommandRouter.thumbSlide('SLIDE_THUMB:x'), isNull);
+    });
+
     test('START_AT accepts 1..9999', () {
       expect(run('START_AT:1'), ['slideStartAt:1']);
       service.calls.clear();

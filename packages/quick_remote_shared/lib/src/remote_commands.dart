@@ -66,6 +66,8 @@ abstract class RemoteCommands {
     'START_AT',
     'VOLUME_SET',
     'SET_KEEP_INK',
+    'SLIDE_PREVIEW',
+    'SLIDE_THUMB',
   };
 
   // Parameterized commands; the PC validates the range of each value.
@@ -77,5 +79,14 @@ abstract class RemoteCommands {
   /// The phone's "keep the ink on slide change" setting, sent after every
   /// connect and on change (the PC does not store it).
   static String keepInk(bool keep) => 'SET_KEEP_INK:${keep ? 1 : 0}';
+
+  /// Turns the slide images (binary [SlideImageFrame]s) on or off for this
+  /// phone, sent after every connect and on change. The PC never sends a
+  /// binary frame to a phone that did not turn them on: older phones read
+  /// every frame as text.
+  static String slidePreview(bool on) => 'SLIDE_PREVIEW:${on ? 1 : 0}';
+
+  /// Asks for the thumbnail of slide [slide] (from 1), for the slide list.
+  static String slideThumb(int slide) => 'SLIDE_THUMB:$slide';
 }
 

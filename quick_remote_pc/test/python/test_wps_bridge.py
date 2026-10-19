@@ -219,5 +219,52 @@ class ProcessTest(unittest.TestCase):
             self.assertIsNone(bridge.child_named(12, "wpp", proc))
 
 
+class ExportTest(unittest.TestCase):
+    def _wps(self, export):
+        slide = Obj(Export=export)
+        slides = Obj(get_Count=(0, 3), Item=lambda _i: (0, slide))
+        setup = Obj(get_SlideWidth=(0, 960.0), get_SlideHeight=(0, 540.0))
+        pres = Obj(get_Slides=(0, slides), get_PageSetup=(0, setup))
+        wps = bridge.Wps()
+        wps._show = lambda: (None, None, pres)
+        return wps, slide
+
+    def test_writes_the_slide_and_answers_its_height(self):
+        def export(path, _filter, _width, _height):
+            with open(path, "wb") as f:
+                f.write(b"\xff\xd8")
+            return 0
+
+        wps, slide = self._wps(export)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "slide-2-640.jpg")
+            self.assertEqual(wps.export({"index": 2, "width": 640, "path": path}), {"height": 360})
+            self.assertEqual(slide.calls, [("Export", path, "JPG", 640, 360)])
+
+    def test_an_export_that_writes_nothing_fails(self):
+        wps, _slide = self._wps(0)
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(bridge.BridgeError) as caught:
+                wps.export({"index": 1, "width": 320, "path": os.path.join(tmp, "a.jpg")})
+        self.assertEqual(str(caught.exception), "NOT_EXPORTED")
+
+    def test_refuses_a_bad_request(self):
+        wps, slide = self._wps(0)
+        for bad in ({"index": 4, "width": 320, "path": "/tmp/a.jpg"},
+                    {"index": 1, "width": 320, "path": "a.jpg"},
+                    {"index": 1, "width": 9000, "path": "/tmp/a.jpg"}):
+            with self.assertRaises(bridge.BridgeError):
+                wps.export(bad)
+        self.assertEqual(slide.calls, [])
+
+    def test_deck_key_names_the_file_and_its_save(self):
+        self.assertEqual(bridge.deck_key(""), "")
+        with tempfile.NamedTemporaryFile(suffix=".pptx") as f:
+            first = bridge.deck_key(f.name)
+            self.assertTrue(first.startswith(f.name + "|"))
+            os.utime(f.name, (1, 2))
+            self.assertNotEqual(bridge.deck_key(f.name), first)
+
+
 if __name__ == "__main__":
     unittest.main()

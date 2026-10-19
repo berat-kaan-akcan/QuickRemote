@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'input/command_router.dart';
 import 'input_simulator.dart';
 import 'mouse_controller.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
@@ -12,6 +13,7 @@ import 'server/local_network.dart';
 import 'server/move_coalescer.dart';
 import 'server/network_manager.dart';
 import 'server/pre_auth_byte_limit.dart';
+import 'server/slide_previewer.dart';
 import 'server/state_broadcaster.dart';
 import 'server/tls_handshake_gate.dart';
 
@@ -83,6 +85,16 @@ class WebSocketServer {
 
   final AuthManager _authManager = AuthManager();
   late final StateBroadcaster _stateBroadcaster;
+  late final SlidePreviewer _previewer = SlidePreviewer(
+    send: (client, frame) {
+      try {
+        (client as WebSocket).add(frame);
+      } catch (e) {
+        debugPrint('Slide image send failed: $e');
+      }
+    },
+    exporter: InputSimulator.exportSlide,
+  );
 
   int _port = 8090;
   /// A slide state check that commands needing a slideshow wait for.
@@ -236,6 +248,7 @@ class WebSocketServer {
     _stateBroadcaster = StateBroadcaster(
       onBroadcast: broadcast,
       hasClients: () => _authenticatedClients.isNotEmpty,
+      onShow: (shown) => _previewer.show(shown),
     );
   }
 
@@ -427,6 +440,7 @@ class WebSocketServer {
       InputSimulator.executeCommand(RemoteCommands.leftUp);
     }
     _gestureBlocked.remove(ws);
+    _previewer.remove(ws);
     if (_gestureOwner == ws) {
       _gestureOwner = null;
       // Mid-gesture: put the laser or pen away, as the phone would have.
@@ -579,6 +593,9 @@ class WebSocketServer {
       // The computer's name, as in the mDNS advertisement: a phone connected
       // by QR code or address knows only the address. Shown on the watch.
       'name': Platform.localHostname,
+      // Slide pictures (SLIDE_PREVIEW), whether or not the program on
+      // screen can export them.
+      'previews': true,
     });
 
     debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
@@ -749,6 +766,19 @@ class WebSocketServer {
       return;
     }
 
+    // Per phone, so the server keeps them; they never reach the presenter.
+    final preview = CommandRouter.previewSwitch(command);
+    if (preview != null) {
+      _previewer.setEnabled(ws, preview);
+      _send(ws, {'type': 'ack', 'command': command});
+      return;
+    }
+    final thumbnail = CommandRouter.thumbSlide(command);
+    if (thumbnail != null) {
+      _previewer.requestThumbnail(ws, thumbnail);
+      return;
+    }
+
     if (!_allowsGesture(ws, command)) {
       debugPrint('Ignored $command: another phone is using the pointer');
       return;
@@ -855,6 +885,7 @@ class WebSocketServer {
     _commandWindows.clear();
     _gestureOwner = null;
     _gestureBlocked.clear();
+    _previewer.reset();
     _lastPressBy = null;
 
     // Copy first: closing a socket runs its onDone, which edits these collections.
@@ -907,6 +938,10 @@ class WebSocketServer {
   void triggerSlideStateUpdate([Duration delay = Duration.zero]) {
     _stateBroadcaster.triggerSlideStateUpdate(delay);
   }
+
+  /// Reads and broadcasts the slide state now, and waits for it.
+  @visibleForTesting
+  Future<void> refreshSlideStateForTesting() => _stateBroadcaster.fetchAndBroadcastSlideState();
 
   void _startNetworkMonitor() {
     _networkCheckTimer?.cancel();
