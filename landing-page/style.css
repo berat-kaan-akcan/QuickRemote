@@ -671,11 +671,13 @@ kbd {
 .ph-tile svg { width: 25px; height: 25px; }
 .ph-id { display: grid; gap: 3px; min-width: 0; margin-right: auto; }
 .ph-word {
-  color: var(--primary-text);
-  font: 500 17px/1 var(--font-display);
+  overflow: hidden;
+  color: var(--text);
+  font: 600 16px/1.1 var(--font-display);
   letter-spacing: -.02em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-.ph-word b { font-weight: 700; }
 .ph-sub { overflow: hidden; color: var(--text-3); font: 500 11.5px/1 var(--font-text); font-variant-numeric: tabular-nums; white-space: nowrap; text-overflow: ellipsis; }
 .ph-chip {
   display: inline-flex;
@@ -1800,7 +1802,7 @@ kbd {
 .js .report:not(.is-in) .rep-bars i { transform: scaleX(0); }
 .js .report.is-in .rep-bars i { transition: transform 700ms var(--ease) calc(var(--n) * 55ms); }
 
-/* Media: the slide's video and the system volume. */
+/* Media: the system volume, what plays, and the slide's video. */
 .t-media { display: grid; gap: 18px; }
 @media (min-width: 900px) {
   .t-media { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 40px; align-items: center; }
@@ -1810,7 +1812,9 @@ kbd {
 .media-demo { display: grid; gap: 14px; align-items: start; }
 @media (min-width: 640px) {
   .media-demo { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
-  .media-demo > .m-card:first-child { grid-row: span 2; }
+  /* Last on the phone, as in the app; the tall card on the left here. */
+  .media-demo > .m-card { grid-column: 2; }
+  .media-demo > .m-card:last-child { grid-column: 1; grid-row: 1 / span 2; }
 }
 .m-now { display: flex; align-items: center; gap: 12px; }
 .m-art {
