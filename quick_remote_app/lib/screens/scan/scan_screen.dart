@@ -116,25 +116,32 @@ class _ScanScreenState extends State<ScanScreen> with SingleTickerProviderStateM
               ),
             ),
 
-            // Header
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xs, AppSpace.md, 0),
-                child: Row(
-                  children: [
-                    _GlassCircleButton(
-                      icon: Icons.close_rounded,
-                      tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                      onTap: () => Navigator.of(context).pop(),
-                    ),
-                    const SizedBox(width: AppSpace.sm),
-                    Expanded(
-                      child: Text(
-                        context.l10n.scanTitle,
-                        style: AppType.title.copyWith(color: AppColors.white, fontWeight: FontWeight.w700),
+            // Header, pinned to the top: the expanding Stack would otherwise
+            // stretch it over the screen and the Row would center vertically.
+            Positioned(
+              left: 0,
+              top: 0,
+              right: 0,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xs, AppSpace.md, 0),
+                  child: Row(
+                    children: [
+                      _GlassCircleButton(
+                        icon: Icons.close_rounded,
+                        tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                        onTap: () => Navigator.of(context).pop(),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: AppSpace.sm),
+                      Expanded(
+                        child: Text(
+                          context.l10n.scanTitle,
+                          style: AppType.title.copyWith(color: AppColors.white, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
