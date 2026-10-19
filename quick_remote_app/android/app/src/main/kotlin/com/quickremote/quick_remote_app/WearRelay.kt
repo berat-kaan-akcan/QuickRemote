@@ -116,6 +116,11 @@ object WearRelay {
                     }
                     result.success(null)
                 }
+                "startDirect" -> {
+                    // The permission was just given: start what attach could not.
+                    WearDirect.start(app)
+                    result.success(null)
+                }
                 "error" -> {
                     val to = watch
                     val text = call.argument<String>("text")

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../utils/delta_accumulator.dart';
@@ -45,6 +46,7 @@ class WearBridge {
     void Function(int seconds)? setTalkDuration,
     TimerAlerts Function()? timerAlerts,
     Listenable? settings,
+    Future<bool> Function()? askNearbyDevices,
     MethodChannel channel = const MethodChannel('com.quickremote.quick_remote_app/wear'),
     DateTime Function() now = DateTime.now,
   })  : _bt = bt ?? BtHidService.instance,
@@ -53,6 +55,7 @@ class WearBridge {
         _setTalkDuration = setTalkDuration ?? ((_) {}),
         _timerAlerts = timerAlerts ?? (() => const TimerAlerts()),
         _settings = settings,
+        _askNearbyDevices = askNearbyDevices ?? _requestBluetoothConnect,
         _channel = channel,
         _now = now {
     _channel.setMethodCallHandler(_onCall);
@@ -106,6 +109,8 @@ class WearBridge {
   final void Function(int seconds) _setTalkDuration;
   final TimerAlerts Function() _timerAlerts;
   final Listenable? _settings;
+  final Future<bool> Function() _askNearbyDevices;
+  bool _nearbyAsked = false;
 
   /// The remote screen's timer, while that screen is open.
   PresentationTimerController? _timer;
@@ -145,6 +150,7 @@ class WearBridge {
       case 'hello':
         _watchSeen = true;
         _pushState(force: true);
+        unawaited(_openDirectLink());
       case 'command':
         final command = call.arguments;
         if (command is String) _onCommand(command);
@@ -159,6 +165,24 @@ class WearBridge {
     }
     return null;
   }
+
+  /// The laser's own Bluetooth socket from the watch (WearDirect.kt) needs
+  /// the "nearby devices" permission on the phone too. Only the Bluetooth
+  /// remote asked for it, so a phone used over Wi-Fi never had it and the
+  /// watch's laser went over the Data Layer: it lagged and stuttered. Asked
+  /// once per run when a watch shows up, then the socket listens.
+  Future<void> _openDirectLink() async {
+    if (_nearbyAsked) return;
+    _nearbyAsked = true;
+    try {
+      if (await _askNearbyDevices()) await _channel.invokeMethod<void>('startDirect');
+    } catch (_) {
+      // No Activity for the dialog, or no native end (tests): the Data Layer serves.
+    }
+  }
+
+  static Future<bool> _requestBluetoothConnect() async =>
+      (await Permission.bluetoothConnect.request()).isGranted;
 
   void _onCommand(String command) {
     _watchSeen = true;

@@ -121,6 +121,8 @@ void main() {
   late WearBridge bridge;
   late List<MethodCall> toWatch;
   late DateTime clock;
+  late int nearbyAsked;
+  late bool nearbyGranted;
 
   /// A message from the watch, as the native WearRelay hands it over.
   Future<void> fromWatch(String method, [Object? arguments]) async {
@@ -136,6 +138,8 @@ void main() {
 
   setUp(() {
     toWatch = [];
+    nearbyAsked = 0;
+    nearbyGranted = false;
     messenger.setMockMethodCallHandler(channel, (call) async {
       toWatch.add(call);
       return null;
@@ -161,6 +165,10 @@ void main() {
       timerAlerts: () => alerts,
       settings: picked,
       now: () => clock,
+      askNearbyDevices: () async {
+        nearbyAsked++;
+        return nearbyGranted;
+      },
     );
     WearBridge.failureText = (failure) => 'text for ${(failure as RemoteFailure).error?.code}';
   });
@@ -178,6 +186,22 @@ void main() {
     expect(states(), [
       {'link': 'connected', 'mode': 'wifi', 'pc': '192.168.1.20', 'running': false, 'current': 0, 'total': 0, 'pointer': 'laser', ...noClock},
     ]);
+  });
+
+  test('a watch gets its laser socket: the permission is asked once, then it listens', () async {
+    nearbyGranted = true;
+    await fromWatch('hello');
+    await fromWatch('hello');
+    await pumpEventQueue();
+    expect(nearbyAsked, 1);
+    expect(toWatch.where((call) => call.method == 'startDirect'), hasLength(1));
+  });
+
+  test('without the permission the socket does not listen', () async {
+    await fromWatch('hello');
+    await pumpEventQueue();
+    expect(nearbyAsked, 1);
+    expect(toWatch.where((call) => call.method == 'startDirect'), isEmpty);
   });
 
   test('every hello is answered, a change is written once', () async {
