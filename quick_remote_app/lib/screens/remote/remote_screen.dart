@@ -55,6 +55,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
   bool _wsRefReady = false;
   bool _canPop = false;
   String? _persistentError;
+  bool _reportOpen = false;
 
   @override
   void initState() {
@@ -99,7 +100,17 @@ class _RemoteScreenState extends State<RemoteScreen> {
       settings.savePresentationAnalytics(analytics);
 
       // Show report
-      AnalyticsReportScreen.showAsBottomSheet(context, analytics);
+      _reportOpen = true;
+      AnalyticsReportScreen.showAsBottomSheet(context, analytics)
+          .whenComplete(() => _reportOpen = false);
+    }
+
+    // A new show puts the last one's report away: it is in the history, and
+    // the presenter needs the remote, not a report left open over it.
+    if (_reportOpen && _wsRef.isPptRunning) {
+      _reportOpen = false;
+      Navigator.of(context)
+          .popUntil((route) => route.settings.name != AnalyticsReportScreen.sheetRouteName);
     }
 
     // Check for command errors

@@ -22,6 +22,9 @@ class AnalyticsReportScreen extends StatelessWidget {
     this.isFromHistory = false,
   });
 
+  /// The bottom sheet's route name, by which the remote closes it.
+  static const sheetRouteName = 'analytics-report';
+
   /// Show as a modal bottom sheet (used after presentation ends).
   static Future<void> showAsBottomSheet(
     BuildContext context,
@@ -29,6 +32,7 @@ class AnalyticsReportScreen extends StatelessWidget {
   ) {
     return showModalBottomSheet(
       context: context,
+      routeSettings: const RouteSettings(name: sheetRouteName),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       constraints: const BoxConstraints(maxWidth: AppSpace.contentMaxWidth),
