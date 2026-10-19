@@ -359,7 +359,7 @@ flutter run
 
 **Bağlantı Yöntemleri:**
 - 📷 **QR Kod:** PC ekranındaki QR kodu telefonla tarayın
-- 🔍 **Otomatik Keşif:** Aynı ağdaki PC'ler otomatik olarak listelenir
+- 🔍 **Otomatik Keşif:** Aynı ağdaki PC'ler otomatik olarak listelenir; daha önce bağlanılan bir PC kayıtlı PIN ile doğrudan bağlanır, PIN yalnızca değiştiyse sorulur
 - ✏️ **Manuel:** IP adresi ve PIN kodunu elle girin
 
 ---
