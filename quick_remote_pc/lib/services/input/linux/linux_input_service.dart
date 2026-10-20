@@ -8,7 +8,6 @@ import 'impress_bridge.dart';
 import 'mpris_controller.dart';
 import 'pactl_volume.dart';
 import 'script_bridge.dart';
-import '../../presenter_settings.dart';
 import 'uinput_device.dart';
 import 'wps_bridge.dart';
 import 'x11_windows.dart';
@@ -28,6 +27,8 @@ class LinuxInputService implements InputService {
         _wps = WpsBridge.instance,
         _activeWindow = X11Windows.instance.activeWindow,
         _clientWindows = X11Windows.instance.clientWindows,
+        _windowArea = X11Windows.instance.area,
+        _captureWindow = X11Windows.instance.capture,
         _keys = UinputDevice.instance.combo {
     _device.ensureOpen();
     _impress.onEvent = _onImpressEvent;
@@ -41,10 +42,14 @@ class LinuxInputService implements InputService {
     required X11Window? Function() activeWindow,
     required List<X11Window> Function() clientWindows,
     required void Function(List<int> keys) keys,
+    ScreenArea? Function(int window)? windowArea,
+    ScreenCapture? Function(int window)? captureWindow,
   })  : _impress = impress,
         _wps = wps,
         _activeWindow = activeWindow,
         _clientWindows = clientWindows,
+        _windowArea = windowArea ?? ((_) => null),
+        _captureWindow = captureWindow ?? ((_) => null),
         _keys = keys;
 
   final UinputDevice _device = UinputDevice.instance;
@@ -52,6 +57,12 @@ class LinuxInputService implements InputService {
   final ScriptBridge _wps;
   final X11Window? Function() _activeWindow;
   final List<X11Window> Function() _clientWindows;
+  final ScreenArea? Function(int window) _windowArea;
+  final ScreenCapture? Function(int window) _captureWindow;
+
+  /// The Impress show's window, from its last state (`window`); null when
+  /// unknown or no Impress show runs.
+  ScreenArea? _impressArea;
 
   /// Presses keys together (uinput), then releases them.
   final void Function(List<int> keys) _keys;
@@ -195,9 +206,11 @@ class LinuxInputService implements InputService {
     final impress = await _impress.request('state');
     if (impress['ok'] == true && impress['state'] == 'RUNNING') {
       _showBy = 'impress';
+      _impressArea = _area(impress['window']);
       return _slideState(impress, 'impress');
     }
     _showBy = null;
+    _impressArea = null;
     _laserViaImpress = false;
     _endStrokes();
     final wps = await _wpsRequest('state');
@@ -220,6 +233,118 @@ class LinuxInputService implements InputService {
     _laserOn = false;
     _wpsLaser = false;
     return {'error': 'POWERPOINT_NOT_RUNNING'};
+  }
+
+  /// The show [getSlideState] last found is the one described: Impress and
+  /// the bridge's WPS do everything, a WPS the user started only what its
+  /// keys do while it has the focus (no slide number, no pictures), a PDF
+  /// viewer or browser only turns pages. Reads only the focused window (and
+  /// the window list for a WPS show), so it is cheap enough to poll.
+  @override
+  Future<PresenterCaps> capabilities() async {
+    final window = _activeWindow();
+    final front = window == null ? null : _frontOf(window);
+    final Set<String> caps;
+    switch (_showBy) {
+      case 'impress':
+        caps = {..._fullShow};
+      case 'wps':
+        caps = {..._fullShow};
+        // WPS's object model has no highlighter: its Ctrl+I needs the focus.
+        if (window == null || !window.hasClass('wpp')) caps.remove(RemoteCaps.highlighter);
+      default:
+        if (window != null && window.hasClass('wpp') && window.fullscreen) {
+          // A WPS the user started: its own keys, it has the focus.
+          caps = {
+            RemoteCaps.laser,
+            RemoteCaps.pen,
+            RemoteCaps.highlighter,
+            RemoteCaps.eraser,
+            RemoteCaps.eraseAll,
+            RemoteCaps.blank,
+          };
+        } else if (front == FrontWindow.editor && !(window!.hasClass('wpp') && !_isBridgeWps(window))) {
+          // Impress (or Draw with a PDF) and the bridge's WPS start a show at
+          // a slide; the WPS the user started only from its first (F5).
+          caps = {RemoteCaps.goto};
+        } else {
+          caps = {};
+        }
+    }
+    return PresenterCaps(front: front, caps: caps);
+  }
+
+  /// What every show the bridges drive has.
+  static const _fullShow = {
+    RemoteCaps.laser,
+    RemoteCaps.pen,
+    RemoteCaps.highlighter,
+    RemoteCaps.eraser,
+    RemoteCaps.eraseAll,
+    RemoteCaps.blank,
+    RemoteCaps.goto,
+    RemoteCaps.notes,
+    RemoteCaps.colors,
+    RemoteCaps.media,
+    RemoteCaps.rewind,
+    RemoteCaps.previews,
+  };
+
+  /// The kind of [window] (an X11 window; a native Wayland one is never
+  /// seen). LibreOffice's show is a window of the same class as its editor,
+  /// so it counts as the show while an Impress show runs.
+  String _frontOf(X11Window window) {
+    if (window.hasClass('wpp')) return window.fullscreen ? FrontWindow.show : FrontWindow.editor;
+    if (window.hasClass('libreoffice-impress') || window.hasClass('libreoffice-draw')) {
+      return _showBy == 'impress' ? FrontWindow.show : FrontWindow.editor;
+    }
+    for (final name in window.wmClass) {
+      final kind = PdfViewers.kindOf(name);
+      if (kind != null) return kind;
+    }
+    return FrontWindow.other;
+  }
+
+  static ScreenArea? _area(Object? window) {
+    if (window is! List || window.length != 4 || window.any((v) => v is! int)) return null;
+    final [x, y, width, height] = window.cast<int>();
+    return (x: x, y: y, width: width, height: height);
+  }
+
+  /// The Impress show's window, else the focused X11 window (a PDF viewer or
+  /// a browser under XWayland). A native Wayland window tells nobody where
+  /// it is: null, the overlay's primary monitor.
+  @override
+  Future<ScreenArea?> laserArea() async {
+    if (_showBy == 'impress' && _impressArea != null) return _impressArea;
+    final window = _activeWindow();
+    return window == null ? null : _windowArea(window.id);
+  }
+
+  /// The window the audience sees, taken with XCB GetImage: the Impress
+  /// show's (its window from the last state, else its full-screen one), a
+  /// WPS show (a full-screen WPS Presentation window, the bridge's or the
+  /// user's), else the focused PDF viewer or browser when it is in full
+  /// screen. A native Wayland window is out of X11's reach: null.
+  @override
+  Future<ScreenCapture?> captureScreen() async {
+    final window = _audienceWindow();
+    return window == null ? null : _captureWindow(window.id);
+  }
+
+  X11Window? _audienceWindow() {
+    if (_showBy == 'impress') {
+      final impress = _clientWindows().where((w) => w.hasClass('libreoffice-impress')).toList();
+      final area = _impressArea;
+      return (area == null ? null : impress.where((w) => _windowArea(w.id) == area).firstOrNull) ??
+          impress.where((w) => w.fullscreen).firstOrNull;
+    }
+    final wpsShow = _clientWindows().where((w) => w.hasClass('wpp') && w.fullscreen).firstOrNull;
+    if (wpsShow != null) return wpsShow;
+    if (_showBy != null) return null;
+    final focused = _activeWindow();
+    if (focused == null || !focused.fullscreen || !FrontWindow.isViewer(_frontOf(focused))) return null;
+    return focused;
   }
 
   static Map<String, dynamic> _slideState(Map<String, dynamic> reply, String presenter) => {
@@ -268,21 +393,25 @@ class LinuxInputService implements InputService {
 
   // ── Presentation ──
   @override
-  void slideNext() => _showOrKeys('next', args: _inkArgs, fallbackKeys: [Evdev.keyPageDown]);
+  void slideNext({bool keepInk = false}) =>
+      _showOrKeys('next', args: _inkArgs(keepInk), fallbackKeys: [Evdev.keyPageDown]);
   @override
-  void slidePrev() => _showOrKeys('prev', args: _inkArgs, fallbackKeys: [Evdev.keyPageUp]);
+  void slidePrev({bool keepInk = false}) =>
+      _showOrKeys('prev', args: _inkArgs(keepInk), fallbackKeys: [Evdev.keyPageUp]);
 
-  static Map<String, Object?> get _inkArgs => {'clearInk': PresenterSettings.clearInkOnSlideChange};
+  /// The bridges erase the slide's ink before the show moves unless the
+  /// phone that sent the command keeps it.
+  static Map<String, Object?> _inkArgs(bool keepInk) => {'clearInk': !keepInk};
 
   @override
-  Future<void> slideStart() => _start('start', _inkArgs);
+  Future<void> slideStart({bool keepInk = false}) => _start('start', _inkArgs(keepInk));
 
   @override
-  Future<void> slideStartAt(int slideNumber) =>
+  Future<void> slideStartAt(int slideNumber, {bool keepInk = false}) =>
       // Without a bridge there is no way to tell whether F5 opened a show, and
       // typing the number + Enter into any other window could send a chat
       // message. So the key fallback only starts the show from its first slide.
-      _start('startAt', {'slide': slideNumber, ..._inkArgs});
+      _start('startAt', {'slide': slideNumber, ..._inkArgs(keepInk)});
 
   /// Starts the show of the focused WPS or PDF viewer, or else of Impress
   /// (a PDF open in Draw becomes a presentation there) or the bridge's WPS;
@@ -391,6 +520,15 @@ class LinuxInputService implements InputService {
 
   @override
   void modeEraser() => _setMode('eraser', wpsKeys: [Evdev.keyLeftCtrl, Evdev.keyE]);
+
+  // Only the overlay has a spotlight and strokes to take back.
+  @override
+  void modeSpotlight() => onCommandError?.call(RemoteError.commandFailed, 'NO_SPOTLIGHT');
+  @override
+  void modeZoom() => onCommandError?.call(RemoteError.commandFailed, 'NO_ZOOM');
+
+  @override
+  void undoInk() {}
 
   @override
   void laserOff() => _setMode('laserOff', wpsKeys: const []);

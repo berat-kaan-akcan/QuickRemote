@@ -2,6 +2,8 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 
+import '../input_service.dart' show ScreenArea, ScreenCapture;
+
 /// A top-level X11 window as the window manager lists it.
 class X11Window {
   final int id;
@@ -136,6 +138,84 @@ class X11Windows {
     }
   }
 
+  /// [window]'s size in pixels; null when it is gone.
+  (int, int)? _size(Pointer<Void> conn, int window) {
+    final geometry = _xcbGetGeometryReply(conn, _xcbGetGeometry(conn, window), nullptr);
+    if (geometry == nullptr) return null;
+    try {
+      // xcb_get_geometry_reply_t: u8 type, u8 depth, u16 seq, u32 length,
+      // u32 root, i16 x, i16 y, u16 width, u16 height
+      final view = ByteData.sublistView(geometry.cast<Uint8>().asTypedList(20));
+      return (view.getUint16(16, Endian.host), view.getUint16(18, Endian.host));
+    } finally {
+      _free(geometry);
+    }
+  }
+
+  /// Where [window] is on the desktop, in root pixels; null when it is gone.
+  ScreenArea? area(int window) {
+    try {
+      if (!_open()) return null;
+      final conn = _conn!;
+      final size = _size(conn, window);
+      if (size == null) return null;
+      final (width, height) = size;
+      // The window sits in the window manager's frame: ask for its corner
+      // in root coordinates.
+      final moved = _xcbTranslateCoordinatesReply(conn, _xcbTranslateCoordinates(conn, window, _root, 0, 0), nullptr);
+      if (moved == nullptr) return null;
+      try {
+        // xcb_translate_coordinates_reply_t: u8 type, u8 same_screen, u16 seq,
+        // u32 length, u32 child, i16 dst_x, i16 dst_y
+        final view = ByteData.sublistView(moved.cast<Uint8>().asTypedList(16));
+        return (x: view.getInt16(12, Endian.host), y: view.getInt16(14, Endian.host), width: width, height: height);
+      } finally {
+        _free(moved);
+      }
+    } catch (e) {
+      debugPrint('X11Windows.area failed: $e');
+      return null;
+    }
+  }
+
+  /// [window]'s picture (XCB GetImage), or null when it is gone, unmapped,
+  /// not 32 bits a pixel, or X11 is out of reach. A window under another
+  /// one comes whole: XWayland and a compositing X server keep each
+  /// window's own pixels (tried on KDE Wayland with a GTK window).
+  ScreenCapture? capture(int window) {
+    try {
+      if (!_open()) return null;
+      final conn = _conn!;
+      final size = _size(conn, window);
+      if (size == null) return null;
+      final (width, height) = size;
+      if (width == 0 || height == 0) return null;
+      final error = calloc<Pointer<Void>>();
+      try {
+        // Format 2 (ZPixmap), every plane.
+        final cookie = _xcbGetImage(conn, 2, window, 0, 0, width, height, 0xFFFFFFFF);
+        final reply = _xcbGetImageReply(conn, cookie, error);
+        if (error.value != nullptr) _free(error.value);
+        if (reply == nullptr) return null; // e.g. BadMatch: not viewable
+        try {
+          final length = _xcbGetImageDataLength(reply);
+          // 16-bit or packed 24-bit visuals are not read.
+          if (length < width * height * 4) return null;
+          final stride = length ~/ height;
+          final data = _xcbGetImageData(reply).asTypedList(stride * height);
+          return ScreenCapture(pixels: Uint8List.fromList(data), width: width, height: height, stride: stride);
+        } finally {
+          _free(reply);
+        }
+      } finally {
+        calloc.free(error);
+      }
+    } catch (e) {
+      debugPrint('X11Windows.capture failed: $e');
+      return null;
+    }
+  }
+
   /// The top-level windows the window manager manages.
   List<X11Window> clientWindows() {
     try {
@@ -199,4 +279,24 @@ final _xcbGetPropertyValue = _xcb.lookupFunction<Pointer<Void> Function(Pointer<
     Pointer<Void> Function(Pointer<Void>)>('xcb_get_property_value');
 final _xcbGetPropertyValueLength = _xcb.lookupFunction<Int32 Function(Pointer<Void>),
     int Function(Pointer<Void>)>('xcb_get_property_value_length');
+final _xcbGetGeometry =
+    _xcb.lookupFunction<_Cookie Function(Pointer<Void>, Uint32), _Cookie Function(Pointer<Void>, int)>('xcb_get_geometry');
+final _xcbGetGeometryReply = _xcb.lookupFunction<
+    Pointer<Void> Function(Pointer<Void>, _Cookie, Pointer<Pointer<Void>>),
+    Pointer<Void> Function(Pointer<Void>, _Cookie, Pointer<Pointer<Void>>)>('xcb_get_geometry_reply');
+final _xcbTranslateCoordinates = _xcb.lookupFunction<_Cookie Function(Pointer<Void>, Uint32, Uint32, Int16, Int16),
+    _Cookie Function(Pointer<Void>, int, int, int, int)>('xcb_translate_coordinates');
+final _xcbTranslateCoordinatesReply = _xcb.lookupFunction<
+    Pointer<Void> Function(Pointer<Void>, _Cookie, Pointer<Pointer<Void>>),
+    Pointer<Void> Function(Pointer<Void>, _Cookie, Pointer<Pointer<Void>>)>('xcb_translate_coordinates_reply');
+final _xcbGetImage = _xcb.lookupFunction<
+    _Cookie Function(Pointer<Void>, Uint8, Uint32, Int16, Int16, Uint16, Uint16, Uint32),
+    _Cookie Function(Pointer<Void>, int, int, int, int, int, int, int)>('xcb_get_image');
+final _xcbGetImageReply = _xcb.lookupFunction<
+    Pointer<Void> Function(Pointer<Void>, _Cookie, Pointer<Pointer<Void>>),
+    Pointer<Void> Function(Pointer<Void>, _Cookie, Pointer<Pointer<Void>>)>('xcb_get_image_reply');
+final _xcbGetImageData = _xcb.lookupFunction<Pointer<Uint8> Function(Pointer<Void>),
+    Pointer<Uint8> Function(Pointer<Void>)>('xcb_get_image_data');
+final _xcbGetImageDataLength =
+    _xcb.lookupFunction<Int32 Function(Pointer<Void>), int Function(Pointer<Void>)>('xcb_get_image_data_length');
 final _free = _libc.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('free');

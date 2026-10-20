@@ -6,8 +6,7 @@ import 'keyboard_simulator.dart';
 import 'mouse_simulator.dart';
 import '../../powershell_runner.dart';
 import '../../input_simulator.dart'; // For InputSimulator.onCommandError
-import '../input_service.dart' show RemoteError;
-import '../../presenter_settings.dart';
+import '../input_service.dart' show FrontWindow, RemoteError;
 import '../pdf_viewers.dart';
 import 'presenter_com.dart';
 
@@ -22,13 +21,13 @@ class PptController {
   static const pointerAutoArrow = 4;
   static const pointerEraser = 5;
 
-  static Future<void> slideNext() async {
-    await _clearInkBeforeMove();
+  static Future<void> slideNext({bool keepInk = false}) async {
+    if (!keepInk) await _clearInkBeforeMove();
     KeyboardSimulator.pressKeyCombo(_viewerInFront()?.next ?? [VK_NEXT]);
   }
 
-  static Future<void> slidePrev() async {
-    await _clearInkBeforeMove();
+  static Future<void> slidePrev({bool keepInk = false}) async {
+    if (!keepInk) await _clearInkBeforeMove();
     KeyboardSimulator.pressKeyCombo(_viewerInFront()?.prev ?? [VK_PRIOR]);
   }
 
@@ -36,11 +35,10 @@ class PptController {
       PdfViewers.forProgram(_windowExecutable(GetForegroundWindow()).split(r'\').last);
 
   /// PowerPoint and WPS keep a slide's ink and show it again when the show
-  /// comes back. With the setting on, the ink is erased first: in PowerPoint
-  /// with E, in WPS through COM. Only while the show window has the focus:
-  /// in the editor the E would be typed.
+  /// comes back. Unless the phone keeps it (SET_KEEP_INK), the ink is erased
+  /// first: in PowerPoint with E, in WPS through COM. Only while the show
+  /// window has the focus: in the editor the E would be typed.
   static Future<void> _clearInkBeforeMove() async {
-    if (!PresenterSettings.clearInkOnSlideChange) return;
     switch (_showWindowKind(GetForegroundWindow())) {
       case 'wps':
         await _eraseDrawingCom();
@@ -62,6 +60,16 @@ class PptController {
     return null;
   }
 
+  /// SLIDE_STATE's `front`: the kind of the foreground window, from its
+  /// executable and class (the same checks the commands use).
+  static String frontWindow() {
+    final hwnd = GetForegroundWindow();
+    if (hwnd.isNull) return FrontWindow.other;
+    if (_showWindowKind(hwnd) != null) return FrontWindow.show;
+    if (_editorWindowKind(hwnd) != null) return FrontWindow.editor;
+    return PdfViewers.kindOf(_windowExecutable(hwnd).split(r'\').last) ?? FrontWindow.other;
+  }
+
   static String _className(HWND hwnd) {
     final name = wsalloc(256);
     try {
@@ -77,6 +85,9 @@ class PptController {
   /// missing in PowerPoint 365 (DISP_E_MEMBERNOTFOUND) and empty in WPS. The
   /// largest, since WPS's show toolbar may be a window of the same class.
   static HWND? _findShowWindow([String? kind]) => _findWindow(_showWindowKind, kind);
+
+  /// The slideshow window of [kind] (either when null), for its picture.
+  static HWND? showWindow([String? kind]) => _findShowWindow(kind);
 
   /// The largest visible window that [kindOf] gives [kind] (any kind when
   /// null).

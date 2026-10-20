@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quick_remote_pc/services/input/input_service.dart';
 import 'package:quick_remote_pc/services/input_simulator.dart';
 import 'package:quick_remote_pc/services/server/state_broadcaster.dart';
 
@@ -86,5 +87,54 @@ void main() {
     await broadcaster.fetchAndBroadcastSlideState();
     expect(sent, hasLength(2));
     expect(sent.last, containsPair('presenter', 'impress'));
+  });
+
+  group('front and caps', () {
+    const pdf = PresenterCaps(front: FrontWindow.pdf, caps: {RemoteCaps.laser});
+
+    test('go with the slide state and make a change news', () async {
+      input.slideState = {'current': 2, 'total': 5, 'notes': ''};
+      input.caps = const PresenterCaps(front: FrontWindow.show, caps: {RemoteCaps.pen, RemoteCaps.goto});
+      await broadcaster.fetchAndBroadcastSlideState();
+      expect(sent.single, containsPair('front', 'show'));
+      expect(sent.single, containsPair('caps', ['goto', 'pen']));
+
+      await broadcaster.fetchAndBroadcastSlideState(); // nothing changed
+      expect(sent, hasLength(1));
+
+      // The same slide, the editor in front.
+      input.caps = const PresenterCaps(front: FrontWindow.editor, caps: {RemoteCaps.pen, RemoteCaps.goto});
+      await broadcaster.fetchAndBroadcastSlideState();
+      expect(sent, hasLength(2));
+      expect(sent.last, containsPair('front', 'editor'));
+      expect(sent.last, containsPair('current', 2));
+    });
+
+    test('go with "not running" too, which a new window in front repeats', () async {
+      await broadcaster.fetchAndBroadcastSlideState();
+      expect(sent.map((m) => m['type']), ['STATUS', 'SLIDE_STATE']);
+      expect(sent.last, containsPair('caps', <String>[]));
+      expect(sent.last.containsKey('front'), isFalse, reason: 'unknown (native Wayland)');
+
+      input.caps = pdf;
+      await broadcaster.fetchAndBroadcastSlideState();
+      expect(sent, hasLength(3), reason: 'no second STATUS');
+      expect(sent.last, containsPair('type', 'SLIDE_STATE'));
+      expect(sent.last, containsPair('data', null));
+      expect(sent.last, containsPair('front', 'pdf'));
+    });
+
+    test('a new window in front is noticed between the slide state reads', () async {
+      broadcaster.startSlideStatePoller();
+      addTearDown(broadcaster.stop);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(sent, hasLength(2)); // not running; the next 3 rounds skip the state
+      input.caps = pdf;
+      final deadline = DateTime.now().add(const Duration(seconds: 4));
+      while (sent.length < 3 && DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      expect(sent.last, containsPair('front', 'pdf'));
+    });
   });
 }

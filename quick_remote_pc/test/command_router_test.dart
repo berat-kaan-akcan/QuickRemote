@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/input/command_router.dart';
-import 'package:quick_remote_pc/services/presenter_settings.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import 'fakes.dart';
@@ -37,14 +36,26 @@ void main() {
   });
 
   group('prefix commands', () {
-    test('SET_KEEP_INK sets the PC setting and calls nothing else', () {
-      addTearDown(() => PresenterSettings.keepInkOnSlideChange = false);
+    test('SET_KEEP_INK is parsed for the server and calls nothing', () {
       expect(run(RemoteCommands.keepInk(true)), isEmpty);
-      expect(PresenterSettings.keepInkOnSlideChange, isTrue);
-      run(RemoteCommands.keepInk(false));
-      expect(PresenterSettings.keepInkOnSlideChange, isFalse);
-      run('SET_KEEP_INK:2');
-      expect(PresenterSettings.keepInkOnSlideChange, isFalse);
+      expect(CommandRouter.keepInkSwitch('SET_KEEP_INK:1'), isTrue);
+      expect(CommandRouter.keepInkSwitch('SET_KEEP_INK:0'), isFalse);
+      expect(CommandRouter.keepInkSwitch('SET_KEEP_INK:2'), isNull);
+      expect(CommandRouter.keepInkSwitch('NEXT'), isNull);
+    });
+
+    test('the slide commands carry the sender\'s keepInk', () {
+      for (final command in [RemoteCommands.next, RemoteCommands.prev, RemoteCommands.start, RemoteCommands.startAt(4)]) {
+        CommandRouter.execute(service, command, keepInk: true);
+      }
+      run(RemoteCommands.next);
+      expect(service.inkChoices, [
+        'slideNext:keep',
+        'slidePrev:keep',
+        'slideStart:keep',
+        'slideStartAt:4:keep',
+        'slideNext:clear',
+      ]);
     });
 
     test('SLIDE_PREVIEW and SLIDE_THUMB are parsed for the server, not routed', () {
