@@ -14,14 +14,34 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+// Whether the app was started with --minimized (at login, from the autostart
+// entry): then the window stays hidden and the app lives in the tray.
+static gboolean started_minimized(MyApplication* self) {
+  if (self->dart_entrypoint_arguments == nullptr) return FALSE;
+  for (char** arg = self->dart_entrypoint_arguments; *arg != nullptr; arg++) {
+    if (g_strcmp0(*arg, "--minimized") == 0) return TRUE;
+  }
+  return FALSE;
+}
+
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
+  if (started_minimized(self)) return;
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
 }
 
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+
+  // The app is unique: a second launch only activates this one, which then
+  // shows its window (also when it was hidden in the tray).
+  GList* windows = gtk_application_get_windows(GTK_APPLICATION(application));
+  if (windows != nullptr) {
+    gtk_window_present(GTK_WINDOW(windows->data));
+    return;
+  }
+
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
@@ -154,7 +174,14 @@ MyApplication* my_application_new() {
   // the application to be recognized beyond its binary name.
   g_set_prgname(APPLICATION_ID);
 
+  // Not G_APPLICATION_NON_UNIQUE: a second copy would try to open the same
+  // port. GApplication hands its activation to the running copy instead.
+#if GLIB_CHECK_VERSION(2, 74, 0)
+  const GApplicationFlags flags = G_APPLICATION_DEFAULT_FLAGS;
+#else
+  const GApplicationFlags flags = G_APPLICATION_FLAGS_NONE;
+#endif
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID, "flags",
-                                     G_APPLICATION_NON_UNIQUE, nullptr));
+                                     flags, nullptr));
 }

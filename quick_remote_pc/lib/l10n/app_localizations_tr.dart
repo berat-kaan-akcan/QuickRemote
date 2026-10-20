@@ -317,6 +317,22 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ekran projeksiyona yansıyorsa aydınlık salonda Açık daha iyi okunur.';
 
   @override
+  String get settingsLaser => 'Lazer';
+
+  @override
+  String get laserOverlayAuto => 'Otomatik';
+
+  @override
+  String get laserOverlayAlways => 'QuickRemote';
+
+  @override
+  String get laserOverlayNever => 'Program';
+
+  @override
+  String get laserOverlayNote =>
+      'QuickRemote lazeri her pencerenin üstünde çizer: Impress\'te videonun üstünde, PDF\'te, tarayıcıda ve gösteri dışında da. Otomatik\'te PowerPoint ve WPS kendi lazerini kullanır. Gösteri dışındaki lazer, telefon yeniden bağlanınca açılır.';
+
+  @override
   String phonesConnected(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -329,4 +345,122 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noPhonesYet => 'Henüz bağlanan telefon yok.';
+
+  @override
+  String get settingsStartup => 'Başlangıç ve tepsi';
+
+  @override
+  String get settingsCloseToTray => 'Kapatınca tepsiye küçült';
+
+  @override
+  String get settingsCloseToTraySubtitle =>
+      'Pencere kapanınca QuickRemote tepside çalışmayı sürdürür; bağlı telefonlar kopmaz.';
+
+  @override
+  String get settingsNoTray =>
+      'Bu masaüstünde sistem tepsisi yok; pencere kapanınca uygulama kapanır. GNOME\'da AppIndicator eklentisiyle tepsi gelir.';
+
+  @override
+  String get settingsLaunchAtLogin => 'Oturum açılınca başlat';
+
+  @override
+  String get settingsLaunchAtLoginSubtitle =>
+      'Pencere açılmadan, tepside başlar.';
+
+  @override
+  String get settingsStartServerOnLaunch => 'Açılınca sunucuyu başlat';
+
+  @override
+  String get settingsStartServerOnLaunchSubtitle =>
+      'Ortak (public) bir ağda sunucu kendiliğinden başlamaz.';
+
+  @override
+  String get settingsCheckUpdates => 'Güncellemeleri denetle';
+
+  @override
+  String get settingsCheckUpdatesSubtitle =>
+      'Açılışta ve günde bir kez GitHub\'a yeni sürüm olup olmadığını sorar; hiçbir şey indirmez. GitHub bu sırada IP adresini görür.';
+
+  @override
+  String get autostartFailed =>
+      'Oturum açılınca başlatma ayarı değiştirilemedi.';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Yeni sürüm: $version';
+  }
+
+  @override
+  String get updateDownload => 'İndir';
+
+  @override
+  String get serverHeldBack =>
+      'Ortak bir ağda olduğun için sunucu kendiliğinden başlamadı. Bu ağa güveniyorsan başlat.';
+
+  @override
+  String get trayShow => 'Göster';
+
+  @override
+  String get trayStartServer => 'Sunucuyu başlat';
+
+  @override
+  String get trayStopServer => 'Sunucuyu durdur';
+
+  @override
+  String trayPhones(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bağlı telefon: $count',
+      zero: 'Bağlı telefon yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayQuit => 'Çıkış';
+
+  @override
+  String get trayTooltipOff => 'QuickRemote PC · Sunucu kapalı';
+
+  @override
+  String get trayTooltipOn => 'QuickRemote PC · Sunucu açık';
+
+  @override
+  String get trayTooltipHeldBack =>
+      'QuickRemote PC · Ortak ağ: sunucu başlamadı';
+
+  @override
+  String get trayNoticeTitle => 'QuickRemote arka planda çalışıyor';
+
+  @override
+  String get trayNoticeBody =>
+      'Pencere kapandı, ama sunucu ve bağlı telefonlar çalışmayı sürdürüyor. Pencereyi tepsideki simgeden açabilir, uygulamadan oradaki Çıkış ile çıkabilirsin. Ayarlar\'da \"Kapatınca tepsiye küçült\" kapatılırsa pencereyi kapatmak uygulamayı kapatır.';
+
+  @override
+  String get trayNoticeOk => 'Anladım';
+
+  @override
+  String get settingsTroubleshooting => 'Sorun giderme';
+
+  @override
+  String get settingsExportLog => 'Günlüğü dışa aktar';
+
+  @override
+  String get settingsReportProblem => 'Sorun bildir';
+
+  @override
+  String get settingsLogPrivacy =>
+      'Günlük yalnızca bu bilgisayarda tutulur ve hiçbir yere kendiliğinden gönderilmez. PIN, eşleştirme kodu, güvenlik kodu, notlar ve dosya yolları yazılmaz; IP adresleri ve cihaz adları yazılır. \"Sorun bildir\" GitHub\'da yeni bir sorun sayfası açar; günlüğü oraya sen eklersin.';
+
+  @override
+  String get logExported => 'Günlük kaydedildi.';
+
+  @override
+  String get logExportFailed => 'Günlük kaydedilemedi.';
+
+  @override
+  String issueBody(String version, String platform, String presenters) {
+    return '**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote PC $version\nPlatform: $platform\nProgramlar: $presenters\n\nGünlüğü (Ayarlar → Günlüğü dışa aktar) bu sayfaya sürükleyip bırakabilirsin.';
+  }
 }
