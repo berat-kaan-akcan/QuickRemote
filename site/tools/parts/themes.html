@@ -1,0 +1,73 @@
+
+  <!-- Themes: the phone's Ayarlar → Tema, with the watch following. -->
+  <section class="sec themes" id="themes" aria-labelledby="themes-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="h2" id="themes-title">{{Kendi renginde.||In your colors.}}</h2>
+        <p class="lede">{{Telefonda altı renk teması var. Kobalt sistemin açık ya da koyu ayarını izler; diğerleri tek görünümlüdür. Saat de istersen aynı temayı alır.||The phone has six color themes. Cobalt follows the system’s light or dark mode; the others have one look each. The watch takes the same theme if you like.}}</p>
+      </div>
+      <div class="themes-grid">
+        <div class="theme-panel" data-themes>
+          <p class="tp-h" id="tp-color">{{Renk teması||Color theme}}</p>
+          <div class="tp-list" role="radiogroup" aria-labelledby="tp-color" data-theme-list>
+            <button class="tp-card" type="button" role="radio" aria-checked="true" data-theme="cobalt"><span class="tp-sw" style="--a:#2F4BE0;--b:#8EA1FF;--c:#0A0D18"></span><span class="tp-name">{{Kobalt||Cobalt}}</span></button>
+            <button class="tp-card" type="button" role="radio" aria-checked="false" data-theme="oled" tabindex="-1"><span class="tp-sw" style="--a:#DCDCE2;--b:#FFFFFF;--c:#000000"></span><span class="tp-name">OLED</span></button>
+            <button class="tp-card" type="button" role="radio" aria-checked="false" data-theme="contrast" tabindex="-1"><span class="tp-sw" style="--a:#FFD000;--b:#FFE14D;--c:#000000"></span><span class="tp-name">{{Yüksek kontrast||High contrast}}</span></button>
+            <button class="tp-card" type="button" role="radio" aria-checked="false" data-theme="mint" tabindex="-1"><span class="tp-sw" style="--a:#12C995;--b:#34E3B0;--c:#0A1714"></span><span class="tp-name">{{Nane||Mint}}</span></button>
+            <button class="tp-card" type="button" role="radio" aria-checked="false" data-theme="violet" tabindex="-1"><span class="tp-sw" style="--a:#7C4DFF;--b:#C4A9FF;--c:#110D20"></span><span class="tp-name">{{Mor||Violet}}</span></button>
+            <button class="tp-card" type="button" role="radio" aria-checked="false" data-theme="sunset" tabindex="-1"><span class="tp-sw" style="--a:#D24226;--b:#B83A1F;--c:#FBF5EE"></span><span class="tp-name">{{Gün Batımı||Sunset}}</span></button>
+          </div>
+          <p class="tp-h" id="tp-mode">{{Açık / Koyu||Light / Dark}}</p>
+          <div class="tp-mode" role="radiogroup" aria-labelledby="tp-mode" data-theme-mode>
+            <button type="button" role="radio" aria-checked="true" data-mode="system">{{Sistem||System}}</button>
+            <button type="button" role="radio" aria-checked="false" data-mode="light" tabindex="-1">{{Açık||Light}}</button>
+            <button type="button" role="radio" aria-checked="false" data-mode="dark" tabindex="-1">{{Koyu||Dark}}</button>
+          </div>
+          <p class="tp-note" data-theme-note
+             data-cobalt="{{Kobalt sistemle birlikte açık ya da koyu olur; elle de seçilebilir.||Cobalt follows the system’s light or dark mode; you can also pick one.}}"
+             data-dark="{{Bu tema yalnız koyu; karanlık salon için tasarlandı.||This theme is dark only, made for a dark room.}}"
+             data-light="{{Gün Batımı yalnız açık; aydınlık odalar için.||Sunset is light only, for bright rooms.}}"></p>
+          <label class="tp-switch">
+            <input type="checkbox" role="switch" checked data-watch-theme>
+            <span class="tp-track" aria-hidden="true"><i></i></span>
+            <span class="tp-switch-text"><b>{{Saatte de kullan||Use on the watch too}}</b><small>{{QuickRemote saat uygulaması bu renk temasını alır.||The QuickRemote watch app takes this color theme.}}</small></span>
+          </label>
+          <p class="tp-note" data-watch-note hidden>{{Saat hep koyu: Gün Batımı saatte Kobalt görünür.||The watch is always dark: Sunset shows as Cobalt there.}}</p>
+        </div>
+
+        <div class="theme-devices" aria-hidden="true">
+          <div class="phone phone-mini" data-theme="cobalt" data-themable>
+            <div class="ph">
+              <div class="ph-head">
+                <svg class="ph-tile"><use href="#mark"/></svg>
+                <span class="ph-id"><b>{{Ofis-PC||Office-PC}}</b><small><svg class="i"><use href="#i-slideshow"/></svg>PowerPoint</small></span>
+                <span class="ph-chip"><i></i>{{Bağlı||Connected}}</span>
+              </div>
+              <div class="ph-card">
+                <div class="ph-card-top"><span class="ph-over"><svg class="i"><use href="#i-slideshow"/></svg>{{SLAYT||SLIDE}}<i class="ph-live"></i></span><span class="ph-timer"><svg class="i"><use href="#i-timer"/></svg>12:40</span></div>
+                <p class="ph-count">3<span class="ph-tot"> /5</span></p>
+                <div class="ph-track"><i class="is-past"></i><i class="is-past"></i><i class="is-on"></i><i></i><i></i></div>
+              </div>
+              <span class="ph-toggle is-end"><svg class="i"><use href="#i-stop"/></svg>{{Bitir||End}}</span>
+              <div class="ph-row ph-slides">
+                <span class="ph-big ph-prev"><svg class="i"><use href="#i-arrow-back"/></svg>{{Önceki||Previous}}</span>
+                <span class="ph-big ph-next"><svg class="i"><use href="#i-arrow-forward"/></svg>{{Sonraki||Next}}</span>
+              </div>
+            </div>
+          </div>
+          <div class="watch watch-mini" data-theme="cobalt" data-themable-watch>
+            <div class="watch-bezel"></div>
+            <div class="watch-screen">
+              <div class="wp wp-remote">
+                <svg class="w-dots" viewBox="0 0 100 100" data-dots-static></svg>
+                <span class="wh-prev w-disc"><svg class="i"><use href="#i-chevron-left"/></svg></span>
+                <span class="wh-laser w-disc"><svg class="i"><use href="#i-laser"/></svg></span>
+                <div class="w-mid"><p class="w-num">3<small>/5</small></p><p class="w-clock"><svg class="i"><use href="#i-timer"/></svg>12:40</p></div>
+                <span class="w-next"><svg class="i"><use href="#i-chevron-right"/></svg><span class="w-next-word">{{İleri||Next}}</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>

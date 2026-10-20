@@ -1,0 +1,38 @@
+
+  <!-- Install: the line ends here, in the laser dot. -->
+  <section class="sec field get" id="download" aria-labelledby="get-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="h2 get-title" id="get-title">{{Ücretsiz indir.||Download it free.}}</h2>
+        <p class="lede">{{Bluetooth modunda yalnızca telefon uygulaması yeter. Wi-Fi modu için bilgisayara <span translate="no">QuickRemote&nbsp;PC</span> da kurulur. Saat uygulaması telefondakiyle birlikte çalışır.||In Bluetooth mode the phone app is enough. For Wi-Fi mode you also install <span translate="no">QuickRemote&nbsp;PC</span> on the computer. The watch app works together with the one on the phone.}}</p>
+      </div>
+      <ul class="get-list" data-install>
+        <li class="get-card" data-os="android">
+          <svg class="i" aria-hidden="true"><use href="#i-android"/></svg>
+          <h3>{{Android telefon||Android phone}}</h3>
+          <p>{{Sürüm sayfasından <code>QuickRemote-…-android.apk</code> dosyasını indir ve aç. Android “bilinmeyen kaynaklardan kurulum” izni isteyebilir. Play Store’da henüz yok.||Download <code>QuickRemote-…-android.apk</code> from the releases page and open it. Android may ask you to allow installing from unknown sources. It is not on the Play Store yet.}}</p>
+          <a class="get-link" href="https://github.com/berat-kaan-akcan/QuickRemote/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>{{Sürüm sayfası||Releases page}}</a>
+        </li>
+        <li class="get-card" data-os="watch">
+          <svg class="i" aria-hidden="true"><use href="#i-watch"/></svg>
+          <h3>{{Wear&nbsp;OS saat||Wear&nbsp;OS watch}}</h3>
+          <p>{{Telefon uygulamasıyla aynı sürümden <code>…-wear-os.apk</code>. Saate adb ile kurulur; telefon ve saat aynı anahtarla imzalı olmalı.||The <code>…-wear-os.apk</code> of the same release as the phone app. It is installed on the watch with adb; the phone and watch apps must be signed with the same key.}}</p>
+          <div class="cmd"><code>adb -s {{&lt;saat&gt;||&lt;watch&gt;}} install QuickRemote-…-wear-os.apk</code><button type="button" data-copy aria-label="{{Komutu kopyala||Copy the command}}" data-done="{{Kopyalandı||Copied}}"><svg class="i" aria-hidden="true"><use href="#i-content-copy"/></svg></button></div>
+        </li>
+        <li class="get-card" data-os="windows">
+          <svg class="i" aria-hidden="true"><use href="#i-desktop-windows"/></svg>
+          <h3>Windows</h3>
+          <p>{{<code>QuickRemote-PC-…-windows-x64-setup.exe</code>: Windows&nbsp;10 ve 11, kullanıcı başına kurulur. Kurulum paketi imzasız; Windows bir uyarı gösterirse “Yine de çalıştır”ı seç. Henüz Windows’ta denenmedi.||<code>QuickRemote-PC-…-windows-x64-setup.exe</code>: Windows&nbsp;10 and 11, installed per user. The installer is unsigned, so if Windows shows a warning choose “Run anyway”. Not yet tried on Windows.}}</p>
+          <a class="get-link" href="https://github.com/berat-kaan-akcan/QuickRemote/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>{{Sürüm sayfası||Releases page}}</a>
+        </li>
+        <li class="get-card" data-os="linux">
+          <svg class="i" aria-hidden="true"><use href="#i-terminal"/></svg>
+          <h3>Linux</h3>
+          <p>{{Debian, Ubuntu ve Pardus için .deb; ötekiler için .tar.gz. Paket, klavye ve fare için gereken udev kuralını da ekler.||A .deb for Debian, Ubuntu and Pardus, a .tar.gz for the rest. The package also adds the udev rule the virtual keyboard and mouse need.}}</p>
+          <div class="cmd"><code>sudo apt install ./quickremote-pc_…_amd64.deb</code><button type="button" data-copy aria-label="{{Komutu kopyala||Copy the command}}" data-done="{{Kopyalandı||Copied}}"><svg class="i" aria-hidden="true"><use href="#i-content-copy"/></svg></button></div>
+          <p class="get-sub">{{Arch için <code>quickremote-pc-bin</code> AUR paketi hazırlanıyor.||An AUR package, <code>quickremote-pc-bin</code>, is on its way for Arch.}}</p>
+        </li>
+      </ul>
+      <p class="get-src">{{Kaynak kodu <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da</a>.||The source code is <a href="https://github.com/berat-kaan-akcan/QuickRemote">on GitHub</a>.}}</p>
+    </div>
+  </section>
