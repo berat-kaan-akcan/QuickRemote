@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
@@ -36,8 +37,30 @@ class MainActivity : FlutterActivity() {
     private val DEVICE_CHANNEL = "com.quickremote.quick_remote_app/device"
     private var btEventSink: EventChannel.EventSink? = null
 
+    /** Recreated from a saved state: its intent's link was taken before. */
+    private var restored = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super: it configures the engine (configureFlutterEngine).
+        restored = savedInstanceState != null
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        LaunchLink.onNewIntent(intent)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // ── App shortcuts and the Quick Settings tile (LaunchLink.kt) ──────
+        LaunchLink.attach(
+            this,
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, LaunchLink.CHANNEL),
+            restored,
+        )
 
         // ── Volume key channel (unchanged) ─────────────────────────────────
         volumeMethodChannel = MethodChannel(
@@ -270,6 +293,7 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         WearRelay.detach(applicationContext)
+        LaunchLink.detach(applicationContext)
         releaseWifiLock()
         // lateinit: unset when the Activity dies before the engine was configured.
         if (::btHidService.isInitialized) btHidService.stopAdvertising()

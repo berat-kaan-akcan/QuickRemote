@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_connect">Bağlan: %1$s</string>
+    <string name="shortcut_bluetooth_short">Bluetooth kumanda</string>
+    <string name="shortcut_bluetooth_long">Bluetooth kumandayı aç</string>
+    <string name="shortcut_scan_short">QR tara</string>
+    <string name="shortcut_scan_long">PC\'deki QR kodu tara</string>
+    <string name="tile_no_pc">Son PC\'ye bağlan</string>
+</resources>
