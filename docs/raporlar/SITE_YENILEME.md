@@ -1,7 +1,7 @@
 # Site yenileme (site/)
 
 ## Durum
-DEVAM EDİYOR (oturum 1, 2026-10-20): içerik, demolar, görseller ve doğrulama bitti; PR açılacak
+TAMAMLANDI (2026-10-20)
 
 Dal: `site-yenileme` (main'den açıldı). Sınırlar: yalnızca `site/`, bu dosya, `docs/raporlar/site-ekranlar/` ve CLAUDE.md'nin site paragrafı.
 
@@ -83,4 +83,4 @@ Düzeltilen sorunlar: telefon kuralının `.rig` dışına sızması (mini telef
 Uygulamadaki tuhaflık notu: yok.
 
 ## Sıradaki adım
-CLAUDE.md paragrafı ve araç README'si yazıldı; ekran görüntüleri commit edilecek, sonra durum TAMAMLANDI yapılıp draft PR açılacak.
+Yok. İş bitti; draft PR açık. Elle bakılacaklar PR açıklamasında.
