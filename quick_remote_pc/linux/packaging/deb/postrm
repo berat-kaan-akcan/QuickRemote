@@ -1,0 +1,23 @@
+#!/bin/sh
+# dpkg has already removed the package's rule file; make udev forget it. On
+# purge also remove the copies the app's "İzin ver" button (LinuxSetup) or
+# install-uinput-rule.sh wrote to /etc: the rule gives every app in the session
+# the virtual keyboard, so it must not outlive the program.
+set -e
+
+case "$1" in
+  purge)
+    rm -f /etc/udev/rules.d/70-quickremote-uinput.rules \
+          /etc/modules-load.d/quickremote-uinput.conf
+    ;;
+esac
+
+case "$1" in
+  remove|purge)
+    if command -v udevadm > /dev/null 2>&1; then
+      udevadm control --reload-rules 2> /dev/null || true
+    fi
+    ;;
+esac
+
+exit 0

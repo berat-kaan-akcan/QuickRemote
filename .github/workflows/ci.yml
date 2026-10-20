@@ -1,0 +1,213 @@
+# Tests and builds every project. A push or pull request runs only the jobs
+# whose folders changed (a change under packages/ runs everything that depends
+# on the shared package); a v* tag, the weekly run and a manual run run all of
+# them, so toolchain breakage (Flutter, Gradle, the runner images) shows even
+# when nobody touches a project.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  schedule:
+    - cron: '0 4 * * 1' # Mondays 04:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with the Flutter on the development machine (flutter --version).
+  FLUTTER_VERSION: '3.47.5'
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      shared: ${{ steps.all.outputs.all == 'true' || steps.filter.outputs.shared == 'true' }}
+      pc: ${{ steps.all.outputs.all == 'true' || steps.filter.outputs.pc == 'true' }}
+      python: ${{ steps.all.outputs.all == 'true' || steps.filter.outputs.python == 'true' }}
+      app: ${{ steps.all.outputs.all == 'true' || steps.filter.outputs.app == 'true' }}
+      wear: ${{ steps.all.outputs.all == 'true' || steps.filter.outputs.wear == 'true' }}
+    steps:
+      - id: all
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == schedule || "$GITHUB_EVENT_NAME" == workflow_dispatch || "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "all=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "all=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.all.outputs.all != 'true'
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+        id: filter
+        if: steps.all.outputs.all != 'true'
+        with:
+          filters: |
+            shared:
+              - 'packages/**'
+              - '.github/workflows/ci.yml'
+            pc:
+              - 'quick_remote_pc/**'
+              - 'packages/**'
+              - '.github/workflows/ci.yml'
+            python:
+              - 'quick_remote_pc/assets/linux/**'
+              - 'quick_remote_pc/test/python/**'
+              - '.github/workflows/ci.yml'
+            app:
+              - 'quick_remote_app/**'
+              - 'packages/**'
+              - '.github/workflows/ci.yml'
+            wear:
+              # WearProtocolTest and WireCommandsTest read the phone's files
+              # and remote_commands.dart.
+              - 'quick_remote_wear/**'
+              - 'packages/**'
+              - 'quick_remote_app/lib/services/wear/**'
+              - 'quick_remote_app/lib/widgets/presentation_timer.dart'
+              - 'quick_remote_app/lib/theme/app_color_theme.dart'
+              - 'quick_remote_app/android/app/src/main/**'
+              - '.github/workflows/ci.yml'
+
+  shared:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/quick_remote_shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: dart pub get
+      - run: dart analyze
+      - run: dart test
+
+  pc-linux:
+    needs: changes
+    if: needs.changes.outputs.pc == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quick_remote_pc
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux build dependencies
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libstdc++-12-dev libx11-dev libxi-dev
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart analyze
+      - run: flutter test
+      - run: flutter build linux --release
+      - name: Packaging scripts parse
+        run: for f in linux/packaging/*.sh linux/packaging/deb/*.sh linux/packaging/deb/postinst linux/packaging/deb/postrm; do sh -n "$f"; done
+
+  pc-windows:
+    needs: changes
+    if: needs.changes.outputs.pc == 'true'
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: quick_remote_pc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter build windows --release
+
+  python:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # No LibreOffice or WPS: the tests that need them skip themselves.
+      - run: python -m unittest discover -s quick_remote_pc/test/python -v
+
+  app:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quick_remote_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      # compileSdk 37 (permission_handler_android 14.x) is not on the image.
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37" > /dev/null
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter config --jdk-dir "$JAVA_HOME"
+      - run: flutter pub get
+      - run: dart analyze
+      - run: flutter test
+      # No key.properties here: the build falls back to the debug key.
+      - run: flutter build apk --debug --target-platform android-arm64
+
+  wear:
+    needs: changes
+    if: needs.changes.outputs.wear == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quick_remote_wear
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37" > /dev/null
+      - run: sh ./gradlew :app:testDebugUnitTest :app:lintDebug
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: wear-reports
+          path: quick_remote_wear/app/build/reports/
+          if-no-files-found: ignore
