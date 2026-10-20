@@ -1,0 +1,69 @@
+
+  <!-- The overlay: laser and ink above every window. -->
+  <section class="sec overlay-sec" id="overlay" aria-labelledby="overlay-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="tag"><svg class="i" aria-hidden="true"><use href="#i-flashlight-on"/></svg>{{Yeni · deneme aşamasında||New · early days}}</p>
+        <h2 class="h2" id="overlay-title">{{Lazer, slaydın ötesinde de çalışır.||The laser works beyond the slide.}}</h2>
+        <p class="lede">{{<span translate="no">QuickRemote&nbsp;PC</span>, ekranın üstüne şeffaf, tıklamayı geçiren bir katman çizer. Lazer, spot ışığı ve kalem; videonun üstünde, PDF’te, tarayıcıda ve gösteri dışında da çalışır.||<span translate="no">QuickRemote&nbsp;PC</span> draws a see-through layer above every window that lets clicks through. The laser, the spotlight and the pen work over a video, in a PDF, in a browser and outside a slideshow too.}}</p>
+      </div>
+
+      <div class="ov-grid">
+        <div class="ov-demo" data-overlay>
+          <div class="ov-ctx seg seg-sm" role="radiogroup" aria-label="{{Ekranda ne açık||What is on screen}}" data-ov-ctx>
+            <button type="button" role="radio" aria-checked="true" data-ctx="pdf"><svg class="i" aria-hidden="true"><use href="#i-picture-as-pdf"/></svg>PDF</button>
+            <button type="button" role="radio" aria-checked="false" data-ctx="web" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-language"/></svg>{{Tarayıcı||Browser}}</button>
+            <button type="button" role="radio" aria-checked="false" data-ctx="video" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-slideshow"/></svg>{{Impress videosu||Impress video}}</button>
+          </div>
+          <div class="ov-screen ctx-pdf" tabindex="0" role="group" aria-label="{{Örnek ekran. Fareyi gezdirerek seçili aracı dene.||Sample screen. Move the pointer to try the chosen tool.}}" data-ov-screen>
+            <div class="ov-content" data-ov-content>
+              <div class="ov-win">
+                <div class="ov-bar" aria-hidden="true"><i></i><i></i><i></i><span data-ov-title>{{Çeyrek raporu.pdf||Quarterly report.pdf}}</span></div>
+                <div class="ov-body">
+                  <div class="ov-page ov-v-pdf" aria-hidden="true">
+                    <p class="ov-h">{{Çeyrek sonuçları||Quarter results}}</p>
+                    <div class="ov-chart"><i style="--v:.42"></i><i style="--v:.58"></i><i style="--v:.5"></i><i style="--v:.82"></i><i style="--v:.7"></i></div>
+                    <p class="ov-line"></p><p class="ov-line s"></p><p class="ov-line"></p>
+                  </div>
+                  <div class="ov-page ov-v-web" aria-hidden="true">
+                    <p class="ov-url">kahve.example/tarih</p>
+                    <p class="ov-h">{{Kahvenin kısa tarihi||A short history of coffee}}</p>
+                    <div class="ov-cards"><i></i><i></i><i></i></div>
+                    <p class="ov-line"></p><p class="ov-line s"></p>
+                  </div>
+                  <div class="ov-page ov-v-video" aria-hidden="true">
+                    <div class="ov-video"><span class="ov-play"><svg class="i"><use href="#i-play"/></svg></span><div class="ov-vbar"><i></i></div></div>
+                    <p class="ov-h">{{Demlenme: 3 dakika||Brewing: 3 minutes}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ov-shade" aria-hidden="true"></div>
+            <canvas class="ov-ink" aria-hidden="true"></canvas>
+            <div class="ov-blank" aria-hidden="true"></div>
+            <div class="ov-lens" aria-hidden="true"><div class="ov-lens-in" data-lens-in></div></div>
+            <i class="ov-dot" aria-hidden="true"></i>
+            <p class="ov-hint" aria-hidden="true" data-ov-hint>{{Fareyi ekranın üstünde gezdir||Move the pointer over the screen}}</p>
+          </div>
+          <div class="ov-tools" role="toolbar" aria-label="{{Telefondaki lazer araçları||Laser tools on the phone}}" data-ov-tools>
+            <button class="tool" type="button" data-ov="laser" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-laser"/></svg><span class="tool-label">{{Lazer||Laser}}</span></button>
+            <button class="tool" type="button" data-ov="spot" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-flashlight-on"/></svg><span class="tool-label">{{Spot ışığı||Spotlight}}</span></button>
+            <button class="tool" type="button" data-ov="zoom" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-zoom-in"/></svg><span class="tool-label">{{Büyüteç||Magnifier}}</span></button>
+            <button class="tool" type="button" data-ov="pen" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-pen"/></svg><span class="tool-label">{{Kalem||Pen}}</span></button>
+            <button class="tool" type="button" data-ov="undo"><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg><span class="tool-label">{{Geri al||Undo}}</span></button>
+            <button class="tool" type="button" data-ov="black" aria-pressed="false"><i class="sw sw-black" aria-hidden="true"></i><span class="tool-label">{{Siyah ekran||Black screen}}</span></button>
+          </div>
+          <p class="ov-foot" data-ov-note data-laser="{{Lazer: tek dokunuş, imleç yerine turuncu nokta.||Laser: the orange dot replaces the cursor.}}" data-spot="{{Spot ışığı: ekran kararır, parmağının altı aydınlık kalır.||Spotlight: the screen darkens and the spot under your finger stays lit.}}" data-zoom="{{Büyüteç: lazerin altı iki kat büyür. Yalnız Windows’ta olacak.||Magnifier: the area under the laser is shown twice as large. Windows only.}}" data-pen="{{Kalem: ekrana serbestçe çiz. Çizgiler katmanda durur, program bozulmaz.||Pen: draw freely on the screen. Strokes live on the layer, so the program stays untouched.}}"></p>
+        </div>
+
+        <div class="ov-copy">
+          <ul class="ov-list">
+            <li><h3>{{Videonun üstünde||Over a video}}</h3><p>{{Impress’te video ayrı bir pencerede oynar ve lazer arkada kalır. Katman videonun üstünde çizdiği için lazer kaybolmaz.||In Impress a video plays in its own window and the laser would go behind it. The layer draws above it, so the laser never disappears.}}</p></li>
+            <li><h3>{{Gösteri olmadan da||Without a slideshow}}</h3><p>{{PDF’te, tarayıcıda ya da masaüstünde lazer, kalem ve siyah ya da beyaz ekran açık kalır; telefondaki touchpad de.||In a PDF, a browser or on the desktop, the laser, the pen and the black or white screen stay on, and so does the touchpad on your phone.}}</p></li>
+            <li><h3>{{İstediğin kadar katman||As much layer as you want}}</h3><p>{{PC’de Ayarlar → Lazer: <b>Otomatik</b> (PowerPoint ve WPS kendi lazerini ve kalemini kullanır, kalan her yerde katman çizer), <b>QuickRemote</b> (her yerde katman) ya da <b>Program</b> (yalnız programın araçları).||On the PC, Settings → Laser: <b>Automatic</b> (PowerPoint and WPS keep their own laser and pen, the layer draws everywhere else), <b>QuickRemote</b> (the layer everywhere) or <b>Program</b> (only the program’s own tools).}}</p></li>
+          </ul>
+          <p class="honest"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>{{Henüz erken: Linux’ta (X11 ve XWayland) katman ekranda denendi; videonun üstü, birden çok monitör ve GNOME gibi durumlar henüz denenmedi. Windows sürümü yazıldı ama hiç derlenip çalıştırılmadı. Büyüteç yalnız Windows’a gelecek ve o da denenmedi.||Early days: on Linux (X11 and XWayland) the layer has been tried on screen, but cases like over a video, several monitors and GNOME have not been tried yet. The Windows version is written but has never been built or run. The magnifier will be Windows only, and is untried too.}}</span></p>
+        </div>
+      </div>
+    </div>
+  </section>

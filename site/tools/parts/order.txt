@@ -1,0 +1,17 @@
+# The page, top to bottom. Edit a part, then run python3 site/tools/build_pages.py
+head
+top
+hero
+watch
+themes
+features
+overlay
+more
+connect
+desktop
+security
+programs
+status
+faq
+download
+foot

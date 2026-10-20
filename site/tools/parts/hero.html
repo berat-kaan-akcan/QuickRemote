@@ -1,0 +1,104 @@
+
+  <!-- Hero: the phone drives a sample talk; a cobalt line, the connection, carries each command to the slide. -->
+  <section class="sec hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1 class="h1" id="hero-title">{{Sunumunu telefonundan yönet.||Run your talk from your phone.}}</h1>
+        <p class="lede">{{Telefonun kumanda, touchpad ve lazer olur. Slaytın resmi, notların ve süren cebinde. Saatinde çerçeveyi çevirince slayt ilerler. PowerPoint, Impress, WPS ve PDF ile çalışır.||Your phone is the remote, the touchpad and the laser. The slide, your notes and your timer are in your pocket. Turn the bezel on your watch and the slide moves. Works with PowerPoint, Impress, WPS and PDF.}}</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#download"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>{{Ücretsiz indir||Download free}}</a>
+          <a class="btn btn-line" href="#connect">{{Nasıl bağlanır||How to connect}}</a>
+        </div>
+        <p class="hero-note">{{Ücretsiz, hesap gerekmez. Telefonla bilgisayar kendi ağında konuşur.||Free, no account. Your phone and computer talk on your own network.}}</p>
+      </div>
+
+      <div class="rig" data-stage>
+        <svg class="beam" viewBox="0 0 600 690" aria-hidden="true" preserveAspectRatio="none">
+          <path class="beam-line" pathLength="1" d="M 236 448 C 384 448 497 362 497 214"/>
+          <path class="beam-pulse" pathLength="1" d="M 236 448 C 384 448 497 362 497 214" data-pulse/>
+        </svg>
+        <div class="screen" tabindex="0" role="group" aria-keyshortcuts="ArrowRight ArrowLeft B W Escape" aria-roledescription="{{sunum ekranı||presentation screen}}" aria-label="{{Örnek sunum: Kahvenin kısa tarihi. Tıklayınca ya da sağ ok tuşuyla slayt ilerler.||Sample talk: A short history of coffee. Click or press the right arrow to go to the next slide.}}" aria-describedby="hero-live">
+          <div class="show" data-show>
+            <div class="deck">
+              <div class="slide s-title is-on" data-note="{{Kendini tanıt. Konuşma on dakika sürecek.||Introduce yourself. The talk will take ten minutes.}}">
+                <p class="s-kicker">{{Kahve Kulübü, Ekim buluşması||Coffee Club, October meetup}}</p>
+                <p class="s-h">{{Kahvenin kısa tarihi||A short history of coffee}}</p>
+                <p class="s-sub">{{Yemen’den İstanbul’a, oradan dünyaya||From Yemen to Istanbul, and on to the world}}</p>
+              </div>
+              <div class="slide" data-note="{{Tahtakale’deki ilk kahvehanenin hikâyesini anlat.||Tell the story of the first coffeehouse, in Tahtakale.}}">
+                <p class="s-big">1554</p>
+                <p class="s-text">{{İstanbul’un ilk kahvehanesi Tahtakale’de açıldı.||Istanbul’s first coffeehouse opened in Tahtakale.}}</p>
+              </div>
+              <div class="slide" data-note="{{Salondan bir örnek iste.||Ask the room for an example.}}">
+                <p class="s-q">{{“Bir fincan kahvenin kırk yıl hatırı vardır.”||“A cup of coffee is remembered for forty years.”}}</p>
+                <p class="s-cite">{{Atasözü||Proverb}}</p>
+              </div>
+              <div class="slide" data-note="{{Köpüğün neden önemli olduğundan bahset.||Explain why the foam matters.}}">
+                <p class="s-big">2013</p>
+                <p class="s-text">{{Türk kahvesi kültürü UNESCO listesine girdi.||Turkish coffee culture joined the UNESCO list.}}</p>
+              </div>
+              <div class="slide s-end" data-note="{{Bir sonraki buluşmanın tarihini duyur.||Announce the date of the next meetup.}}">
+                <p class="s-h">{{Sorular?||Questions?}}</p>
+                <p class="s-sub">{{Teşekkürler.||Thank you.}}</p>
+              </div>
+            </div>
+            <div class="blank" aria-hidden="true"></div>
+            <div class="editor" aria-hidden="true"><span>{{Gösteri bitti. Başlat’a bas.||The show has ended. Press Start.}}</span></div>
+            <i class="laser" aria-hidden="true" data-laser></i>
+          </div>
+        </div>
+
+        <div class="phone" role="group" aria-label="{{QuickRemote kumandası, örnek: Ofis-PC’ye bağlı, beş slaytlık bir sunum||The QuickRemote remote, sample: connected to Office-PC, a five-slide talk}}" data-phone data-theme="cobalt">
+          <div class="ph">
+            <div class="ph-status" aria-hidden="true"><span>14:32</span><span class="ph-sys"><svg class="i"><use href="#i-wifi"/></svg><i class="ph-batt"></i></span></div>
+            <div class="ph-head" aria-hidden="true">
+              <svg class="ph-tile"><use href="#mark"/></svg>
+              <span class="ph-id"><b translate="no">{{Ofis-PC||Office-PC}}</b><small translate="no"><svg class="i"><use href="#i-slideshow"/></svg>PowerPoint<svg class="i"><use href="#i-keyboard-arrow-down"/></svg></small></span>
+              <span class="ph-chip"><i></i>{{Bağlı||Connected}}</span>
+              <svg class="i ph-ib"><use href="#i-settings"/></svg>
+              <svg class="i ph-ib"><use href="#i-close"/></svg>
+            </div>
+            <div class="ph-card">
+              <div class="ph-card-top">
+                <span class="ph-over" aria-hidden="true"><svg class="i"><use href="#i-slideshow"/></svg>{{SLAYT||SLIDE}}<i class="ph-live"></i></span>
+                <span class="ph-timer" aria-hidden="true"><svg class="i"><use href="#i-timer"/></svg><span data-timer>00:00</span></span>
+              </div>
+              <div class="ph-numrow">
+                <p class="ph-count" aria-hidden="true"><span data-cur>1</span><span class="ph-tot"> /5</span></p>
+                <button class="ph-thumb show" type="button" data-cmd="presenter" aria-label="{{Sunucu görünümünü aç||Open the presenter view}}" data-clones></button>
+              </div>
+              <div class="ph-track" aria-hidden="true" data-track><i class="is-on"></i><i></i><i></i><i></i><i></i></div>
+              <button class="ph-notes" type="button" data-cmd="notes" aria-expanded="false" aria-controls="ph-sheet"><svg class="i" aria-hidden="true"><use href="#i-notes"/></svg><span data-note-line>{{Kendini tanıt. Konuşma on dakika sürecek.||Introduce yourself. The talk will take ten minutes.}}</span><svg class="i ph-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+              <div class="ph-keys">
+                <button class="ph-sq" type="button" data-cmd="black" aria-pressed="false" aria-label="{{Siyah ekran||Black screen}}"><i class="sw sw-black" aria-hidden="true"></i></button>
+                <button class="ph-sq" type="button" data-cmd="white" aria-pressed="false" aria-label="{{Beyaz ekran||White screen}}"><i class="sw sw-white" aria-hidden="true"></i></button>
+                <button class="ph-goto" type="button" data-cmd="goto" aria-expanded="false" aria-controls="ph-grid"><svg class="i" aria-hidden="true"><use href="#i-grid-view"/></svg>{{Slayta git||Go to slide}}</button>
+              </div>
+            </div>
+            <button class="ph-toggle" type="button" data-cmd="toggle" data-start="{{Başlat||Start}}" data-end="{{Bitir||End}}"><svg class="i i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="i i-stop" aria-hidden="true"><use href="#i-stop"/></svg><span data-toggle-label>{{Bitir||End}}</span></button>
+            <div class="ph-row ph-slides">
+              <button class="ph-big ph-prev" type="button" data-cmd="prev"><svg class="i" aria-hidden="true"><use href="#i-arrow-back"/></svg>{{Önceki||Previous}}</button>
+              <button class="ph-big ph-next is-hint" type="button" data-cmd="next"><svg class="i" aria-hidden="true"><use href="#i-arrow-forward"/></svg>{{Sonraki||Next}}</button>
+            </div>
+            <div class="ph-nav" aria-hidden="true">
+              <span class="is-on"><svg class="i"><use href="#i-gamepad"/></svg>{{Kontroller||Controls}}</span>
+              <span><svg class="i"><use href="#i-touch"/></svg>Touchpad</span>
+              <span><svg class="i"><use href="#i-music"/></svg>{{Medya||Media}}</span>
+            </div>
+            <div class="ph-sheet" id="ph-sheet" data-sheet="notes" hidden>
+              <p class="ph-sheet-title">{{Konuşmacı Notları||Speaker Notes}}</p>
+              <p class="ph-sheet-text" data-note-text>{{Kendini tanıt. Konuşma on dakika sürecek.||Introduce yourself. The talk will take ten minutes.}}</p>
+              <button class="ph-sheet-close" type="button" data-cmd="notes">{{Kapat||Close}}</button>
+            </div>
+            <div class="ph-sheet" id="ph-grid" data-sheet="goto" hidden>
+              <p class="ph-sheet-title">{{Slayta git||Go to slide}}</p>
+              <div class="ph-grid" data-grid></div>
+              <button class="ph-sheet-close" type="button" data-cmd="goto">{{Kapat||Close}}</button>
+            </div>
+          </div>
+        </div>
+        <p class="sr" id="hero-live" aria-live="polite" data-live="{{Slayt %n / %t||Slide %n of %t}}" data-ended="{{Gösteri bitti||The show has ended}}"></p>
+      </div>
+      <p class="stage-hint">{{Telefondaki düğmelere bas.||Press the buttons on the phone.}}<span class="hint-keys"> {{Slayta tıklayınca <kbd>←</kbd> ve <kbd>→</kbd> tuşları da çalışır.||Click the slide and <kbd>←</kbd> and <kbd>→</kbd> work too.}}</span></p>
+    </div>
+  </section>
