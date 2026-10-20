@@ -57,6 +57,13 @@ pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
+# The laser overlay runs as its own process (GDK_BACKEND=x11); see
+# overlay/laser_overlay.cc. Installed into the bundle's lib/ directory.
+add_executable(quickremote_overlay "overlay/laser_overlay.cc")
+apply_standard_settings(quickremote_overlay)
+target_link_libraries(quickremote_overlay PRIVATE PkgConfig::GTK)
+add_dependencies(${BINARY_NAME} quickremote_overlay)
+
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
 
@@ -98,6 +105,9 @@ install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}
   COMPONENT Runtime)
 
 install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+
+install(TARGETS quickremote_overlay RUNTIME DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
 foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
