@@ -41,6 +41,9 @@ class SettingsProvider extends ChangeNotifier {
   AppColorTheme _colorTheme = AppColorTheme.cobalt;
   ThemeMode _themeMode = ThemeMode.system;
 
+  // The color theme goes to the watch too (Sunset, light only, as Cobalt)
+  bool _watchUsesTheme = true;
+
   // The program the user marked per PC (its address) in the remote's program
   // sheet. It only names the program while no show runs; the PC is not told.
   Map<String, String> _presenterByPc = {};
@@ -67,6 +70,7 @@ class SettingsProvider extends ChangeNotifier {
   AppLanguage get language => _language;
   AppColorTheme get colorTheme => _colorTheme;
   ThemeMode get themeMode => _themeMode;
+  bool get watchUsesTheme => _watchUsesTheme;
 
   /// The mode the app is in: Cobalt's choice, or the theme's own look.
   ThemeMode get effectiveThemeMode => _colorTheme.followsMode ? _themeMode : _colorTheme.fixedMode;
@@ -94,6 +98,7 @@ class SettingsProvider extends ChangeNotifier {
       (m) => m.name == prefs.getString('theme_mode'),
       orElse: () => ThemeMode.system,
     );
+    _watchUsesTheme = prefs.getBool('watch_uses_theme') ?? true;
     final presenters = prefs.getString('presenter_by_pc');
     if (presenters != null) {
       try {
@@ -239,6 +244,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme_mode', mode.name);
+  }
+
+  Future<void> setWatchUsesTheme(bool value) async {
+    _watchUsesTheme = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('watch_uses_theme', value);
   }
 
   Future<void> setPresenterFor(String pc, String presenter) async {

@@ -22,6 +22,7 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import com.quickremote.wear.remote.WireCommands
+import com.quickremote.wear.ui.theme.WearTheme
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -70,6 +71,14 @@ class PhoneLink(context: Context) :
 
     private val _state = MutableStateFlow<PhoneState>(PhoneState.Checking)
     val state: StateFlow<PhoneState> = _state.asStateFlow()
+
+    private val _theme = MutableStateFlow(WearTheme.stored(this.context))
+
+    /**
+     * The color theme: the stored one, replaced and stored when the phone
+     * names another, and kept while the phone is away or names none.
+     */
+    val theme: StateFlow<WearTheme> = _theme.asStateFlow()
 
     private val _events = MutableSharedFlow<LinkEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<LinkEvent> = _events.asSharedFlow()
@@ -187,9 +196,11 @@ class PhoneLink(context: Context) :
                     running = map.getBoolean(WearProtocol.KEY_RUNNING, false),
                     current = map.getInt(WearProtocol.KEY_CURRENT, 0),
                     total = map.getInt(WearProtocol.KEY_TOTAL, 0),
+                    laserAnywhere = map.getBoolean(WearProtocol.KEY_LASER_ANYWHERE, false),
                 )
             },
             pointer = Pointer.of(map.getString(WearProtocol.KEY_POINTER)),
+            theme = map.getString(WearProtocol.KEY_THEME),
             duration = if (map.containsKey(WearProtocol.KEY_DURATION)) map.getInt(WearProtocol.KEY_DURATION) else null,
             clock = if (map.containsKey(WearProtocol.KEY_TIMER_TARGET)) {
                 TalkClock(
@@ -206,6 +217,11 @@ class PhoneLink(context: Context) :
 
     private fun publish() {
         _state.value = PhoneState.of(reachable, report, silent = unanswered > SILENT_AFTER)
+        val theme = WearTheme.ofWire(report?.theme)
+        if (theme != null && theme != _theme.value) {
+            WearTheme.store(context, theme)
+            _theme.value = theme
+        }
     }
 
     override fun onMessageReceived(event: MessageEvent) {

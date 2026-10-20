@@ -3,19 +3,18 @@ package com.quickremote.wear.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.ambient.AmbientLifecycleObserver
 import com.quickremote.wear.QuickRemoteWearApp
 import com.quickremote.wear.ui.theme.QuickRemoteTheme
-import com.quickremote.wear.ui.theme.WearTheme
 
 class MainActivity : ComponentActivity() {
     private val app get() = application as QuickRemoteWearApp
 
     /** The screen is dimmed (always-on display): the remote shows its ambient screen. */
     private val ambient = mutableStateOf(false)
-
-    private val theme = mutableStateOf(WearTheme.COBALT)
 
     // With this the remote stays in front while the screen is dimmed, on
     // watches with the always-on display on, instead of the watch face.
@@ -35,11 +34,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(ambientObserver)
-        theme.value = WearTheme.stored(this)
         setContent {
-            // Where the presenter picks the theme is still to be decided; the
-            // stored one (the brand's cobalt until then) is used.
-            QuickRemoteTheme(theme.value) {
+            // The phone picks the theme (its "use on the watch" switch); the
+            // last one it named is stored, the brand's cobalt until then.
+            val theme by app.phone.theme.collectAsStateWithLifecycle()
+            QuickRemoteTheme(theme) {
                 WearApp(app.phone, ambient.value)
             }
         }
