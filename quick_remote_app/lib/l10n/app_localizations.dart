@@ -182,6 +182,12 @@ abstract class AppLocalizations {
   /// **'Slayt {slide} önizlemesi'**
   String slidePreviewLabel(int slide);
 
+  /// No description provided for @screenPreviewLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayarın ekranı'**
+  String get screenPreviewLabel;
+
   /// No description provided for @settingsLanguageTitle.
   ///
   /// In tr, this message translates to:
@@ -500,6 +506,18 @@ abstract class AppLocalizations {
   /// **'Geçmişten Sil'**
   String get homeRemoveFromHistory;
 
+  /// No description provided for @launchNoRecentPc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlanılacak bir PC henüz yok. Önce QR kodla ya da PIN ile bir kez bağlanın.'**
+  String get launchNoRecentPc;
+
+  /// No description provided for @launchPcNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} ağda bulunamadı. QuickRemote PC açık mı?'**
+  String launchPcNotFound(String name);
+
   /// No description provided for @unknownPc.
   ///
   /// In tr, this message translates to:
@@ -752,6 +770,18 @@ abstract class AppLocalizations {
   /// **'Bitir'**
   String get actionEnd;
 
+  /// Replaces Start while a PDF viewer or a browser is in front on the PC: START puts it in full screen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran'**
+  String get actionFullScreen;
+
+  /// Shown instead of 'no presentation open' while a PDF viewer (front = pdf) or a browser (front = browser) is in front on the PC.
+  ///
+  /// In tr, this message translates to:
+  /// **'{front, select, browser{Tarayıcı önde · yalnız sayfa geçişi ve tam ekran} other{PDF açık · yalnız sayfa geçişi ve tam ekran}}'**
+  String viewerInFront(String front);
+
   /// No description provided for @blackScreen.
   ///
   /// In tr, this message translates to:
@@ -877,6 +907,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tüm çizimleri temizle'**
   String get clearInkTooltip;
+
+  /// No description provided for @clearInkUndoTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm çizimleri temizle; basılı tutunca son çizgiyi geri alır'**
+  String get clearInkUndoTooltip;
+
+  /// No description provided for @toolSpotlight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Spot ışığı'**
+  String get toolSpotlight;
+
+  /// No description provided for @toolZoom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Büyüteç'**
+  String get toolZoom;
+
+  /// No description provided for @laserStyleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lazer türü'**
+  String get laserStyleTitle;
+
+  /// No description provided for @laserStyleSpotlightNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Spot ışığında ekran kararır, parmağınızın altı aydınlık kalır.'**
+  String get laserStyleSpotlightNote;
 
   /// No description provided for @toolLaser.
   ///
@@ -2119,6 +2179,89 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gün Batımı'**
   String get themeSunset;
+
+  /// No description provided for @themeWatchHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat'**
+  String get themeWatchHeader;
+
+  /// No description provided for @themeWatchTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saatte de kullan'**
+  String get themeWatchTitle;
+
+  /// No description provided for @themeWatchSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote saat uygulaması bu renk temasını alır.'**
+  String get themeWatchSubtitle;
+
+  /// No description provided for @themeWatchSunsetNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat hep koyu: Gün Batımı saatte Kobalt görünür.'**
+  String get themeWatchSunsetNote;
+
+  /// Settings section header.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yardım'**
+  String get settingsSectionHelp;
+
+  /// No description provided for @settingsShareLogTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hata günlüğünü paylaş'**
+  String get settingsShareLogTitle;
+
+  /// No description provided for @settingsShareLogSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük yalnızca bu telefonda tutulur ve kendiliğinden hiçbir yere gönderilmez. PIN, eşleştirme kodu, notlar ve dosya yolları yazılmaz; IP adresleri ve cihaz adları yazılır.'**
+  String get settingsShareLogSubtitle;
+
+  /// No description provided for @settingsReportProblemTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sorun bildir'**
+  String get settingsReportProblemTitle;
+
+  /// No description provided for @settingsReportProblemSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'GitHub\'da yeni bir sorun sayfası açar; günlüğü oraya sen eklersin.'**
+  String get settingsReportProblemSubtitle;
+
+  /// No description provided for @logShareFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük paylaşılamadı.'**
+  String get logShareFailed;
+
+  /// No description provided for @logShareEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük henüz boş.'**
+  String get logShareEmpty;
+
+  /// No description provided for @issueOpenFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcı açılamadı.'**
+  String get issueOpenFailed;
+
+  /// No description provided for @issueBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote {version} (telefon)\nPlatform: {platform}\nBilgisayardaki programlar: {presenters}\nBluetooth hedefi: {btTarget}\n\nGünlüğü (Ayarlar → Hata günlüğünü paylaş) bu sayfaya ekleyebilirsin.'**
+  String issueBody(
+    String version,
+    String platform,
+    String presenters,
+    String btTarget,
+  );
 }
 
 class _AppLocalizationsDelegate

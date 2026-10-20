@@ -57,6 +57,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get screenPreviewLabel => 'Bilgisayarın ekranı';
+
+  @override
   String get settingsLanguageTitle => 'Dil';
 
   @override
@@ -238,6 +241,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeRemoveFromHistory => 'Geçmişten Sil';
 
   @override
+  String get launchNoRecentPc =>
+      'Bağlanılacak bir PC henüz yok. Önce QR kodla ya da PIN ile bir kez bağlanın.';
+
+  @override
+  String launchPcNotFound(String name) {
+    return '$name ağda bulunamadı. QuickRemote PC açık mı?';
+  }
+
+  @override
   String get unknownPc => 'Bilinmeyen PC';
 
   @override
@@ -375,6 +387,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get actionEnd => 'Bitir';
 
   @override
+  String get actionFullScreen => 'Tam ekran';
+
+  @override
+  String viewerInFront(String front) {
+    String _temp0 = intl.Intl.selectLogic(front, {
+      'browser': 'Tarayıcı önde · yalnız sayfa geçişi ve tam ekran',
+      'other': 'PDF açık · yalnız sayfa geçişi ve tam ekran',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get blackScreen => 'Siyah Ekran';
 
   @override
@@ -438,6 +462,23 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get clearInkTooltip => 'Tüm çizimleri temizle';
+
+  @override
+  String get clearInkUndoTooltip =>
+      'Tüm çizimleri temizle; basılı tutunca son çizgiyi geri alır';
+
+  @override
+  String get toolSpotlight => 'Spot ışığı';
+
+  @override
+  String get toolZoom => 'Büyüteç';
+
+  @override
+  String get laserStyleTitle => 'Lazer türü';
+
+  @override
+  String get laserStyleSpotlightNote =>
+      'Spot ışığında ekran kararır, parmağınızın altı aydınlık kalır.';
 
   @override
   String get toolLaser => 'Lazer';
@@ -1179,4 +1220,54 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get themeSunset => 'Gün Batımı';
+
+  @override
+  String get themeWatchHeader => 'Saat';
+
+  @override
+  String get themeWatchTitle => 'Saatte de kullan';
+
+  @override
+  String get themeWatchSubtitle =>
+      'QuickRemote saat uygulaması bu renk temasını alır.';
+
+  @override
+  String get themeWatchSunsetNote =>
+      'Saat hep koyu: Gün Batımı saatte Kobalt görünür.';
+
+  @override
+  String get settingsSectionHelp => 'Yardım';
+
+  @override
+  String get settingsShareLogTitle => 'Hata günlüğünü paylaş';
+
+  @override
+  String get settingsShareLogSubtitle =>
+      'Günlük yalnızca bu telefonda tutulur ve kendiliğinden hiçbir yere gönderilmez. PIN, eşleştirme kodu, notlar ve dosya yolları yazılmaz; IP adresleri ve cihaz adları yazılır.';
+
+  @override
+  String get settingsReportProblemTitle => 'Sorun bildir';
+
+  @override
+  String get settingsReportProblemSubtitle =>
+      'GitHub\'da yeni bir sorun sayfası açar; günlüğü oraya sen eklersin.';
+
+  @override
+  String get logShareFailed => 'Günlük paylaşılamadı.';
+
+  @override
+  String get logShareEmpty => 'Günlük henüz boş.';
+
+  @override
+  String get issueOpenFailed => 'Tarayıcı açılamadı.';
+
+  @override
+  String issueBody(
+    String version,
+    String platform,
+    String presenters,
+    String btTarget,
+  ) {
+    return '**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote $version (telefon)\nPlatform: $platform\nBilgisayardaki programlar: $presenters\nBluetooth hedefi: $btTarget\n\nGünlüğü (Ayarlar → Hata günlüğünü paylaş) bu sayfaya ekleyebilirsin.';
+  }
 }

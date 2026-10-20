@@ -39,7 +39,7 @@ class _MediaControlViewState extends State<MediaControlView> {
     final ws = widget.ws;
     final show = ShowInfo.of(ws);
     // Without a slideshow the PC ignores slide media.
-    final slideMedia = ws.isConnected && show.running;
+    final slideMedia = ws.isConnected && show.media;
     const padding = EdgeInsets.fromLTRB(
       AppSpace.page,
       AppSpace.xxs,
@@ -113,10 +113,10 @@ class _MediaControlViewState extends State<MediaControlView> {
                       const SizedBox(height: AppSpace.sm),
                       SlideMediaPanel(
                         slide: ws.currentSlide,
-                        hasMedia: show.running && ws.pptHasMedia,
+                        hasMedia: show.media && ws.pptHasMedia,
                         isPlaying: ws.pptIsMediaPlaying,
                         playStateKnown: !show.windowsWps,
-                        canRewind: !show.windowsWps,
+                        canRewind: show.rewind,
                         onPlayPause: slideMedia
                             ? () => _send(RemoteCommands.mediaPlayPause)
                             : null,

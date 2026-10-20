@@ -53,6 +53,10 @@ class _Shown {
   Uint8List? image;
   Uint8List? next;
   bool running = false;
+
+  /// The PC's screen instead of a slide (a full-screen PDF, a show the PC
+  /// cannot read): no number, no next slide, no notes.
+  bool screen = false;
 }
 
 class _PresenterViewScreenState extends State<PresenterViewScreen> {
@@ -72,11 +76,13 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
         ..current = ws.currentSlide
         ..total = ws.totalSlides
         ..notes = ws.slideNotes.trim()
-        ..image = ws.currentSlideImage
+        ..screen = ws.screenImage != null
+        ..image = ws.screenImage ?? ws.currentSlideImage
         ..next = ws.nextSlideImage
         ..running = ws.isPptRunning;
     }
-    final canSend = connected && _shown.running;
+    // A viewer in front turns its pages with Next and Previous too.
+    final canSend = connected && (_shown.running || _shown.screen);
     final landscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
@@ -84,6 +90,7 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
       slide: _shown.current,
       image: _shown.image,
       radius: AppRadius.md,
+      label: _shown.screen ? context.l10n.screenPreviewLabel : null,
     );
     final keys = _Keys(
       onPrev: canSend ? () => _send(RemoteCommands.prev) : null,
@@ -103,9 +110,13 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    nextUp,
-                    const SizedBox(height: AppSpace.sm),
-                    Expanded(child: notes),
+                    if (_shown.screen)
+                      const Spacer()
+                    else ...[
+                      nextUp,
+                      const SizedBox(height: AppSpace.sm),
+                      Expanded(child: notes),
+                    ],
                     const SizedBox(height: AppSpace.sm),
                     SizedBox(height: 88, child: keys),
                   ],
@@ -118,9 +129,13 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
             children: [
               current,
               const SizedBox(height: AppSpace.sm),
-              nextUp,
-              const SizedBox(height: AppSpace.sm),
-              Expanded(child: notes),
+              if (_shown.screen)
+                const Spacer()
+              else ...[
+                nextUp,
+                const SizedBox(height: AppSpace.sm),
+                Expanded(child: notes),
+              ],
               const SizedBox(height: AppSpace.sm),
               SizedBox(height: 120, child: keys),
             ],
@@ -140,7 +155,7 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
             children: [
               _TopBar(shown: _shown, timer: widget.timer),
               Reveal(
-                child: connected && !_shown.running
+                child: connected && !_shown.running && !_shown.screen
                     ? Padding(
                         padding: const EdgeInsets.only(bottom: AppSpace.sm),
                         child: InlineAlert(
@@ -176,6 +191,32 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final total = shown.total > 0 ? '${shown.total}' : '?';
+    if (shown.screen) {
+      return SizedBox(
+        height: 56,
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: Icon(Icons.arrow_back_rounded, color: p.textPrimary),
+            ),
+            const SizedBox(width: AppSpace.xs),
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  context.l10n.screenPreviewLabel,
+                  style: AppType.title.copyWith(color: p.textPrimary, fontSize: 18),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            PresentationTimer(controller: timer),
+          ],
+        ),
+      );
+    }
     return SizedBox(
       height: 56,
       child: Row(

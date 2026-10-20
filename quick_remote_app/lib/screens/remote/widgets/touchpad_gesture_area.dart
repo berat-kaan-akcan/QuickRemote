@@ -23,6 +23,9 @@ class TouchpadGestureArea extends StatefulWidget {
   /// False while no slideshow runs (see [TouchpadSurface.enabled]).
   final bool enabled;
 
+  /// What a touch sends for the laser: MODE_LASER, or MODE_SPOTLIGHT.
+  final String laserCommand;
+
   const TouchpadGestureArea({
     super.key,
     required this.sensitivity,
@@ -33,6 +36,7 @@ class TouchpadGestureArea extends StatefulWidget {
     this.laserLabel,
     this.laserIcon,
     this.enabled = true,
+    this.laserCommand = RemoteCommands.modeLaser,
   });
 
   @override
@@ -97,7 +101,7 @@ class _TouchpadGestureAreaState extends State<TouchpadGestureArea> with SingleTi
     } else if (_activeTool == DrawTool.eraser) {
       widget.onSendCommand(RemoteCommands.modeEraser);
     } else if (_activeTool == DrawTool.laser) {
-      widget.onSendCommand(RemoteCommands.modeLaser);
+      widget.onSendCommand(widget.laserCommand);
     }
 
     Future.delayed(const Duration(milliseconds: 150), () {

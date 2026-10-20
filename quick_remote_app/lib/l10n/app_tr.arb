@@ -21,6 +21,7 @@
       }
     }
   },
+  "screenPreviewLabel": "Bilgisayarın ekranı",
   "settingsLanguageTitle": "Dil",
   "languageSystem": "Sistem dili",
   "@languageSystem": {
@@ -105,6 +106,15 @@
   "homeRescan": "Yeniden Tara",
   "homeRecent": "Son Bağlanılanlar",
   "homeRemoveFromHistory": "Geçmişten Sil",
+  "launchNoRecentPc": "Bağlanılacak bir PC henüz yok. Önce QR kodla ya da PIN ile bir kez bağlanın.",
+  "launchPcNotFound": "{name} ağda bulunamadı. QuickRemote PC açık mı?",
+  "@launchPcNotFound": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "unknownPc": "Bilinmeyen PC",
   "verifyTitle": "Güvenlik Kodunu Karşılaştırın",
   "verifyConfirm": "Kodlar Aynı, Bağlan",
@@ -171,6 +181,19 @@
     }
   },
   "actionEnd": "Bitir",
+  "actionFullScreen": "Tam ekran",
+  "@actionFullScreen": {
+    "description": "Replaces Start while a PDF viewer or a browser is in front on the PC: START puts it in full screen."
+  },
+  "viewerInFront": "{front, select, browser{Tarayıcı önde · yalnız sayfa geçişi ve tam ekran} other{PDF açık · yalnız sayfa geçişi ve tam ekran}}",
+  "@viewerInFront": {
+    "description": "Shown instead of 'no presentation open' while a PDF viewer (front = pdf) or a browser (front = browser) is in front on the PC.",
+    "placeholders": {
+      "front": {
+        "type": "String"
+      }
+    }
+  },
   "blackScreen": "Siyah Ekran",
   "whiteScreen": "Beyaz Ekran",
   "actionPrev": "Önceki",
@@ -199,6 +222,11 @@
   },
   "clearInk": "Temizle",
   "clearInkTooltip": "Tüm çizimleri temizle",
+  "clearInkUndoTooltip": "Tüm çizimleri temizle; basılı tutunca son çizgiyi geri alır",
+  "toolSpotlight": "Spot ışığı",
+  "toolZoom": "Büyüteç",
+  "laserStyleTitle": "Lazer türü",
+  "laserStyleSpotlightNote": "Spot ışığında ekran kararır, parmağınızın altı aydınlık kalır.",
   "toolLaser": "Lazer",
   "unknownMedia": "Bilinmeyen Medya",
   "noMedia": "Medya Yok",
@@ -620,5 +648,37 @@
   "themeHighContrast": "Yüksek kontrast",
   "themeMint": "Nane",
   "themeViolet": "Mor",
-  "themeSunset": "Gün Batımı"
+  "themeSunset": "Gün Batımı",
+  "themeWatchHeader": "Saat",
+  "themeWatchTitle": "Saatte de kullan",
+  "themeWatchSubtitle": "QuickRemote saat uygulaması bu renk temasını alır.",
+  "themeWatchSunsetNote": "Saat hep koyu: Gün Batımı saatte Kobalt görünür.",
+  "settingsSectionHelp": "Yardım",
+  "@settingsSectionHelp": {
+    "description": "Settings section header."
+  },
+  "settingsShareLogTitle": "Hata günlüğünü paylaş",
+  "settingsShareLogSubtitle": "Günlük yalnızca bu telefonda tutulur ve kendiliğinden hiçbir yere gönderilmez. PIN, eşleştirme kodu, notlar ve dosya yolları yazılmaz; IP adresleri ve cihaz adları yazılır.",
+  "settingsReportProblemTitle": "Sorun bildir",
+  "settingsReportProblemSubtitle": "GitHub'da yeni bir sorun sayfası açar; günlüğü oraya sen eklersin.",
+  "logShareFailed": "Günlük paylaşılamadı.",
+  "logShareEmpty": "Günlük henüz boş.",
+  "issueOpenFailed": "Tarayıcı açılamadı.",
+  "issueBody": "**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote {version} (telefon)\nPlatform: {platform}\nBilgisayardaki programlar: {presenters}\nBluetooth hedefi: {btTarget}\n\nGünlüğü (Ayarlar → Hata günlüğünü paylaş) bu sayfaya ekleyebilirsin.",
+  "@issueBody": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "platform": {
+        "type": "String"
+      },
+      "presenters": {
+        "type": "String"
+      },
+      "btTarget": {
+        "type": "String"
+      }
+    }
+  }
 }

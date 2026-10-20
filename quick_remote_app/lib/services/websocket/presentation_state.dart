@@ -49,7 +49,16 @@ class PresentationState {
     pcName = cleanName(authReply['name']);
     platform = authReply['platform'] as String?;
     previewsSupported = authReply['previews'] == true;
+    toolsAnywhere = authReply['overlay'] == true;
+    zoomAvailable = authReply['zoom'] == true;
   }
+
+  /// The PC draws the laser on its own overlay, so it works outside a
+  /// slideshow too (`overlay` in its auth reply).
+  bool toolsAnywhere = false;
+
+  /// The PC's overlay has a magnifier (MODE_ZOOM; `zoom`, Windows).
+  bool zoomAvailable = false;
 
   // ── Slide pictures (SlideImageFrame) ──
 
@@ -70,13 +79,22 @@ class PresentationState {
   final LinkedHashMap<int, Uint8List> _medium = LinkedHashMap();
   final LinkedHashMap<int, Uint8List> _thumbnails = LinkedHashMap();
 
+  /// The PC's picture of its screen where no slide is known (a PDF viewer
+  /// or browser in full screen, a show the PC cannot read): one, the last,
+  /// whatever is in front; [screenImage] shows it only where it fits.
+  Uint8List? rawScreenImage;
+
   /// Keeps [frame] when it belongs to the deck on screen; false otherwise.
   bool addImage(SlideImageFrame frame) {
+    if (frame.kind == SlideImageKind.screen) {
+      rawScreenImage = frame.jpeg;
+      return true;
+    }
     if (deck != null && frame.deck != deck) return false;
     final (images, max) = switch (frame.kind) {
       SlideImageKind.current => (_large, maxLargeImages),
       SlideImageKind.next => (_medium, maxMediumImages),
-      SlideImageKind.thumbnail => (_thumbnails, maxThumbnails),
+      SlideImageKind.thumbnail || SlideImageKind.screen => (_thumbnails, maxThumbnails),
     };
     images.remove(frame.slide);
     images[frame.slide] = frame.jpeg;
@@ -99,6 +117,15 @@ class PresentationState {
 
   /// A thumbnail for the slide list (a larger picture does as well).
   Uint8List? thumbnail(int slide) => _thumbnails[slide] ?? _medium[slide] ?? _large[slide];
+
+  /// What is on the PC's screen while a viewer is in front (no show), or a
+  /// show runs whose slide the PC cannot read; null otherwise.
+  Uint8List? get screenImage {
+    final front = caps?.front;
+    final viewer = !isPptRunning && FrontWindow.isViewer(front);
+    final unreadable = isPptRunning && currentSlide == 0 && totalSlides == 0;
+    return viewer || unreadable ? rawScreenImage : null;
+  }
 
   bool get hasSlideImages => _large.isNotEmpty || _medium.isNotEmpty || _thumbnails.isNotEmpty;
 
@@ -154,14 +181,35 @@ class PresentationState {
     systemVolume = -1;
     systemMuted = false;
     deck = null;
+    caps = null;
     clearImages();
+    rawScreenImage = null;
   }
 
   bool pptHasMedia = false;
   bool pptIsMediaPlaying = false;
 
+  /// What is in front on the PC and which tools work there (SLIDE_STATE's
+  /// `front` and `caps`); null from a PC that does not send them, which
+  /// leaves the remote as it was before them.
+  PresenterCaps? caps;
+
+  /// Takes [message]'s `caps` and `front` (a SLIDE_STATE, or the STATUS and
+  /// empty SLIDE_STATE that say no show runs). With [keep], a message
+  /// without `caps` keeps the ones there are: the empty SLIDE_STATE right
+  /// after the STATUS that may have carried them.
+  void updateCaps(Map<String, dynamic> message, {bool keep = false}) {
+    final next = PresenterCaps.fromJson(message);
+    if (next != null || !keep) caps = next;
+    // Another kind of window in front: the screen picture is of something
+    // else (the PC sends a new one when a viewer comes back).
+    final front = caps?.front;
+    if (!FrontWindow.isViewer(front) && front != FrontWindow.show) rawScreenImage = null;
+  }
+
   void updateFromSlideState(Map<String, dynamic> message) {
     isPptRunning = true;
+    updateCaps(message);
     final running = message['presenter'];
     if (running is String) presenter = running;
     final newSlide = message['current'] as int? ?? 0;
@@ -201,6 +249,7 @@ class PresentationState {
     final state = message['state'] as String?;
     if (state == 'POWERPOINT_NOT_RUNNING') {
       isPptRunning = false;
+      updateCaps(message);
     } else if (state == 'VOLUME_CHANGED') {
       final vol = message['volume'];
       final mut = message['muted'];

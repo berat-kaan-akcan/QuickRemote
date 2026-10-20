@@ -33,6 +33,21 @@ class DrawToolBar extends StatelessWidget {
   /// False fades every key and ignores taps (no slideshow runs).
   final bool enabled;
 
+  /// The tools that work now; the others are faded and ignore taps. Null:
+  /// all of them (when [enabled]).
+  final Set<DrawTool>? available;
+
+  /// False fades Clear (the PC cannot erase all ink now).
+  final bool clearEnabled;
+
+  /// The laser has a choice too (laser or spotlight, from a PC that draws
+  /// them itself): tapping it again or holding it calls
+  /// [onColorPickerRequested] for it.
+  final bool laserHasOptions;
+
+  /// Holding Clear takes back the last stroke; null: it does not.
+  final VoidCallback? onUndo;
+
   const DrawToolBar({
     super.key,
     required this.activeTool,
@@ -50,6 +65,10 @@ class DrawToolBar extends StatelessWidget {
     this.laserColor,
     this.inks = const {},
     this.enabled = true,
+    this.available,
+    this.clearEnabled = true,
+    this.laserHasOptions = false,
+    this.onUndo,
   });
 
   @override
@@ -87,9 +106,11 @@ class DrawToolBar extends StatelessWidget {
     final label = _label(context, tool);
     final isActive = activeTool == tool;
     final hasColors = tool == DrawTool.pen || tool == DrawTool.highlighter;
-    final canPickColor = hasColors && onColorPickerRequested != null;
+    final hasOptions = hasColors || (tool == DrawTool.laser && laserHasOptions);
+    final canPickColor = hasOptions && onColorPickerRequested != null;
     final activeColor = tool == DrawTool.laser ? laserColor ?? tool.colorIn(p) : tool.colorIn(p);
     final ink = hasColors ? inks[tool] : null;
+    final enabled = this.enabled && (available?.contains(tool) ?? true);
 
     return Expanded(
       child: Pressable(
@@ -129,10 +150,11 @@ class DrawToolBar extends StatelessWidget {
 
   Widget _buildClearButton(BuildContext context) {
     final p = context.palette;
+    final enabled = this.enabled && clearEnabled;
     return Expanded(
       child: Pressable(
         semanticLabel: context.l10n.clearInk,
-        tooltip: context.l10n.clearInkTooltip,
+        tooltip: onUndo == null ? context.l10n.clearInkTooltip : context.l10n.clearInkUndoTooltip,
         pressedScale: 0.92,
         dimWhenDisabled: false,
         borderRadius: AppRadius.all(AppRadius.md),
@@ -141,6 +163,12 @@ class DrawToolBar extends StatelessWidget {
             : () {
                 HapticFeedback.mediumImpact();
                 onClear();
+              },
+        onLongPress: !enabled || onUndo == null
+            ? null
+            : () {
+                HapticFeedback.heavyImpact();
+                onUndo!();
               },
         child: _ToolKey(
           icon: Icons.cleaning_services_rounded,

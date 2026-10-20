@@ -41,6 +41,23 @@ Map<String, dynamic> slideState(int current, {int total = 10, int? deck = 7}) =>
       'deck': ?deck,
     };
 
+SlideImageFrame screenFrame([int marker = 1]) => SlideImageFrame(
+  kind: SlideImageKind.screen,
+  slide: 0,
+  deck: 0,
+  width: 1280,
+  height: 720,
+  jpeg: Uint8List.fromList([0xFF, 0xD8, 0xEE, marker]),
+);
+
+/// No show; [front] in front (what the PC sends then).
+Map<String, dynamic> noShow(String front) => {
+  'type': 'SLIDE_STATE',
+  'data': null,
+  'front': front,
+  'caps': <String>[],
+};
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -97,6 +114,28 @@ void main() {
       expect(s.imageOf(15), isNotNull);
     });
 
+    test('the screen picture shows while a viewer is in front', () {
+      final s = PresentationState()..updateCaps(noShow(FrontWindow.pdf));
+      expect(s.addImage(screenFrame()), isTrue);
+      expect(s.screenImage, [0xFF, 0xD8, 0xEE, 1]);
+      expect(s.hasSlideImages, isFalse, reason: 'no slide picture');
+      s.updateCaps(noShow(FrontWindow.browser));
+      expect(s.screenImage, isNotNull);
+      s.updateCaps(noShow(FrontWindow.other));
+      expect(s.screenImage, isNull);
+      s.updateCaps(noShow(FrontWindow.pdf));
+      expect(s.screenImage, isNull, reason: 'the old picture is of something else');
+    });
+
+    test('and while a show the PC cannot read runs, not in a readable one', () {
+      final s = PresentationState()
+        ..updateFromSlideState({...slideState(0, total: 0), 'front': FrontWindow.show, 'caps': <String>[]})
+        ..addImage(screenFrame());
+      expect(s.screenImage, isNotNull);
+      s.updateFromSlideState({...slideState(3), 'front': FrontWindow.show, 'caps': <String>[]});
+      expect(s.screenImage, isNull);
+    });
+
     test('the end of the show forgets the pictures', () {
       final s = state()..addImage(frame(SlideImageKind.current, 3));
       s.reset();
@@ -145,6 +184,31 @@ void main() {
       expect(ws.sent, [RemoteCommands.slidePreview(false)]);
       expect(ws.currentSlideImage, isNull);
       expect(ws.hasSlideImages, isFalse);
+    });
+  });
+
+  group('screen picture', () {
+    _Ws viewer() => _Ws()
+      ..handleMessage({'type': 'auth', 'status': 'ok', 'previews': true})
+      ..handleMessage({'type': 'STATUS', 'state': 'POWERPOINT_NOT_RUNNING', 'front': FrontWindow.pdf, 'caps': <String>[]})
+      ..handleMessage(noShow(FrontWindow.pdf))
+      ..handleImage(screenFrame());
+
+    test('comes through the service, only with previews on', () {
+      final ws = viewer();
+      expect(ws.screenImage, isNotNull);
+      ws.setSlidePreview(false);
+      expect(ws.screenImage, isNull);
+    });
+
+    test('stays across the empty slide state that repeats "no show"', () {
+      final ws = viewer()..handleMessage(noShow(FrontWindow.pdf));
+      expect(ws.screenImage, [0xFF, 0xD8, 0xEE, 1]);
+    });
+
+    test('a newer one replaces it', () {
+      final ws = viewer()..handleImage(screenFrame(2));
+      expect(ws.screenImage, [0xFF, 0xD8, 0xEE, 2]);
     });
   });
 
@@ -221,6 +285,18 @@ void main() {
       expect(SlideCard.showsPreview(withShow(), ShowInfo.of(withShow())), isTrue);
       final noPicture = withShow(picture: false);
       expect(SlideCard.showsPreview(noPicture, ShowInfo.of(noPicture)), isFalse);
+    });
+
+    testWidgets('a full-screen PDF shows the PC\'s screen', (tester) async {
+      final ws = _Ws()
+        ..handleMessage({'type': 'auth', 'status': 'ok', 'previews': true})
+        ..handleMessage(noShow(FrontWindow.pdf));
+      await pumpCard(tester, ws);
+      expect(find.byType(SlideImage), findsNothing, reason: 'no picture yet');
+      ws.handleImage(screenFrame());
+      await pumpCard(tester, ws);
+      expect(find.byType(SlideImage), findsOneWidget);
+      expect(find.bySemanticsLabel("The PC's screen"), findsOneWidget);
     });
 
     testWidgets('a black screen covers the picture', (tester) async {

@@ -41,6 +41,9 @@ class _TouchpadViewState extends State<TouchpadView> {
   /// The tool whose colors (or note) show above the bar; null: none.
   DrawTool? _popoverFor;
 
+  /// What the laser is (from a PC whose overlay draws it).
+  LaserStyle _laserStyle = LaserStyle.laser;
+
   void _send(String command) {
     HapticFeedback.mediumImpact();
     widget.ws.sendCommand(command);
@@ -60,7 +63,21 @@ class _TouchpadViewState extends State<TouchpadView> {
               if (swatches[bgr] != null) tool: swatches[bgr]!,
           }
         : const <DrawTool, Color>{};
-    final popoverFor = show.running ? _popoverFor : null;
+    // Without a show the PC's overlay can still draw the laser and the ink;
+    // a PC that sends caps says which tools work, the others are faded.
+    final available = show.tools;
+    final tools = available.isNotEmpty;
+    // The picked tool, or the first that works when it does not.
+    final drawTool = available.contains(_drawTool) || !tools ? _drawTool : DrawTool.values.firstWhere(available.contains);
+    final popoverFor = tools && (_popoverFor == null || available.contains(_popoverFor)) ? _popoverFor : null;
+    // Only the PC's overlay has a spotlight and strokes to take back.
+    final overlay = show.spotlight || show.zoom;
+    final style =
+        (_laserStyle == LaserStyle.spotlight && !show.spotlight) || (_laserStyle == LaserStyle.zoom && !show.zoom)
+        ? LaserStyle.laser
+        : _laserStyle;
+    final laserLabel = style == LaserStyle.laser ? null : style.label(context);
+    final laserIcon = style == LaserStyle.laser ? null : style.icon;
 
     return ContentWidth(
       child: Padding(
@@ -78,7 +95,9 @@ class _TouchpadViewState extends State<TouchpadView> {
                   child: ShowToggleButton(
                     compact: true,
                     running: show.running,
-                    startLabel: context.l10n.actionStart,
+                    // START puts a PDF viewer or a browser in full screen.
+                    startLabel: show.viewer ? context.l10n.actionFullScreen : context.l10n.actionStart,
+                    startIcon: show.viewer ? Icons.fullscreen_rounded : Icons.play_arrow_rounded,
                     endLabel: context.l10n.actionEnd,
                     onTap: !connected
                         ? null
@@ -100,9 +119,12 @@ class _TouchpadViewState extends State<TouchpadView> {
             Expanded(
               child: TouchpadGestureArea(
                 sensitivity: _sensitivity,
-                drawTool: _drawTool,
+                drawTool: drawTool,
                 inks: inks,
-                enabled: show.running,
+                enabled: tools,
+                laserCommand: style.command,
+                laserLabel: laserLabel,
+                laserIcon: laserIcon,
                 onSendCommand: (cmd) => widget.ws.sendCommand(cmd),
                 onSendTouchOrLaser: (type, dx, dy) =>
                     widget.ws.sendTouchOrLaser(type, dx, dy),
@@ -113,9 +135,25 @@ class _TouchpadViewState extends State<TouchpadView> {
               child: popoverFor == null
                   ? null
                   : ToolPopover(
-                      // The pen is the second of five keys, the highlighter the third.
-                      anchor: popoverFor == DrawTool.pen ? 0.3 : 0.5,
-                      child: show.colorsAvailable
+                      // The laser is the first of five keys, the pen the
+                      // second, the highlighter the third.
+                      anchor: switch (popoverFor) {
+                        DrawTool.laser => 0.1,
+                        DrawTool.pen => 0.3,
+                        _ => 0.5,
+                      },
+                      child: popoverFor == DrawTool.laser
+                          ? LaserStylePicker(
+                              style: style,
+                              spotlight: show.spotlight,
+                              zoom: show.zoom,
+                              onPicked: (value) => setState(() {
+                                _laserStyle = value;
+                                _popoverFor = null;
+                              }),
+                              onClose: () => setState(() => _popoverFor = null),
+                            )
+                          : show.colorsAvailable
                           ? InkPicker(
                               tool: popoverFor,
                               selected: widget.inks[popoverFor],
@@ -135,9 +173,17 @@ class _TouchpadViewState extends State<TouchpadView> {
                     ),
             ),
             DrawToolBar(
-              activeTool: _drawTool,
+              activeTool: drawTool,
               inks: inks,
-              enabled: show.running,
+              enabled: tools,
+              available: available,
+              clearEnabled: show.eraseAll,
+              laserHasOptions: overlay,
+              laserLabel: laserLabel,
+              laserIcon: laserIcon,
+              onUndo: show.undo
+                  ? () => widget.ws.sendCommand(RemoteCommands.undoInk)
+                  : null,
               onToolSelected: (tool) => setState(() {
                 _drawTool = tool;
                 _popoverFor = null;
