@@ -101,6 +101,76 @@ for (const c of combos) {
   await ctx.close();
 }
 
+
+// The live demos: press things and see that the page answers.
+async function interact(lang) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
+  await ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}/${lang === 'en' ? 'en/' : ''}`, { waitUntil: 'networkidle' });
+  const t = (name, ok) => { if (!ok) note(`${lang}: demo failed: ${name}`); };
+  const text = (sel) => page.$eval(sel, (e) => e.textContent.trim());
+  // hero
+  await page.click('.ph-next'); await page.click('.ph-next');
+  t('hero next', (await text('[data-cur]')) === '3');
+  await page.click('.ph-goto'); await page.click('.ph-cell[data-goto="4"]');
+  t('hero go to slide', (await text('[data-cur]')) === '5');
+  await page.click('[data-cmd="toggle"]');
+  t('hero end', await page.$eval('.ph', (e) => e.classList.contains('is-ended')));
+  await page.click('[data-cmd="toggle"]');
+  t('hero start', (await text('[data-cur]')) === '1');
+  await page.click('.ph-notes'); t('hero notes', await page.$eval('#ph-sheet', (e) => !e.hidden));
+  await page.keyboard.press('Escape');
+  // watch
+  const w = '[data-watch]';
+  await page.click('.w-next'); t('watch next', (await text('[data-wnum]')) === '2');
+  await page.click('[data-goto-page="tools"]'); t('watch tools page', await page.$eval('.wp-tools', (e) => !e.hidden));
+  await page.click('.wq-black', { position: { x: 25, y: 130 } }); t('watch black', await page.$eval('[data-wblank]', (e) => !e.hidden));
+  await page.click('[data-wblank]');
+  const box = await (await page.$('[data-wend]')).boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8); await page.mouse.down(); await page.waitForTimeout(1250); await page.mouse.up();
+  t('watch end by hold', await page.$eval('.wp-start', (e) => !e.hidden));
+  await page.click('[data-dur]'); await page.click('.w-start');
+  t('watch start', await page.$eval('.wp-remote', (e) => !e.hidden));
+  const nb = await (await page.$('.w-next')).boundingBox();
+  await page.mouse.move(nb.x + nb.width / 2, nb.y + nb.height / 2); await page.mouse.down(); await page.waitForTimeout(500);
+  t('watch held laser', await page.$eval('.wp-remote', (e) => e.classList.contains('is-laser')));
+  await page.mouse.up();
+  // themes
+  await page.click('.tp-card[data-theme="mint"]');
+  t('theme mint', await page.$eval('.phone', (e) => e.dataset.theme === 'mint') && await page.$eval('[data-watch]', (e) => e.dataset.theme === 'mint'));
+  await page.click('.tp-card[data-theme="sunset"]');
+  t('theme sunset on watch is cobalt', await page.$eval('[data-watch]', (e) => e.dataset.theme === 'cobalt'));
+  await page.click('.tp-card[data-theme="cobalt"]');
+  // overlay
+  await page.click('[data-ov="zoom"]'); await page.waitForTimeout(700);
+  const sc = await (await page.$('[data-ov-screen]')).boundingBox();
+  await page.mouse.move(sc.x + 200, sc.y + 150); await page.waitForTimeout(100);
+  t('overlay lens', await page.$eval('[data-ov-screen]', (e) => e.classList.contains('is-over')) && (await page.$eval('[data-lens-in]', (e) => e.children.length)) === 1);
+  await page.click('[data-ov="pen"]');
+  await page.mouse.move(sc.x + 100, sc.y + 100); await page.mouse.down(); await page.mouse.move(sc.x + 300, sc.y + 200, { steps: 6 }); await page.mouse.up();
+  const ink = await page.$eval('.ov-ink', (c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; });
+  t('overlay pen draws', ink);
+  await page.click('[data-ov="undo"]');
+  t('overlay undo', !(await page.$eval('.ov-ink', (c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; })));
+  await page.click('[data-ctx="video"]'); t('overlay context', await page.$eval('[data-ov-screen]', (e) => e.classList.contains('ctx-video')));
+  // goto, media, connect, desktop, install
+  await page.click('.gd-cell:nth-child(4)'); t('goto demo', (await text('[data-gd-foot]')).includes('4'));
+  await page.click('[data-media-cmd="play"]'); t('media play', await page.$eval('[data-media]', (e) => e.classList.contains('is-playing')));
+  await page.click('#tab-bt'); await page.click('[data-p="wps"]'); t('keymap wps', await page.$eval('[data-keymap]', (e) => e.dataset.prog === 'wps'));
+  await page.click('#tab-wifi'); await page.click('[data-pc-remove]'); t('pc remove phone', await page.$eval('[data-pc-none]', (e) => !e.hidden));
+  await page.click('[data-pc-hide]'); t('pc hide code', await page.$eval('[data-pc-pair]', (e) => e.hidden));
+  await page.click('[data-tray-server]'); t('tray off', await page.$eval('[data-tray]', (e) => e.dataset.state === 'off'));
+  await page.click('[data-look="dark"]'); t('site dark', await page.$eval('html', (e) => e.dataset.theme === 'dark'));
+  await page.click('[data-theme-btn]'); t('header button cycles', await page.$eval('html', (e) => e.dataset.theme === undefined));
+  await page.click('[data-copy]'); t('copy command', await page.$eval('[data-copy]', (e) => e.classList.contains('is-done')));
+  if (errors.length) note(`${lang}: demo errors ${errors}`);
+  await ctx.close();
+}
+for (const lang of ['tr', 'en']) await interact(lang);
+
 const tr = idsByLang.tr, en = idsByLang.en;
 if (tr && en) {
   if (JSON.stringify(tr.ids) !== JSON.stringify(en.ids)) note('ids differ between tr and en');

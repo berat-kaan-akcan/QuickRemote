@@ -1229,6 +1229,11 @@ input:focus-visible + .tp-track { outline: 3px solid var(--accent-text); outline
 .cmd .i { width: 1.25rem; height: 1.25rem; }
 .get-sub { font-size: .875rem; }
 
+/* Settings card: nothing clips in a narrow column. */
+.dk-card, .desktop-demo > * { min-width: 0; }
+.dk-card .seg-sm { flex-wrap: wrap; justify-self: start; max-width: 100%; }
+.dk-sw > span:last-child { min-width: 0; }
+
 /* ── Reduced motion: every duration to zero, loops stop ─────────────── */
 
 @media (prefers-reduced-motion: reduce) {
