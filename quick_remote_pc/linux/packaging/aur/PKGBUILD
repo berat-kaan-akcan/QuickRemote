@@ -1,0 +1,57 @@
+# Maintainer: Berat Kaan Akcan <beratkaanakcan@gmail.com>
+#
+# Repackages the release's "-noupdate" tarball: the same build as the other
+# tarball, but made with --dart-define=UPDATE_CHECK=false, since pacman updates
+# this package and the app must not point users at GitHub downloads.
+#
+# The release workflow (.github/workflows/release.yml) fills in _ver and the
+# checksum and leaves this file as its "aur-pkgbuild" artifact. To publish:
+# copy it and quickremote-pc.install into the AUR clone, then
+#   makepkg --printsrcinfo > .SRCINFO && git commit && git push
+# By hand: set _ver, reset pkgrel to 1, run updpkgsums, then the same.
+# Push only final releases: pacman would sort 0.2.0_beta.1 after 0.2.0.
+#
+# The project has no licence file yet (README: "kişisel kullanım amaçlıdır");
+# set license=() to its SPDX id once it has one.
+
+pkgname=quickremote-pc-bin
+_ver=0.1.0            # the release tag without its v, e.g. 0.2.0 or 0.2.0-beta.1
+pkgver=${_ver//-/_}   # pacman versions cannot hold "-"
+pkgrel=1
+pkgdesc='Computer side of QuickRemote: control LibreOffice Impress and WPS presentations from your phone'
+arch=('x86_64')
+url='https://github.com/berat-kaan-akcan/QuickRemote'
+license=('LicenseRef-QuickRemote')
+depends=('gtk3' 'libx11' 'libxi' 'python' 'hicolor-icon-theme')
+optdepends=(
+  'libreoffice: control Impress slideshows (libreoffice-fresh or libreoffice-still)'
+  'avahi: let phones find this computer on the network (mDNS)'
+  'polkit: the setup panel buttons that need the admin password'
+)
+provides=('quickremote-pc')
+conflicts=('quickremote-pc')
+options=('!strip' '!debug')
+install=quickremote-pc.install
+_tarball="quickremote-pc-${_ver}-linux-x64-noupdate.tar.gz"
+source=("${_tarball}::${url}/releases/download/v${_ver}/${_tarball}")
+sha256sums=('SKIP')
+
+package() {
+  local _app_id=com.quickremote.quick_remote_pc
+  cd "${srcdir}/quickremote-pc"
+
+  install -Dm644 "share/${_app_id}.desktop" "${pkgdir}/usr/share/applications/${_app_id}.desktop"
+  install -Dm644 "share/${_app_id}.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/${_app_id}.svg"
+
+  install -d "${pkgdir}/opt/quickremote-pc"
+  cp -a quick_remote_pc lib data "${pkgdir}/opt/quickremote-pc/"
+  install -d "${pkgdir}/usr/bin"
+  ln -s /opt/quickremote-pc/quick_remote_pc "${pkgdir}/usr/bin/quick_remote_pc"
+
+  # The /dev/uinput rule of share/install-uinput-rule.sh and LinuxSetup, as
+  # package files, so pacman removes them with the package.
+  install -d "${pkgdir}/usr/lib/udev/rules.d" "${pkgdir}/usr/lib/modules-load.d"
+  echo 'KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"' \
+    > "${pkgdir}/usr/lib/udev/rules.d/70-quickremote-uinput.rules"
+  echo uinput > "${pkgdir}/usr/lib/modules-load.d/quickremote-uinput.conf"
+}

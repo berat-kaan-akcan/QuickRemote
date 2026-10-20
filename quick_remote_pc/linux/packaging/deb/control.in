@@ -1,0 +1,19 @@
+Package: quickremote-pc
+Version: @VERSION@
+Architecture: amd64
+Maintainer: Berat Kaan Akcan <beratkaanakcan@gmail.com>
+Installed-Size: @SIZE@
+Depends: libc6, libstdc++6, libgtk-3-0, libx11-6, libxi6, python3
+Recommends: python3-uno, avahi-daemon, pkexec | policykit-1
+Suggests: libreoffice-impress
+Section: utils
+Priority: optional
+Homepage: https://github.com/berat-kaan-akcan/QuickRemote
+Description: QuickRemote PC: control presentations from your phone
+ The computer side of QuickRemote. The QuickRemote phone app connects to it
+ over the local network and controls LibreOffice Impress and WPS
+ Presentation slideshows (next and previous slide, laser, pen, black screen),
+ the mouse, media and volume.
+ .
+ Installing the package adds a udev rule that lets the logged-in user use
+ /dev/uinput (the virtual keyboard and mouse); removing it takes the rule away.
