@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts the system shows outside the app: the launcher's app shortcuts
+     (xml/shortcuts.xml, LaunchLink.kt) and the Quick Settings tile
+     (QuickTileService.kt). The app's own texts are in lib/l10n. -->
+<resources>
+    <string name="shortcut_connect">Connect: %1$s</string>
+    <string name="shortcut_bluetooth_short">Bluetooth remote</string>
+    <string name="shortcut_bluetooth_long">Open the Bluetooth remote</string>
+    <string name="shortcut_scan_short">Scan QR</string>
+    <string name="shortcut_scan_long">Scan the QR code on the PC</string>
+    <string name="tile_label" translatable="false">QuickRemote</string>
+    <string name="tile_no_pc">Connect to the last PC</string>
+</resources>
