@@ -149,14 +149,18 @@ class BrandTilePainter extends CustomPainter {
   final double progress;
 
   // Geometry in the units of the 512 px icon, as in brand/tools/draw_logo.py:
-  // the mark is drawn around (256, 260) and placed 1.12 times larger.
+  // the mark is drawn around the middle of its two keys and placed 1.12
+  // times larger.
   static const radius = 118.0;
-  static const _markCenter = Offset(256, 260);
+  static const _markCenter = Offset(233, 276);
   static const _markScale = 1.12;
   static const _prev = Rect.fromLTWH(70, 196, 100, 150);
   static const _next = Rect.fromLTWH(196, 158, 200, 236);
-  static const _laser = Offset(420, 116);
+  static const _laser = Offset(388, 166);
   static const _laserRadius = 28.0;
+
+  /// The Next key is cut away this far around the laser dot on its corner.
+  static const _laserGap = 10.0;
 
   static double _phase(double t, double from, double to) =>
       ((t - from) / (to - from)).clamp(0.0, 1.0);
@@ -202,8 +206,9 @@ class BrandTilePainter extends CustomPainter {
     canvas.scale(_markScale);
     canvas.translate(-_markCenter.dx, -_markCenter.dy);
     _paintPrev(canvas, Curves.easeOutCubic.transform(_phase(progress, 0, 0.4)));
-    _paintNext(canvas, _phase(progress, 0.15, 0.62));
-    _paintLaser(canvas, _phase(progress, 0.62, 1));
+    final laser = _phase(progress, 0.62, 1);
+    _paintNext(canvas, _phase(progress, 0.15, 0.62), laser);
+    _paintLaser(canvas, laser);
     canvas.restore();
 
     canvas.drawRRect(
@@ -263,8 +268,12 @@ class BrandTilePainter extends CustomPainter {
     });
   }
 
-  void _paintNext(Canvas canvas, double t) {
+  /// The Next key, its corner cut away for the laser dot as the dot comes
+  /// ([laser]).
+  void _paintNext(Canvas canvas, double t, double laser) {
     final pop = Curves.easeOutBack.transform(t);
+    final gap =
+        (_laserRadius + _laserGap) * Curves.easeOutBack.transform(laser);
     _appear(
       canvas,
       Curves.easeOut.transform(t),
@@ -272,6 +281,14 @@ class BrandTilePainter extends CustomPainter {
       _next.center,
       _next.inflate(90),
       () {
+        if (gap > 0) {
+          canvas.clipPath(
+            Path()
+              ..fillType = PathFillType.evenOdd
+              ..addRect(_next.inflate(100))
+              ..addOval(Rect.fromCircle(center: _laser, radius: gap)),
+          );
+        }
         final key = RRect.fromRectAndRadius(
           _next,
           Radius.circular(_next.width * 0.26),
