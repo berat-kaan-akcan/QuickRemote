@@ -71,8 +71,9 @@ private enum class Tool(val angle: Float) { LASER(-90f), WHITE(0f), END(90f), BL
  * ticks) so that it is never pressed by accident.
  *
  * [pointer] names the laser's quarter. While no slideshow runs the computer
- * ignores the laser and the black and white screens ([showTools] false):
- * their quarters are faded and call [onUnavailable] instead.
+ * ignores the black and white screens ([showTools] false) and, unless it
+ * draws the laser itself, the laser ([canPoint] false): their quarters are
+ * faded and call [onUnavailable] instead.
  */
 @Composable
 fun ToolsPage(
@@ -81,6 +82,7 @@ fun ToolsPage(
     onLaser: () -> Unit,
     pointer: Pointer,
     showTools: Boolean,
+    canPoint: Boolean,
     onUnavailable: () -> Unit,
 ) {
     val palette = LocalWearPalette.current
@@ -88,6 +90,7 @@ fun ToolsPage(
     val press by rememberUpdatedState(onPress)
     val laser by rememberUpdatedState(onLaser)
     val usable by rememberUpdatedState(showTools)
+    val pointable by rememberUpdatedState(canPoint)
     val unavailable by rememberUpdatedState(onUnavailable)
     val scope = rememberCoroutineScope()
     val ending = remember { Animatable(0f) }
@@ -114,8 +117,8 @@ fun ToolsPage(
                     .fillMaxSize()
                     .semantics {
                         contentDescription = labels.values.joinToString() + ", " + endLabel
+                        val laserAction = CustomAccessibilityAction(labels.getValue(Tool.LASER)) { laser(); true }
                         val showOnly = listOf(
-                            CustomAccessibilityAction(labels.getValue(Tool.LASER)) { laser(); true },
                             CustomAccessibilityAction(labels.getValue(Tool.WHITE)) {
                                 press(RemoteAction.WHITE_SCREEN); true
                             },
@@ -123,7 +126,8 @@ fun ToolsPage(
                                 press(RemoteAction.BLACK_SCREEN); true
                             },
                         )
-                        customActions = (if (showTools) showOnly else emptyList()) +
+                        customActions = (if (canPoint) listOf(laserAction) else emptyList()) +
+                            (if (showTools) showOnly else emptyList()) +
                             CustomAccessibilityAction(endLabel) { press(RemoteAction.END); true }
                     }
                     .pointerInput(Unit) {
@@ -170,7 +174,7 @@ fun ToolsPage(
                                     scope.launch { ending.snapTo(0f) }
                                 }
                                 !released -> Unit
-                                !usable -> {
+                                if (tool == Tool.LASER) !pointable else !usable -> {
                                     haptics.failed()
                                     unavailable()
                                 }
@@ -193,7 +197,11 @@ fun ToolsPage(
                     drawArc(
                         fills.getValue(tool), tool.angle - 45f, 90f, true,
                         Offset(c.x - outer, c.y - outer), Size(outer * 2, outer * 2),
-                        alpha = if (showTools || tool == Tool.END) 1f else DISABLED_ALPHA,
+                        alpha = when (tool) {
+                            Tool.END -> 1f
+                            Tool.LASER -> if (canPoint) 1f else DISABLED_ALPHA
+                            else -> if (showTools) 1f else DISABLED_ALPHA
+                        },
                     )
                     if (pressed == tool) {
                         drawArc(
@@ -231,7 +239,7 @@ fun ToolsPage(
 
             val mid = screen * LABEL_RADIUS
             val faded = !showTools
-            ToolLabel(Tool.LASER, mid, faded) {
+            ToolLabel(Tool.LASER, mid, !canPoint) {
                 Canvas(Modifier.size(screen * 0.11f)) {
                     drawLaserDot(center, size.minDimension / 2, palette.laser)
                 }

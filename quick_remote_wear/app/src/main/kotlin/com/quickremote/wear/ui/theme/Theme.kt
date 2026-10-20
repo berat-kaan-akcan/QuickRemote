@@ -16,6 +16,7 @@ import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Typography
 import com.quickremote.wear.R
+import com.quickremote.wear.phone.WearProtocol
 
 /**
  * The brand palette (brand/BRAND.md), the dark ("Ink") values of the phone's
@@ -82,12 +83,16 @@ data class WearPalette(
 }
 
 /**
- * The themes a presenter can pick; [COBALT], the brand's, is the default.
- * The same as the phone's themes of the same names (all but its light-only
- * Sunset: a watch is always dark). The laser and the status colors stay.
+ * The themes of the remote; [COBALT], the brand's, is the default. The same
+ * as the phone's themes of the same names (all but its light-only Sunset: a
+ * watch is always dark, and the phone sends Sunset as Cobalt). The phone
+ * picks it: its "use on the watch" switch puts [wire] into the state, and
+ * [com.quickremote.wear.phone.PhoneLink] stores it. The laser and the status
+ * colors stay.
  */
-enum class WearTheme(val palette: WearPalette) {
+enum class WearTheme(val wire: String, val palette: WearPalette) {
     COBALT(
+        WearProtocol.THEME_COBALT,
         WearPalette(
             accent = WearColors.cobaltBright, accentEnd = WearColors.cobalt, onAccent = WearColors.white,
             accentText = WearColors.cobaltLight,
@@ -100,6 +105,7 @@ enum class WearTheme(val palette: WearPalette) {
 
     /** Black and white: the fewest lit pixels in a dark room. */
     OLED(
+        WearProtocol.THEME_OLED,
         WearPalette(
             accent = Color(0xFFF4F4F6), accentEnd = Color(0xFFDCDCE2), onAccent = Color(0xFF000000),
             accentText = Color(0xFFFFFFFF),
@@ -112,6 +118,7 @@ enum class WearTheme(val palette: WearPalette) {
 
     /** Yellow on black: the most legible in sunlight and for weak eyes. */
     HIGH_CONTRAST(
+        WearProtocol.THEME_CONTRAST,
         WearPalette(
             accent = Color(0xFFFFE14D), accentEnd = Color(0xFFFFD000), onAccent = Color(0xFF000000),
             accentText = Color(0xFFFFD000),
@@ -123,6 +130,7 @@ enum class WearTheme(val palette: WearPalette) {
     ),
 
     MINT(
+        WearProtocol.THEME_MINT,
         WearPalette(
             accent = Color(0xFF34E3B0), accentEnd = Color(0xFF12C995), onAccent = Color(0xFF032019),
             accentText = Color(0xFF34E3B0),
@@ -134,6 +142,7 @@ enum class WearTheme(val palette: WearPalette) {
     ),
 
     VIOLET(
+        WearProtocol.THEME_VIOLET,
         WearPalette(
             accent = Color(0xFF9B6BFF), accentEnd = Color(0xFF7C4DFF), onAccent = WearColors.white,
             accentText = Color(0xFFC4A9FF),
@@ -154,6 +163,9 @@ enum class WearTheme(val palette: WearPalette) {
             val name = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
             return entries.firstOrNull { it.name == name } ?: COBALT
         }
+
+        /** The theme the phone names with [word] ([WearProtocol.KEY_THEME]); null for none or an unknown one. */
+        fun ofWire(word: String?): WearTheme? = entries.firstOrNull { it.wire == word }
 
         fun store(context: Context, theme: WearTheme) {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString(KEY, theme.name) }

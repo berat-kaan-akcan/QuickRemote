@@ -15,6 +15,9 @@ object WearProtocol {
     const val KEY_MODE = "mode"
     const val KEY_PC = "pc"
     const val KEY_RUNNING = "running"
+
+    /** The computer's overlay draws the laser, so it works without a slideshow too. */
+    const val KEY_LASER_ANYWHERE = "laserAnywhere"
     const val KEY_CURRENT = "current"
     const val KEY_TOTAL = "total"
 
@@ -30,6 +33,17 @@ object WearProtocol {
 
     /** The talk's length, in seconds (0: none), picked on the watch or on the phone's timer. */
     const val KEY_DURATION = "duration"
+
+    /**
+     * The color theme the phone's "use on the watch" switch hands on: one of
+     * the THEME_ words. Absent while the switch is off: the watch keeps its own.
+     */
+    const val KEY_THEME = "theme"
+    const val THEME_COBALT = "cobalt"
+    const val THEME_OLED = "oled"
+    const val THEME_CONTRAST = "contrast"
+    const val THEME_MINT = "mint"
+    const val THEME_VIOLET = "violet"
 
     /** The talk's clock: its length (0 counts up), whether it runs, its start (ms since the epoch) and, paused, its time. */
     const val KEY_TIMER_TARGET = "timerTarget"

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
+import '../../theme/app_color_theme.dart';
 import '../../utils/delta_accumulator.dart';
 import '../bluetooth/bt_hid_service.dart';
 import '../bluetooth/bt_key_mapping.dart';
@@ -36,7 +37,9 @@ class WearBridge {
   /// [btTarget] is the program the user picked for the Bluetooth remote
   /// (`SettingsProvider.btTarget`): its shortcuts differ. [talkDuration] and
   /// [setTalkDuration] keep the talk's length (`SettingsProvider.talkDuration`),
-  /// [timerAlerts] what the timer warns with. [settings] tells when they change.
+  /// [timerAlerts] what the timer warns with. [watchTheme] is the color
+  /// theme the watch is to use ([watchThemeOf]), null while the phone's
+  /// "use on the watch" switch is off. [settings] tells when they change.
   WearBridge(
     this._ws,
     this._discovery, {
@@ -45,6 +48,7 @@ class WearBridge {
     int Function()? talkDuration,
     void Function(int seconds)? setTalkDuration,
     TimerAlerts Function()? timerAlerts,
+    String? Function()? watchTheme,
     Listenable? settings,
     Future<bool> Function()? askNearbyDevices,
     MethodChannel channel = const MethodChannel('com.quickremote.quick_remote_app/wear'),
@@ -54,6 +58,7 @@ class WearBridge {
         _talkDuration = talkDuration ?? (() => 0),
         _setTalkDuration = setTalkDuration ?? ((_) {}),
         _timerAlerts = timerAlerts ?? (() => const TimerAlerts()),
+        _watchTheme = watchTheme ?? (() => null),
         _settings = settings,
         _askNearbyDevices = askNearbyDevices ?? _requestBluetoothConnect,
         _channel = channel,
@@ -101,6 +106,16 @@ class WearBridge {
   /// One mouse report's limit per axis.
   static const _mouseStep = 127;
 
+  /// The watch's name for a color theme (WearTheme.wire there). A watch is
+  /// always dark, so light-only Sunset shows as Cobalt.
+  static String watchThemeOf(AppColorTheme theme) => switch (theme) {
+        AppColorTheme.cobalt || AppColorTheme.sunset => 'cobalt',
+        AppColorTheme.oled => 'oled',
+        AppColorTheme.highContrast => 'contrast',
+        AppColorTheme.mint => 'mint',
+        AppColorTheme.violet => 'violet',
+      };
+
   final WebSocketService _ws;
   final DiscoveryService _discovery;
   final BtHidService _bt;
@@ -108,6 +123,7 @@ class WearBridge {
   final int Function() _talkDuration;
   final void Function(int seconds) _setTalkDuration;
   final TimerAlerts Function() _timerAlerts;
+  final String? Function() _watchTheme;
   final Listenable? _settings;
   final Future<bool> Function() _askNearbyDevices;
   bool _nearbyAsked = false;
@@ -321,11 +337,15 @@ class WearBridge {
       'mode': bluetooth ? 'bluetooth' : 'wifi',
       'pc': wifi ? _pcName() : (bluetooth ? _bt.connectedDeviceName ?? '' : ''),
       'running': wifi && _ws.isPptRunning,
+      // The PC's overlay draws the laser outside a show too.
+      'laserAnywhere': wifi && _ws.toolsAnywhere,
       'current': wifi ? _ws.currentSlide : 0,
       'total': wifi ? _ws.totalSlides : 0,
       'pointer': _pointer(wifi: wifi),
       'duration': _talkDuration(),
       ..._clockState(),
+      // Absent: the watch keeps the theme it has.
+      'theme': ?_watchTheme(),
     };
   }
 

@@ -35,6 +35,9 @@ object WearRelay {
     const val KEY_MODE = "mode"
     const val KEY_PC = "pc"
     const val KEY_RUNNING = "running"
+
+    /** The PC's overlay draws the laser, so it works without a slideshow too. */
+    const val KEY_LASER_ANYWHERE = "laserAnywhere"
     const val KEY_CURRENT = "current"
     const val KEY_TOTAL = "total"
 
@@ -44,6 +47,9 @@ object WearRelay {
 
     /** The talk's length picked on either side, in seconds (0: none). */
     const val KEY_DURATION = "duration"
+
+    /** The watch's color theme (cobalt, oled, contrast, mint, violet); absent: it keeps its own. */
+    const val KEY_THEME = "theme"
 
     /** The talk's clock: its length (0 counts up), whether it runs, its start (ms since the epoch) and, paused, its time. */
     const val KEY_TIMER_TARGET = "timerTarget"
@@ -92,9 +98,11 @@ object WearRelay {
                         mode = call.argument<String>(KEY_MODE) ?: MODE_WIFI,
                         pc = call.argument<String>(KEY_PC) ?: "",
                         running = call.argument<Boolean>(KEY_RUNNING) ?: false,
+                        laserAnywhere = call.argument<Boolean>(KEY_LASER_ANYWHERE) ?: false,
                         current = call.argument<Int>(KEY_CURRENT) ?: 0,
                         total = call.argument<Int>(KEY_TOTAL) ?: 0,
                         pointer = call.argument<String>(KEY_POINTER) ?: POINTER_LASER,
+                        theme = call.argument<String>(KEY_THEME),
                         clock = Clock(
                             duration = call.argument<Number>(KEY_DURATION)?.toInt() ?: 0,
                             target = call.argument<Number>(KEY_TIMER_TARGET)?.toInt() ?: 0,
@@ -188,7 +196,7 @@ object WearRelay {
         main.post { channel?.invokeMethod("move", listOf(dx, dy)) }
     }
 
-    private fun putClosed(context: Context) = putState(context, LINK_CLOSED, MODE_WIFI, "", false, 0, 0, POINTER_LASER, Clock())
+    private fun putClosed(context: Context) = putState(context, LINK_CLOSED, MODE_WIFI, "", false, false, 0, 0, POINTER_LASER, null, Clock())
 
     private fun putState(
         context: Context,
@@ -196,9 +204,11 @@ object WearRelay {
         mode: String,
         pc: String,
         running: Boolean,
+        laserAnywhere: Boolean,
         current: Int,
         total: Int,
         pointer: String,
+        theme: String?,
         clock: Clock,
     ) {
         val request = PutDataMapRequest.create(PATH_STATE).apply {
@@ -206,9 +216,11 @@ object WearRelay {
             dataMap.putString(KEY_MODE, mode)
             dataMap.putString(KEY_PC, pc)
             dataMap.putBoolean(KEY_RUNNING, running)
+            dataMap.putBoolean(KEY_LASER_ANYWHERE, laserAnywhere)
             dataMap.putInt(KEY_CURRENT, current)
             dataMap.putInt(KEY_TOTAL, total)
             dataMap.putString(KEY_POINTER, pointer)
+            theme?.let { dataMap.putString(KEY_THEME, it) }
             dataMap.putInt(KEY_DURATION, clock.duration)
             dataMap.putInt(KEY_TIMER_TARGET, clock.target)
             dataMap.putBoolean(KEY_TIMER_RUNNING, clock.running)

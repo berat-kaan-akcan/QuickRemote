@@ -57,6 +57,17 @@ void main() {
     expect(reloaded.keepInkOnSlideChange, true);
   });
 
+  test('SettingsProvider sends the theme to the watch unless turned off', () async {
+    final provider = SettingsProvider();
+    await Future.delayed(Duration.zero);
+    expect(provider.watchUsesTheme, true);
+    await provider.setWatchUsesTheme(false);
+
+    final reloaded = SettingsProvider();
+    await Future.delayed(Duration.zero);
+    expect(reloaded.watchUsesTheme, false);
+  });
+
   test('SettingsProvider stores the color theme and the mode', () async {
     final provider = SettingsProvider();
     await Future.delayed(Duration.zero);
