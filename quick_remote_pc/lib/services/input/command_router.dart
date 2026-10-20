@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
-import '../presenter_settings.dart';
 import 'input_service.dart';
 
 /// Parses a validated remote command string and routes it to the platform
 /// [InputService]. Shared by every platform so parameter parsing and
 /// validation behave identically everywhere.
 class CommandRouter {
-  static void execute(InputService service, String command) {
+  /// [keepInk]: the sending phone's SET_KEEP_INK, for the slide commands.
+  static void execute(InputService service, String command, {bool keepInk = false}) {
     final isPen = command.startsWith('SET_PEN_COLOR:');
     if (isPen || command.startsWith('SET_HIGHLIGHTER_COLOR:')) {
       final bgr = parseIntArg(command, min: 0, max: 0xFFFFFF);
@@ -24,19 +24,16 @@ class CommandRouter {
     if (command.startsWith('START_AT:')) {
       final slideNumber = parseIntArg(command, min: 1, max: 9999);
       if (slideNumber != null) {
-        service.slideStartAt(slideNumber);
+        service.slideStartAt(slideNumber, keepInk: keepInk);
       }
       return;
     }
 
-    if (command.startsWith('SET_KEEP_INK:')) {
-      final keep = parseIntArg(command, min: 0, max: 1);
-      if (keep != null) PresenterSettings.keepInkOnSlideChange = keep == 1;
-      return;
-    }
-
-    if (command.startsWith('SLIDE_PREVIEW:') || command.startsWith('SLIDE_THUMB:')) {
-      // Per phone: the server handles them (previewSwitch, thumbSlide).
+    if (command.startsWith('SET_KEEP_INK:') ||
+        command.startsWith('SLIDE_PREVIEW:') ||
+        command.startsWith('SLIDE_THUMB:')) {
+      // Per phone: the server handles them (keepInkSwitch, previewSwitch,
+      // thumbSlide).
       return;
     }
 
@@ -52,11 +49,11 @@ class CommandRouter {
 
     switch (command) {
       case RemoteCommands.next:
-        service.slideNext();
+        service.slideNext(keepInk: keepInk);
       case RemoteCommands.prev:
-        service.slidePrev();
+        service.slidePrev(keepInk: keepInk);
       case RemoteCommands.start:
-        service.slideStart();
+        service.slideStart(keepInk: keepInk);
       case RemoteCommands.end:
         service.slideEnd();
       case RemoteCommands.blackScreen:
@@ -65,6 +62,8 @@ class CommandRouter {
         service.whiteScreen();
       case RemoteCommands.eraseAll:
         service.eraseAllInk();
+      case RemoteCommands.undoInk:
+        service.undoInk();
       case RemoteCommands.lock:
         service.lockPC();
 
@@ -81,6 +80,10 @@ class CommandRouter {
         service.modeHighlighter();
       case RemoteCommands.modeEraser:
         service.modeEraser();
+      case RemoteCommands.modeSpotlight:
+        service.modeSpotlight();
+      case RemoteCommands.modeZoom:
+        service.modeZoom();
       case RemoteCommands.laserOff:
         service.laserOff();
 
@@ -121,6 +124,14 @@ class CommandRouter {
       default:
         debugPrint('Unknown command: $command');
     }
+  }
+
+  /// The value of `SET_KEEP_INK:0/1`; null for any other command or a bad
+  /// value.
+  static bool? keepInkSwitch(String command) {
+    if (!command.startsWith('SET_KEEP_INK:')) return null;
+    final keep = parseIntArg(command, min: 0, max: 1);
+    return keep == null ? null : keep == 1;
   }
 
   /// The value of `SLIDE_PREVIEW:0/1`; null for any other command.

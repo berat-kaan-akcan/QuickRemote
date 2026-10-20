@@ -220,6 +220,15 @@ def show_geometry(win_x, win_y, win_w, win_h, root):
     return win_x, win_y, win_w, win_h, root[0], root[1]
 
 
+def show_area(win_x, win_y, win_w, win_h, root):
+    """[x, y, width, height] of the show window in X root pixels, for the
+    laser overlay to pick the show's monitor; None when the position means
+    nothing (no X root, or a Wayland client's made-up position)."""
+    if root is None or win_x < 0 or win_y < 0 or win_x + win_w > root[0] or win_y + win_h > root[1]:
+        return None
+    return [win_x, win_y, win_w, win_h]
+
+
 def desktop_fraction(geometry, slide_w, slide_h, x, y):
     """Maps a laser position (fractions of the slide) to fractions of the
     desktop, the coordinates of the absolute virtual pointer."""
@@ -298,6 +307,8 @@ class Impress:
         self.media_rects = None
         # (controller, show_geometry()) of the full screen show.
         self.geometry = None
+        # show_area() of that show, for the laser overlay.
+        self.area = None
         # PDF URL -> the Impress document it was imported into.
         self.pdf_imports = {}
 
@@ -492,6 +503,8 @@ class Impress:
             "isMediaPlaying": self._media_playing(ctrl, index)[2] if has_media else None,
             "isBlackScreen": at_end or bool(ctrl.isPaused()),
             "deckKey": deck_key(doc.getURL()),
+            # Where the laser overlay goes (the show's monitor); not sent on.
+            "window": self._show_area(doc, ctrl),
         }
 
     @staticmethod
@@ -996,10 +1009,21 @@ class Impress:
             return None  # a windowed show: its position is not worth guessing
         outer = frame.getContainerWindow().getPosSize()
         inner = frame.getComponentWindow().getPosSize()
-        geometry = show_geometry(outer.X + inner.X, outer.Y + inner.Y,
-                                 inner.Width, inner.Height, x11_root_size())
+        root = x11_root_size()
+        win = (outer.X + inner.X, outer.Y + inner.Y, inner.Width, inner.Height)
+        geometry = show_geometry(*win, root)
         self.geometry = (ctrl, geometry)
+        self.area = show_area(*win, root)
         return geometry
+
+    def _show_area(self, doc, ctrl):
+        """The full screen show's window ([x, y, w, h], X root pixels), or None."""
+        try:
+            if self._show_geometry(doc, ctrl) is None:
+                return None
+        except Exception:  # noqa: BLE001 - the frame went away meanwhile
+            return None
+        return self.area
 
     # ── Embedded media ──
     # LibreOffice does not implement XSlideShow.startShapeActivity, and its

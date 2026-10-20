@@ -1,8 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quick_remote_pc/services/input/input_service.dart';
 import 'package:quick_remote_pc/services/input/slide_files.dart';
-import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:quick_remote_pc/services/input/linux/evdev_keys.dart';
 import 'package:quick_remote_pc/services/input/linux/linux_input_service.dart';
 import 'package:quick_remote_pc/services/input/linux/script_bridge.dart';
@@ -68,6 +69,9 @@ void main() {
   X11Window? active;
   List<X11Window> windows = const [];
 
+  /// The windows captureScreen took a picture of.
+  late List<int> captured;
+
   LinuxInputService service() {
     final s = LinuxInputService.withDependencies(
       impress: impress,
@@ -75,6 +79,11 @@ void main() {
       activeWindow: () => active,
       clientWindows: () => windows,
       keys: keys.add,
+      windowArea: (id) => id == 7 ? (x: 1920, y: 0, width: 1920, height: 1080) : null,
+      captureWindow: (id) {
+        captured.add(id);
+        return ScreenCapture(pixels: Uint8List(16), width: 2, height: 2);
+      },
     );
     s.onCommandError = (error, [info]) => errors.add((error, info));
     return s;
@@ -87,6 +96,7 @@ void main() {
     errors = [];
     active = null;
     windows = const [];
+    captured = [];
   });
 
   const userWps = X11Window(1, ['wpp', 'wpp'], pid: 100);
@@ -107,6 +117,17 @@ void main() {
       service().slideNext();
       await pumpEventQueue();
       expect(wps.requests, isEmpty);
+    });
+
+    test('a phone that keeps the ink: no clearInk for the bridge', () async {
+      impress.replies['next'] = _ok;
+      impress.replies['startAt'] = _ok;
+      final s = service();
+      s.slideNext(keepInk: true);
+      await s.slideStartAt(3, keepInk: true);
+      s.slidePrev();
+      await pumpEventQueue();
+      expect(impress.requests.map((r) => r.$2['clearInk']), [false, false, true]);
     });
 
     test('fall back to PageDown when no show answers', () async {
@@ -395,6 +416,162 @@ void main() {
       await service().slideStart();
       expect(impress.timeouts.single, greaterThan(const Duration(seconds: 60)));
       expect(keys, isEmpty);
+    });
+  });
+
+  group('laser overlay area', () {
+    test('the Impress show\'s window, as its bridge tells it', () async {
+      impress = FakeBridge({
+        'state': {'ok': true, 'state': 'RUNNING', 'current': 1, 'total': 3, 'window': [1920, 0, 1920, 1080]},
+      });
+      final s = service();
+      final state = await s.getSlideState();
+      expect(await s.laserArea(), (x: 1920, y: 0, width: 1920, height: 1080));
+      // Not sent on to the phones.
+      expect(state, isNot(contains('window')));
+    });
+
+    test('else the focused X11 window (a PDF viewer)', () async {
+      active = const X11Window(7, ['okular']);
+      final s = service();
+      await s.getSlideState();
+      expect(await s.laserArea(), (x: 1920, y: 0, width: 1920, height: 1080));
+    });
+
+    test('unknown under a native Wayland window', () async {
+      final s = service();
+      await s.getSlideState();
+      expect(await s.laserArea(), isNull);
+    });
+  });
+
+  group('capabilities', () {
+    Future<PresenterCaps> capsAfterState(LinuxInputService s) async {
+      await s.getSlideState();
+      return s.capabilities();
+    }
+
+    test('an Impress show has every tool', () async {
+      impress.replies['state'] = {'ok': true, 'state': 'RUNNING', 'current': 1, 'total': 4};
+      active = const X11Window(5, ['libreoffice', 'libreoffice-impress']);
+      final caps = await capsAfterState(service());
+      expect(caps.front, FrontWindow.show);
+      expect(caps.caps, containsAll([RemoteCaps.laser, RemoteCaps.goto, RemoteCaps.media, RemoteCaps.previews]));
+    });
+
+    test('the bridge\'s WPS lacks the highlighter while it has no focus', () async {
+      wps.replies['state'] = {'ok': true, 'state': 'RUNNING', 'current': 3, 'total': 9, 'pid': 200};
+      active = const X11Window(7, ['okular']);
+      final s = service();
+      var caps = await capsAfterState(s);
+      expect(caps.front, FrontWindow.pdf);
+      expect(caps.has(RemoteCaps.highlighter), isFalse);
+      expect(caps.has(RemoteCaps.pen), isTrue);
+      active = const X11Window(2, ['wpp', 'wpp'], pid: 200, fullscreen: true);
+      caps = await capsAfterState(s);
+      expect(caps.front, FrontWindow.show);
+      expect(caps.has(RemoteCaps.highlighter), isTrue);
+    });
+
+    test('a WPS the user started: its keys only, no slide to jump to', () async {
+      windows = const [wpsShow];
+      active = wpsShow;
+      final caps = await capsAfterState(service());
+      expect(caps.front, FrontWindow.show);
+      expect(caps.caps, containsAll([RemoteCaps.laser, RemoteCaps.pen, RemoteCaps.blank]));
+      expect(caps.caps, isNot(anyOf(contains(RemoteCaps.goto), contains(RemoteCaps.notes), contains(RemoteCaps.previews))));
+    });
+
+    test('a PDF viewer or a browser: page turns only', () async {
+      active = const X11Window(7, ['okular']);
+      final s = service();
+      expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.pdf));
+      active = const X11Window(8, ['Navigator', 'firefox']);
+      expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.browser));
+    });
+
+    test('an editor jumps to a slide, a WPS the bridge does not control does not', () async {
+      final s = service();
+      active = const X11Window(5, ['libreoffice', 'libreoffice-draw']);
+      expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.editor, caps: {RemoteCaps.goto}));
+      active = userWps;
+      expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.editor));
+    });
+
+    test('any other window, and an unknown one (native Wayland)', () async {
+      final s = service();
+      active = const X11Window(9, ['konsole']);
+      expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.other));
+      active = null;
+      expect(await capsAfterState(s), const PresenterCaps());
+    });
+  });
+
+  group('screen picture', () {
+    const impressEditor = X11Window(10, ['libreoffice', 'libreoffice-impress']);
+    const impressShow = X11Window(11, ['libreoffice', 'libreoffice-impress'], fullscreen: true);
+    const okular = X11Window(12, ['okular'], fullscreen: true);
+    const firefoxWindowed = X11Window(13, ['Navigator', 'firefox']);
+    const firefoxFull = X11Window(14, ['Navigator', 'firefox'], fullscreen: true);
+    const konsoleFull = X11Window(15, ['konsole'], fullscreen: true);
+
+    Future<int?> capturedAfterState(LinuxInputService s) async {
+      captured.clear();
+      await s.getSlideState();
+      final picture = await s.captureScreen();
+      expect(picture == null, captured.isEmpty);
+      return captured.isEmpty ? null : captured.single;
+    }
+
+    test('an Impress show: its full-screen window, not the editor', () async {
+      impress.replies['state'] = {'ok': true, 'state': 'RUNNING', 'current': 1, 'total': 4};
+      windows = const [impressEditor, impressShow];
+      active = konsoleFull; // another window in front does not matter
+      expect(await capturedAfterState(service()), 11);
+    });
+
+    test('an Impress show: the window its state names, when known', () async {
+      impress.replies['state'] = {
+        'ok': true,
+        'state': 'RUNNING',
+        'current': 1,
+        'total': 4,
+        'window': [1920, 0, 1920, 1080],
+      };
+      windows = const [impressShow, X11Window(7, ['libreoffice', 'libreoffice-impress'])];
+      expect(await capturedAfterState(service()), 7);
+    });
+
+    test('an Impress show out of X11 reach (native Wayland): none', () async {
+      impress.replies['state'] = {'ok': true, 'state': 'RUNNING', 'current': 1, 'total': 4};
+      windows = const [];
+      active = okular;
+      expect(await capturedAfterState(service()), isNull, reason: 'never the PDF beside the show');
+    });
+
+    test('a WPS show, the bridge\'s or the user\'s', () async {
+      windows = const [userWps, wpsShow];
+      expect(await capturedAfterState(service()), 3);
+    });
+
+    test('a PDF viewer or browser only in full screen', () async {
+      final s = service();
+      active = okular;
+      expect(await capturedAfterState(s), 12);
+      active = firefoxFull;
+      expect(await capturedAfterState(s), 14);
+      active = firefoxWindowed;
+      expect(await capturedAfterState(s), isNull, reason: 'its other tabs, the desktop around it');
+    });
+
+    test('never another window, full screen or not', () async {
+      final s = service();
+      active = konsoleFull;
+      expect(await capturedAfterState(s), isNull);
+      active = const X11Window(16, ['libreoffice', 'libreoffice-impress'], fullscreen: true);
+      expect(await capturedAfterState(s), isNull, reason: 'an editor without a show');
+      active = null;
+      expect(await capturedAfterState(s), isNull);
     });
   });
 }

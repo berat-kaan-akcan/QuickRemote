@@ -173,6 +173,14 @@ class LaserGeometryTest(unittest.TestCase):
         self.assertEqual(bridge.show_geometry(1920, 0, 1920, 1080, (1920, 1080)),
                          (0, 0, 1920, 1080, 1920, 1080))
 
+    def test_show_area_for_the_overlay(self):
+        # The second monitor's show: the overlay goes there.
+        self.assertEqual(bridge.show_area(1920, 0, 1920, 1080, (3840, 1080)), [1920, 0, 1920, 1080])
+        # No X root, or a position outside it: unknown.
+        self.assertIsNone(bridge.show_area(0, 0, 1920, 1080, None))
+        self.assertIsNone(bridge.show_area(1920, 0, 1920, 1080, (1920, 1080)))
+        self.assertIsNone(bridge.show_area(-5, 0, 1920, 1080, (3840, 1080)))
+
     def test_letterboxed_slide(self):
         # 4:3 slide on a 16:9 screen: its left edge is 240 px in.
         geometry = (0, 0, 1920, 1080, 1920, 1080)

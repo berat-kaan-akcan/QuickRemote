@@ -13,6 +13,9 @@ class StateBroadcaster {
   int _generation = 0;
   Timer? _volumeStateTimer;
   Map<String, dynamic>? _lastSlideState;
+
+  /// The `front` and `caps` sent with the last SLIDE_STATE.
+  PresenterCaps? _lastCaps;
   int _pptNotRunningSkipCount = 0;
   /// The last SMTC_STATE sent, without its cover, and the cover sent last
   /// ([_noThumbnail] until one was sent).
@@ -25,8 +28,9 @@ class StateBroadcaster {
   final void Function(Map<String, dynamic> message) onBroadcast;
   final bool Function() hasClients;
 
-  /// Every slide state read: the show on screen, or null without one.
-  final void Function(ShownSlide? shown)? onShow;
+  /// Every slide state read: the show on screen, or null without one, and
+  /// what is in front (`front`, null when unknown).
+  final void Function(ShownSlide? shown, String? front)? onShow;
 
   StateBroadcaster({required this.onBroadcast, required this.hasClients, this.onShow});
 
@@ -52,6 +56,11 @@ class StateBroadcaster {
 
         if (_pptNotRunningSkipCount > 0) {
           _pptNotRunningSkipCount--;
+          // No show to read, but a new window in front (a PDF viewer) changes
+          // what the phone shows: the state goes out again at once.
+          if (hasClients() && _lastCaps != null && await _readCaps() != _lastCaps) {
+            await fetchAndBroadcastSlideState();
+          }
         } else {
           await fetchAndBroadcastSlideState();
         }
@@ -76,7 +85,18 @@ class StateBroadcaster {
     _volumeStateTimer?.cancel();
     _volumeStateTimer = null;
     _lastSlideState = null;
+    _lastCaps = null;
     resendSmtcInFull();
+  }
+
+  /// What is in front and which tools work; null when it cannot be read.
+  static Future<PresenterCaps?> _readCaps() async {
+    try {
+      return await InputSimulator.capabilities();
+    } catch (e) {
+      debugPrint('StateBroadcaster: capabilities failed: $e');
+      return null;
+    }
   }
 
   void scheduleVolumeStateBroadcast() {
@@ -127,6 +147,7 @@ class StateBroadcaster {
   /// number until the slide changed.
   void resendSlideState() {
     _lastSlideState = null;
+    _lastCaps = null;
   }
 
   Future<void> fetchAndBroadcastSlideState() async {
@@ -134,18 +155,26 @@ class StateBroadcaster {
 
     final state = await InputSimulator.getSlideState();
     if (state != null) {
+      // Read right after the state, whose show it describes.
+      final caps = await _readCaps();
+      final capsChanged = caps != _lastCaps;
       if (state['error'] == 'POWERPOINT_NOT_RUNNING') {
         _pptNotRunningSkipCount = 3;
-        onShow?.call(null);
-        if (_lastSlideState == null || _lastSlideState!['error'] != 'POWERPOINT_NOT_RUNNING') {
+        onShow?.call(null, caps?.front);
+        final stateChanged = _lastSlideState == null || _lastSlideState!['error'] != 'POWERPOINT_NOT_RUNNING';
+        if (stateChanged || capsChanged) {
           _lastSlideState = state;
-          onBroadcast({
-            'type': 'STATUS',
-            'state': 'POWERPOINT_NOT_RUNNING',
-          });
+          _lastCaps = caps;
+          if (stateChanged) {
+            onBroadcast({
+              'type': 'STATUS',
+              'state': 'POWERPOINT_NOT_RUNNING',
+            });
+          }
           onBroadcast({
             'type': 'SLIDE_STATE',
             'data': null,
+            ...?caps?.toJson(),
           });
         }
         return;
@@ -159,6 +188,7 @@ class StateBroadcaster {
       final deck = deckOf(state);
       onShow?.call(
         current is int && total is int ? (deck: deck, current: current, total: total) : null,
+        caps?.front,
       );
 
       if (_lastSlideState == null ||
@@ -169,10 +199,11 @@ class StateBroadcaster {
           _lastSlideState!['isMediaPlaying'] != state['isMediaPlaying'] ||
           _lastSlideState!['presenter'] != state['presenter'] ||
           _lastSlideState!['deckKey'] != state['deckKey'] ||
-          _lastSlideState!['error'] != null) {
-        
+          _lastSlideState!['error'] != null ||
+          capsChanged) {
         _lastSlideState = state;
-        
+        _lastCaps = caps;
+
         onBroadcast({
           'type': 'SLIDE_STATE',
           'current': current,
@@ -182,6 +213,7 @@ class StateBroadcaster {
           'isMediaPlaying': state['isMediaPlaying'] ?? false,
           if (state['presenter'] != null) 'presenter': state['presenter'],
           'deck': deck,
+          ...?caps?.toJson(),
         });
       }
     }

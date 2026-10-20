@@ -22,6 +22,18 @@ void main() {
     }
   });
 
+  test('tells PDF viewers from browsers for SLIDE_STATE\'s front', () {
+    for (final browser in ['firefox.exe', 'Navigator', 'msedge.exe', 'google-chrome']) {
+      expect(PdfViewers.kindOf(browser), 'browser', reason: browser);
+    }
+    for (final viewer in ['okular', 'pdf', 'AcroRd32.exe', 'SumatraPDF.exe', 'evince', 'foxitpdfreader.exe']) {
+      expect(PdfViewers.kindOf(viewer), 'pdf', reason: viewer);
+    }
+    for (final other in ['powerpnt.exe', 'wpp', 'konsole', 'code.exe']) {
+      expect(PdfViewers.kindOf(other), isNull, reason: other);
+    }
+  });
+
   test('only full screen is toggled off again by END', () {
     expect(PdfViewers.fullScreen.end, isNotNull);
     expect(PdfViewers.firefox.end, isNull);
