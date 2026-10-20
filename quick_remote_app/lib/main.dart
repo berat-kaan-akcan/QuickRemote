@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'app_version.dart';
 import 'l10n/app_language.dart';
 import 'l10n/failure_text.dart';
 import 'screens/home/home_screen.dart';
+import 'services/app_log_setup.dart';
 import 'services/background_session.dart';
 import 'services/wear/wear_bridge.dart';
 import 'services/websocket_service.dart';
@@ -17,6 +22,14 @@ import 'widgets/brand/brand_splash.dart';
 
 // Background execution starts with a remote screen (services/background_session.dart).
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // debugPrint and uncaught errors go to a local log file (Ayarlar shares it).
+  installAppLog(
+    getApplicationSupportDirectory().then(
+      (dir) => Directory('${dir.path}/logs'),
+    ),
+  );
+  debugPrint('QuickRemote $appVersion, ${Platform.operatingSystemVersion}');
   _registerFontLicense();
   runApp(const QuickRemoteApp());
 }
@@ -32,10 +45,9 @@ class QuickRemoteApp extends StatelessWidget {
         // Hands the phone's PC-side settings to the connection.
         ChangeNotifierProxyProvider<SettingsProvider, WebSocketService>(
           create: (_) => WebSocketService(),
-          update: (_, settings, service) =>
-              service!
-                ..setKeepInkOnSlideChange(settings.keepInkOnSlideChange)
-                ..setSlidePreview(settings.slidePreview),
+          update: (_, settings, service) => service!
+            ..setKeepInkOnSlideChange(settings.keepInkOnSlideChange)
+            ..setSlidePreview(settings.slidePreview),
         ),
         ChangeNotifierProvider(create: (_) => DiscoveryService()),
         // The watch app's way to the PC; it listens from the start.
@@ -50,9 +62,16 @@ class QuickRemoteApp extends StatelessWidget {
               talkDuration: () => settings.talkDuration,
               setTalkDuration: settings.setTalkDuration,
               timerAlerts: () => TimerAlerts(
-                warnings: settings.earlyWarningHaptic ? settings.warningVibrations : const {},
-                timeUp: settings.timeOutVibrationEnabled ? settings.timeOutVibrationPattern : null,
+                warnings: settings.earlyWarningHaptic
+                    ? settings.warningVibrations
+                    : const {},
+                timeUp: settings.timeOutVibrationEnabled
+                    ? settings.timeOutVibrationPattern
+                    : null,
               ),
+              watchTheme: () => settings.watchUsesTheme
+                  ? WearBridge.watchThemeOf(settings.colorTheme)
+                  : null,
               settings: settings,
             );
           },
@@ -77,7 +96,8 @@ class QuickRemoteApp extends StatelessWidget {
           theme: AppTheme.of(settings.colorTheme.light),
           darkTheme: AppTheme.of(settings.colorTheme.dark),
           builder: (context, child) {
-            BackgroundSession.notificationText = context.l10n.backgroundNotification;
+            BackgroundSession.notificationText =
+                context.l10n.backgroundNotification;
             WearBridge.failureText = context.l10n.failure;
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: AppTheme.overlayStyle(context.palette),
@@ -101,10 +121,11 @@ class QuickRemoteApp extends StatelessWidget {
 /// which travels with them.
 void _registerFontLicense() {
   LicenseRegistry.addLicense(() async* {
-    yield LicenseEntryWithLineBreaks(['Inter'], await rootBundle.loadString('assets/fonts/OFL.txt'));
-    yield LicenseEntryWithLineBreaks(
-      ['Space Grotesk'],
-      await rootBundle.loadString('assets/fonts/OFL-SpaceGrotesk.txt'),
-    );
+    yield LicenseEntryWithLineBreaks([
+      'Inter',
+    ], await rootBundle.loadString('assets/fonts/OFL.txt'));
+    yield LicenseEntryWithLineBreaks([
+      'Space Grotesk',
+    ], await rootBundle.loadString('assets/fonts/OFL-SpaceGrotesk.txt'));
   });
 }
