@@ -148,6 +148,14 @@ class WebSocketService extends ChangeNotifier {
   /// The PC's system ('windows' or 'linux'); null from an older PC.
   String? get pcPlatform => _state.platform;
   bool get pptHasMedia => _state.pptHasMedia;
+
+  /// What is in front on the PC and which tools work there; null from a PC
+  /// that does not tell (the remote then guesses as before).
+  PresenterCaps? get presenterCaps => _state.caps;
+
+  /// The kind of window in front on the PC (a [FrontWindow] value); null
+  /// when unknown.
+  String? get frontWindow => _state.caps?.front;
   bool get pptIsMediaPlaying => _state.pptIsMediaPlaying;
   
   bool get hasMedia => _state.hasMedia;
@@ -160,6 +168,12 @@ class WebSocketService extends ChangeNotifier {
   int get systemVolume => _state.systemVolume;
   bool get systemMuted => _state.systemMuted;
 
+  /// The laser works without a slideshow (the PC's overlay draws it).
+  bool get toolsAnywhere => _state.toolsAnywhere;
+
+  /// The laser can be a magnifier (the PC's overlay has one).
+  bool get zoomAvailable => _state.zoomAvailable;
+
   // 🖼️ Slide pictures 🖼️
 
   /// Whether slide pictures can come: the PC sends them and the setting is on.
@@ -167,6 +181,10 @@ class WebSocketService extends ChangeNotifier {
   Uint8List? get currentSlideImage => previewsAvailable ? _state.currentSlideImage : null;
   Uint8List? get nextSlideImage => previewsAvailable ? _state.nextSlideImage : null;
   Uint8List? thumbnail(int slide) => previewsAvailable ? _state.thumbnail(slide) : null;
+
+  /// The PC's screen, live, where it has no slide to name: a PDF viewer or
+  /// browser in full screen, or a show it cannot read (SlideImageKind.screen).
+  Uint8List? get screenImage => previewsAvailable ? _state.screenImage : null;
 
   /// Asks the PC for slide [slide]'s thumbnail unless there is a picture of
   /// it; it comes through [thumbnail] and a notification.
@@ -226,6 +244,14 @@ class WebSocketService extends ChangeNotifier {
       return;
     }
 
+    if (message['type'] == 'OVERLAY') {
+      // The PC's Laser setting changed while connected.
+      _state.toolsAnywhere = message['overlay'] == true;
+      _state.zoomAvailable = message['zoom'] == true;
+      notifyListeners();
+      return;
+    }
+
     if (message['type'] == 'SMTC_STATE') {
       _state.updateFromSmtcState(message);
       notifyListeners();
@@ -236,7 +262,13 @@ class WebSocketService extends ChangeNotifier {
       if (message.containsKey('data') && message['data'] == null) {
         // Presentation ended (slideshow closed)
         _autoStopTracking();
+        final caps = _state.caps;
+        final screen = _state.rawScreenImage;
         _state.reset();
+        // The STATUS just before may have told what is in front now.
+        _state.caps = caps;
+        _state.rawScreenImage = screen;
+        _state.updateCaps(message, keep: true);
         _thumbnails.reset();
         notifyListeners();
         return;
@@ -308,7 +340,7 @@ class WebSocketService extends ChangeNotifier {
 
   @visibleForTesting
   void handleImage(SlideImageFrame frame) {
-    _thumbnails.arrived(frame.slide);
+    if (frame.kind != SlideImageKind.screen) _thumbnails.arrived(frame.slide);
     if (_state.addImage(frame)) notifyListeners();
   }
 

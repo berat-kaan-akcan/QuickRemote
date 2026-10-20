@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_app/services/websocket/presentation_state.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 void main() {
   test('names every program the PC controls while no show runs', () {
@@ -40,10 +41,59 @@ void main() {
     expect(state.platform, isNull);
   });
 
+  test('a PC with the laser overlay says so; an older PC does not', () {
+    final state = PresentationState()..updatePresenters({'presenter': 'impress', 'overlay': true});
+    expect(state.toolsAnywhere, isTrue);
+    state.updatePresenters({'presenter': 'impress'});
+    expect(state.toolsAnywhere, isFalse);
+  });
+
   test('the slide state names the program running the show', () {
     final state = PresentationState()
       ..updatePresenters({'presenter': 'powerpoint', 'presenters': ['powerpoint', 'wps']})
       ..updateFromSlideState({'current': 0, 'total': 0, 'presenter': 'wps'});
     expect(state.presenterNames, ['WPS Office']);
+  });
+
+  test('the slide state tells what is in front and which tools work', () {
+    final state = PresentationState()
+      ..updateFromSlideState({
+        'current': 2,
+        'total': 9,
+        'front': FrontWindow.show,
+        'caps': [RemoteCaps.laser, RemoteCaps.pen, 'teleport', 7],
+      });
+    expect(state.caps?.front, FrontWindow.show);
+    // Values this version does not know are left out.
+    expect(state.caps?.caps, {RemoteCaps.laser, RemoteCaps.pen});
+
+    // An unknown window is no window.
+    state.updateFromSlideState({'current': 2, 'total': 9, 'front': 'tv', 'caps': <String>[]});
+    expect(state.caps, const PresenterCaps());
+  });
+
+  test('an older PC sends no caps: the remote guesses as before', () {
+    final state = PresentationState()
+      ..updateFromSlideState({'current': 2, 'total': 9, 'caps': [RemoteCaps.laser]})
+      ..updateFromSlideState({'current': 3, 'total': 9, 'front': FrontWindow.pdf});
+    expect(state.caps, isNull);
+  });
+
+  test('the "no show" status may carry them; a lost link drops them', () {
+    final state = PresentationState()
+      ..updateFromStatus({
+        'state': 'POWERPOINT_NOT_RUNNING',
+        'front': FrontWindow.pdf,
+        'caps': <String>[],
+      });
+    expect(state.isPptRunning, isFalse);
+    expect(state.caps?.front, FrontWindow.pdf);
+    // An empty SLIDE_STATE after it keeps them; one with caps replaces them.
+    state.updateCaps({'data': null}, keep: true);
+    expect(state.caps?.front, FrontWindow.pdf);
+    state.updateCaps({'data': null, 'front': FrontWindow.browser, 'caps': <String>[]}, keep: true);
+    expect(state.caps?.front, FrontWindow.browser);
+    state.reset();
+    expect(state.caps, isNull);
   });
 }
