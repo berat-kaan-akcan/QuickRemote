@@ -15,7 +15,7 @@ QuickRemote ile sunum telefondan yönetilir. Logo uygulamanın kendi parçaları
 
 - **Sonraki tuşu**: büyük, yuvarlak köşeli; kobalt gradyan (`#3E63F5` → `#2F4BE0` → `#1B28A3`), üstünde hafif parlaklık, altında mavi parıltı, ortasında beyaz ok.
 - **Önceki tuşu**: solunda küçük, koyu kart (`#1A1F36`, ince kenar), soluk ok.
-- **Lazer noktası**: sağ üst köşede `#FF6A3D`, çevresinde turuncu parıltı.
+- **Lazer noktası**: Sonraki tuşunun sağ üst köşesine oturur, tuş çevresinden küçük bir boşlukla kesilir; `#FF6A3D`, çevresinde turuncu parıltı. İkonlar iki tuşu ortalar, noktayı değil.
 
 Bütün SVG'ler `brand/tools/draw_logo.py` ile tek bir ölçü tanımından üretilir (yazı dosyaları hariç); elle düzenlenmez. Ölçüler 512 px'lik ikonun birimleriyle betikte yazılıdır.
 
