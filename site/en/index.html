@@ -152,8 +152,8 @@
 
       <div class="rig" data-stage>
         <svg class="beam" viewBox="0 0 600 690" aria-hidden="true" preserveAspectRatio="none">
-          <path class="beam-line" pathLength="1" d="M 236 448 C 384 448 497 362 497 214"/>
-          <path class="beam-pulse" pathLength="1" d="M 236 448 C 384 448 497 362 497 214" data-pulse/>
+          <path class="beam-line" pathLength="1" d="M 236 558 C 400 558 497 400 497 214"/>
+          <path class="beam-pulse" pathLength="1" d="M 236 558 C 400 558 497 400 497 214" data-pulse/>
         </svg>
         <div class="screen" tabindex="0" role="group" aria-keyshortcuts="ArrowRight ArrowLeft B W Escape" aria-roledescription="presentation screen" aria-label="Sample talk: A short history of coffee. Click or press the right arrow to go to the next slide." aria-describedby="hero-live">
           <div class="show" data-show>
@@ -346,9 +346,9 @@
           </div>
           <p class="tp-h" id="tp-mode">Light / Dark</p>
           <div class="tp-mode" role="radiogroup" aria-labelledby="tp-mode" data-theme-mode>
-            <button type="button" role="radio" aria-checked="true" data-mode="system">System</button>
+            <button type="button" role="radio" aria-checked="false" data-mode="system" tabindex="-1">System</button>
             <button type="button" role="radio" aria-checked="false" data-mode="light" tabindex="-1">Light</button>
-            <button type="button" role="radio" aria-checked="false" data-mode="dark" tabindex="-1">Dark</button>
+            <button type="button" role="radio" aria-checked="true" data-mode="dark">Dark</button>
           </div>
           <p class="tp-note" data-theme-note
              data-cobalt="Cobalt follows the system’s light or dark mode; you can also pick one."
@@ -565,7 +565,7 @@
           <div class="gotodemo" data-gotodemo>
             <p class="gd-h"><svg class="i" aria-hidden="true"><use href="#i-grid-view"/></svg>Go to slide</p>
             <div class="gd-grid" role="group" aria-label="Sample thumbnails" data-gd-grid></div>
-            <p class="gd-foot" data-gd-foot data-text="Go to slide %n" aria-live="polite"></p>
+            <p class="gd-foot" data-gd-foot data-text="Selected slide: %n" aria-live="polite"></p>
           </div>
         </article>
         <article class="row row-media">
@@ -810,8 +810,8 @@
             <li class="tray-sep" role="separator"></li>
             <li><button type="button">Quit</button></li>
           </ul>
-          <div class="tray-legend" aria-hidden="true">
-            <span data-st="off"><i></i>off</span><span data-st="on"><i></i>on</span><span data-st="phone"><i></i>phone connected</span><span data-st="held"><i></i>held back</span>
+          <div class="tray-legend" role="group" aria-label="States of the tray icon">
+            <button type="button" data-st="off"><i></i>off</button><button type="button" data-st="on"><i></i>on</button><button type="button" data-st="phone"><i></i>phone connected</button><button type="button" data-st="held"><i></i>held back</button>
           </div>
         </div>
       </div>
@@ -962,7 +962,7 @@
         <details><summary>How does the slide’s picture reach the phone?</summary><p><span translate="no">QuickRemote&nbsp;PC</span> takes the slide from the program as a picture and sends it only to a phone that turned previews on; you can turn it off in Settings. The picture is the slide as saved: the current animation step, drawings and a playing video do not show. For full-screen shows and PDFs the screen itself is sent.</p></details>
         <details><summary>Can more than one phone connect at once?</summary><p>Yes. The phone that picks up the laser or pen keeps it until its gesture ends. If two people press Next at the same time, the slide moves once.</p></details>
         <details><summary>Does the connection drop when the phone locks?</summary><p>No. While the remote screen is open, the connection carries on in the background even if you lock the phone.</p></details>
-        <details><summary>Does <span translate="no">QuickRemote&nbsp;PC</span> quit when I close its window?</summary><p>By default, no: it goes to the tray and connected phones stay connected. To quit completely use Quit in the tray menu, or turn off “Minimize to tray on close” in Settings. On desktops without a tray, closing the window quits the app.</p></details>
+        <details><summary>Does <span translate="no">QuickRemote PC</span> quit when I close its window?</summary><p>By default, no: it goes to the tray and connected phones stay connected. To quit completely use Quit in the tray menu, or turn off “Minimize to tray on close” in Settings. On desktops without a tray, closing the window quits the app.</p></details>
         <details><summary>Does it collect data?</summary><p>No. It sends no crash reports and no usage statistics. The error log stays on your device, and you attach it yourself if you want to share it. With the update check on, <span translate="no">QuickRemote&nbsp;PC</span> asks GitHub for a new version, and GitHub sees your IP address then; you can turn it off.</p></details>
         <details><summary>What do I do if something goes wrong?</summary><p>On the phone: Settings → Help. On the PC: Settings → Troubleshooting. Share the error log, or tap “Report a problem” to open a pre-filled page on GitHub. You attach the log there yourself.</p></details>
         <details><summary>Which languages does it support?</summary><p>Turkish and English. The apps follow the device’s language, and you can change it in Settings. On Android&nbsp;13 and up you can also pick the app’s language in the system settings.</p></details>
@@ -977,7 +977,7 @@
         <h2 class="h2 get-title" id="get-title">Download it free.</h2>
         <p class="lede">In Bluetooth mode the phone app is enough. For Wi-Fi mode you also install <span translate="no">QuickRemote&nbsp;PC</span> on the computer. The watch app works together with the one on the phone.</p>
       </div>
-      <ul class="get-list" data-install>
+      <ul class="get-list" data-install data-yours="For you">
         <li class="get-card" data-os="android">
           <svg class="i" aria-hidden="true"><use href="#i-android"/></svg>
           <h3>Android phone</h3>

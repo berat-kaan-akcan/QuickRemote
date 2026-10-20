@@ -19,9 +19,9 @@
           </div>
           <p class="tp-h" id="tp-mode">{{Açık / Koyu||Light / Dark}}</p>
           <div class="tp-mode" role="radiogroup" aria-labelledby="tp-mode" data-theme-mode>
-            <button type="button" role="radio" aria-checked="true" data-mode="system">{{Sistem||System}}</button>
+            <button type="button" role="radio" aria-checked="false" data-mode="system" tabindex="-1">{{Sistem||System}}</button>
             <button type="button" role="radio" aria-checked="false" data-mode="light" tabindex="-1">{{Açık||Light}}</button>
-            <button type="button" role="radio" aria-checked="false" data-mode="dark" tabindex="-1">{{Koyu||Dark}}</button>
+            <button type="button" role="radio" aria-checked="true" data-mode="dark">{{Koyu||Dark}}</button>
           </div>
           <p class="tp-note" data-theme-note
              data-cobalt="{{Kobalt sistemle birlikte açık ya da koyu olur; elle de seçilebilir.||Cobalt follows the system’s light or dark mode; you can also pick one.}}"
