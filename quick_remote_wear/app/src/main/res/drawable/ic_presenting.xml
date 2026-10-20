@@ -10,11 +10,11 @@
     <group
         android:translateX="256"
         android:translateY="256"
-        android:scaleX="1.0323"
-        android:scaleY="1.0323">
+        android:scaleX="1.1633"
+        android:scaleY="1.1633">
         <group
-            android:translateX="-256"
-            android:translateY="-260">
+            android:translateX="-233"
+            android:translateY="-276">
             <path
                 android:pathData="M100,196H140A30,30 0 0,1 170,226V316A30,30 0 0,1 140,346H100A30,30 0 0,1 70,316V226A30,30 0 0,1 100,196Z"
                 android:strokeWidth="22"
@@ -26,11 +26,11 @@
                 android:strokeLineCap="round"
                 android:strokeLineJoin="round" />
             <path
-                android:pathData="M248,158H344A52,52 0 0,1 396,210V342A52,52 0 0,1 344,394H248A52,52 0 0,1 196,342V210A52,52 0 0,1 248,158Z M285.31,220.69 L329.31,264.69 A16,16 0 0,1 329.31,287.31 L285.31,331.31 A16,16 0 0,1 262.69,308.69 L295.37,276 L262.69,243.31 A16,16 0 0,1 285.31,220.69 Z"
+                android:pathData="M248,158H344A52,52 0 0,1 348.76,158.22A40,40 0 0,0 395.78,205.24A52,52 0 0,1 396,210V342A52,52 0 0,1 344,394H248A52,52 0 0,1 196,342V210A52,52 0 0,1 248,158Z M285.31,220.69 L329.31,264.69 A16,16 0 0,1 329.31,287.31 L285.31,331.31 A16,16 0 0,1 262.69,308.69 L295.37,276 L262.69,243.31 A16,16 0 0,1 285.31,220.69 Z"
                 android:fillColor="#FFFFFFFF"
                 android:fillType="evenOdd" />
             <path
-                android:pathData="M390,116a30,30 0 1,0 60,0a30,30 0 1,0 -60,0z"
+                android:pathData="M358,166a30,30 0 1,0 60,0a30,30 0 1,0 -60,0z"
                 android:fillColor="#FFFFFFFF" />
         </group>
     </group>
