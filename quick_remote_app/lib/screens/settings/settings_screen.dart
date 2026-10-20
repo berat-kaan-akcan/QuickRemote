@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_language.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/problem_report.dart';
+import '../../services/websocket_service.dart';
+import '../../utils/ui/app_snackbar.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
 import '../../utils/ui/app_top_bar.dart';
 import '../../widgets/ui/ui.dart';
@@ -125,6 +128,34 @@ class SettingsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(height: AppSpace.sm),
+                    FadeSlideIn(
+                      index: 4,
+                      child: SettingsSectionLabel(l10n.settingsSectionHelp),
+                    ),
+                    FadeSlideIn(
+                      index: 5,
+                      child: SettingsGroup(
+                        children: [
+                          SettingsRow(
+                            icon: Icons.bug_report_outlined,
+                            iconColor: p.warning,
+                            title: l10n.settingsShareLogTitle,
+                            subtitle: l10n.settingsShareLogSubtitle,
+                            alignTop: true,
+                            onTap: () => _shareLog(context, settings),
+                          ),
+                          SettingsRow(
+                            icon: Icons.open_in_new_rounded,
+                            iconColor: p.info,
+                            title: l10n.settingsReportProblemTitle,
+                            subtitle: l10n.settingsReportProblemSubtitle,
+                            alignTop: true,
+                            onTap: () => _reportProblem(context, settings),
+                          ),
+                        ],
+                      ),
+                    ),
                     const Spacer(),
                     const SizedBox(height: AppSpace.xl),
                     Opacity(
@@ -151,6 +182,49 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// The programs of the connected PC, for the log and the issue.
+  static String _presenters(BuildContext context) {
+    final service = context.read<WebSocketService>();
+    return service.isConnected && service.presenters.isNotEmpty
+        ? service.presenters.join(', ')
+        : '-';
+  }
+
+  static Future<void> _shareLog(
+    BuildContext context,
+    SettingsProvider settings,
+  ) async {
+    final shared = await ProblemReport.shareLog(
+      presenters: _presenters(context),
+      btTarget: settings.btTarget.name,
+    );
+    if (shared == true || !context.mounted) return;
+    AppSnackbar.show(
+      context,
+      message: shared == null
+          ? context.l10n.logShareEmpty
+          : context.l10n.logShareFailed,
+      type: shared == null ? SnackbarType.info : SnackbarType.error,
+    );
+  }
+
+  static Future<void> _reportProblem(
+    BuildContext context,
+    SettingsProvider settings,
+  ) async {
+    final opened = await ProblemReport.openIssue(
+      context.l10n,
+      presenters: _presenters(context),
+      btTarget: settings.btTarget.name,
+    );
+    if (opened || !context.mounted) return;
+    AppSnackbar.show(
+      context,
+      message: context.l10n.issueOpenFailed,
+      type: SnackbarType.error,
     );
   }
 

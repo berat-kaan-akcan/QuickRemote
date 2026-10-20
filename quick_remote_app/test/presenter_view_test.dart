@@ -164,4 +164,27 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Next'));
     expect(sent, isEmpty);
   });
+
+  testWidgets('a full-screen PDF: the PC\'s screen and the keys, no slide parts', (tester) async {
+    final ws = _Ws()
+      ..handleMessage({'type': 'STATUS', 'state': 'POWERPOINT_NOT_RUNNING', 'front': FrontWindow.pdf, 'caps': <String>[]})
+      ..handleMessage({'type': 'SLIDE_STATE', 'data': null, 'front': FrontWindow.pdf, 'caps': <String>[]})
+      ..handleImage(
+        SlideImageFrame(
+          kind: SlideImageKind.screen,
+          slide: 0,
+          deck: 0,
+          width: 1280,
+          height: 720,
+          jpeg: Uint8List.fromList([0xFF, 0xD8, 3, 0]),
+        ),
+      );
+    await pumpView(tester, ws, const Size(400, 860));
+    expect(tester.takeException(), isNull);
+    expect(find.text("The PC's screen"), findsOneWidget);
+    expect(find.text('NEXT UP'), findsNothing);
+    expect(find.text('No slideshow is running.'), findsNothing);
+    await tester.tap(find.bySemanticsLabel('Next'));
+    expect(sent, [RemoteCommands.next], reason: 'the viewer turns its page');
+  });
 }

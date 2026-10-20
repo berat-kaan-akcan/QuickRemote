@@ -21,6 +21,7 @@ class SlideImage extends StatelessWidget {
     this.radius = AppRadius.sm,
     this.onTap,
     this.tooltip,
+    this.label,
   });
 
   final int slide;
@@ -29,6 +30,9 @@ class SlideImage extends StatelessWidget {
   final double radius;
   final VoidCallback? onTap;
   final String? tooltip;
+
+  /// What a screen reader says; "Preview of slide [slide]" when null.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +91,7 @@ class SlideImage extends StatelessWidget {
     );
     return Semantics(
       image: true,
-      label: context.l10n.slidePreviewLabel(slide),
+      label: label ?? context.l10n.slidePreviewLabel(slide),
       button: onTap != null,
       child: ExcludeSemantics(
         child: onTap == null

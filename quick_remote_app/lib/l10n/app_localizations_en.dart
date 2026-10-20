@@ -57,6 +57,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get screenPreviewLabel => 'The PC\'s screen';
+
+  @override
   String get settingsLanguageTitle => 'Language';
 
   @override
@@ -241,6 +244,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeRemoveFromHistory => 'Remove from History';
 
   @override
+  String get launchNoRecentPc =>
+      'No PC to connect to yet. Connect once with the QR code or the PIN.';
+
+  @override
+  String launchPcNotFound(String name) {
+    return '$name was not found on the network. Is QuickRemote PC running?';
+  }
+
+  @override
   String get unknownPc => 'Unknown PC';
 
   @override
@@ -378,6 +390,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionEnd => 'End';
 
   @override
+  String get actionFullScreen => 'Full screen';
+
+  @override
+  String viewerInFront(String front) {
+    String _temp0 = intl.Intl.selectLogic(front, {
+      'browser': 'Browser in front · page turns and full screen only',
+      'other': 'PDF open · page turns and full screen only',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get blackScreen => 'Black Screen';
 
   @override
@@ -441,6 +465,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearInkTooltip => 'Clear all drawings';
+
+  @override
+  String get clearInkUndoTooltip =>
+      'Clear all drawings; hold to undo the last stroke';
+
+  @override
+  String get toolSpotlight => 'Spotlight';
+
+  @override
+  String get toolZoom => 'Magnifier';
+
+  @override
+  String get laserStyleTitle => 'Laser style';
+
+  @override
+  String get laserStyleSpotlightNote =>
+      'The spotlight darkens the screen and keeps a circle under your finger lit.';
 
   @override
   String get toolLaser => 'Laser';
@@ -1178,4 +1219,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeSunset => 'Sunset';
+
+  @override
+  String get themeWatchHeader => 'Watch';
+
+  @override
+  String get themeWatchTitle => 'Use on the watch too';
+
+  @override
+  String get themeWatchSubtitle =>
+      'The QuickRemote watch app takes this color theme.';
+
+  @override
+  String get themeWatchSunsetNote =>
+      'The watch is always dark: Sunset shows as Cobalt there.';
+
+  @override
+  String get settingsSectionHelp => 'Help';
+
+  @override
+  String get settingsShareLogTitle => 'Share error log';
+
+  @override
+  String get settingsShareLogSubtitle =>
+      'The log stays on this phone and is never sent anywhere by itself. PINs, pairing codes, notes and file paths are not written; IP addresses and device names are.';
+
+  @override
+  String get settingsReportProblemTitle => 'Report a problem';
+
+  @override
+  String get settingsReportProblemSubtitle =>
+      'Opens a new issue on GitHub; you attach the log there yourself.';
+
+  @override
+  String get logShareFailed => 'Could not share the log.';
+
+  @override
+  String get logShareEmpty => 'The log is empty so far.';
+
+  @override
+  String get issueOpenFailed => 'Could not open the browser.';
+
+  @override
+  String issueBody(
+    String version,
+    String platform,
+    String presenters,
+    String btTarget,
+  ) {
+    return '**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote $version (phone)\nPlatform: $platform\nPrograms on the PC: $presenters\nBluetooth target: $btTarget\n\nYou can attach the log (Settings → Share error log) on this page.';
+  }
 }

@@ -95,7 +95,8 @@ class _MainControlsViewState extends State<MainControlsView> {
                         show: show,
                         timer: PresentationTimer(controller: widget.timer),
                         activeScreen: _activeScreen,
-                        onScreen: connected && show.running ? _send : null,
+                        // Outside a show the PC's overlay covers the screen.
+                        onScreen: connected && show.blank ? _send : null,
                         onNotes: SlideCard.showsPreview(ws, show)
                             ? openPresenterView
                             : () => RemoteDialogs.showNotesDialog(
@@ -120,13 +121,22 @@ class _MainControlsViewState extends State<MainControlsView> {
                         ? null
                         : Padding(
                             padding: const EdgeInsets.only(top: AppSpace.sm),
-                            child: InlineAlert(
-                              tone: AppTone.danger,
-                              icon: Icons.error_outline_rounded,
-                              message: context.l10n.presentationNotOpen(
-                                PresentationState.nameOf(widget.program),
-                              ),
-                            ),
+                            // A PDF or a browser in front is no error: it
+                            // turns pages and goes full screen.
+                            child: show.viewer
+                                ? InlineAlert(
+                                    key: const ValueKey('viewer'),
+                                    tone: AppTone.info,
+                                    icon: Icons.picture_as_pdf_rounded,
+                                    message: context.l10n.viewerInFront(show.front!),
+                                  )
+                                : InlineAlert(
+                                    tone: AppTone.danger,
+                                    icon: Icons.error_outline_rounded,
+                                    message: context.l10n.presentationNotOpen(
+                                      PresentationState.nameOf(widget.program),
+                                    ),
+                                  ),
                           ),
                   ),
                   const SizedBox(height: AppSpace.sm),
@@ -134,7 +144,9 @@ class _MainControlsViewState extends State<MainControlsView> {
                     index: 1,
                     child: ShowToggleButton(
                       running: show.running,
-                      startLabel: context.l10n.actionStart,
+                      // START puts a PDF viewer or a browser in full screen.
+                      startLabel: show.viewer ? context.l10n.actionFullScreen : context.l10n.actionStart,
+                      startIcon: show.viewer ? Icons.fullscreen_rounded : Icons.play_arrow_rounded,
                       endLabel: context.l10n.actionEnd,
                       onTap: !connected
                           ? null
@@ -232,7 +244,13 @@ class SlideCard extends StatelessWidget {
   /// next slide's picture loads; with none of this deck yet the card looks as
   /// without previews.
   static bool showsPreview(WebSocketService ws, ShowInfo show) =>
-      show.running && !show.unreadable && ws.currentSlide > 0 && ws.hasSlideImages;
+      (show.running && show.previews && !show.unreadable && ws.currentSlide > 0 && ws.hasSlideImages) ||
+      showsScreen(ws);
+
+  /// Whether the card shows the PC's screen instead: a PDF viewer or
+  /// browser in full screen, or a show the PC cannot read, has no slide
+  /// pictures, but the PC may send what is on its screen.
+  static bool showsScreen(WebSocketService ws) => ws.screenImage != null;
 
   @override
   Widget build(BuildContext context) {
@@ -333,10 +351,11 @@ class SlideCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: AppSpace.xs),
                     child: SlideImage(
                       slide: current,
-                      image: ws.currentSlideImage,
+                      image: showsScreen(ws) ? ws.screenImage : ws.currentSlideImage,
                       cover: activeScreen,
                       onTap: onPreview,
                       tooltip: context.l10n.presenterViewOpenHint,
+                      label: showsScreen(ws) ? context.l10n.screenPreviewLabel : null,
                     ),
                   ),
                 ),
@@ -347,7 +366,7 @@ class SlideCard extends StatelessWidget {
             const SizedBox(height: AppSpace.sm),
             _SlideTrack(current: current, total: ws.totalSlides),
           ],
-          if (show.running && notes.isNotEmpty) ...[
+          if (show.running && show.notes && notes.isNotEmpty) ...[
             const SizedBox(height: AppSpace.sm),
             _NotePreview(
               notes: notes,
@@ -378,7 +397,8 @@ class SlideCard extends StatelessWidget {
                     : () => onScreen!(RemoteCommands.whiteScreen),
               ),
               const Spacer(),
-              _GoToSlideKey(onTap: onGoTo),
+              // A PDF has no slides to jump to.
+              if (!show.viewer) _GoToSlideKey(onTap: onGoTo),
             ],
           ),
         ],

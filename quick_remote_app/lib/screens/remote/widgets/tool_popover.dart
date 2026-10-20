@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../models/draw_tool.dart';
 import '../../../l10n/app_language.dart';
 import '../../../theme/app_colors.dart';
@@ -179,6 +180,90 @@ class NoColorNote extends StatelessWidget {
             ]),
             style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12.5),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// What the laser is, from a PC whose overlay draws it: the dot, the
+/// spotlight (the screen darkened but for a circle under the finger) or a
+/// magnifier (Windows PCs only).
+enum LaserStyle {
+  laser(RemoteCommands.modeLaser, Icons.highlight_rounded),
+  spotlight(RemoteCommands.modeSpotlight, Icons.flashlight_on_rounded),
+  zoom(RemoteCommands.modeZoom, Icons.zoom_in_rounded);
+
+  const LaserStyle(this.command, this.icon);
+
+  /// What a touch sends.
+  final String command;
+  final IconData icon;
+
+  String label(BuildContext context) => switch (this) {
+    LaserStyle.laser => context.l10n.toolLaser,
+    LaserStyle.spotlight => context.l10n.toolSpotlight,
+    LaserStyle.zoom => context.l10n.toolZoom,
+  };
+}
+
+/// Picks the [LaserStyle]; [zoom]: the PC has a magnifier.
+class LaserStylePicker extends StatelessWidget {
+  const LaserStylePicker({
+    super.key,
+    required this.style,
+    required this.zoom,
+    required this.onPicked,
+    required this.onClose,
+    this.spotlight = true,
+  });
+
+  final LaserStyle style;
+  final bool zoom;
+
+  /// The PC has the spotlight (from a PC that sends caps, it may not).
+  final bool spotlight;
+  final ValueChanged<LaserStyle> onPicked;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(DrawTool.laser.icon, color: DrawTool.laser.colorIn(p), size: 18),
+            const SizedBox(width: AppSpace.xs),
+            Expanded(
+              child: Text(
+                context.l10n.laserStyleTitle,
+                style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14),
+              ),
+            ),
+            AppIconButton(icon: Icons.close_rounded, tooltip: context.l10n.close, size: 32, iconSize: 20, onPressed: onClose),
+          ],
+        ),
+        const SizedBox(height: AppSpace.xs),
+        AppSegmented<LaserStyle>(
+          height: 40,
+          selected: style,
+          onChanged: (value) {
+            HapticFeedback.lightImpact();
+            onPicked(value);
+          },
+          segments: [
+            for (final option in LaserStyle.values)
+              if ((option != LaserStyle.zoom || zoom) && (option != LaserStyle.spotlight || spotlight))
+                AppSegment(value: option, label: option.label(context), icon: option.icon),
+          ],
+        ),
+        const SizedBox(height: AppSpace.xs),
+        Text(
+          context.l10n.laserStyleSpotlightNote,
+          style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
         ),
       ],
     );
