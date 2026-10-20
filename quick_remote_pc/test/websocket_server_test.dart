@@ -6,7 +6,9 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:quick_remote_pc/services/input/input_service.dart';
+import 'package:quick_remote_pc/services/input/overlay_input_service.dart';
 import 'package:quick_remote_pc/services/input_simulator.dart';
+import 'package:quick_remote_pc/services/overlay/laser_overlay.dart';
 import 'package:quick_remote_pc/services/websocket_server.dart';
 
 import 'fakes.dart';
@@ -291,6 +293,91 @@ void main() {
     });
   });
 
+  group('laser overlay', () {
+    late FakeLaserOverlay overlay;
+
+    setUp(() {
+      overlay = FakeLaserOverlay();
+      InputSimulator.instance = OverlayInputService(input, overlay);
+    });
+
+    tearDown(() => LaserOverlaySettings.mode = LaserOverlayMode.auto);
+
+    test('a changed Laser setting reaches the connected phones', () async {
+      final client = await authed();
+      LaserOverlaySettings.mode = LaserOverlayMode.never;
+      expect(await client.next('OVERLAY'), containsPair('overlay', false));
+      client.received.clear();
+      LaserOverlaySettings.mode = LaserOverlayMode.always;
+      expect(await client.next('OVERLAY'), containsPair('overlay', true));
+      // Auto still lets the laser out of a show: nothing to tell.
+      client.received.clear();
+      LaserOverlaySettings.mode = LaserOverlayMode.auto;
+      await settle();
+      expect(client.received.whereType<Map>().where((m) => m['type'] == 'OVERLAY'), isEmpty);
+    });
+
+    test('the auth reply says the laser works outside a show', () async {
+      final client = await connect();
+      client.send({'auth': server.pin.value});
+      expect(await client.next('auth'), containsPair('overlay', true));
+    });
+
+    test('a PC without the overlay says so', () async {
+      final client = await connect();
+      InputSimulator.instance = input;
+      client.send({'auth': server.pin.value});
+      expect(await client.next('auth'), containsPair('overlay', false));
+    });
+
+    test('draws the laser without a slideshow, the cursor stays still', () async {
+      final client = await authed();
+      await client.next('STATUS'); // not running
+      client.command('MODE_LASER');
+      await client.next('ack');
+      client.ws.add(moveFrame(1, 5, 5));
+      await eventually(() => overlay.calls.contains('move'));
+      client.command('LASER_OFF');
+      client.command('MODE_ARROW');
+      await eventually(() => overlay.calls.contains('hide'));
+      expect(mouse.moves, isEmpty);
+      // The program's keys would go to whatever window has the focus.
+      expect(input.calls, isNot(contains('modeArrow')));
+    });
+
+    test('the pen draws on the overlay without a slideshow, nothing is clicked', () async {
+      final client = await authed();
+      await client.next('STATUS');
+      client.command('MODE_PEN');
+      await client.next('ack');
+      client.command('LEFT_DOWN');
+      client.ws.add(moveFrame(0, 5, 5));
+      client.command('LEFT_UP');
+      await eventually(() => overlay.calls.contains('inkEnd'));
+      expect(overlay.calls, containsAllInOrder(['inkBegin:pen:ff0000', 'inkTo', 'inkEnd']));
+      expect(input.calls, isNot(anyOf(contains('leftDown'), contains('modePen'))));
+      expect(mouse.moves, isEmpty);
+    });
+
+    test('without a slideshow the overlay covers the screen in black', () async {
+      final client = await authed();
+      await client.next('STATUS');
+      client.command('BLACK_SCREEN');
+      await eventually(() => overlay.calls.contains('blank:000000'));
+      // No B typed into whatever window has the focus.
+      expect(input.calls, isNot(contains('blackScreen')));
+    });
+
+    test('a phone that leaves mid-laser puts it away', () async {
+      final client = await authed();
+      await client.next('STATUS');
+      client.command('MODE_LASER');
+      await client.next('ack');
+      await client.ws.close();
+      await eventually(() => overlay.calls.contains('hide'));
+    });
+  });
+
   group('two phones', () {
     Future<(TestClient, TestClient)> twoInAShow() async {
       input.slideState = {'current': 1, 'total': 3, 'notes': ''};
@@ -301,6 +388,22 @@ void main() {
     }
 
     int count(String call) => input.calls.where((c) => c == call).length;
+
+    test('each phone\'s own "keep the ink" goes with its slide commands', () async {
+      final (a, b) = await twoInAShow();
+      final c = await authed(); // never sent SET_KEEP_INK
+      a.command(RemoteCommands.keepInk(true));
+      b.command(RemoteCommands.keepInk(false));
+      await a.next('ack');
+      await b.next('ack');
+      a.command(RemoteCommands.next);
+      await eventually(() => input.inkChoices.isNotEmpty);
+      b.command(RemoteCommands.prev);
+      await eventually(() => input.inkChoices.length == 2);
+      c.command(RemoteCommands.startAt(2));
+      await eventually(() => input.inkChoices.length == 3);
+      expect(input.inkChoices, ['slideNext:keep', 'slidePrev:clear', 'slideStartAt:2:clear']);
+    });
 
     test('the second phone does not end the first one\'s laser', () async {
       final (a, b) = await twoInAShow();
@@ -390,6 +493,14 @@ void main() {
       await client.next('SLIDE_STATE');
       return client;
     }
+
+    test('the slide state carries front and caps', () async {
+      input.caps = const PresenterCaps(front: FrontWindow.show, caps: {RemoteCaps.previews, RemoteCaps.goto});
+      final client = await inAShow();
+      final state = client.received.whereType<Map<String, dynamic>>().firstWhere((m) => m['type'] == 'SLIDE_STATE');
+      expect(state, containsPair('front', 'show'));
+      expect(state, containsPair('caps', ['goto', 'previews']));
+    });
 
     test('the auth reply and the slide state announce them', () async {
       final client = await connect();
