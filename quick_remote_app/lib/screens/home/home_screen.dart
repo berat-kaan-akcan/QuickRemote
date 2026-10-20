@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/discovery_service.dart';
+import '../../services/launch_actions.dart';
 import '../../services/websocket_service.dart';
 import '../../repositories/device_history_repository.dart';
 import '../scan/scan_screen.dart';
@@ -36,42 +37,143 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadRecentDevices();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DiscoveryService>().startScanning();
+      LaunchActions.instance.watchConnection(context.read<WebSocketService>());
+      LaunchActions.instance.listen(_onLaunchAction);
     });
+  }
+
+  @override
+  void dispose() {
+    LaunchActions.instance.listen(null);
+    super.dispose();
   }
 
   Future<void> _loadRecentDevices() async {
     final data = await _repository.getRecentDevices();
     if (!mounted) return;
-    setState(() {
-      _recentDevices = data;
-    });
+    _setRecentDevices(data);
   }
 
-  Future<void> _saveRecentDevice(String host, int port, String pin) async {
-    String name = host;
-    if (mounted) {
-      try {
-        final discovery = context.read<DiscoveryService>();
-        final dev = discovery.devices.firstWhere((d) => d.ip == host);
-        if (dev.name.isNotEmpty) name = dev.name;
-      } catch (_) {
-        // Fallback to host
-      }
-    }
+  /// The first recent PC is the one the app shortcut and the tile connect to.
+  void _setRecentDevices(List<Map<String, dynamic>> data) {
+    setState(() => _recentDevices = data);
+    LaunchActions.instance.setLastPc(
+      PcAddress.fromRecent(data.firstOrNull)?.name,
+    );
+  }
+
+  Future<void> _saveRecentDevice(
+    String host,
+    int port,
+    String pin, {
+    String? name,
+  }) async {
+    name ??= _nameOf(host);
     final data = await _repository.saveRecentDevice(host, port, pin, name);
-    if (mounted) {
-      setState(() {
-        _recentDevices = data;
-      });
-    }
+    if (mounted) _setRecentDevices(data);
+  }
+
+  /// The PC's mDNS name, else the host name it gave on connecting, else its
+  /// address: "connect to the last PC" looks for it under this name when its
+  /// address changes.
+  String _nameOf(String host) {
+    final found = context
+        .read<DiscoveryService>()
+        .devices
+        .where((d) => d.ip == host && d.name.isNotEmpty)
+        .firstOrNull;
+    return found?.name ?? context.read<WebSocketService>().pcName ?? host;
   }
 
   Future<void> _removeRecentDevice(int index) async {
     final data = await _repository.removeRecentDevice(index);
-    if (mounted) {
-      setState(() {
-        _recentDevices = data;
-      });
+    if (mounted) _setRecentDevices(data);
+  }
+
+  /// A link from an app shortcut or the Quick Settings tile.
+  void _onLaunchAction(LaunchAction action) {
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    switch (action) {
+      case LaunchAction.connectLast:
+        // Already connected: the app is back in front, on its remote.
+        if (context.read<WebSocketService>().isConnected || _connecting) return;
+        navigator.popUntil((route) => route.isFirst);
+        _connectLast();
+      case LaunchAction.bluetooth:
+        navigator.popUntil((route) => route.isFirst);
+        navigator.push(
+          MaterialPageRoute(builder: (_) => const BluetoothConnectScreen()),
+        );
+      case LaunchAction.scan:
+        navigator.popUntil((route) => route.isFirst);
+        _scanAndConnect();
+    }
+  }
+
+  /// quickremote://connect/last (LastPcConnect): the last PC with its saved
+  /// PIN, looked up by name over mDNS when its address changed.
+  Future<void> _connectLast() async {
+    _clearError();
+    setState(() => _connecting = true);
+    final discovery = context.read<DiscoveryService>();
+    String? failure;
+    final outcome = await LastPcConnect.run(
+      recent: await _repository.getRecentDevices(),
+      found: () => discovery.devices,
+      fingerprintOf: LastPcConnect.pinnedFingerprint,
+      connect: (pc, fingerprint) async {
+        if (!mounted) return ConnectionError.none;
+        final result = await ConnectionHandler.connect(
+          context,
+          pc.host,
+          pc.port,
+          pin: pc.pin,
+          certFingerprint: fingerprint,
+        );
+        if (result.success) return null;
+        failure = result.errorMessage;
+        if (result.wasCancelled || !mounted) return ConnectionError.none;
+        return result.error ?? ConnectionError.unknown;
+      },
+    );
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (outcome) {
+      case LastPcConnected(:final pc, :final movedFrom):
+        if (movedFrom != null) {
+          await _repository.removeDevice(movedFrom.host, movedFrom.port);
+        }
+        await _saveRecentDevice(pc.host, pc.port, pc.pin, name: pc.name);
+        if (!mounted) return;
+        setState(() => _connecting = false);
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const RemoteScreen()));
+      case LastPcMissing():
+        setState(() {
+          _connecting = false;
+          _error = l10n.launchNoRecentPc;
+        });
+      case LastPcNotFound(:final pc):
+        setState(() {
+          _connecting = false;
+          _error = l10n.launchPcNotFound(pc.name);
+        });
+      case LastPcFailed(:final pc, :final error):
+        setState(() {
+          _connecting = false;
+          _error = error == ConnectionError.none ? null : failure;
+        });
+        // The PC has a new PIN since: ask for it, as a tap on it would.
+        if (error == ConnectionError.wrongPin) {
+          _clearError();
+          await _showManualConnect(
+            context,
+            defaultIp: pc.host,
+            defaultPort: pc.port.toString(),
+          );
+        }
     }
   }
 

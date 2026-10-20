@@ -66,7 +66,37 @@
             <meta-data
                 android:name="flutter_deeplinking_enabled"
                 android:value="false" />
+            <!-- The launcher's app shortcuts (Bluetooth remote, scan QR; the
+                 "Connect: <PC>" one is dynamic, LaunchLink.kt). -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+        <!-- The target of every app shortcut (LaunchLink.kt): hands its
+             quickremote:// link to MainActivity and closes. Its own task, so
+             the launcher's CLEAR_TASK does not end a running remote. Not
+             exported: the launcher starts shortcuts as this app, and no
+             other app may send the links. -->
+        <activity
+            android:name=".ShortcutActivity"
+            android:exported="false"
+            android:taskAffinity="com.quickremote.quick_remote_app.shortcut"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+        <!-- The Quick Settings tile: one tap connects to the last PC. Not an
+             active tile: the system asks it for its state each time the panel
+             opens, so a killed app never leaves it showing "connected". -->
+        <service
+            android:name=".QuickTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_presenting"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
         <!-- The watch app's messages (WearRelay.kt). Google Play services
              binds to it, also while the app is closed. -->
         <service

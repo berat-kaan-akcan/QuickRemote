@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher's static app shortcuts. The dynamic "Connect: <PC>" one is
+     added by LaunchLink.kt. Each goes through ShortcutActivity, which hands
+     the quickremote:// link to MainActivity (lib/services/launch_actions.dart). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="bluetooth"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_bluetooth"
+        android:shortcutShortLabel="@string/shortcut_bluetooth_short"
+        android:shortcutLongLabel="@string/shortcut_bluetooth_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="quickremote://bluetooth"
+            android:targetPackage="com.quickremote.quick_remote_app"
+            android:targetClass="com.quickremote.quick_remote_app.ShortcutActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="scan"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_scan"
+        android:shortcutShortLabel="@string/shortcut_scan_short"
+        android:shortcutLongLabel="@string/shortcut_scan_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="quickremote://scan"
+            android:targetPackage="com.quickremote.quick_remote_app"
+            android:targetClass="com.quickremote.quick_remote_app.ShortcutActivity" />
+    </shortcut>
+</shortcuts>
