@@ -1,3 +1,6 @@
+import 'dart:ffi';
+
+import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 import '../input_service.dart';
 import 'keyboard_simulator.dart';
@@ -8,6 +11,7 @@ import 'slide_exporter.dart';
 import 'slide_state_controller.dart';
 import 'smtc_controller.dart';
 import 'volume_controller.dart';
+import 'window_capture.dart';
 
 class WindowsInputService implements InputService {
   @override
@@ -30,6 +34,68 @@ class WindowsInputService implements InputService {
 
   @override
   Future<SlideImage?> exportSlide(int index, int width) => SlideExporter.export(index, width);
+
+  /// The show's window ([PresenterCom.active]'s), else the foreground
+  /// window when it is a PDF viewer or browser covering its monitor, taken
+  /// with PrintWindow. Not tried on Windows yet.
+  @override
+  Future<ScreenCapture?> captureScreen() async {
+    final active = PresenterCom.active;
+    if (active != null) {
+      final show = PptController.showWindow(active);
+      return show == null ? null : WindowCapture.capture(show);
+    }
+    if (!FrontWindow.isViewer(PptController.frontWindow())) return null;
+    final front = GetForegroundWindow();
+    if (front.isNull || !WindowCapture.coversMonitor(front)) return null;
+    return WindowCapture.capture(front);
+  }
+
+  /// The show the last slide state found ([PresenterCom.active]) and the
+  /// foreground window, read with a few Win32 calls (no PowerShell), so it
+  /// is cheap enough to poll. Both programs do everything but WPS's media
+  /// rewind and its slide pictures (COM `Player` and `Export` are not
+  /// verified there); their editors start a show at a slide (COM GotoSlide).
+  @override
+  Future<PresenterCaps> capabilities() async {
+    final front = PptController.frontWindow();
+    final caps = switch (PresenterCom.active) {
+      'powerpoint' => {..._showCaps, RemoteCaps.rewind, RemoteCaps.previews},
+      'wps' => _showCaps,
+      _ => front == FrontWindow.editor ? const {RemoteCaps.goto} : const <String>{},
+    };
+    return PresenterCaps(front: front, caps: caps);
+  }
+
+  static const _showCaps = {
+    RemoteCaps.laser,
+    RemoteCaps.pen,
+    RemoteCaps.highlighter,
+    RemoteCaps.eraser,
+    RemoteCaps.eraseAll,
+    RemoteCaps.blank,
+    RemoteCaps.media,
+    RemoteCaps.goto,
+    RemoteCaps.notes,
+    RemoteCaps.colors,
+  };
+
+  /// The focused window (a browser or PDF viewer in full screen): the
+  /// overlay goes to its monitor. PowerPoint and WPS keep their own laser
+  /// unless the PC's Laser setting says always; then their show is in front.
+  @override
+  Future<ScreenArea?> laserArea() async {
+    final window = GetForegroundWindow();
+    if (window.isNull) return null;
+    final rect = calloc<RECT>();
+    try {
+      if (!GetWindowRect(window, rect).value) return null;
+      final r = rect.ref;
+      return (x: r.left, y: r.top, width: r.right - r.left, height: r.bottom - r.top);
+    } finally {
+      calloc.free(rect);
+    }
+  }
   @override
   void volumeUp() => VolumeController.volumeUp();
   @override
@@ -40,13 +106,15 @@ class WindowsInputService implements InputService {
   Future<void> setVolume(int level) => VolumeController.setVolume(level);
 
   @override
-  void slideNext() => PptController.slideNext();
+  void slideNext({bool keepInk = false}) => PptController.slideNext(keepInk: keepInk);
   @override
-  void slidePrev() => PptController.slidePrev();
+  void slidePrev({bool keepInk = false}) => PptController.slidePrev(keepInk: keepInk);
+  // A show that starts has no ink yet; START_AT in a running show jumps
+  // through COM, which leaves the ink to the program as before.
   @override
-  Future<void> slideStart() => PptController.slideStart();
+  Future<void> slideStart({bool keepInk = false}) => PptController.slideStart();
   @override
-  Future<void> slideStartAt(int slideNumber) => PptController.slideStartAt(slideNumber);
+  Future<void> slideStartAt(int slideNumber, {bool keepInk = false}) => PptController.slideStartAt(slideNumber);
   @override
   Future<void> slideEnd() => PptController.slideEnd();
   @override
@@ -55,6 +123,13 @@ class WindowsInputService implements InputService {
   void whiteScreen() => PptController.whiteScreen();
   @override
   void eraseAllInk() => PptController.eraseAllInk();
+  // Only the overlay has a spotlight and strokes to take back.
+  @override
+  void modeSpotlight() => onCommandError?.call(RemoteError.commandFailed, 'NO_SPOTLIGHT');
+  @override
+  void modeZoom() => onCommandError?.call(RemoteError.commandFailed, 'NO_ZOOM');
+  @override
+  void undoInk() {}
   // PowerPoint's COM API has a single PointerColor, and Ctrl+P / Ctrl+I
   // switch to each tool with the color it had: the chosen colors are applied
   // again after the switch.

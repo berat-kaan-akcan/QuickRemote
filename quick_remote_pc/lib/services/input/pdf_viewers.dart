@@ -1,3 +1,5 @@
+import 'package:quick_remote_shared/quick_remote_shared.dart' show FrontWindow;
+
 /// Keys that start and end a presentation in a program QuickRemote cannot
 /// drive otherwise, as Windows virtual-key codes (Linux maps them with
 /// Evdev.fromVk).
@@ -48,6 +50,32 @@ class PdfViewers {
   static const wpsPdf = ViewerKeys([_f11]);
 
   static const _chromium = ['chrome', 'msedge', 'brave', 'vivaldi', 'opera'];
+
+  /// PDF viewers whose F5 starts their presentation (SumatraPDF) or that
+  /// have no keys of their own here, so [forProgram] does not know them.
+  static const _otherPdfViewers = [
+    'sumatrapdf',
+    'foxit',
+    'evince',
+    'org.gnome.evince',
+    'papers',
+    'org.gnome.papers',
+    'atril',
+    'xreader',
+    'zathura',
+    'qpdfview',
+  ];
+
+  /// SLIDE_STATE's `front` for [program] (named as for [forProgram]):
+  /// [FrontWindow.browser], [FrontWindow.pdf], or null for anything else.
+  static String? kindOf(String program) {
+    final name = program.toLowerCase();
+    if (name.startsWith('firefox') || name == 'navigator' || _chromium.any(name.contains)) {
+      return FrontWindow.browser;
+    }
+    if (forProgram(name) != null || _otherPdfViewers.any(name.startsWith)) return FrontWindow.pdf;
+    return null;
+  }
 
   /// The keys for [program]: an executable file name (Windows, "firefox.exe")
   /// or a WM_CLASS name (Linux, "firefox", "google-chrome"). Null when F5

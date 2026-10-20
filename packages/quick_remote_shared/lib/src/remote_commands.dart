@@ -16,6 +16,15 @@ abstract class RemoteCommands {
   static const modeHighlighter = 'MODE_HIGHLIGHTER';
   static const modeEraser = 'MODE_ERASER';
 
+  /// The screen darkened but for a circle that follows the laser's motion
+  /// (LASER frames); LASER_OFF or MODE_ARROW ends it. Only QuickRemote's
+  /// overlay draws it: sent only to a PC whose auth reply has `overlay`.
+  static const modeSpotlight = 'MODE_SPOTLIGHT';
+
+  /// A round magnifier that follows the laser's motion, as the spotlight;
+  /// sent only to a PC whose auth reply has `zoom` (Windows).
+  static const modeZoom = 'MODE_ZOOM';
+
   // Mouse actions
   static const leftClick = 'LEFT_CLICK';
   static const rightClick = 'RIGHT_CLICK';
@@ -29,6 +38,9 @@ abstract class RemoteCommands {
   static const blackScreen = 'BLACK_SCREEN';
   static const whiteScreen = 'WHITE_SCREEN';
   static const eraseAll = 'ERASE_ALL';
+
+  /// Takes back the last stroke the overlay drew (`overlay` PCs only).
+  static const undoInk = 'UNDO_INK';
 
   // Legacy alias kept for backwards‑compat (maps to modeLaser on PC)
   static const laserCursor = 'LASER_CURSOR';
@@ -50,9 +62,9 @@ abstract class RemoteCommands {
 
   static const allowedCommands = <String>{
     next, prev, start, end, lock, refreshState,
-    modeArrow, modeLaser, modePen, modeHighlighter, modeEraser,
+    modeArrow, modeLaser, modePen, modeHighlighter, modeEraser, modeSpotlight, modeZoom,
     leftClick, rightClick, leftDown, leftUp,
-    laserOff, laserCursor, blackScreen, whiteScreen, eraseAll,
+    laserOff, laserCursor, blackScreen, whiteScreen, eraseAll, undoInk,
     // Medya & ses
     mediaPlayPause, mediaRewind,
     volumeUp, volumeDown, volumeMute,
@@ -77,7 +89,8 @@ abstract class RemoteCommands {
   static String volumeSet(int level) => 'VOLUME_SET:$level';
 
   /// The phone's "keep the ink on slide change" setting, sent after every
-  /// connect and on change (the PC does not store it).
+  /// connect and on change. The PC keeps it per phone, in memory only: the
+  /// phone that sends NEXT, PREV or START_AT decides whether the ink stays.
   static String keepInk(bool keep) => 'SET_KEEP_INK:${keep ? 1 : 0}';
 
   /// Turns the slide images (binary [SlideImageFrame]s) on or off for this
