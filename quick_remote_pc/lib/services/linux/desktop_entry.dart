@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 
+import '../desktop/desktop_policy.dart';
+
 /// Installs a .desktop file and icon for the running build in the user's
 /// data directory.
 ///
@@ -15,7 +17,7 @@ class DesktopEntry {
   static const appId = 'com.quickremote.quick_remote_pc';
 
   /// Marks files this class wrote, so it never replaces a user's own.
-  static const _marker = 'X-QuickRemote-Generated=true';
+  static const marker = 'X-QuickRemote-Generated=true';
 
   static Future<void> ensureInstalled() async {
     try {
@@ -30,7 +32,7 @@ class DesktopEntry {
       final content = render(Platform.resolvedExecutable);
       if (desktopFile.existsSync()) {
         final current = desktopFile.readAsStringSync();
-        if (!current.contains(_marker) || current == content) return;
+        if (!current.contains(marker) || current == content) return;
       }
       desktopFile.parent.createSync(recursive: true);
       desktopFile.writeAsStringSync(content);
@@ -59,17 +61,18 @@ class DesktopEntry {
     icon.writeAsBytesSync(png.buffer.asUint8List());
   }
 
-  @visibleForTesting
-  static String render(String executable) => '''[Desktop Entry]
+  /// The entry for [executable]. [autostart] is the copy in
+  /// `~/.config/autostart` (`LinuxAutostart`): it starts the app in the tray.
+  static String render(String executable, {bool autostart = false}) => '''[Desktop Entry]
 Type=Application
 Name=QuickRemote PC
 Comment=Telefonla sunum ve bilgisayar kontrolü
-Exec=${quoteExec(executable)}
+Exec=${quoteExec(executable)}${autostart ? ' $minimizedFlag' : ''}
 Icon=$appId
 Terminal=false
 Categories=Office;Presentation;Utility;
 StartupWMClass=$appId
-$_marker
+${autostart ? 'X-GNOME-Autostart-enabled=true\n' : ''}$marker
 ''';
 
   /// Quotes a path for the Exec key as the Desktop Entry spec asks: inside

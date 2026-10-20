@@ -139,6 +139,11 @@
   "appearanceLight": "Açık",
   "appearanceDark": "Koyu",
   "appearanceNote": "Ekran projeksiyona yansıyorsa aydınlık salonda Açık daha iyi okunur.",
+  "settingsLaser": "Lazer",
+  "laserOverlayAuto": "Otomatik",
+  "laserOverlayAlways": "QuickRemote",
+  "laserOverlayNever": "Program",
+  "laserOverlayNote": "QuickRemote lazeri her pencerenin üstünde çizer: Impress'te videonun üstünde, PDF'te, tarayıcıda ve gösteri dışında da. Otomatik'te PowerPoint ve WPS kendi lazerini kullanır. Gösteri dışındaki lazer, telefon yeniden bağlanınca açılır.",
   "phonesConnected": "{count, plural, =1{1 telefon bağlı} other{{count} telefon bağlı}}",
   "@phonesConnected": {
     "placeholders": {
@@ -147,5 +152,64 @@
       }
     }
   },
-  "noPhonesYet": "Henüz bağlanan telefon yok."
+  "noPhonesYet": "Henüz bağlanan telefon yok.",
+  "settingsStartup": "Başlangıç ve tepsi",
+  "settingsCloseToTray": "Kapatınca tepsiye küçült",
+  "settingsCloseToTraySubtitle": "Pencere kapanınca QuickRemote tepside çalışmayı sürdürür; bağlı telefonlar kopmaz.",
+  "settingsNoTray": "Bu masaüstünde sistem tepsisi yok; pencere kapanınca uygulama kapanır. GNOME'da AppIndicator eklentisiyle tepsi gelir.",
+  "settingsLaunchAtLogin": "Oturum açılınca başlat",
+  "settingsLaunchAtLoginSubtitle": "Pencere açılmadan, tepside başlar.",
+  "settingsStartServerOnLaunch": "Açılınca sunucuyu başlat",
+  "settingsStartServerOnLaunchSubtitle": "Ortak (public) bir ağda sunucu kendiliğinden başlamaz.",
+  "settingsCheckUpdates": "Güncellemeleri denetle",
+  "settingsCheckUpdatesSubtitle": "Açılışta ve günde bir kez GitHub'a yeni sürüm olup olmadığını sorar; hiçbir şey indirmez. GitHub bu sırada IP adresini görür.",
+  "autostartFailed": "Oturum açılınca başlatma ayarı değiştirilemedi.",
+  "updateAvailable": "Yeni sürüm: {version}",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateDownload": "İndir",
+  "serverHeldBack": "Ortak bir ağda olduğun için sunucu kendiliğinden başlamadı. Bu ağa güveniyorsan başlat.",
+  "trayShow": "Göster",
+  "trayStartServer": "Sunucuyu başlat",
+  "trayStopServer": "Sunucuyu durdur",
+  "trayPhones": "{count, plural, =0{Bağlı telefon yok} other{Bağlı telefon: {count}}}",
+  "@trayPhones": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trayQuit": "Çıkış",
+  "trayTooltipOff": "QuickRemote PC · Sunucu kapalı",
+  "trayTooltipOn": "QuickRemote PC · Sunucu açık",
+  "trayTooltipHeldBack": "QuickRemote PC · Ortak ağ: sunucu başlamadı",
+  "trayNoticeTitle": "QuickRemote arka planda çalışıyor",
+  "trayNoticeBody": "Pencere kapandı, ama sunucu ve bağlı telefonlar çalışmayı sürdürüyor. Pencereyi tepsideki simgeden açabilir, uygulamadan oradaki Çıkış ile çıkabilirsin. Ayarlar'da \"Kapatınca tepsiye küçült\" kapatılırsa pencereyi kapatmak uygulamayı kapatır.",
+  "trayNoticeOk": "Anladım",
+  "settingsTroubleshooting": "Sorun giderme",
+  "settingsExportLog": "Günlüğü dışa aktar",
+  "settingsReportProblem": "Sorun bildir",
+  "settingsLogPrivacy": "Günlük yalnızca bu bilgisayarda tutulur ve hiçbir yere kendiliğinden gönderilmez. PIN, eşleştirme kodu, güvenlik kodu, notlar ve dosya yolları yazılmaz; IP adresleri ve cihaz adları yazılır. \"Sorun bildir\" GitHub'da yeni bir sorun sayfası açar; günlüğü oraya sen eklersin.",
+  "logExported": "Günlük kaydedildi.",
+  "logExportFailed": "Günlük kaydedilemedi.",
+  "issueBody": "**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nProgramlar: {presenters}\n\nGünlüğü (Ayarlar → Günlüğü dışa aktar) bu sayfaya sürükleyip bırakabilirsin.",
+  "@issueBody": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "platform": {
+        "type": "String"
+      },
+      "presenters": {
+        "type": "String"
+      }
+    }
+  }
 }

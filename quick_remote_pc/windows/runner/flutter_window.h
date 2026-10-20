@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "laser_overlay.h"
 #include "win32_window.h"
 
 // A window that does nothing but host a Flutter view.
@@ -14,6 +15,10 @@ class FlutterWindow : public Win32Window {
   // Creates a new FlutterWindow hosting a Flutter view running |project|.
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
+
+  // Keeps the window hidden after the first frame (--minimized); the app
+  // shows it from the tray.
+  void set_start_hidden(bool start_hidden) { start_hidden_ = start_hidden; }
 
  protected:
   // Win32Window:
@@ -28,6 +33,11 @@ class FlutterWindow : public Win32Window {
 
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+
+  bool start_hidden_ = false;
+
+  // The laser overlay window, driven over its channel.
+  std::unique_ptr<LaserOverlay> laser_overlay_;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_
