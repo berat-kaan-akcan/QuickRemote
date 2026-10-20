@@ -263,6 +263,18 @@ QuickRemote/
 
 ## 🚀 Kurulum
 
+### Hazır paketler (PC uygulaması)
+
+Paketler [Releases](https://github.com/berat-kaan-akcan/QuickRemote/releases) sayfasındadır. Dosyaların SHA-256 değerleri `SHA256SUMS.txt` içinde.
+
+- **Windows 10/11:** `QuickRemote-PC-<sürüm>-windows-x64-setup.exe` dosyasını çalıştırın. Kurulum yönetici izni istemez; uygulama kullanıcı klasörüne kurulur.
+  - Kurulum dosyası henüz imzasız olduğu için Windows **"Windows bilgisayarınızı korudu"** (SmartScreen) uyarısı gösterir. **Ek bilgi**'ye, sonra **Yine de çalıştır**'a tıklayın.
+- **Debian, Ubuntu, Pardus:** `sudo apt install ./quickremote-pc_<sürüm>_amd64.deb`. Paket `/dev/uinput` izni için gereken udev kuralını da kurar; uygulamadaki "İzin ver" adımı gerekmez. LibreOffice Impress kontrolü için `python3-uno` (önerilen bağımlılık) kurulu olmalı.
+- **Arch, CachyOS, Manjaro:** AUR'daki `quickremote-pc-bin` paketi (`yay -S quickremote-pc-bin` gibi). Güncellemeleri pacman yapar.
+- **Diğer Linux dağıtımları:** `quickremote-pc-<sürüm>-linux-x64.tar.gz` arşivini açın, `quickremote-pc/quick_remote_pc` ile başlatın. Klavye/fare izni için bir kez `sudo quickremote-pc/share/install-uinput-rule.sh` çalıştırın (ya da uygulamadaki "İzin ver" tuşunu kullanın).
+
+Kaynaktan derlemek için aşağıdaki adımları izleyin.
+
 ### Gereksinimler
 
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.47+ (Dart 3.11+)
