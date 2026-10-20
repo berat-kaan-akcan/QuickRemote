@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'input/command_router.dart';
 import 'input_simulator.dart';
 import 'mouse_controller.dart';
+import 'overlay/laser_overlay.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import 'server/auth_manager.dart';
@@ -13,6 +14,7 @@ import 'server/local_network.dart';
 import 'server/move_coalescer.dart';
 import 'server/network_manager.dart';
 import 'server/pre_auth_byte_limit.dart';
+import 'capture/capture_encoder.dart';
 import 'server/slide_previewer.dart';
 import 'server/state_broadcaster.dart';
 import 'server/tls_handshake_gate.dart';
@@ -94,6 +96,10 @@ class WebSocketServer {
       }
     },
     exporter: InputSimulator.exportSlide,
+    capture: () async {
+      final screen = await InputSimulator.captureScreen();
+      return screen == null ? null : CaptureEncoder.encode(screen);
+    },
   );
 
   int _port = 8090;
@@ -111,6 +117,11 @@ class WebSocketServer {
   final Map<WebSocket, PreAuthByteLimit> _byteLimits = {};
   /// Start and count of each client's current one-second command window.
   final Map<WebSocket, (Duration, int)> _commandWindows = {};
+
+  /// Each phone's "keep the ink on slide change" (SET_KEEP_INK), passed
+  /// with its own NEXT, PREV, START and START_AT. A phone that never sent
+  /// one gets the ink erased.
+  final Map<WebSocket, bool> _keepInk = {};
   /// Clients that sent LEFT_DOWN without a LEFT_UP yet.
   final Set<WebSocket> _leftButtonHeld = {};
 
@@ -171,12 +182,34 @@ class WebSocketServer {
     RemoteCommands.whiteScreen,
   };
 
+  /// The laser's and the ink's commands: where QuickRemote's overlay draws
+  /// them ([InputSimulator.toolsAnywhere]) they press no key, so they run
+  /// outside a slideshow too.
+  static const _overlayCommands = {
+    RemoteCommands.modeLaser,
+    RemoteCommands.laserCursor,
+    RemoteCommands.laserOff,
+    RemoteCommands.modeArrow,
+    RemoteCommands.modePen,
+    RemoteCommands.modeHighlighter,
+    RemoteCommands.modeEraser,
+    RemoteCommands.eraseAll,
+    RemoteCommands.modeSpotlight,
+    RemoteCommands.modeZoom,
+    RemoteCommands.undoInk,
+    // Outside a show the overlay covers the screen in black or white.
+    RemoteCommands.blackScreen,
+    RemoteCommands.whiteScreen,
+  };
+
   static const _gestureStartCommands = {
     RemoteCommands.modeLaser,
     RemoteCommands.laserCursor,
     RemoteCommands.modePen,
     RemoteCommands.modeHighlighter,
     RemoteCommands.modeEraser,
+    RemoteCommands.modeSpotlight,
+    RemoteCommands.modeZoom,
   };
 
   /// Commands that act on the shared pointer, see [_gestureOwner].
@@ -248,7 +281,7 @@ class WebSocketServer {
     _stateBroadcaster = StateBroadcaster(
       onBroadcast: broadcast,
       hasClients: () => _authenticatedClients.isNotEmpty,
-      onShow: (shown) => _previewer.show(shown),
+      onShow: (shown, front) => _previewer.show(shown, front: front),
     );
   }
 
@@ -327,6 +360,7 @@ class WebSocketServer {
     debugPrint('WebSocket server started on port $_port');
 
     InputSimulator.onCommandError = (error, [info]) => broadcast(error.status(info));
+    LaserOverlaySettings.changes.addListener(_announceOverlay);
 
     _server!.listen(_handleRequest, onError: (error) => debugPrint('Server error: $error'));
   }
@@ -433,6 +467,7 @@ class WebSocketServer {
     _releasePending(ws);
     _invalidMessageCount.remove(ws);
     _commandWindows.remove(ws);
+    _keepInk.remove(ws);
     _moves.remove(ws)?.dispose();
     _byteLimits.remove(ws);
     if (_leftButtonHeld.remove(ws)) {
@@ -444,7 +479,9 @@ class WebSocketServer {
     if (_gestureOwner == ws) {
       _gestureOwner = null;
       // Mid-gesture: put the laser or pen away, as the phone would have.
-      if (_isSlideshowRunning) InputSimulator.executeCommand(RemoteCommands.modeArrow);
+      if (_isSlideshowRunning || InputSimulator.handlesLaserPointer || InputSimulator.handlesDrawPointer) {
+        InputSimulator.executeCommand(RemoteCommands.modeArrow);
+      }
     }
     if (_lastPressBy == ws) _lastPressBy = null;
     _pendingAddress.remove(ws);
@@ -596,6 +633,11 @@ class WebSocketServer {
       // Slide pictures (SLIDE_PREVIEW), whether or not the program on
       // screen can export them.
       'previews': true,
+      // The laser and the ink work outside a slideshow (QuickRemote's
+      // overlay draws them): the phone keeps its tools on then.
+      'overlay': _announcedOverlay = InputSimulator.toolsAnywhere,
+      // A magnifier (MODE_ZOOM) besides: the Windows overlay's.
+      'zoom': InputSimulator.zoomAvailable,
     });
 
     debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
@@ -653,14 +695,15 @@ class WebSocketServer {
 
   void _applyMove(int typeId, double dx, double dy) {
     if (typeId == 1) {
-      if (!_isSlideshowRunning) {
-        _checkSlideshow();
-        return;
-      }
       if (InputSimulator.handlesLaserPointer) {
-        // The presenter draws the laser itself (Impress): keep the OS cursor still.
+        // QuickRemote's overlay or the presenter (Impress) draws the laser:
+        // keep the OS cursor still. The overlay draws it outside a show too.
         mouseController.trackDelta(dx, dy);
         InputSimulator.laserPointerMoved(_relX, _relY);
+        return;
+      }
+      if (!_isSlideshowRunning) {
+        _checkSlideshow();
         return;
       }
     } else if (InputSimulator.handlesDrawPointer) {
@@ -773,6 +816,12 @@ class WebSocketServer {
       _send(ws, {'type': 'ack', 'command': command});
       return;
     }
+    final keepInk = CommandRouter.keepInkSwitch(command);
+    if (keepInk != null) {
+      _keepInk[ws] = keepInk;
+      _send(ws, {'type': 'ack', 'command': command});
+      return;
+    }
     final thumbnail = CommandRouter.thumbSlide(command);
     if (thumbnail != null) {
       _previewer.requestThumbnail(ws, thumbnail);
@@ -792,7 +841,9 @@ class WebSocketServer {
   }
 
   void _runCommand(WebSocket ws, String command) {
-    if (!_isSlideshowRunning && _slideshowOnlyCommands.contains(command)) {
+    if (!_isSlideshowRunning &&
+        _slideshowOnlyCommands.contains(command) &&
+        !(InputSimulator.toolsAnywhere && _overlayCommands.contains(command))) {
       // After "not running" the poller skips a few rounds, so a show just
       // started on the PC may not be known yet: check once, then decide.
       _checkSlideshow().then((_) {
@@ -818,14 +869,16 @@ class WebSocketServer {
     }
 
     lastCommand.value = command;
-    InputSimulator.executeCommand(command);
+    InputSimulator.executeCommand(command, keepInk: _keepInk[ws] ?? false);
     debugPrint('Executed: $command');
 
     if (_volumeCommands.contains(command) || command.startsWith('VOLUME_SET:')) {
       _stateBroadcaster.scheduleVolumeStateBroadcast();
     }
 
-    if (command == RemoteCommands.modeLaser) {
+    if (command == RemoteCommands.modeLaser ||
+        command == RemoteCommands.modeSpotlight ||
+        command == RemoteCommands.modeZoom) {
       laserActive.value = true;
     } else if (command == RemoteCommands.laserOff) {
       laserActive.value = false;
@@ -834,6 +887,7 @@ class WebSocketServer {
     }
 
     if (_slideCommands.contains(command) || command.startsWith('START_AT:')) {
+      if (command != RemoteCommands.end) _previewer.slideMoved();
       triggerSlideStateUpdate(const Duration(milliseconds: 500));
       if (command == RemoteCommands.start || command.startsWith('START_AT:')) {
         // PowerPoint's show can take seconds to open. A check that finds no
@@ -866,7 +920,11 @@ class WebSocketServer {
 
   Future<void> stop() async {
     _stopNetworkMonitor();
+    LaserOverlaySettings.changes.removeListener(_announceOverlay);
+    _announcedOverlay = null;
     _stateBroadcaster.stop();
+    // The overlay's dot would stay on screen with no phone to put it away.
+    if (InputSimulator.handlesLaserPointer) InputSimulator.executeCommand(RemoteCommands.laserOff);
 
     for (final timer in _authTimers.values) {
       timer.cancel();
@@ -883,6 +941,7 @@ class WebSocketServer {
     _pendingAuth.clear();
     _invalidMessageCount.clear();
     _commandWindows.clear();
+    _keepInk.clear();
     _gestureOwner = null;
     _gestureBlocked.clear();
     _previewer.reset();
@@ -922,6 +981,19 @@ class WebSocketServer {
     _gate = null;
     isRunning.value = false;
     debugPrint('Server stopped');
+  }
+
+  /// What the phones were last told about [InputSimulator.toolsAnywhere].
+  bool? _announcedOverlay;
+
+  /// Tells the phones when the laser starts or stops working outside a show
+  /// (the PC's Laser setting, or an overlay that failed to start). Phones
+  /// from before it ignore the message.
+  void _announceOverlay() {
+    final now = InputSimulator.toolsAnywhere;
+    if (now == _announcedOverlay) return;
+    _announcedOverlay = now;
+    broadcast({'type': 'OVERLAY', 'overlay': now, 'zoom': InputSimulator.zoomAvailable});
   }
 
   void broadcast(Map<String, dynamic> message) {
