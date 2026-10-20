@@ -644,6 +644,36 @@ abstract class AppLocalizations {
   /// **'Ekran projeksiyona yansıyorsa aydınlık salonda Açık daha iyi okunur.'**
   String get appearanceNote;
 
+  /// No description provided for @settingsLaser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lazer'**
+  String get settingsLaser;
+
+  /// No description provided for @laserOverlayAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get laserOverlayAuto;
+
+  /// No description provided for @laserOverlayAlways.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote'**
+  String get laserOverlayAlways;
+
+  /// No description provided for @laserOverlayNever.
+  ///
+  /// In tr, this message translates to:
+  /// **'Program'**
+  String get laserOverlayNever;
+
+  /// No description provided for @laserOverlayNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote lazeri her pencerenin üstünde çizer: Impress\'te videonun üstünde, PDF\'te, tarayıcıda ve gösteri dışında da. Otomatik\'te PowerPoint ve WPS kendi lazerini kullanır. Gösteri dışındaki lazer, telefon yeniden bağlanınca açılır.'**
+  String get laserOverlayNote;
+
   /// No description provided for @phonesConnected.
   ///
   /// In tr, this message translates to:
@@ -655,6 +685,198 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Henüz bağlanan telefon yok.'**
   String get noPhonesYet;
+
+  /// No description provided for @settingsStartup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç ve tepsi'**
+  String get settingsStartup;
+
+  /// No description provided for @settingsCloseToTray.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapatınca tepsiye küçült'**
+  String get settingsCloseToTray;
+
+  /// No description provided for @settingsCloseToTraySubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pencere kapanınca QuickRemote tepside çalışmayı sürdürür; bağlı telefonlar kopmaz.'**
+  String get settingsCloseToTraySubtitle;
+
+  /// No description provided for @settingsNoTray.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu masaüstünde sistem tepsisi yok; pencere kapanınca uygulama kapanır. GNOME\'da AppIndicator eklentisiyle tepsi gelir.'**
+  String get settingsNoTray;
+
+  /// No description provided for @settingsLaunchAtLogin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oturum açılınca başlat'**
+  String get settingsLaunchAtLogin;
+
+  /// No description provided for @settingsLaunchAtLoginSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pencere açılmadan, tepside başlar.'**
+  String get settingsLaunchAtLoginSubtitle;
+
+  /// No description provided for @settingsStartServerOnLaunch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açılınca sunucuyu başlat'**
+  String get settingsStartServerOnLaunch;
+
+  /// No description provided for @settingsStartServerOnLaunchSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak (public) bir ağda sunucu kendiliğinden başlamaz.'**
+  String get settingsStartServerOnLaunchSubtitle;
+
+  /// No description provided for @settingsCheckUpdates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncellemeleri denetle'**
+  String get settingsCheckUpdates;
+
+  /// No description provided for @settingsCheckUpdatesSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açılışta ve günde bir kez GitHub\'a yeni sürüm olup olmadığını sorar; hiçbir şey indirmez. GitHub bu sırada IP adresini görür.'**
+  String get settingsCheckUpdatesSubtitle;
+
+  /// No description provided for @autostartFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oturum açılınca başlatma ayarı değiştirilemedi.'**
+  String get autostartFailed;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sürüm: {version}'**
+  String updateAvailable(String version);
+
+  /// No description provided for @updateDownload.
+  ///
+  /// In tr, this message translates to:
+  /// **'İndir'**
+  String get updateDownload;
+
+  /// No description provided for @serverHeldBack.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak bir ağda olduğun için sunucu kendiliğinden başlamadı. Bu ağa güveniyorsan başlat.'**
+  String get serverHeldBack;
+
+  /// No description provided for @trayShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster'**
+  String get trayShow;
+
+  /// No description provided for @trayStartServer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucuyu başlat'**
+  String get trayStartServer;
+
+  /// No description provided for @trayStopServer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucuyu durdur'**
+  String get trayStopServer;
+
+  /// No description provided for @trayPhones.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =0{Bağlı telefon yok} other{Bağlı telefon: {count}}}'**
+  String trayPhones(int count);
+
+  /// No description provided for @trayQuit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkış'**
+  String get trayQuit;
+
+  /// No description provided for @trayTooltipOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote PC · Sunucu kapalı'**
+  String get trayTooltipOff;
+
+  /// No description provided for @trayTooltipOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote PC · Sunucu açık'**
+  String get trayTooltipOn;
+
+  /// No description provided for @trayTooltipHeldBack.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote PC · Ortak ağ: sunucu başlamadı'**
+  String get trayTooltipHeldBack;
+
+  /// No description provided for @trayNoticeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote arka planda çalışıyor'**
+  String get trayNoticeTitle;
+
+  /// No description provided for @trayNoticeBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pencere kapandı, ama sunucu ve bağlı telefonlar çalışmayı sürdürüyor. Pencereyi tepsideki simgeden açabilir, uygulamadan oradaki Çıkış ile çıkabilirsin. Ayarlar\'da \"Kapatınca tepsiye küçült\" kapatılırsa pencereyi kapatmak uygulamayı kapatır.'**
+  String get trayNoticeBody;
+
+  /// No description provided for @trayNoticeOk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anladım'**
+  String get trayNoticeOk;
+
+  /// No description provided for @settingsTroubleshooting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sorun giderme'**
+  String get settingsTroubleshooting;
+
+  /// No description provided for @settingsExportLog.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlüğü dışa aktar'**
+  String get settingsExportLog;
+
+  /// No description provided for @settingsReportProblem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sorun bildir'**
+  String get settingsReportProblem;
+
+  /// No description provided for @settingsLogPrivacy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük yalnızca bu bilgisayarda tutulur ve hiçbir yere kendiliğinden gönderilmez. PIN, eşleştirme kodu, güvenlik kodu, notlar ve dosya yolları yazılmaz; IP adresleri ve cihaz adları yazılır. \"Sorun bildir\" GitHub\'da yeni bir sorun sayfası açar; günlüğü oraya sen eklersin.'**
+  String get settingsLogPrivacy;
+
+  /// No description provided for @logExported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük kaydedildi.'**
+  String get logExported;
+
+  /// No description provided for @logExportFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük kaydedilemedi.'**
+  String get logExportFailed;
+
+  /// No description provided for @issueBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nProgramlar: {presenters}\n\nGünlüğü (Ayarlar → Günlüğü dışa aktar) bu sayfaya sürükleyip bırakabilirsin.'**
+  String issueBody(String version, String platform, String presenters);
 }
 
 class _AppLocalizationsDelegate

@@ -1,10 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../l10n/app_language.dart';
 import '../../../providers/appearance_provider.dart';
+import '../../../providers/desktop_provider.dart';
 import '../../../providers/language_provider.dart';
+import '../../../providers/laser_overlay_provider.dart';
+import '../../../services/desktop/problem_report.dart';
+import '../../../services/overlay/laser_overlay.dart';
+import '../../../widgets/status_snack_bar.dart';
 import '../../../widgets/ui/ui.dart';
 
 class SettingsDialog extends StatefulWidget {
@@ -38,11 +45,145 @@ class _SettingsDialogState extends State<SettingsDialog> {
     });
   }
 
+  Widget _switch({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+  }) {
+    final p = context.palette;
+    return SwitchListTile(
+      title: Text(title, style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5)),
+      subtitle: Text(subtitle, style: AppType.bodySmall.copyWith(color: p.textSecondary)),
+      value: value,
+      onChanged: onChanged,
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  /// Startup and tray; only where a [DesktopProvider] runs (not in tests that
+  /// leave it out).
+  List<Widget> _desktopSection(BuildContext context) {
+    final desktop = context.watch<DesktopProvider?>();
+    if (desktop == null) return const [];
+    final l10n = context.l10n;
+    final p = context.palette;
+    final launchAtLogin = desktop.launchAtLogin;
+    final checkUpdates = desktop.checkUpdates;
+    return [
+      Divider(color: p.border, height: AppSpace.lg),
+      Row(
+        children: [
+          Icon(Icons.power_settings_new_rounded, size: 20, color: p.textSecondary),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Text(
+              l10n.settingsStartup,
+              style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
+            ),
+          ),
+        ],
+      ),
+      _switch(
+        title: l10n.settingsCloseToTray,
+        subtitle: desktop.trayShown ? l10n.settingsCloseToTraySubtitle : l10n.settingsNoTray,
+        value: desktop.trayShown && desktop.closeToTray,
+        onChanged: desktop.trayShown ? desktop.setCloseToTray : null,
+      ),
+      if (launchAtLogin != null)
+        _switch(
+          title: l10n.settingsLaunchAtLogin,
+          subtitle: l10n.settingsLaunchAtLoginSubtitle,
+          value: launchAtLogin,
+          onChanged: (value) async {
+            final ok = await desktop.setLaunchAtLogin(value);
+            if (!ok && context.mounted) {
+              showStatusSnackBar(context, context.l10n.autostartFailed, kind: StatusKind.error);
+            }
+          },
+        ),
+      _switch(
+        title: l10n.settingsStartServerOnLaunch,
+        subtitle: l10n.settingsStartServerOnLaunchSubtitle,
+        value: desktop.startServerOnLaunch,
+        onChanged: desktop.setStartServerOnLaunch,
+      ),
+      if (checkUpdates != null)
+        _switch(
+          title: l10n.settingsCheckUpdates,
+          subtitle: l10n.settingsCheckUpdatesSubtitle,
+          value: checkUpdates,
+          onChanged: desktop.setCheckUpdates,
+        ),
+    ];
+  }
+
+  /// The local log and a GitHub issue; nothing is sent by the app.
+  List<Widget> _troubleshootingSection(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    return [
+      Divider(color: p.border, height: AppSpace.lg),
+      Row(
+        children: [
+          Icon(Icons.bug_report_outlined, size: 20, color: p.textSecondary),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Text(
+              l10n.settingsTroubleshooting,
+              style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpace.sm),
+      Wrap(
+        spacing: AppSpace.sm,
+        runSpacing: AppSpace.sm,
+        children: [
+          AppButton(
+            label: l10n.settingsExportLog,
+            icon: Icons.save_alt_rounded,
+            variant: AppButtonVariant.tonal,
+            expand: false,
+            height: 40,
+            onPressed: () async {
+              final saved = await ProblemReport.exportLog();
+              if (saved == null || !context.mounted) return;
+              showStatusSnackBar(
+                context,
+                saved ? context.l10n.logExported : context.l10n.logExportFailed,
+                kind: saved ? StatusKind.success : StatusKind.error,
+              );
+            },
+          ),
+          AppButton(
+            label: l10n.settingsReportProblem,
+            icon: Icons.open_in_new_rounded,
+            variant: AppButtonVariant.tonal,
+            expand: false,
+            height: 40,
+            onPressed: () => ProblemReport.openIssue(context.l10n),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpace.xs + 1),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          l10n.settingsLogPrivacy,
+          style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
+        ),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final languages = context.watch<LanguageProvider>();
     final appearance = context.watch<AppearanceProvider>();
+    final laser = context.watch<LaserOverlayProvider>();
     final p = context.palette;
     return AlertDialog(
       // A short window scrolls the content instead of cutting it off.
@@ -146,6 +287,42 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
               ),
             ),
+            if (Platform.isLinux || Platform.isWindows) ...[
+              Divider(color: p.border, height: AppSpace.lg),
+              Row(
+                children: [
+                  Icon(Icons.adjust_rounded, size: 20, color: p.textSecondary),
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(
+                    child: Text(
+                      l10n.settingsLaser,
+                      style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpace.sm - 3),
+              AppSegmented<LaserOverlayMode>(
+                height: 40,
+                selected: laser.mode,
+                onChanged: laser.setMode,
+                segments: [
+                  AppSegment(value: LaserOverlayMode.auto, label: l10n.laserOverlayAuto, icon: Icons.auto_awesome_rounded),
+                  AppSegment(value: LaserOverlayMode.always, label: l10n.laserOverlayAlways, icon: Icons.layers_rounded),
+                  AppSegment(value: LaserOverlayMode.never, label: l10n.laserOverlayNever, icon: Icons.slideshow_rounded),
+                ],
+              ),
+              const SizedBox(height: AppSpace.xs + 1),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l10n.laserOverlayNote,
+                  style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
+                ),
+              ),
+            ],
+            ..._desktopSection(context),
+            ..._troubleshootingSection(context),
           ],
         ),
       ),

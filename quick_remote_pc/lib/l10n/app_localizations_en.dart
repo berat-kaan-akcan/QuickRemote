@@ -321,6 +321,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'When the screen is projected in a bright room, Light reads better.';
 
   @override
+  String get settingsLaser => 'Laser';
+
+  @override
+  String get laserOverlayAuto => 'Automatic';
+
+  @override
+  String get laserOverlayAlways => 'QuickRemote';
+
+  @override
+  String get laserOverlayNever => 'Program';
+
+  @override
+  String get laserOverlayNote =>
+      'QuickRemote draws the laser above every window: over Impress videos, in PDFs, in browsers and outside a slideshow too. Automatic leaves PowerPoint and WPS their own laser. The laser outside a slideshow turns on when the phone reconnects.';
+
+  @override
   String phonesConnected(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -333,4 +349,122 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noPhonesYet => 'No phone has connected yet.';
+
+  @override
+  String get settingsStartup => 'Startup and tray';
+
+  @override
+  String get settingsCloseToTray => 'Minimize to tray on close';
+
+  @override
+  String get settingsCloseToTraySubtitle =>
+      'Closing the window keeps QuickRemote running in the tray; connected phones stay connected.';
+
+  @override
+  String get settingsNoTray =>
+      'This desktop has no system tray, so closing the window quits the app. On GNOME the AppIndicator extension adds one.';
+
+  @override
+  String get settingsLaunchAtLogin => 'Start at login';
+
+  @override
+  String get settingsLaunchAtLoginSubtitle =>
+      'Starts in the tray, without a window.';
+
+  @override
+  String get settingsStartServerOnLaunch => 'Start the server on launch';
+
+  @override
+  String get settingsStartServerOnLaunchSubtitle =>
+      'On a public network the server does not start by itself.';
+
+  @override
+  String get settingsCheckUpdates => 'Check for updates';
+
+  @override
+  String get settingsCheckUpdatesSubtitle =>
+      'Asks GitHub for a new version at launch and once a day; downloads nothing. GitHub sees your IP address when it does.';
+
+  @override
+  String get autostartFailed => 'Couldn\'t change the start at login setting.';
+
+  @override
+  String updateAvailable(String version) {
+    return 'New version: $version';
+  }
+
+  @override
+  String get updateDownload => 'Download';
+
+  @override
+  String get serverHeldBack =>
+      'You\'re on a public network, so the server didn\'t start by itself. Start it if you trust this network.';
+
+  @override
+  String get trayShow => 'Show';
+
+  @override
+  String get trayStartServer => 'Start the server';
+
+  @override
+  String get trayStopServer => 'Stop the server';
+
+  @override
+  String trayPhones(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phones connected',
+      one: '1 phone connected',
+      zero: 'No phone connected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayQuit => 'Quit';
+
+  @override
+  String get trayTooltipOff => 'QuickRemote PC · Server off';
+
+  @override
+  String get trayTooltipOn => 'QuickRemote PC · Server on';
+
+  @override
+  String get trayTooltipHeldBack =>
+      'QuickRemote PC · Public network: server not started';
+
+  @override
+  String get trayNoticeTitle => 'QuickRemote keeps running';
+
+  @override
+  String get trayNoticeBody =>
+      'The window is closed, but the server and connected phones keep running. Open the window from the tray icon, and quit with Quit there. If \"Minimize to tray on close\" is turned off in Settings, closing the window quits the app.';
+
+  @override
+  String get trayNoticeOk => 'Got it';
+
+  @override
+  String get settingsTroubleshooting => 'Troubleshooting';
+
+  @override
+  String get settingsExportLog => 'Export log';
+
+  @override
+  String get settingsReportProblem => 'Report a problem';
+
+  @override
+  String get settingsLogPrivacy =>
+      'The log stays on this computer and is never sent anywhere by itself. PINs, pairing codes, security codes, notes and file paths are not written; IP addresses and device names are. \"Report a problem\" opens a new issue on GitHub; you attach the log there yourself.';
+
+  @override
+  String get logExported => 'Log saved.';
+
+  @override
+  String get logExportFailed => 'Could not save the log.';
+
+  @override
+  String issueBody(String version, String platform, String presenters) {
+    return '**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote PC $version\nPlatform: $platform\nPrograms: $presenters\n\nYou can drag the log (Settings → Export log) onto this page.';
+  }
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/desktop_provider.dart';
 import '../../providers/server_provider.dart';
 import 'widgets/connected_clients_list.dart';
 import 'widgets/linux_setup_panel.dart';
@@ -116,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WebSocketServerProvider provider, {
     required bool framed,
   }) => [
+    ..._desktopRows(),
     if (Platform.isLinux)
       LinuxSetupPanel(provider: provider, framed: framed, topGap: AppSpace.sm),
     Reveal(
@@ -131,6 +133,43 @@ class _HomeScreenState extends State<HomeScreen> {
           : null,
     ),
   ];
+
+  /// The server held back on a public network, and a newer version. Not
+  /// shown where no [DesktopProvider] runs (tests).
+  List<Widget> _desktopRows() {
+    final desktop = context.watch<DesktopProvider?>();
+    if (desktop == null) return const [];
+    final l10n = context.l10n;
+    final update = desktop.update;
+    return [
+      Reveal(
+        child: desktop.heldBack
+            ? Padding(
+                padding: const EdgeInsets.only(top: AppSpace.sm),
+                child: InlineAlert(
+                  tone: AppTone.warning,
+                  icon: Icons.public_rounded,
+                  message: l10n.serverHeldBack,
+                ),
+              )
+            : null,
+      ),
+      Reveal(
+        child: update != null
+            ? Padding(
+                padding: const EdgeInsets.only(top: AppSpace.sm),
+                child: InlineAlert(
+                  dense: true,
+                  icon: Icons.system_update_alt_rounded,
+                  message: l10n.updateAvailable(update.version.toString()),
+                  actionLabel: l10n.updateDownload,
+                  onAction: desktop.openUpdate,
+                ),
+              )
+            : null,
+      ),
+    ];
+  }
 
   Widget _clients(WebSocketServerProvider provider, {required bool framed}) =>
       Reveal(
