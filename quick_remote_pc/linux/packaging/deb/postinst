@@ -1,0 +1,18 @@
+#!/bin/sh
+# Applies the package's /dev/uinput udev rule now, not only after a restart, so
+# the setup panel's first row is already done. Nothing here may fail the
+# install: in a container or on a kernel without the module the rule simply
+# applies from the next boot.
+set -e
+
+case "$1" in
+  configure)
+    modprobe uinput 2> /dev/null || true
+    if command -v udevadm > /dev/null 2>&1; then
+      udevadm control --reload-rules 2> /dev/null || true
+      udevadm trigger --action=change --sysname-match=uinput 2> /dev/null || true
+    fi
+    ;;
+esac
+
+exit 0

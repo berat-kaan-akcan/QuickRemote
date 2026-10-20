@@ -1,0 +1,14 @@
+# Applies the package's /dev/uinput udev rule now, not only after a restart.
+_apply_uinput_rule() {
+  modprobe uinput 2> /dev/null || true
+  udevadm control --reload-rules 2> /dev/null || true
+  udevadm trigger --action=change --sysname-match=uinput 2> /dev/null || true
+}
+
+post_install() {
+  _apply_uinput_rule
+}
+
+post_upgrade() {
+  _apply_uinput_rule
+}

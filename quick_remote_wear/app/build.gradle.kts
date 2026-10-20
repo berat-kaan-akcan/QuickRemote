@@ -48,8 +48,10 @@ android {
         targetSdk = 36
         // Every AAB in one Play listing needs its own versionCode: the watch
         // is 1_000_000 + the phone's (quick_remote_app/pubspec.yaml, 0.1.0+1).
-        versionCode = 1_000_001
-        versionName = "0.1.0"
+        // The release workflow passes the phone's --build-number and
+        // --build-name as -PphoneVersionCode and -PappVersionName.
+        versionCode = 1_000_000 + ((findProperty("phoneVersionCode") as String?)?.toInt() ?: 1)
+        versionName = (findProperty("appVersionName") as String?) ?: "0.1.0"
     }
 
     signingConfigs {

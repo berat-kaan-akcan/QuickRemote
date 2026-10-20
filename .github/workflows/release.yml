@@ -1,0 +1,422 @@
+# Builds the release packages when a v* tag is pushed (v0.2.0, v0.2.0-beta.1)
+# and puts them on a draft GitHub release with generated notes:
+#
+#   QuickRemote-PC-<v>-windows-x64-setup.exe   Inno Setup, per user, unsigned
+#   quickremote-pc-<v>-linux-x64.tar.gz        the Flutter bundle
+#   quickremote-pc-<v>-linux-x64-noupdate.tar.gz  the same, UPDATE_CHECK=false (AUR)
+#   quickremote-pc_<v>_amd64.deb               install-tested in debian:12 and ubuntu:22.04
+#   QuickRemote-<v>-android.apk, QuickRemote-<v>-wear-os.apk
+#                                              only when the signing secrets exist
+#   SHA256SUMS.txt
+#
+# The version comes from the tag alone: --build-name, --dart-define=APP_VERSION
+# (lib/app_version.dart, read by the update check), the installer and the
+# packages. Android's versionCode is MAJOR*10000 + MINOR*100 + PATCH (the watch
+# adds 1 000 000), so minor and patch stay below 100.
+#
+# A manual run (workflow_dispatch) builds and tests everything for the version
+# it is given but creates no release.
+#
+# Signing secrets (Settings > Secrets and variables > Actions), all optional;
+# without ANDROID_KEYSTORE_BASE64 the APKs are skipped:
+#   ANDROID_KEYSTORE_BASE64   base64 -w0 upload-keystore.jks
+#   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without v (e.g. 0.2.0-test). No release is created.'
+        required: true
+        default: '0.0.1-test'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with ci.yml and the development machine.
+  FLUTTER_VERSION: '3.47.5'
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      numeric: ${{ steps.v.outputs.numeric }}
+      code: ${{ steps.v.outputs.code }}
+      prerelease: ${{ steps.v.outputs.prerelease }}
+    steps:
+      - id: v
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            version=${GITHUB_REF_NAME#v}
+          else
+            version=${INPUT_VERSION#v}
+          fi
+          re='^([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.]+)?$'
+          if [[ ! "$version" =~ $re ]]; then
+            echo "::error::'$version' is not MAJOR.MINOR.PATCH[-PRERELEASE]"
+            exit 1
+          fi
+          major=$((10#${BASH_REMATCH[1]}))
+          minor=$((10#${BASH_REMATCH[2]}))
+          patch=$((10#${BASH_REMATCH[3]}))
+          if (( minor > 99 || patch > 99 )); then
+            echo "::error::minor and patch must stay below 100 (Android versionCode)"
+            exit 1
+          fi
+          code=$(( major * 10000 + minor * 100 + patch ))
+          (( code > 0 )) || code=1
+          {
+            echo "version=$version"
+            echo "numeric=$major.$minor.$patch"
+            echo "code=$code"
+            if [[ -n "${BASH_REMATCH[4]}" ]]; then echo "prerelease=true"; else echo "prerelease=false"; fi
+          } >> "$GITHUB_OUTPUT"
+          echo "version $version, numeric $major.$minor.$patch, versionCode $code"
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      NUMERIC: ${{ needs.version.outputs.numeric }}
+      CODE: ${{ needs.version.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Build
+        working-directory: quick_remote_pc
+        run: |
+          flutter pub get
+          # Windows file versions are numbers only; the full version goes in APP_VERSION.
+          flutter build windows --release --build-name $env:NUMERIC --build-number $env:CODE "--dart-define=APP_VERSION=$env:VERSION"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Find the Visual C++ runtime
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $crt = $null
+          $versions = Get-ChildItem "$vs\VC\Redist\MSVC" -Directory |
+            Where-Object { $_.Name -match '^\d+(\.\d+)+$' } |
+            Sort-Object { [version]$_.Name } -Descending
+          foreach ($v in $versions) {
+            $c = Get-ChildItem "$($v.FullName)\x64" -Directory -Filter 'Microsoft.VC*.CRT' -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($c) { $crt = $c.FullName; break }
+          }
+          if (-not $crt) { throw "No Microsoft.VC*.CRT folder under $vs\VC\Redist\MSVC" }
+          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            if (-not (Test-Path "$crt\$dll")) { throw "$dll missing in $crt" }
+          }
+          Write-Host "VC++ runtime: $crt"
+          "VC_CRT=$crt" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Installer
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          }
+          $build = "$env:GITHUB_WORKSPACE\quick_remote_pc\build\windows\x64\runner\Release"
+          $out = "$env:RUNNER_TEMP\dist"
+          & $iscc "/DAppVersion=$env:VERSION" "/DAppVersionNumeric=$env:NUMERIC" "/DBuildDir=$build" "/DVcRuntimeDir=$env:VC_CRT" "/DOutputDir=$out" quick_remote_pc\windows\installer\quickremote.iss
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Install test
+        run: |
+          $setup = Get-ChildItem "$env:RUNNER_TEMP\dist\*-setup.exe" | Select-Object -First 1
+          $p = Start-Process $setup.FullName -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=$env:RUNNER_TEMP\setup.log" -Wait -PassThru
+          if ($p.ExitCode) { Get-Content "$env:RUNNER_TEMP\setup.log"; throw "setup exited with $($p.ExitCode)" }
+          $app = "$env:LOCALAPPDATA\Programs\QuickRemote PC"
+          foreach ($f in 'quick_remote_pc.exe', 'flutter_windows.dll', 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'data\app.so') {
+            if (-not (Test-Path "$app\$f")) { Get-Content "$env:RUNNER_TEMP\setup.log"; throw "$f was not installed" }
+          }
+          Write-Host "Installed into $app"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: ${{ runner.temp }}/dist/*-setup.exe
+          if-no-files-found: error
+
+  linux:
+    needs: version
+    # The oldest supported glibc (2.35): the bundle then runs on Ubuntu 22.04,
+    # Debian 12 and Pardus 23 too. Move to ubuntu-24.04 when 22.04 support ends.
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: quick_remote_pc
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      CODE: ${{ needs.version.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux build dependencies
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libstdc++-12-dev libx11-dev libxi-dev
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Build and package
+        run: |
+          out="$RUNNER_TEMP/dist"
+          bundle=build/linux/x64/release/bundle
+          flutter pub get
+          flutter build linux --release --build-name "$VERSION" --build-number "$CODE" \
+            --dart-define=APP_VERSION="$VERSION"
+          tarball=$(sh linux/packaging/make-tarball.sh "$bundle" "$VERSION" "$out")
+          sh linux/packaging/deb/build-deb.sh "$tarball" "$VERSION" "$out"
+          # The AUR package updates through pacman: no GitHub update check.
+          flutter build linux --release --build-name "$VERSION" --build-number "$CODE" \
+            --dart-define=APP_VERSION="$VERSION" --dart-define=UPDATE_CHECK=false
+          noupdate=$(sh linux/packaging/make-tarball.sh "$bundle" "$VERSION" "$out" -noupdate)
+
+          # The PKGBUILD for this release, checksum filled in.
+          sha=$(sha256sum "$noupdate" | cut -d' ' -f1)
+          mkdir -p "$RUNNER_TEMP/aur"
+          cp linux/packaging/aur/PKGBUILD linux/packaging/aur/quickremote-pc.install "$RUNNER_TEMP/aur/"
+          sed -i -e "s/^_ver=[^ ]*/_ver=$VERSION/" -e "s/^sha256sums=('SKIP')/sha256sums=('$sha')/" "$RUNNER_TEMP/aur/PKGBUILD"
+          grep -q "^_ver=$VERSION " "$RUNNER_TEMP/aur/PKGBUILD"
+          grep -q "$sha" "$RUNNER_TEMP/aur/PKGBUILD"
+          ls -l "$out"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            ${{ runner.temp }}/dist/*.tar.gz
+            ${{ runner.temp }}/dist/*.deb
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aur-pkgbuild
+          path: ${{ runner.temp }}/aur/
+          if-no-files-found: error
+
+  deb-test:
+    needs: linux
+    strategy:
+      fail-fast: false
+      matrix:
+        # Debian 12 stands in for Pardus 23 too; Ubuntu 22.04 is the oldest
+        # supported system (no "pkexec" package there: policykit-1).
+        image: ['debian:12', 'ubuntu:22.04']
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: dist
+      - name: Install
+        shell: bash
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -euo pipefail
+          deb=$(ls dist/quickremote-pc_*_amd64.deb)
+          apt-get update
+          # Every dependency, Recommends included, must exist in the archive.
+          apt-get install -s "./$deb" > /dev/null
+          apt-get install -y --no-install-recommends "./$deb" xvfb xauth dbus
+      - name: Check the installed files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x /opt/quickremote-pc/quick_remote_pc
+          test "$(readlink /usr/bin/quick_remote_pc)" = /opt/quickremote-pc/quick_remote_pc
+          test -f /opt/quickremote-pc/lib/libapp.so
+          test -x /opt/quickremote-pc/lib/quickremote_overlay
+          test -f /usr/share/applications/com.quickremote.quick_remote_pc.desktop
+          test -f /usr/share/icons/hicolor/scalable/apps/com.quickremote.quick_remote_pc.svg
+          grep -q 'TAG+="uaccess"' /usr/lib/udev/rules.d/70-quickremote-uinput.rules
+          grep -qx uinput /usr/lib/modules-load.d/quickremote-uinput.conf
+          missing=$(find /opt/quickremote-pc -type f \( -name '*.so*' -o -perm -u+x \) -exec ldd {} \; 2> /dev/null | grep 'not found' || true)
+          if [ -n "$missing" ]; then
+            echo "::error::missing libraries:"; echo "$missing" | sort -u; exit 1
+          fi
+      - name: Start the app
+        shell: bash
+        run: |
+          # Still running after 15 s (timeout's 124) counts as started.
+          set +e
+          dbus-run-session -- xvfb-run -a -s '-screen 0 1280x800x24' timeout 15 quick_remote_pc > run.log 2>&1
+          code=$?
+          set -e
+          cat run.log
+          if [ "$code" != 124 ]; then
+            echo "::error::quick_remote_pc exited after less than 15 s (status $code)"
+            exit 1
+          fi
+      - name: Remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get remove -y quickremote-pc
+          test ! -e /usr/lib/udev/rules.d/70-quickremote-uinput.rules
+          test ! -e /opt/quickremote-pc/quick_remote_pc
+
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      CODE: ${{ needs.version.outputs.code }}
+    steps:
+      # The signing secrets go only to the steps that need them (step env),
+      # never to the job, so no third-party action step sees them.
+      - id: key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANDROID_KEYSTORE_BASE64 is not set: no APKs in this release."
+          fi
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.present == 'true'
+      - uses: actions/setup-java@v4
+        if: steps.key.outputs.present == 'true'
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+        if: steps.key.outputs.present == 'true'
+      - name: Android platform 37
+        if: steps.key.outputs.present == 'true'
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37" > /dev/null
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        if: steps.key.outputs.present == 'true'
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Signing key
+        if: steps.key.outputs.present == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # storeFile is relative to quick_remote_app/android/app (both apps
+          # read this key.properties); both files are gitignored.
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > quick_remote_app/android/app/upload-keystore.jks
+          {
+            echo "storeFile=upload-keystore.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > quick_remote_app/android/key.properties
+      - name: Phone APK
+        if: steps.key.outputs.present == 'true'
+        working-directory: quick_remote_app
+        run: |
+          flutter config --jdk-dir "$JAVA_HOME"
+          flutter pub get
+          flutter build apk --release --build-name "$VERSION" --build-number "$CODE" \
+            --dart-define=APP_VERSION="$VERSION"
+      - name: Watch APK
+        if: steps.key.outputs.present == 'true'
+        working-directory: quick_remote_wear
+        run: sh ./gradlew :app:assembleRelease -PphoneVersionCode="$CODE" -PappVersionName="$VERSION"
+      - name: Check signatures and collect
+        if: steps.key.outputs.present == 'true'
+        run: |
+          apksigner=$(printf '%s\n' "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          phone=quick_remote_app/build/app/outputs/flutter-apk/app-release.apk
+          watch=quick_remote_wear/app/build/outputs/apk/release/app-release.apk
+          # The Wearable Data Layer joins only apps signed with the same key.
+          p=$("$apksigner" verify --print-certs "$phone" | grep 'SHA-256 digest')
+          w=$("$apksigner" verify --print-certs "$watch" | grep 'SHA-256 digest')
+          if [ "$p" != "$w" ]; then echo "::error::phone and watch APKs have different signers"; exit 1; fi
+          mkdir -p "$RUNNER_TEMP/dist"
+          cp "$phone" "$RUNNER_TEMP/dist/QuickRemote-$VERSION-android.apk"
+          cp "$watch" "$RUNNER_TEMP/dist/QuickRemote-$VERSION-wear-os.apk"
+      - name: Remove the signing key
+        if: always() && steps.key.outputs.present == 'true'
+        run: rm -f quick_remote_app/android/app/upload-keystore.jks quick_remote_app/android/key.properties
+      - uses: actions/upload-artifact@v4
+        if: steps.key.outputs.present == 'true'
+        with:
+          name: android-apks
+          path: ${{ runner.temp }}/dist/*.apk
+          if-no-files-found: error
+
+  release:
+    needs: [version, windows, linux, deb-test, android]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Collect
+        run: |
+          mkdir dist
+          for a in windows-installer linux-packages android-apks; do
+            if [ -d "artifacts/$a" ]; then cp artifacts/"$a"/* dist/; fi
+          done
+          (cd dist && sha256sum -- * > SHA256SUMS.txt)
+          ls -l dist
+      - name: Notes
+        run: |
+          tag=$GITHUB_REF_NAME
+          prev=$(git describe --tags --abbrev=0 --match 'v*' "$tag^" 2> /dev/null || true)
+          deb_version=$(printf '%s' "$VERSION" | tr '-' '~') # as build-deb.sh names it
+          {
+            echo "## Kurulum / Install"
+            echo
+            echo "- **Windows:** \`QuickRemote-PC-$VERSION-windows-x64-setup.exe\`. Kurulum imzasız; SmartScreen uyarısında **Ek bilgi → Yine de çalıştır**. (Unsigned: SmartScreen → More info → Run anyway.)"
+            echo "- **Debian / Ubuntu / Pardus:** \`sudo apt install ./quickremote-pc_${deb_version}_amd64.deb\`"
+            echo "- **Arch / CachyOS:** AUR \`quickremote-pc-bin\`"
+            echo "- **Linux (any):** \`quickremote-pc-$VERSION-linux-x64.tar.gz\`, then \`sudo quickremote-pc/share/install-uinput-rule.sh\`"
+            echo
+            if [ -n "$prev" ]; then
+              echo "## Commits since $prev"
+              echo
+              git log --no-merges --format='- %s (%h)' "$prev..$tag" | head -n 200
+            fi
+          } > notes.md
+          cat notes.md
+      - name: Draft release
+        run: |
+          tag=$GITHUB_REF_NAME
+          if gh release view "$tag" > /dev/null 2>&1; then
+            # A rerun: replace the files, keep the text someone may have edited.
+            gh release upload "$tag" dist/* --clobber
+          else
+            flags=()
+            if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
+            gh release create "$tag" dist/* --draft --verify-tag --generate-notes \
+              --title "QuickRemote $VERSION" --notes-file notes.md "${flags[@]}"
+          fi

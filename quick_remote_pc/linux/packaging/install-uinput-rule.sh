@@ -3,6 +3,7 @@
 # a virtual keyboard/mouse (works on X11 and Wayland). Same steps as the
 # "İzin ver" button in the app. Run with: sudo ./install-uinput-rule.sh
 set -e
+mkdir -p /etc/udev/rules.d /etc/modules-load.d
 echo 'KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"' \
   > /etc/udev/rules.d/70-quickremote-uinput.rules
 echo uinput > /etc/modules-load.d/quickremote-uinput.conf
