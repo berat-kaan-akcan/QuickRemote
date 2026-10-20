@@ -117,6 +117,41 @@ class ThemeScreen extends StatelessWidget {
                 ],
               ),
             ),
+            // Always shown: the phone knows of a watch only once it has said
+            // hello in this run, so hiding it would make the row come and go.
+            const SizedBox(height: AppSpace.xs),
+            FadeSlideIn(
+              index: 4,
+              child: SettingsSectionLabel(l10n.themeWatchHeader),
+            ),
+            FadeSlideIn(
+              index: 5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SettingsGroup(
+                    children: [
+                      SettingsRow(
+                        icon: Icons.watch_outlined,
+                        title: l10n.themeWatchTitle,
+                        subtitle: l10n.themeWatchSubtitle,
+                        alignTop: true,
+                        value: settings.watchUsesTheme,
+                        onChanged: settings.setWatchUsesTheme,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                  Text(
+                    l10n.themeWatchSunsetNote,
+                    style: AppType.bodySmall.copyWith(
+                      color: p.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

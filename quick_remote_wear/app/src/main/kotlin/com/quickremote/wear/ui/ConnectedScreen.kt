@@ -45,8 +45,10 @@ enum class Page { START, TOOLS, REMOTE }
  *
  * Over Wi-Fi with no slideshow running (nothing open, or a PDF), the
  * computer ignores the laser and the black and white screens: they are
- * faded, and a tap says when they work. Over Bluetooth the watch is told
- * nothing about the show, so they stay as they are. [pointer] names the laser.
+ * faded, and a tap says when they work. The laser stays on where the
+ * computer draws it itself ([Show.laserAnywhere]). Over Bluetooth the watch
+ * is told nothing about the show, so they stay as they are. [pointer] names
+ * the laser.
  */
 @Composable
 fun ConnectedScreen(
@@ -67,6 +69,7 @@ fun ConnectedScreen(
     val running = show?.running ?: (clock?.running == true)
     var blank by rememberSaveable { mutableStateOf<RemoteAction?>(null) }
     val showTools = show == null || running
+    val canPoint = showTools || show?.laserAnywhere == true
     var tip by remember { mutableStateOf<Notice?>(null) }
     val needsShow = stringResource(R.string.needs_show)
     val unavailable = { tip = Notice(needsShow) }
@@ -169,6 +172,7 @@ fun ConnectedScreen(
                             onLaser = onLaser,
                             pointer = pointer,
                             showTools = showTools,
+                            canPoint = canPoint,
                             onUnavailable = unavailable,
                         )
                         Page.REMOTE -> RemotePage(
@@ -178,7 +182,7 @@ fun ConnectedScreen(
                             onLaser = onLaser,
                             laser = laser,
                             pointer = pointer,
-                            canPoint = showTools,
+                            canPoint = canPoint,
                             onUnavailable = unavailable,
                         )
                     }

@@ -2,6 +2,7 @@ package com.quickremote.wear
 
 import com.quickremote.wear.phone.AlertService
 import com.quickremote.wear.phone.WearProtocol
+import com.quickremote.wear.ui.theme.WearTheme
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -27,11 +28,13 @@ class WearProtocolTest {
             "MODE_WIFI" to WearProtocol.MODE_WIFI,
             "KEY_PC" to WearProtocol.KEY_PC,
             "KEY_RUNNING" to WearProtocol.KEY_RUNNING,
+            "KEY_LASER_ANYWHERE" to WearProtocol.KEY_LASER_ANYWHERE,
             "KEY_CURRENT" to WearProtocol.KEY_CURRENT,
             "KEY_TOTAL" to WearProtocol.KEY_TOTAL,
             "KEY_POINTER" to WearProtocol.KEY_POINTER,
             "POINTER_LASER" to WearProtocol.POINTER_LASER,
             "KEY_DURATION" to WearProtocol.KEY_DURATION,
+            "KEY_THEME" to WearProtocol.KEY_THEME,
             "KEY_TIMER_TARGET" to WearProtocol.KEY_TIMER_TARGET,
             "KEY_TIMER_RUNNING" to WearProtocol.KEY_TIMER_RUNNING,
             "KEY_TIMER_START" to WearProtocol.KEY_TIMER_START,
@@ -72,10 +75,12 @@ class WearProtocolTest {
             WearProtocol.KEY_MODE,
             WearProtocol.KEY_PC,
             WearProtocol.KEY_RUNNING,
+            WearProtocol.KEY_LASER_ANYWHERE,
             WearProtocol.KEY_CURRENT,
             WearProtocol.KEY_TOTAL,
             WearProtocol.KEY_POINTER,
             WearProtocol.KEY_DURATION,
+            WearProtocol.KEY_THEME,
             WearProtocol.KEY_TIMER_TARGET,
             WearProtocol.KEY_TIMER_RUNNING,
             WearProtocol.KEY_TIMER_START,
@@ -95,6 +100,22 @@ class WearProtocolTest {
             "wear_bridge.dart writes other modes",
             "'${WearProtocol.KEY_MODE}': bluetooth ? '${WearProtocol.MODE_BLUETOOTH}' : '${WearProtocol.MODE_WIFI}'," in bridge,
         )
+    }
+
+    @Test
+    fun `the phone names every watch theme, and Sunset as Cobalt`() {
+        // WearBridge.watchThemeOf: `AppColorTheme.cobalt || AppColorTheme.sunset => 'cobalt',`
+        val sent = Regex("""((?:AppColorTheme\.\w+(?: \|\| )?)+) => '(\w+)'""").findAll(bridge)
+            .flatMap { match ->
+                Regex("""AppColorTheme\.(\w+)""").findAll(match.groupValues[1]).map { it.groupValues[1] to match.groupValues[2] }
+            }
+            .toMap()
+        val phoneThemes = phone.resolve("lib/theme/app_color_theme.dart").readText()
+            .let { Regex("""^  (\w+)\(AppPalette""", RegexOption.MULTILINE).findAll(it).map { m -> m.groupValues[1] }.toSet() }
+        assertEquals("every phone theme has a watch word", phoneThemes, sent.keys)
+        assertEquals(WearTheme.entries.map { it.wire }.toSet(), sent.values.toSet())
+        assertEquals(WearProtocol.THEME_COBALT, sent["sunset"])
+        sent.values.forEach { assertTrue(it, WearTheme.ofWire(it) != null) }
     }
 
     @Test

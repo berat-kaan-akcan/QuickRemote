@@ -9,6 +9,7 @@ import 'package:quick_remote_app/services/discovery_service.dart';
 import 'package:quick_remote_app/services/presentation_timer_controller.dart';
 import 'package:quick_remote_app/services/wear/wear_bridge.dart';
 import 'package:quick_remote_app/services/websocket_service.dart';
+import 'package:quick_remote_app/theme/app_color_theme.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 /// The connection as the bridge sees it, with what it sent kept in [sent].
@@ -16,6 +17,7 @@ class FakeConnection extends WebSocketService {
   AppConnectionState state = AppConnectionState.disconnected;
   String address = '';
   bool running = false;
+  bool overlay = false;
   int current = 0;
   int total = 0;
   Failure? error;
@@ -38,6 +40,8 @@ class FakeConnection extends WebSocketService {
   String? get pcPlatform => platform;
   @override
   bool get isPptRunning => running;
+  @override
+  bool get toolsAnywhere => overlay;
   @override
   int get currentSlide => current;
   @override
@@ -123,6 +127,7 @@ void main() {
   late DateTime clock;
   late int nearbyAsked;
   late bool nearbyGranted;
+  late String? watchTheme;
 
   /// A message from the watch, as the native WearRelay hands it over.
   Future<void> fromWatch(String method, [Object? arguments]) async {
@@ -151,6 +156,7 @@ void main() {
     program = BtTarget.powerpoint;
     picked = ValueNotifier(0);
     length = 0;
+    watchTheme = null;
     alerts = const TimerAlerts(warnings: {300: 'double', 60: 'long'}, timeUp: 'triple');
     bridge = WearBridge(
       ws,
@@ -163,6 +169,7 @@ void main() {
         picked.value++;
       },
       timerAlerts: () => alerts,
+      watchTheme: () => watchTheme,
       settings: picked,
       now: () => clock,
       askNearbyDevices: () async {
@@ -184,7 +191,7 @@ void main() {
 
     await fromWatch('hello');
     expect(states(), [
-      {'link': 'connected', 'mode': 'wifi', 'pc': '192.168.1.20', 'running': false, 'current': 0, 'total': 0, 'pointer': 'laser', ...noClock},
+      {'link': 'connected', 'mode': 'wifi', 'pc': '192.168.1.20', 'running': false, 'laserAnywhere': false, 'current': 0, 'total': 0, 'pointer': 'laser', ...noClock},
     ]);
   });
 
@@ -223,6 +230,7 @@ void main() {
       'mode': 'wifi',
       'pc': '192.168.1.20',
       'running': true,
+      'laserAnywhere': false,
       'current': 5,
       'total': 20,
       'pointer': 'laser',
@@ -232,6 +240,47 @@ void main() {
       'timerRunning': true,
       'timerStart': clock.millisecondsSinceEpoch,
       'timerElapsed': 0,
+    });
+  });
+
+  test('a PC whose overlay draws the laser tells the watch it works without a show', () async {
+    await fromWatch('hello');
+    ws
+      ..connect192()
+      ..overlay = true
+      ..change();
+    expect(states().last['laserAnywhere'], isTrue);
+  });
+
+  group('the color theme', () {
+    test('goes to the watch while the switch is on, and again when it changes', () async {
+      watchTheme = 'mint';
+      await fromWatch('hello');
+      expect(states().last['theme'], 'mint');
+
+      watchTheme = 'violet';
+      picked.value++;
+      expect(states().last['theme'], 'violet');
+      expect(states(), hasLength(2));
+    });
+
+    test('is left out while the switch is off: the watch keeps its own', () async {
+      watchTheme = 'oled';
+      await fromWatch('hello');
+      watchTheme = null;
+      picked.value++;
+      expect(states(), hasLength(2));
+      expect(states().last.containsKey('theme'), isFalse);
+    });
+
+    test('a watch is always dark: light-only Sunset is sent as Cobalt', () {
+      expect(WearBridge.watchThemeOf(AppColorTheme.sunset), 'cobalt');
+      expect(WearBridge.watchThemeOf(AppColorTheme.cobalt), 'cobalt');
+      expect(WearBridge.watchThemeOf(AppColorTheme.highContrast), 'contrast');
+      expect(
+        {for (final theme in AppColorTheme.values) WearBridge.watchThemeOf(theme)},
+        {'cobalt', 'oled', 'contrast', 'mint', 'violet'},
+      );
     });
   });
 
@@ -357,6 +406,7 @@ void main() {
         'mode': 'bluetooth',
         'pc': 'berat-cachyos',
         'running': false,
+        'laserAnywhere': false,
         'current': 0,
         'total': 0,
         'pointer': 'laser',
