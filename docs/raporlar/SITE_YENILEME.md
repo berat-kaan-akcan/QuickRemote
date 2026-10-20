@@ -1,7 +1,7 @@
 # Site yenileme (site/)
 
 ## Durum
-DEVAM EDİYOR (oturum 1, 2026-10-20)
+DEVAM EDİYOR (oturum 1, 2026-10-20): içerik, demolar, görseller ve doğrulama bitti; PR açılacak
 
 Dal: `site-yenileme` (main'den açıldı). Sınırlar: yalnızca `site/`, bu dosya, `docs/raporlar/site-ekranlar/` ve CLAUDE.md'nin site paragrafı.
 
@@ -24,54 +24,63 @@ Kaynaklar: CLAUDE.md, brand/BRAND.md, iki uygulamanın ARB dosyaları, saatin `r
 (Aşağıda sıralı; [x] = kapandı)
 
 ### Marka ve ortak
-- [ ] Logo: sprite'taki `#mark` eski Q; 59A ile değiştir (ayrı, parıltısız favicon ve uygulama ikonu varlıkları `brand/export/`'tan)
-- [ ] `assets/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`, `app-icon.png` yenile
-- [ ] Başlık/altlık logosu ve wordmark: BRAND.md (Quick Bold, Remote Medium)
+- [x] Logo: sprite'taki `#mark` eski Q; 59A ile değiştir (ayrı, parıltısız favicon ve uygulama ikonu varlıkları `brand/export/`'tan)
+- [x] `assets/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`, `app-icon.png` yenile
+- [x] Başlık/altlık logosu ve wordmark: BRAND.md (Quick Bold, Remote Medium)
 
 ### Telefon parçası (hero)
-- [ ] Başlık: PC adı + "PowerPoint" (landing-page `b73b012`)
-- [ ] Slayt kartı: yeni yapı; Başlat/Bitir tek tuş; siyah/beyaz kartın içinde + "Slayta git"; geniş Sonraki/dar Önceki
-- [ ] Slayt resmi kartta (önizleme) ve sunucu görünümü
-- [ ] Medya sırası: Sistem sesi → Şu an çalan → Slayt medyası (landing-page `b73b012`)
+- [x] Başlık: PC adı + "PowerPoint" (landing-page `b73b012`)
+- [x] Slayt kartı: yeni yapı; Başlat/Bitir tek tuş; siyah/beyaz kartın içinde + "Slayta git"; geniş Sonraki/dar Önceki
+- [x] Slayt resmi kartta (önizleme) ve sunucu görünümü
+- [x] Medya sırası: Sistem sesi → Şu an çalan → Slayt medyası (landing-page `b73b012`)
 
 ### Saat
-- [ ] Yeni saat tasarımı (Başlat/Araçlar/Kumanda sayfaları, süre sayacı, noktalar, basılı tut = lazer, 1 sn basılı tut = Bitir)
-- [ ] Saat "telefon üzerinden" metni (landing-page `fd71d83`; kontrol)
-- [ ] Saat temaları
+- [x] Yeni saat tasarımı (Başlat/Araçlar/Kumanda sayfaları, süre sayacı, noktalar, basılı tut = lazer, 1 sn basılı tut = Bitir)
+- [x] Saat "telefon üzerinden" metni (landing-page `fd71d83`; kontrol)
+- [x] Saat temaları
 
 ### Yeni özellikler (sitede hiç yok)
-- [ ] Lazer/mürekkep overlay'i: lazer, spot ışığı, büyüteç, geri al; gösteri dışında da
-- [ ] Slayt önizleme, sunucu görünümü, slayta git ızgarası
-- [ ] Renk temaları (telefon + saat) ve PC Görünüm
-- [ ] Araçlar programa göre solar (caps)
-- [ ] Kısayollar ve Hızlı Ayarlar kutucuğu
-- [ ] Tepsi, oturum açılınca başlat, güncelleme denetimi, sorun bildir/günlük
-- [ ] Diller (TR/EN, sistem dili)
-- [ ] PC penceresi yeni tasarım (durum kartı, eşleştirme kartı, telefon listesi)
-- [ ] Kurulum/indirme: Windows yükleyici, .deb, tarball, AUR, APK
-- [ ] Güvenlik bölümü: yerel ağ sınırı, deneme sınırları; (kontrol: 5 hata/60 sn doğru, 6 hane PIN)
-- [ ] Programlar: WPS Linux/Windows, PDF ayrıntıları, Okular/WPS PDF doğrulanmadı
-- [ ] SSS: dil, tepsi, güncelleme, gizlilik/günlük, önizleme sınırı, saat Bluetooth
-- [ ] Bluetooth: kapalıyken aç, görünür yap, tuş tablosu hedef programa göre
+- [x] Lazer/mürekkep overlay'i: lazer, spot ışığı, büyüteç, geri al; gösteri dışında da
+- [x] Slayt önizleme, sunucu görünümü, slayta git ızgarası
+- [x] Renk temaları (telefon + saat) ve PC Görünüm
+- [x] Araçlar programa göre solar (caps)
+- [x] Kısayollar ve Hızlı Ayarlar kutucuğu
+- [x] Tepsi, oturum açılınca başlat, güncelleme denetimi, sorun bildir/günlük
+- [x] Diller (TR/EN, sistem dili)
+- [x] PC penceresi yeni tasarım (durum kartı, eşleştirme kartı, telefon listesi)
+- [x] Kurulum/indirme: Windows yükleyici, .deb, tarball, AUR, APK
+- [x] Güvenlik bölümü: yerel ağ sınırı, deneme sınırları; (kontrol: 5 hata/60 sn doğru, 6 hane PIN)
+- [x] Programlar: WPS Linux/Windows, PDF ayrıntıları, Okular/WPS PDF doğrulanmadı
+- [x] SSS: dil, tepsi, güncelleme, gizlilik/günlük, önizleme sınırı, saat Bluetooth
+- [x] Bluetooth: kapalıyken aç, görünür yap, tuş tablosu hedef programa göre
 
 ### İki dil
-- [ ] TR/EN eşitliği (bölüm sayısı, id'ler, sayılar)
+- [x] TR/EN eşitliği (bölüm sayısı, id'ler, sayılar)
 
 ## Ekstralar (fikir listesi)
-- [ ] Bağlantı animasyonu: saat ⇄ telefon ⇄ PC (veri akışı)
-- [ ] Canlı overlay demosu: lazer / spot ışığı / büyüteç / mürekkep, gösteri dışında da
-- [ ] Tema değiştirici: 6 tema, telefon + saat birlikte değişir
-- [ ] Slayt önizleme + sunucu görünümü demosu
-- [ ] Kaydırmaya bağlı girişler (transform/opacity), reduced-motion'da sade
-- [ ] Kurulum sekmeleri (Windows / Linux / Android / Saat) + kopyalanabilir komutlar
-- [ ] SSS genişletme + arama olmadan hızlı bağlantılar
+- [x] Bağlantı animasyonu: saat ⇄ telefon ⇄ PC (veri akışı)
+- [x] Canlı overlay demosu: lazer / spot ışığı / büyüteç / mürekkep, gösteri dışında da
+- [x] Tema değiştirici: 6 tema, telefon + saat birlikte değişir
+- [x] Slayt önizleme + sunucu görünümü demosu
+- [x] Kaydırmaya bağlı girişler (transform/opacity), reduced-motion'da sade
+- [x] Kurulum sekmeleri (Windows / Linux / Android / Saat) + kopyalanabilir komutlar
+- [x] SSS genişletme + arama olmadan hızlı bağlantılar
 
 ## Kararlar
+- Sayfalar `site/tools/parts/` parçalarından `build_pages.py` ile üretilir (görev "build adımı yok" der: site kendisi yine düz HTML/CSS/JS ve bir derleme gerektirmez; betik yalnızca iki sayfanın aynı yapıda kalmasını sağlar). Her cümle `{{tr||en}}` çifti.
+- Logo: `brand/logo/favicon.svg`'den koyu karo olarak satır içi sprite'a alındı; "Q'nun kuyruğu" hikâyesi "bağlantı çizgisi" oldu (çizgi ve duraklar aynı).
+- Telefon kopyası dinamik temalı (`--p*` değişkenleri = AppPalette); hero telefonu varsayılan Kobalt koyu. Saat Gün Batımı'nı Kobalt gösterir (uygulamadaki gibi).
+- Dürüstlük: Windows'ta hiç derlenmeyen/çalıştırılmayan şeyler (katman, büyüteç, ekran resmi, PowerPoint slayt resmi, yükleyici), tepsi/oturumda başlat/güncelleme denetimi, telefon kısayolları ve sunucu görünümü gizlenmedi; "Neyi denedik, neyi henüz denemedik" bölümü, katman bölümündeki "Yeni · deneme aşamasında" etiketi ve ilgili kartlardaki notlarla açıkça işaretlendi. "Gerçek cihazda denendi" sütunu yalnızca CLAUDE.md'de "verified" diye geçenlere dayanır.
+- Gösterilen sürüm numarası ("Yeni sürüm: 0.2.0") yalnızca örnektir. İndirme bağlantıları `releases/latest`; henüz yayın yok, Play Store'da yok diye yazıldı.
+- Uygulamadan not (düzeltilmedi): `DURUM.md` "Site güncellemesi proje bitince" der; bu görevle kalktı. `README` "kişisel kullanım", lisans kararı bekliyor, sitede "Kişisel kullanım amaçlıdır" korundu.
+- Oturumun atanmış dalı `claude/…`, görevin dalı `site-yenileme`; görevdeki talimata uyuldu.
 - Dal `site-yenileme` (görev metni); oturumun atanmış dalı `claude/…` ise kullanılmadı, çünkü görev yalnızca `site-yenileme`'ye push edilmesini ister.
 - Windows'ta doğrulanmamış özellikler sitede "Windows'ta denenmedi" diye işaretlenir (gizlenmez); ana vaatler yalnızca doğrulanmış özelliklerdir.
 
 ## Doğrulama sonuçları
-(henüz yok)
+`node site/tools/verify.mjs` (tam matris: tr/en × 1440/390 × açık/koyu × hareket azaltma açık/kapalı): konsol hatası yok, kırık `#` bağlantısı/ikon yok, yatay kaydırma yok, TR/EN kimlik, bölüm ve eleman sayıları eşit, tüm demo adımları geçti (hero, saat, tema, katman, goto, medya, anahtar tablosu, PC penceresi, tepsi, görünüm, kopyalama). Ekran görüntüleri `docs/raporlar/site-ekranlar/`.
+Düzeltilen sorunlar: telefon kuralının `.rig` dışına sızması (mini telefon), 390 px'te SSS'de nbsp kaynaklı 20 px taşma, sunucu görünümünde boşluk, ayarlar kartında kırpılma.
+Uygulamadaki tuhaflık notu: yok.
 
 ## Sıradaki adım
-1. Kaynaklarda kalanları oku (saat tema renkleri, PC pencere ekran kodu), sonra logo + sprite + ikonlar.
+CLAUDE.md paragrafı ve araç README'si yazıldı; ekran görüntüleri commit edilecek, sonra durum TAMAMLANDI yapılıp draft PR açılacak.
