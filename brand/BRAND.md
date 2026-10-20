@@ -31,7 +31,7 @@ Bütün SVG'ler `brand/tools/draw_logo.py` ile tek bir ölçü tanımından üre
 | `wordmark-light-bg.svg` / `wordmark-dark-bg.svg` | Yalnızca yazı (elle hazırlanmış) |
 | `favicon.svg` | 16–48 px için parıltısız sürüm |
 
-Saatin bildirim ikonu (`quick_remote_wear/.../drawable/ic_presenting.xml`) da aynı betikle tek renk işaretten üretilir.
+`ic_presenting.xml` da aynı betikle tek renk işaretten, beyaz olarak üretilir ve iki yere yazılır: saatte (`quick_remote_wear/.../drawable/`) Ongoing Activity ve bildirim ikonu, telefonda (`quick_remote_app/android/.../drawable/`) Hızlı Ayarlar kutucuğunun ikonu.
 
 - **Wordmark**: Space Grotesk ile "**Quick**" Bold, "Remote" Medium ve birincil renkte yazılır. Ad her zaman bitişik ve büyük harflerle "QuickRemote" olarak yazılır. PC uygulamasında yanına gri renkte "PC" eklenir. İkonla yan yana yazıldığında yazı boyu ikon yüksekliğinin 0,53'ü, aradaki boşluk 0,22'sidir.
 - **Boşluk**: İkonun çevresinde en az lazer noktasının çapı kadar boşluk bırakılır.
@@ -163,4 +163,22 @@ Bileşenler `lib/widgets/ui/` altındadır ve tek bir import ile gelir: `import 
 
 ## Tema
 
-İki uygulama da sistemin açık/koyu ayarını izler (`ThemeMode.system`). `AppTheme.light` ve `AppTheme.dark` tüm Material bileşenlerini (buton, input, diyalog, switch, slider, tooltip, sayfa geçişi) bu rehbere bağlar. Android 12 ve üstündeki sistem açılış ekranı temaya göre Paper ya da Ink zeminde uygulama ikonunu gösterir; ardından Flutter'daki `BrandSplash` ikonun tuşlarını ve lazer noktasını sırayla getirerek bu ekranı devralır.
+İki uygulama da kullanıcı başka bir seçim yapmadıkça sistemin açık/koyu ayarını izler (`ThemeMode.system`). PC'de bu seçim Ayarlar → Görünüm'dedir (`theme_mode`); PC'nin renk teması yoktur.
+
+Telefonda Ayarlar → Tema (`ThemeScreen`) ekranında renk temaları da vardır. Her biri bir `AppPalette`'tir (`lib/theme/app_color_theme.dart`):
+
+| Tema | Mod |
+|---|---|
+| Kobalt (varsayılan) | Açık/koyu ayarını izler |
+| OLED | Yalnızca koyu, tam siyah zemin |
+| Yüksek kontrast | Yalnızca koyu |
+| Nane | Yalnızca koyu |
+| Mor | Yalnızca koyu |
+| Gün batımı | Yalnızca açık |
+
+- Lazer turuncusu ve durum renkleri (başarı, uyarı, hata, bilgi) bütün temalarda aynıdır.
+- Birincil dolgu üzerindeki metin ve ikonlar `onPrimary` rengini kullanır; OLED, yüksek kontrast ve nane temalarında bu renk koyudur, beyaz varsayılmaz.
+- Başlatıcı ikonu temadan bağımsız olarak her zaman koyu kobalt karodur. Uygulama içindeki karo temanın renklerini alır.
+- Saat, telefondaki "Saatte de kullan" anahtarı açıkken telefonun temasını alır (`WearTheme`). Saatin açık teması olmadığından Gün batımı orada Kobalt olarak görünür.
+
+`AppTheme.light` ve `AppTheme.dark` tüm Material bileşenlerini (buton, input, diyalog, switch, slider, tooltip, sayfa geçişi) bu rehbere bağlar. Android 12 ve üstündeki sistem açılış ekranı temaya göre Paper ya da Ink zeminde uygulama ikonunu gösterir; ardından Flutter'daki `BrandSplash` ikonun tuşlarını ve lazer noktasını sırayla getirerek bu ekranı devralır.
