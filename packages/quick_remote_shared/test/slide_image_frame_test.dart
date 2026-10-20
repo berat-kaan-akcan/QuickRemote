@@ -47,12 +47,40 @@ void main() {
     Uint8List patched(int index, int value) =>
         Uint8List.fromList(good)..[index] = value;
     expect(SlideImageFrame.decode(patched(0, 0x52)), isNull, reason: 'magic');
-    expect(SlideImageFrame.decode(patched(1, 3)), isNull, reason: 'kind');
+    expect(SlideImageFrame.decode(patched(1, 4)), isNull, reason: 'kind');
+    expect(SlideImageFrame.decode(patched(1, 0xFF)), isNull, reason: 'kind');
     expect(SlideImageFrame.decode(patched(2, 0)), isNull, reason: 'slide 0');
     expect(SlideImageFrame.decode(patched(8, 0)..[9] = 0), isNull,
         reason: 'width 0');
     expect(SlideImageFrame.decode(patched(12, 0)), isNull,
         reason: 'not a JPEG');
+  });
+
+  test('a screen picture has no slide and no deck', () {
+    final bytes = SlideImageFrame(
+      kind: SlideImageKind.screen,
+      slide: 0,
+      deck: 0,
+      width: 1280,
+      height: 720,
+      jpeg: jpeg,
+    ).encode();
+    expect(bytes[1], 3, reason: 'kind 3 on the wire');
+    final decoded = SlideImageFrame.decode(bytes)!;
+    expect(decoded.kind, SlideImageKind.screen);
+    expect(decoded.slide, 0);
+    expect(decoded.deck, 0);
+  });
+
+  test('phones from before screen pictures drop them', () {
+    // Their decode: `kind >= SlideImageKind.values.length` (3 kinds then)
+    // is null, before anything else is read.
+    const oldKinds = 3;
+    final screen = frame(kind: SlideImageKind.screen).encode();
+    expect(screen[1] >= oldKinds, isTrue);
+    for (final kind in SlideImageKind.values.take(oldKinds)) {
+      expect(frame(kind: kind).encode()[1] < oldKinds, isTrue);
+    }
   });
 
   test('deckId is a stable 32-bit hash', () {
