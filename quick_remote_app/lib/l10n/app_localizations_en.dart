@@ -146,6 +146,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorWpsNoMediaRewind => 'WPS can\'t rewind the video.';
 
   @override
+  String get errorWpsTakeOverNoWps => 'No open WPS was found on the PC.';
+
+  @override
+  String get errorWpsTakeOverNoFile =>
+      'The presentation isn\'t saved: save it in WPS first.';
+
+  @override
+  String get errorWpsTakeOverNotClosed =>
+      'WPS didn\'t close: answer its save question on the PC and try again.';
+
+  @override
+  String get errorWpsTakeOverFailed =>
+      'Couldn\'t open the presentation in QuickRemote\'s WPS.';
+
+  @override
   String get errorLockFailed => 'Couldn\'t lock the computer.';
 
   @override
@@ -1057,6 +1072,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get unreadableShowUserWps =>
       'QuickRemote did not open this WPS: no slide number or notes, and the buttons work while the WPS window is in front.';
+
+  @override
+  String get takeOverHint =>
+      'QuickRemote didn\'t open this WPS: no slide numbers or notes. Take over closes WPS on the PC and opens the presentation at the same slide with full control.';
+
+  @override
+  String get takeOverAction => 'Take over';
+
+  @override
+  String get takeOverStarted =>
+      'WPS is reopening on the PC; if it asks to save, answer on the PC.';
 
   @override
   String get drawToolsNeedShow =>

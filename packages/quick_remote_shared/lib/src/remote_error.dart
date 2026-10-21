@@ -24,6 +24,10 @@ enum RemoteError {
   wpsOpenFromApp('WPS_OPEN_FROM_APP'),
   wpsHighlighterNeedsFocus('WPS_HIGHLIGHTER_NEEDS_FOCUS'),
   wpsNoMediaRewind('WPS_NO_REWIND'),
+  wpsTakeOverNoWps('WPS_TAKEOVER_NO_WPS'),
+  wpsTakeOverNoFile('WPS_TAKEOVER_NO_FILE'),
+  wpsTakeOverNotClosed('WPS_TAKEOVER_NOT_CLOSED'),
+  wpsTakeOverFailed('WPS_TAKEOVER_FAILED'),
   lockFailed('LOCK_FAILED'),
 
   /// Anything else; `info` carries the program's own error.
@@ -78,6 +82,10 @@ enum RemoteError {
         wpsOpenFromApp => 'WPS\'te bu özellik yalnızca QuickRemote\'tan açılan sunumda çalışır ("Sunumu WPS ile aç").',
         wpsHighlighterNeedsFocus => 'WPS\'te fosforlu kalem yalnızca slayt gösterisi odaktayken seçilebilir.',
         wpsNoMediaRewind => 'WPS\'te video başa sarılamıyor.',
+        wpsTakeOverNoWps => 'PC\'de açık bir WPS bulunamadı.',
+        wpsTakeOverNoFile => 'Sunum kaydedilmemiş: önce WPS\'te kaydedin.',
+        wpsTakeOverNotClosed => 'WPS kapanmadı: PC\'deki kaydetme sorusunu yanıtlayıp tekrar deneyin.',
+        wpsTakeOverFailed => 'Sunum QuickRemote\'un WPS\'inde açılamadı.',
         lockFailed => 'Bilgisayar kilitlenemedi.',
         commandFailed => 'Sunum komutu başarısız: ${info ?? ''}',
       };

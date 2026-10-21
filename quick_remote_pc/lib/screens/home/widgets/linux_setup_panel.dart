@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../../providers/server_provider.dart';
 import '../../../services/input/linux/wps_bridge.dart';
+import '../../../services/input_simulator.dart';
 import '../../../services/linux/linux_setup.dart';
 import '../../../services/server/network_manager.dart';
 import '../../../widgets/status_snack_bar.dart';
@@ -230,6 +232,13 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
             action: context.l10n.openPresentation,
             onTap: _openInWps,
           ),
+        WpsStatus.userStarted => _row(
+            Icons.slideshow_rounded,
+            _orange,
+            context.l10n.wpsUserStarted,
+            action: context.l10n.takeOver,
+            onTap: _takeOver,
+          ),
         WpsStatus.noRpc => _row(
             Icons.slideshow_rounded,
             _orange,
@@ -256,6 +265,29 @@ class _LinuxSetupPanelState extends State<LinuxSetupPanel> {
       if (reply['ok'] != true) debugPrint('WPS open failed: ${reply['error']}');
       return reply['ok'] == true;
     }, context.l10n.wpsOpened, context.l10n.wpsOpenFailed);
+  }
+
+  /// Closes the WPS the user started and opens its presentation in the
+  /// bridge's WPS (WPS_TAKE_OVER, as from the phone).
+  Future<void> _takeOver() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final error = await InputSimulator.takeOverWps();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    final l10n = context.l10n;
+    showStatusSnackBar(
+      context,
+      switch (error) {
+        null => l10n.wpsTakenOver,
+        RemoteError.wpsTakeOverNoWps => l10n.wpsTakeOverNoWps,
+        RemoteError.wpsTakeOverNoFile => l10n.wpsTakeOverNoFile,
+        RemoteError.wpsTakeOverNotClosed => l10n.wpsTakeOverNotClosed,
+        _ => l10n.wpsTakeOverFailed,
+      },
+      kind: error == null ? StatusKind.success : StatusKind.error,
+    );
+    _refresh();
   }
 
   Widget _row(IconData icon, Color color, String text, {String? action, VoidCallback? onTap}) {

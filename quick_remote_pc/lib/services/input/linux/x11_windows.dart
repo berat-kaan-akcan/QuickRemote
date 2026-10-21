@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
@@ -228,6 +229,50 @@ class X11Windows {
     }
   }
 
+  /// [window]'s title (`_NET_WM_NAME`, else WM_NAME), or null.
+  String? title(int window) {
+    try {
+      if (!_open()) return null;
+      final bytes = _property(window, '_NET_WM_NAME') ?? _property(window, 'WM_NAME');
+      return bytes == null ? null : utf8.decode(bytes, allowMalformed: true);
+    } catch (e) {
+      debugPrint('X11Windows.title failed: $e');
+      return null;
+    }
+  }
+
+  /// Asks the window manager to close [window], as its close button does
+  /// (`_NET_CLOSE_WINDOW`): the program may still ask to save first.
+  bool close(int window) {
+    try {
+      if (!_open()) return false;
+      final type = _atom('_NET_CLOSE_WINDOW');
+      if (type == 0) return false;
+      // xcb_client_message_event_t: u8 response_type (33), u8 format (32),
+      // u16 sequence, u32 window, u32 type, then five u32: the time (0, now)
+      // and the source (2, a pager: what a taskbar's close sends).
+      final event = calloc<Uint8>(32);
+      try {
+        final bytes = event.asTypedList(32);
+        final view = ByteData.sublistView(bytes);
+        bytes[0] = 33;
+        bytes[1] = 32;
+        view.setUint32(4, window, Endian.host);
+        view.setUint32(8, type, Endian.host);
+        view.setUint32(16, 2, Endian.host);
+        // SubstructureRedirect | SubstructureNotify on the root, as EWMH asks.
+        _xcbSendEvent(_conn!, 0, _root, (1 << 19) | (1 << 20), event);
+        _xcbFlush(_conn!);
+        return true;
+      } finally {
+        calloc.free(event);
+      }
+    } catch (e) {
+      debugPrint('X11Windows.close failed: $e');
+      return false;
+    }
+  }
+
   /// Splits WM_CLASS ("instance\0class\0") into its names.
   @visibleForTesting
   static List<String> parseWmClass(Uint8List bytes) => String.fromCharCodes(bytes)
@@ -299,4 +344,8 @@ final _xcbGetImageData = _xcb.lookupFunction<Pointer<Uint8> Function(Pointer<Voi
     Pointer<Uint8> Function(Pointer<Void>)>('xcb_get_image_data');
 final _xcbGetImageDataLength =
     _xcb.lookupFunction<Int32 Function(Pointer<Void>), int Function(Pointer<Void>)>('xcb_get_image_data_length');
+final _xcbSendEvent = _xcb.lookupFunction<
+    _Cookie Function(Pointer<Void>, Uint8, Uint32, Uint32, Pointer<Uint8>),
+    _Cookie Function(Pointer<Void>, int, int, int, Pointer<Uint8>)>('xcb_send_event');
+final _xcbFlush = _xcb.lookupFunction<Int32 Function(Pointer<Void>), int Function(Pointer<Void>)>('xcb_flush');
 final _free = _libc.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('free');

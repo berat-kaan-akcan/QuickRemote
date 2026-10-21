@@ -143,6 +143,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get errorWpsNoMediaRewind => 'WPS\'te video başa sarılamıyor.';
 
   @override
+  String get errorWpsTakeOverNoWps => 'PC\'de açık bir WPS bulunamadı.';
+
+  @override
+  String get errorWpsTakeOverNoFile =>
+      'Sunum kaydedilmemiş: önce WPS\'te kaydedin.';
+
+  @override
+  String get errorWpsTakeOverNotClosed =>
+      'WPS kapanmadı: PC\'deki kaydetme sorusunu yanıtlayıp tekrar deneyin.';
+
+  @override
+  String get errorWpsTakeOverFailed =>
+      'Sunum QuickRemote\'un WPS\'inde açılamadı.';
+
+  @override
   String get errorLockFailed => 'Bilgisayar kilitlenemedi.';
 
   @override
@@ -1052,6 +1067,17 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get unreadableShowUserWps =>
       'Bu WPS\'i QuickRemote açmadı: slayt numarası ve notlar gelmez, tuşlar WPS penceresi öndeyken çalışır.';
+
+  @override
+  String get takeOverHint =>
+      'Bu WPS\'i QuickRemote açmadı: slayt numarası ve notlar gelmiyor. Devral ile PC\'deki WPS kapanıp sunum aynı slayttan tam kontrolle açılır.';
+
+  @override
+  String get takeOverAction => 'Devral';
+
+  @override
+  String get takeOverStarted =>
+      'WPS PC\'de yeniden açılıyor; kaydetme sorusu çıkarsa PC\'de yanıtlayın.';
 
   @override
   String get drawToolsNeedShow =>

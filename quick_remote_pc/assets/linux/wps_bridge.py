@@ -13,6 +13,7 @@ one they answer NOT_RUNNING, and the server falls back to key presses.
 """
 import json
 import os
+import signal
 import sys
 
 try:
@@ -210,6 +211,15 @@ class Wps:
         self.wrapper_pid = pid if hr == S_OK and pid > 0 else None
         self.pid = child_named(self.wrapper_pid, "wpp") if self.wrapper_pid else None
 
+    def _stop_wps(self):
+        for pid in (self.pid, self.wrapper_pid):
+            if pid:
+                try:
+                    os.kill(pid, signal.SIGTERM)
+                except OSError:
+                    pass
+        self.reset()
+
     def _show(self):
         """(window, view, presentation) of the running show, or None."""
         self._check_alive()
@@ -245,8 +255,20 @@ class Wps:
         self._check_alive()
         if self.app is None:
             self._start_wps()
-        call(call(self.app, "get_Presentations"), "Open", os.path.abspath(path))
-        return {"pid": self.pid}
+        try:
+            presentations = call(self.app, "get_Presentations")
+        except BridgeError:
+            # A WPS whose windows the user closed keeps running and answers
+            # nothing: end it and start another.
+            self._stop_wps()
+            self._start_wps()
+            presentations = call(self.app, "get_Presentations")
+        pres = call(presentations, "Open", os.path.abspath(path))
+        try:
+            total = call(call(pres, "get_Slides"), "get_Count")
+        except BridgeError:
+            total = None
+        return {"pid": self.pid, "total": total}
 
     def state(self, _args):
         show = self._show()
@@ -291,11 +313,14 @@ class Wps:
             return ""
 
     def export(self, args):
-        """Writes slide "index" of the running show to "path" as a JPEG
-        "width" pixels wide (Slide.Export, verified on WPS 11.1.0.11723) and
-        answers its height. The picture is the slide as the document holds
-        it: the animation step, ink and a playing video do not show."""
-        pres = self._require_show()[2]
+        """Writes slide "index" of the running show (without one, of the
+        active presentation: a take-over matches the user's show against
+        them) to "path" as a JPEG "width" pixels wide (Slide.Export, verified
+        on WPS 11.1.0.11723) and answers its height. The picture is the slide
+        as the document holds it: the animation step, ink and a playing video
+        do not show."""
+        show = self._show()
+        pres = show[2] if show is not None else self._presentation()
         slides = call(pres, "get_Slides")
         request = export_request(args, call(slides, "get_Count"))
         if request is None:

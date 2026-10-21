@@ -4,6 +4,8 @@ import 'package:path/path.dart' as p;
 import '../input/linux/impress_bridge.dart';
 import '../input/linux/uinput_device.dart';
 import '../input/linux/wps_bridge.dart';
+import '../input/linux/wps_take_over.dart';
+import '../input/linux/x11_windows.dart';
 import 'system_executable.dart';
 
 enum ImpressStatus {
@@ -40,6 +42,10 @@ enum WpsStatus {
 
   /// pywpsrpc is installed: "Sunumu WPS ile aç" gives full control.
   ready,
+
+  /// A WPS the user started runs, which only keys reach: "Devral" moves its
+  /// presentation to the bridge's WPS.
+  userStarted,
 
   /// WPS is installed but pywpsrpc is not: only key presses reach it.
   noRpc,
@@ -221,6 +227,10 @@ udevadm settle
     if (!await wpsInstalled()) return WpsStatus.notInstalled;
     final ping = await WpsBridge.instance.request('ping');
     if (ping['ok'] != true || ping['rpc'] != true) return WpsStatus.noRpc;
+    final bridgePid = ping['pid'] is int ? ping['pid'] as int : null;
+    if (WpsTakeOver.userWindows(X11Windows.instance.clientWindows(), bridgePid).isNotEmpty) {
+      return WpsStatus.userStarted;
+    }
     return ping['connected'] == true ? WpsStatus.connected : WpsStatus.ready;
   }
 

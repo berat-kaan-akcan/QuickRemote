@@ -498,6 +498,21 @@ void main() {
       expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.editor));
     });
 
+    test('a WPS the user started can be taken over once the bridge answers', () async {
+      windows = const [userWps, bridgeWps];
+      active = const X11Window(9, ['konsole']);
+      wps.replies['state'] = {'ok': true, 'state': 'NOT_RUNNING', 'pid': 200};
+      final s = service();
+      expect((await capsAfterState(s)).has(RemoteCaps.takeOver), isTrue);
+      // Only the bridge's own WPS: nothing to take over.
+      windows = const [bridgeWps];
+      expect((await capsAfterState(s)).has(RemoteCaps.takeOver), isFalse);
+      // Without pywpsrpc the bridge could not open the files.
+      windows = const [userWps];
+      wps.replies['state'] = {'ok': false, 'error': 'NO_RPC'};
+      expect((await capsAfterState(s)).has(RemoteCaps.takeOver), isFalse);
+    });
+
     test('any other window, and an unknown one (native Wayland)', () async {
       final s = service();
       active = const X11Window(9, ['konsole']);

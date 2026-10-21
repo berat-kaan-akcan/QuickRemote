@@ -34,6 +34,10 @@ extension FailureText on AppLocalizations {
         RemoteError.wpsOpenFromApp => errorWpsOpenFromApp,
         RemoteError.wpsHighlighterNeedsFocus => errorWpsHighlighterNeedsFocus,
         RemoteError.wpsNoMediaRewind => errorWpsNoMediaRewind,
+        RemoteError.wpsTakeOverNoWps => errorWpsTakeOverNoWps,
+        RemoteError.wpsTakeOverNoFile => errorWpsTakeOverNoFile,
+        RemoteError.wpsTakeOverNotClosed => errorWpsTakeOverNotClosed,
+        RemoteError.wpsTakeOverFailed => errorWpsTakeOverFailed,
         RemoteError.lockFailed => errorLockFailed,
         RemoteError.commandFailed => errorCommandFailed(info ?? ''),
       };
