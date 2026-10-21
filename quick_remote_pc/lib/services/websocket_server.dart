@@ -490,6 +490,8 @@ class WebSocketServer {
       clientCount.value = _authenticatedClients.length;
       if (_authenticatedClients.isEmpty) {
         laserActive.value = false;
+        // Nobody is left to clear what the overlay shows.
+        InputSimulator.phonesGone();
       }
     }
   }

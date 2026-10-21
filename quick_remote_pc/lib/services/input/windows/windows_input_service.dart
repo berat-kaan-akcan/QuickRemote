@@ -130,6 +130,8 @@ class WindowsInputService implements InputService {
   void modeZoom() => onCommandError?.call(RemoteError.commandFailed, 'NO_ZOOM');
   @override
   void undoInk() {}
+  @override
+  void phonesGone() {}
   // PowerPoint's COM API has a single PointerColor, and Ctrl+P / Ctrl+I
   // switch to each tool with the color it had: the chosen colors are applied
   // again after the switch.

@@ -118,6 +118,11 @@ abstract class InputService {
   /// Takes back the overlay's last stroke; the programs have nothing to undo.
   void undoInk();
 
+  /// The last phone left: the overlay puts away everything it shows (dot,
+  /// spotlight, cover, ink), which nobody could clear any more; the
+  /// programs keep their own.
+  void phonesGone();
+
   /// True when the service renders the laser pointer itself; the server then
   /// feeds [laserPointerMoved] instead of moving the OS cursor.
   bool get handlesLaserPointer;
