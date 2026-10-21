@@ -1,8 +1,8 @@
 # Kalanlar: bütün denemeler ve açık noktalar
 
-Son güncelleme: 2026-10-20. Bu liste [DURUM.md](DURUM.md)'nin "2. Ne kaldı" bölümünün aynısı; DURUM.md'de ayrıca neler yapıldığı da var. Bir madde bitince iki dosyada da işaretlenmeli.
+Son güncelleme: 2026-10-21. Bu liste [DURUM.md](DURUM.md)'nin "2. Ne kaldı" bölümünün aynısı; DURUM.md'de ayrıca neler yapıldığı da var. Bir madde bitince iki dosyada da işaretlenmeli.
 
-**Commit durumu:** Son commit `911807b` (logo). Ondan sonra yapılan her şey commit edilmedi.
+**Commit durumu:** her şey commit edildi ve GitHub'a gönderildi (2026-10-21).
 
 Kaynak kısaltmaları:
 
@@ -59,15 +59,15 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [ ] İki telefon: biri "mürekkep kalsın", diğeri "temizle". Slaytı değiştirenin ayarı mı geçerli oluyor?
 
 ### PC: tepsi, tek örnek, otomatik başlama, güncelleme (ALTYAPI 2, 4)
-- [ ] Tepsi simgesi görünüyor mu? Menü çalışıyor mu? Simgenin rengi duruma göre değişiyor mu?
-- [ ] Pencere kapanınca tepsiye iniyor mu? İlk seferki bilgi penceresi çıkıyor mu? Çıkış tam kapatıyor mu?
-- [ ] İkinci açılış yeni kopya açmadan ilk pencereyi gösteriyor mu?
-- [ ] "Oturum açılınca başlat": oturumu kapatıp açınca uygulama küçültülmüş başlıyor mu?
+- [x] Tepsi simgesi görünüyor mu? Menü çalışıyor mu? Simgenin rengi duruma göre değişiyor mu? (2026-10-21, KDE, release derlemesi, D-Bus üzerinden: menü panele hiç bildirilmiyordu, düzeltildi `83004f7`; sol tık pencereyi açıyor, menüden Başlat/Durdur çalışıyor, nokta açıkken yeşil, kapalıyken gri.)
+- [x] Pencere kapanınca tepsiye iniyor mu? İlk seferki bilgi penceresi çıkıyor mu? Çıkış tam kapatıyor mu? (2026-10-21: üçü de evet. Yan bulgu: tepsiden durdurulan sunucunun "ortak ağ" uyarısı ekranda kalıyordu, düzeltildi `46e53b9`.)
+- [x] İkinci açılış yeni kopya açmadan ilk pencereyi gösteriyor mu? (2026-10-21: ikinci kopya hemen çıkıyor, tek süreç kalıyor.)
+- [ ] "Oturum açılınca başlat": oturumu kapatıp açınca uygulama küçültülmüş başlıyor mu? (`--minimized` ile elle başlatınca pencere gizli, yalnızca tepsi simgesi çıkıyor; oturum kapatıp açma denenmedi.)
 - [ ] Ortak (public) ağda sunucu kendiliğinden başlamıyor mu? Sarı satır çıkıyor mu?
 - [ ] Güncelleme denetimi: ilk GitHub release'inden sonra "Yeni sürüm" satırı çıkıyor mu?
 
 ### PC: hata günlüğü (ALTYAPI 6)
-- [ ] Günlük dosyası gerçekten yazılıyor mu? PIN ve dosya yolları gizleniyor mu?
+- [x] Günlük dosyası gerçekten yazılıyor mu? PIN ve dosya yolları gizleniyor mu? (2026-10-21: yazılıyor, yol `<path>` olarak gizli, PIN yok. Günlükte 20 Ekim'deki bir debug çalıştırmasından "RenderFlex overflowed by 17 pixels" hatası var; hangi ekran olduğu günlükten anlaşılmıyor.)
 - [ ] "Günlüğü dışa aktar" kaydetme penceresini açıyor mu?
 - [ ] "Sorun bildir" tarayıcıda dolu bir issue sayfası açıyor mu?
 
@@ -83,6 +83,8 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 ## 2. Telefon (S23 FE)
 
 Önce telefon uygulamasını **release** olarak derleyip kur. Debug sürümü yavaşlatıyor.
+
+**Kurulum engeli (2026-10-21):** telefondaki uygulama (versionCode 1000002) başka bir anahtarla imzalı, bu makinede derlenen release APK üstüne kurulamıyor (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`). Ya imzalayan makineden kurulur ya da uygulama kaldırılıp kurulur (kayıtlı PC'ler ve ayarlar gider). Yeni kurulumun versionCode'u en az 1000003 olmalı (`--build-number 1000003`).
 
 - [ ] **Kısayollar** (ALTYAPI 5): simgeye basılı tutunca "Bluetooth kumanda", "QR tara" ve "Bağlan: <PC>" çıkıyor ve çalışıyor mu?
   - Başlatıcı, dışa kapalı (`exported=false`) olan `ShortcutActivity`'yi açamazsa manifest'te bu değer `true` yapılır.
@@ -160,9 +162,10 @@ Windows için yazılan kodların çoğu **hiç derlenmedi ya da hiç çalıştı
 
 ## 5. GitHub, CI ve paketler (ALTYAPI 1, 3)
 
-- [ ] İlk push'ta CI koşusu. Windows'ta Linux'a bağlı testler kırılabilir; atlanır ya da düzeltilir.
-- [ ] Release akışını ilk etiketten önce bir kez elle çalıştır.
-- [ ] Gerçek Flutter derlemeleri, Inno Setup kurulumu, gerçek `dpkg-deb` ile .deb paketi. Hiçbiri yerelde denenmedi.
+- [x] İlk push'ta CI koşusu. (2026-10-21: Windows testleri geçti; telefon ve saat işleri Android SDK paket adı yüzünden düşüyordu, düzeltildi `a030f31`. Şimdi bütün işler yeşil.)
+- [x] Release akışını ilk etiketten önce bir kez elle çalıştır. (2026-10-21, `0.0.1-test`: iki düzeltmeden sonra yeşil. .deb kontrolü yanlış alarm veriyordu `c13ff49`; .deb EGL/GLES bağımlılığı olmadan temiz Debian/Ubuntu'da açılışta çöküyordu `60555de`, düzeltildi.)
+- [x] Gerçek Flutter derlemeleri, Inno Setup kurulumu, gerçek `dpkg-deb` ile .deb paketi. (CI'da derleniyor; .deb, Debian 12 ve Ubuntu 22.04'te kurulup açılıyor. AUR PKGBUILD'i bu makinede `makepkg` ile paket oluşturdu, kurulmadı.)
+- [ ] Windows kurulum dosyasını (Inno Setup) gerçek Windows'ta kur ve aç.
 - [ ] Pardus'ta bir sanal makinede .deb kurulumu (ilk release'ten önce bir kez).
 - [ ] AUR: hesap aç, `quickremote-pc-bin` paketini ilk kez yükle.
 - [ ] Play kararına bağlı: release akışındaki telefon ve saat APK'ları (PLAY, 1. bölüm).
@@ -173,11 +176,11 @@ Ayrı dosyada: [PLAY_STORE_YAPILACAKLAR.md](PLAY_STORE_YAPILACAKLAR.md).
 
 ## 7. Web sitesi (SITE, ONIZLEME 4)
 
-Site güncellemesi, proje bitince tek seferde yapılacak (karar 2026-10-16). Toplanan değişiklikler:
-- [ ] **Logo 59A:** favicon, uygulama simgesi, og:image ve sayfalardaki sprite (SITE, aşama 1).
-- [ ] **Uygulama ekranlarının kopyaları** yeni tasarıma göre: Wi-Fi kumanda, Bluetooth, ana sayfa ve Ayarlar, tema, PC penceresi, saat (SITE, aşama 2–7).
-- [ ] **Slayt önizlemesi:** karttaki resim, istenirse Sunucu görünümü demosu, "Hangi slayttasın" kutusu, SSS (ONIZLEME 4).
-- [ ] **2026-10-20 özellikleri:** kaplama (gösterisiz lazer, spot ışığı, büyüteç), PDF'te canlı ekran, telefon kısayolları ve Hızlı Ayarlar kutucuğu, PC tepsisi, hazır paketler ve indirme bölümü.
+Site 2026-10-20'de yenilendi (`docs/raporlar/SITE_YENILEME.md`). Kalanlar:
+- [x] **Logo 59A:** favicon, uygulama simgesi, og:image ve sayfalardaki sprite (SITE, aşama 1).
+- [x] **Uygulama ekranlarının kopyaları** yeni tasarıma göre: Wi-Fi kumanda, Bluetooth, ana sayfa ve Ayarlar, tema, PC penceresi, saat (SITE, aşama 2–7).
+- [x] **Slayt önizlemesi:** karttaki resim, istenirse Sunucu görünümü demosu, "Hangi slayttasın" kutusu, SSS (ONIZLEME 4).
+- [x] **2026-10-20 özellikleri:** kaplama (gösterisiz lazer, spot ışığı, büyüteç), PDF'te canlı ekran, telefon kısayolları ve Hızlı Ayarlar kutucuğu, PC tepsisi, hazır paketler ve indirme bölümü.
 - [ ] **Play rozeti** ve gizlilik politikası sayfaları (PLAY).
 - [ ] **Alan adı belli olunca:** og:image ve hreflang için tam adresler, gerçek indirme bağlantıları (ESKI).
 
@@ -198,4 +201,4 @@ Site güncellemesi, proje bitince tek seferde yapılacak (karar 2026-10-16). Top
 - **Saat, gösteri dışında siyah/beyaz ekranı soluk gösteriyor**: ayrı bir bayrak gerekiyor (OVERLAY).
 - **Siyah ekran açıkken kaplamanın mürekkebi görünmüyor**: programın siyah ekranından dönünce yoklama süresi kadar gecikmeyle yeniden çiziliyor (OVERLAY).
 - **PC'nin sürümünü `auth` cevabında göndermesi**: telefon eski PC'ye "PC uygulamasını güncelleyin" diyebilsin diye (ALTYAPI 4).
-- **Commit**: değişiklikler konulara göre ayrı commit'lere bölünecek. Logo değişiklikleri ayrı tutulacak; `quick_remote_pc/tool_tmp/` (kaplama deneme düzeneği) hiç commit edilmeyecek.
+- `quick_remote_pc/tool_tmp/` (kaplama deneme düzeneği) hiç commit edilmeyecek.
