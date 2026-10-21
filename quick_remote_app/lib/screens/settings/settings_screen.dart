@@ -8,6 +8,7 @@ import '../../utils/ui/app_snackbar.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
 import '../../utils/ui/app_top_bar.dart';
 import '../../widgets/ui/ui.dart';
+import 'capabilities_screen.dart';
 import 'theme_screen.dart';
 import 'timer_settings_screen.dart';
 import 'presentation_history_screen.dart';
@@ -137,6 +138,19 @@ class SettingsScreen extends StatelessWidget {
                       index: 5,
                       child: SettingsGroup(
                         children: [
+                          SettingsRow(
+                            icon: Icons.fact_check_outlined,
+                            iconColor: p.success,
+                            title: l10n.settingsCapabilitiesTitle,
+                            subtitle: l10n.settingsCapabilitiesSubtitle,
+                            alignTop: true,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CapabilitiesScreen(),
+                              ),
+                            ),
+                          ),
                           SettingsRow(
                             icon: Icons.bug_report_outlined,
                             iconColor: p.warning,

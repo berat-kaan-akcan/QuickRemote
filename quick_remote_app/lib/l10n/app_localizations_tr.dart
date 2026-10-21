@@ -1309,4 +1309,165 @@ class AppLocalizationsTr extends AppLocalizations {
   ) {
     return '**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote $version (telefon)\nPlatform: $platform\nBilgisayardaki programlar: $presenters\nBluetooth hedefi: $btTarget\n\nGünlüğü (Ayarlar → Hata günlüğünü paylaş) bu sayfaya ekleyebilirsin.';
   }
+
+  @override
+  String get settingsCapabilitiesTitle => 'Neler yapılabilir?';
+
+  @override
+  String get settingsCapabilitiesSubtitle =>
+      'Hangi programda hangi özellik çalışır, karşılaştır';
+
+  @override
+  String get capTitle => 'Neler yapılabilir?';
+
+  @override
+  String get capIntro =>
+      'Bağlantıyı, bilgisayarı ve programı seç; çalışan özellikleri gör. Karşılaştır, o bilgisayardaki bütün programları yan yana koyar.';
+
+  @override
+  String get capConnection => 'Bağlantı';
+
+  @override
+  String get capComputer => 'Bilgisayar';
+
+  @override
+  String get capViewOne => 'Program seç';
+
+  @override
+  String get capViewCompare => 'Karşılaştır';
+
+  @override
+  String get capFootnoteWifi =>
+      'PC uygulamasının Lazer ayarı Otomatik\'ken. Karşılaştır\'da halkalı işarete dokununca notu görünür.';
+
+  @override
+  String get capFootnoteBluetooth =>
+      'Bluetooth\'ta telefon bilgisayarın klavyesi ve faresi olur; PC uygulaması gerekmez ama bilgisayar hiçbir şey bildirmez. Karşılaştır\'da halkalı işarete dokununca notu görünür.';
+
+  @override
+  String get capProgramWpsApp => 'WPS (uygulamanın açtığı)';
+
+  @override
+  String get capProgramWpsOwn => 'WPS (kendin açtığın)';
+
+  @override
+  String get capProgramPdf => 'PDF ve tarayıcı';
+
+  @override
+  String get capShortWpsApp => 'WPS\nuygulama';
+
+  @override
+  String get capShortWpsOwn => 'WPS\nkendin';
+
+  @override
+  String get capNextPrev => 'Sonraki / önceki slayt';
+
+  @override
+  String get capStartEnd => 'Gösteriyi başlat / bitir';
+
+  @override
+  String get capGoTo => 'Slayta git';
+
+  @override
+  String get capLaser => 'Lazer';
+
+  @override
+  String get capInk => 'Kalem ve vurgulayıcı';
+
+  @override
+  String get capEraser => 'Silgi ve temizle';
+
+  @override
+  String get capBlank => 'Siyah / beyaz ekran';
+
+  @override
+  String get capSlideInfo => 'Slayt numarası ve notlar';
+
+  @override
+  String get capPreview => 'Slayt önizlemesi';
+
+  @override
+  String get capSlideMedia => 'Slayttaki video';
+
+  @override
+  String get capSpotlight => 'Spot ışığı ve büyüteç';
+
+  @override
+  String get capVolume => 'Bilgisayarın sesi ve medyası';
+
+  @override
+  String get capNoteOverlay =>
+      'QuickRemote kendi katmanında çizer, videonun üstünde de görünür.';
+
+  @override
+  String get capNoteFocus => 'Yalnızca WPS penceresi öndeyken.';
+
+  @override
+  String get capNoteFullscreen => 'Tam ekrana ya da sunum moduna geçer.';
+
+  @override
+  String get capNoteNoJump => 'Sayfaya atlamaz.';
+
+  @override
+  String get capNoteFirstSlide => 'Gösteri ilk slayttan başlar.';
+
+  @override
+  String get capNoteShowOnly => 'Yalnızca gösterinin açık olduğu bilinir.';
+
+  @override
+  String get capNoteScreenOnly =>
+      'Yalnızca o anki ekranın resmi; sıradaki slayt görünmez.';
+
+  @override
+  String get capNoteFullscreenOnly =>
+      'Yalnızca tam ekrandayken, o anki ekranın resmi.';
+
+  @override
+  String get capNotePlayOnly => 'Oynat ve duraklat var, başa sarma yok.';
+
+  @override
+  String get capNoteMediaReload =>
+      'İlk basışta slayt bir kez yeniden yüklenebilir.';
+
+  @override
+  String get capNoteNoMagnifier => 'Spot ışığı var, büyüteç yok.';
+
+  @override
+  String get capNoteWpsArrow => 'Gösteri önde değilken lazer yerine ok imleci.';
+
+  @override
+  String get capNoteHighlighterFocus => 'Vurgulayıcı için gösteri önde olmalı.';
+
+  @override
+  String get capNoteCursor => 'Lazer kısayolu yok; fare imleci kullanılır.';
+
+  @override
+  String get capNotePenOnly => 'Yalnızca kalem; vurgulayıcı yok.';
+
+  @override
+  String get capNoteClearOnly => 'Yalnızca hepsini temizle; silgi yok.';
+
+  @override
+  String get capNoteWpsEraser =>
+      'Windows\'taki WPS\'te silgi kısayolu başka bir iş yapabilir.';
+
+  @override
+  String get capNoteNoAnswer =>
+      'Bluetooth\'ta bilgisayar telefona bilgi göndermez.';
+
+  @override
+  String get capNoteKeysOnly =>
+      'Yalnızca tuşlar; ses seviyesi ve şarkı adı görünmez.';
+
+  @override
+  String get capNoteWpsNoMedia => 'WPS\'teki video uzaktan oynatılamıyor.';
+
+  @override
+  String get capLevelYes => 'Çalışır';
+
+  @override
+  String get capLevelPartial => 'Kısmen';
+
+  @override
+  String get capLevelNo => 'Çalışmaz';
 }
