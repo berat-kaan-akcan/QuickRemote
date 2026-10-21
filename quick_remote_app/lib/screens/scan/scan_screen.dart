@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
@@ -67,6 +69,10 @@ class _ScanScreenState extends State<ScanScreen> with SingleTickerProviderStateM
 
     final fingerprint = payload.certFingerprint;
     _scanned = true;
+    // The camera kept sending frames while the screen slid away, which made
+    // the way back stutter. Paused, the preview keeps its last frame.
+    unawaited(_controller.pause());
+    _sweep.stop();
     Navigator.of(context).pop({
       'host': payload.host,
       'port': payload.port,
