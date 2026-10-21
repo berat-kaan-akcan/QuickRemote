@@ -65,6 +65,9 @@ class _RemoteScreenState extends State<RemoteScreen> {
   bool _wrongPin = false;
   bool _pinDialogOpen = false;
 
+  /// The last PIN refused was one the user typed (not the saved one).
+  bool _typedPinRefused = false;
+
   @override
   void initState() {
     super.initState();
@@ -294,9 +297,15 @@ class _RemoteScreenState extends State<RemoteScreen> {
     final host = _wsRef.serverHost, port = _wsRef.serverPort;
     if (_pinDialogOpen || host == null || port == null) return;
     _pinDialogOpen = true;
-    final data = await ManualConnectDialog.show(context, defaultIp: host, defaultPort: '$port');
+    final data = await ManualConnectDialog.show(
+      context,
+      defaultIp: host,
+      defaultPort: '$port',
+      error: _typedPinRefused ? context.l10n.connectionWrongPin : context.l10n.remoteNewPinTitle,
+    );
     _pinDialogOpen = false;
     if (data == null || !mounted) return;
+    _typedPinRefused = true;
     final result = await ConnectionHandler.connect(context, data.host, data.port, pin: data.pin);
     if (!mounted || !result.success) {
       if (mounted && result.error != ConnectionError.wrongPin && result.errorMessage != null) {
@@ -304,7 +313,10 @@ class _RemoteScreenState extends State<RemoteScreen> {
       }
       return;
     }
-    setState(() => _wrongPin = false);
+    setState(() {
+      _wrongPin = false;
+      _typedPinRefused = false;
+    });
     final repository = DeviceHistoryRepository();
     final saved = (await repository.getRecentDevices())
         .where((d) => d['host'] == data.host && d['port'] == data.port)
