@@ -72,7 +72,7 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [x] "Sorun bildir" tarayıcıda dolu bir issue sayfası açıyor mu? (2026-10-21: açıyordu ama tarayıcı arkada kalıyordu; GTK üzerinden açılacak şekilde düzeltildi `70fb0ef`, artık öne geliyor.)
 
 ### PDF görüntüleyiciler (ESKI, CLAUDE.md)
-- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil. WPS PDF `libtiff5` kurulunca açıldı: telefon "PDF açık" diyor, Tam ekran F11 ile çalışıyor, ekran resmi geliyor. PageDown bir ekran kaydırıyordu, sağ/sol ok sayfa başına atlıyor; Linux artık görüntüleyicinin ok tuşlarını kullanıyor, bu değişiklik telefonla canlı denenmedi.)
+- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil. WPS PDF `libtiff5` kurulunca açıldı: telefon "PDF açık" diyor, Tam ekran F11 ile çalışıyor, ekran resmi geliyor. PageDown bir ekran kaydırıyordu, sağ/sol ok sayfa başına atlıyor; Linux artık görüntüleyicinin ok tuşlarını kullanıyor; telefondan Sonraki/Önceki sayfa sayfa geçiyor.)
 - [x] Linux'ta tarayıcıların PDF'inde Sonraki/Önceki hâlâ PageDown/PageUp gönderiyor. Windows'ta bu yüzden sağ/sol oka geçilmişti; Linux'ta da sayfalar arasında takılıyor mu? (2026-10-21: Firefox'un sunum kipinde PageDown sayfa sayfa geçiyor, takılmıyor. Chrome'da denenmedi.)
 
 ### WPS: Devral (2026-10-21)
@@ -80,7 +80,7 @@ Kullanıcının kendi açtığı WPS'e köprü bağlanamıyor. PC'deki WPS satı
 - [x] Gösteri yokken: iki sekmeli WPS kapandı, iki dosya da köprünün WPS'inde açıldı, etkin sekme korundu. (2026-10-21, sunucuya bağlanan bir test istemcisiyle.)
 - [x] Gösteri sürerken aynı slayttan devam ediyor mu? (2026-10-21: evet. 119 slaytlık sunumda, animasyonu yarıda kalmış 4. slayt doğru bulundu, devralma 3 saniye sürdü, telefon "4 / 119" ve bütün araçları aldı. İlk denemede köprü, pencereleri daha önce kapatılmış eski WPS'ine açmaya çalışıp hata vermişti; köprü artık yanıt vermeyen WPS'i kapatıp yenisini başlatıyor, yine açamazsa dosyalar kullanıcının kendi WPS'inde yeniden açılıyor.)
 - [x] Yan bulgu: uygulamanın açtığı WPS gösterisinde, notunda boş bir metin kutusu olan slaytta köprünün durumu çöküyordu (telefon slayt numarasını göremiyordu). Düzeltildi.
-- [ ] Kaydedilmemiş değişiklik varken: WPS'in kaydetme sorusu yanıtlanınca devralma sürüyor mu? 60 saniyede yanıtlanmazsa telefon "WPS kapanmadı" diyor mu?
+- [x] Kaydedilmemiş değişiklik varken: (2026-10-21: WPS kaydetme sorusunu soruyor. 60 saniyede yanıtlanmazsa telefona `WPS_TAKEOVER_NOT_CLOSED` gidiyor ve değişiklik duruyor; "Yes" denince dosya kaydedilip devralma kaydedilen hâliyle sürüyor. Bulunan hata: soru açıkken ikinci bir Devral sorunun penceresine de "kapat" gönderiyordu, WPS bunu "kaydetme" sayıp değişikliği siliyordu. Düzeltildi: diyaloglara hiç kapat gönderilmiyor, soru açıksa yalnızca yanıt bekleniyor.)
 - [x] Telefondaki Devral düğmesi, gerçek dokunuşla (2026-10-21: gösteri telefondan başlatıldı, Devral'dan sonra kart "4 / 119", not ve resim geldi, Sonraki köprüden ilerletti). PC'deki düğmeye gerçek tıklama denenmedi (Wayland'de yapay tıklama yok).
 
 ### Yeni bulgu: yerel Wayland pencereleri (2026-10-21)
