@@ -153,6 +153,10 @@ class NotesTest(unittest.TestCase):
         slide = self._slide([self._shape("3", body=False), self._shape(" Not ", body=True)])
         self.assertEqual(bridge.slide_notes(slide), "Not")
 
+    def test_an_empty_text_box_is_skipped(self):
+        slide = self._slide([self._shape(None, body=True), self._shape("x", body=False)])
+        self.assertEqual(bridge.slide_notes(slide), "x")
+
     def test_falls_back_to_other_text(self):
         self.assertEqual(bridge.slide_notes(self._slide([self._shape("x", body=False)])), "x")
 
