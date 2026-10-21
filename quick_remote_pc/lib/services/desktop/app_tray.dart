@@ -87,17 +87,17 @@ class AppTray {
     try {
       final icon = tray.TrayIcon.create();
       if (icon == null) return false;
-      if (Platform.isWindows) {
-        // A left click shows the window, a right click opens the menu. Linux
-        // reports no clicks: its panel opens the menu.
-        icon.setContextMenuTrigger(tray.ContextMenuTrigger.rightClicked);
-        icon.addListener((event) {
-          if (event is tray.TrayIconClickedEvent ||
-              event is tray.TrayIconDoubleClickedEvent) {
-            onShow();
-          }
-        });
-      }
+      // A left click shows the window, a right click opens the menu. On
+      // Linux the trigger is what exports the menu to the panel (without it
+      // the item says /NO_DBUSMENU and a right click shows nothing); GNOME's
+      // extension opens it on a left click and reports a double click.
+      icon.setContextMenuTrigger(tray.ContextMenuTrigger.rightClicked);
+      icon.addListener((event) {
+        if (event is tray.TrayIconClickedEvent ||
+            event is tray.TrayIconDoubleClickedEvent) {
+          onShow();
+        }
+      });
       _icon = icon;
       return true;
     } catch (e) {
