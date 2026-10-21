@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../services/bluetooth/bt_hid_service.dart';
 import '../../services/discovery_service.dart';
 import '../../services/launch_actions.dart';
 import '../../services/websocket_service.dart';
@@ -93,11 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
   /// A link from an app shortcut or the Quick Settings tile.
   void _onLaunchAction(LaunchAction action) {
     if (!mounted) return;
+    final remoteInUse =
+        context.read<WebSocketService>().isConnected ||
+        _connecting ||
+        BtHidService.instance.isConnected;
+    if (!LaunchAction.handles(remoteInUse: remoteInUse)) return;
     final navigator = Navigator.of(context);
     switch (action) {
       case LaunchAction.connectLast:
-        // Already connected: the app is back in front, on its remote.
-        if (context.read<WebSocketService>().isConnected || _connecting) return;
         navigator.popUntil((route) => route.isFirst);
         _connectLast();
       case LaunchAction.bluetooth:

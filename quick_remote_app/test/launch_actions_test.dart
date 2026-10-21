@@ -37,6 +37,13 @@ Future<String?> _fingerprints(String host) async =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  group('LaunchAction.handles', () {
+    test('a remote in use keeps its screen: the link only brings the app back', () {
+      expect(LaunchAction.handles(remoteInUse: true), isFalse);
+      expect(LaunchAction.handles(remoteInUse: false), isTrue);
+    });
+  });
+
   group('LaunchAction.parse', () {
     test('reads the three links', () {
       expect(
