@@ -1,0 +1,63 @@
+
+  <!-- The PC app in the background: tray, start at login, update check, settings. -->
+  <section class="sec desktop" id="desktop" aria-labelledby="desktop-title">
+    <div class="wrap desktop-grid">
+      <div class="desktop-copy">
+        <h2 class="h2" id="desktop-title">{{Bilgisayarda sessizce çalışır.||It runs quietly on the computer.}}</h2>
+        <p class="lede">{{<span translate="no">QuickRemote&nbsp;PC</span> sistem tepsisinde bekler; pencereyi kapatsan da bağlı telefonlar kopmaz.||<span translate="no">QuickRemote&nbsp;PC</span> waits in the system tray; closing the window does not drop the phones that are connected.}}</p>
+        <ul class="plain">
+          <li><h3>{{Tepside bekler||Waits in the tray}}</h3><p>{{Simgenin rengi durumu söyler: gri kapalı, yeşil açık, mavi telefon bağlı, sarı ortak ağda tutuldu.||The icon’s color tells the state: grey off, green on, blue phone connected, amber held back on a public network.}}</p></li>
+          <li><h3>{{Oturum açılınca kendiliğinden||On its own at login}}</h3><p>{{İstersen pencere açılmadan tepside başlar ve sunucuyu da kendisi başlatır. Ortak bir ağda sunucu kendiliğinden başlamaz.||If you like, it starts in the tray without a window and starts the server too. On a public network the server never starts by itself.}}</p></li>
+          <li><h3>{{Yeni sürümü haber verir||Tells you about new versions}}</h3><p>{{Açılışta ve günde bir kez GitHub’a bakar; yalnızca bildirir, hiçbir şey indirmez. İstersen kapatırsın.||It asks GitHub at launch and once a day; it only tells you, and downloads nothing. You can turn it off.}}</p></li>
+        </ul>
+      </div>
+      <div class="desktop-demo" data-desktop>
+        <div class="dk-card" role="group" aria-label="{{QuickRemote PC ayarları, örnek||QuickRemote PC settings, sample}}">
+          <div class="pcw-bar" aria-hidden="true"><svg><use href="#mark"/></svg><span>{{Ayarlar||Settings}}</span></div>
+          <div class="dk-body">
+            <p class="dk-h" id="dk-look">{{Görünüm||Appearance}}</p>
+            <div class="seg seg-sm" role="radiogroup" aria-labelledby="dk-look" data-dk-look>
+              <button type="button" role="radio" aria-checked="true" data-look="system">{{Sistem||System}}</button>
+              <button type="button" role="radio" aria-checked="false" data-look="light" tabindex="-1">{{Açık||Light}}</button>
+              <button type="button" role="radio" aria-checked="false" data-look="dark" tabindex="-1">{{Koyu||Dark}}</button>
+            </div>
+            <p class="dk-h" id="dk-laser">{{Lazer||Laser}}</p>
+            <div class="seg seg-sm" role="radiogroup" aria-labelledby="dk-laser" data-dk-laser>
+              <button type="button" role="radio" aria-checked="true" data-laser="auto">{{Otomatik||Automatic}}</button>
+              <button type="button" role="radio" aria-checked="false" data-laser="always" tabindex="-1">QuickRemote</button>
+              <button type="button" role="radio" aria-checked="false" data-laser="never" tabindex="-1">{{Program||Program}}</button>
+            </div>
+            <p class="dk-note" data-dk-laser-note aria-live="polite"
+               data-auto="{{PowerPoint ve WPS kendi lazerini kullanır; Impress, PDF, tarayıcı ve gösteri dışında katman çizer.||PowerPoint and WPS keep their own laser; the layer draws in Impress, PDFs, browsers and outside a show.}}"
+               data-always="{{QuickRemote lazeri her pencerenin üstünde çizer.||QuickRemote draws the laser above every window.}}"
+               data-never="{{Programın kendi araçları kullanılır, yalnız gösteri sırasında.||The program’s own tools are used, only during a show.}}"></p>
+            <p class="dk-h">{{Başlangıç ve tepsi||Startup and tray}}</p>
+            <label class="dk-sw"><input type="checkbox" role="switch" checked data-dk-sw="close"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>{{Kapatınca tepsiye küçült||Minimize to tray on close}}</b><small>{{Bağlı telefonlar kopmaz.||Connected phones stay connected.}}</small></span></label>
+            <label class="dk-sw"><input type="checkbox" role="switch" data-dk-sw="login"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>{{Oturum açılınca başlat||Start at login}}</b><small>{{Pencere açılmadan, tepside başlar.||Starts in the tray, without a window.}}</small></span></label>
+            <label class="dk-sw"><input type="checkbox" role="switch" data-dk-sw="server"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>{{Açılınca sunucuyu başlat||Start the server on launch}}</b><small>{{Ortak bir ağda sunucu kendiliğinden başlamaz.||On a public network the server does not start by itself.}}</small></span></label>
+            <label class="dk-sw"><input type="checkbox" role="switch" checked data-dk-sw="update"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>{{Güncellemeleri denetle||Check for updates}}</b><small>{{Hiçbir şey indirmez. GitHub bu sırada IP adresini görür.||Downloads nothing. GitHub sees your IP address when it does.}}</small></span></label>
+          </div>
+        </div>
+        <div class="tray" role="group" aria-label="{{Sistem tepsisi menüsü, örnek||System tray menu, sample}}" data-tray data-state="phone">
+          <div class="tray-icon"><svg aria-hidden="true"><use href="#mark"/></svg><i class="tray-dot" aria-hidden="true"></i></div>
+          <p class="tray-tip" data-tray-tip aria-live="polite"
+             data-off="{{QuickRemote PC · Sunucu kapalı||QuickRemote PC · Server off}}"
+             data-on="{{QuickRemote PC · Sunucu açık||QuickRemote PC · Server on}}"
+             data-phone="{{QuickRemote PC · Sunucu açık||QuickRemote PC · Server on}}"
+             data-held="{{QuickRemote PC · Ortak ağ: sunucu başlamadı||QuickRemote PC · Public network: server not started}}"></p>
+          <ul class="tray-menu">
+            <li><button type="button">{{Göster||Show}}</button></li>
+            <li><button type="button" data-tray-server data-start="{{Sunucuyu başlat||Start the server}}" data-stop="{{Sunucuyu durdur||Stop the server}}">{{Sunucuyu durdur||Stop the server}}</button></li>
+            <li class="tray-info" data-tray-phones data-none="{{Bağlı telefon yok||No phone connected}}" data-one="{{1 telefon bağlı||1 phone connected}}">{{1 telefon bağlı||1 phone connected}}</li>
+            <li class="tray-sep" role="separator"></li>
+            <li><button type="button" class="tray-update">{{Yeni sürüm: 0.2.0 · İndir||New version: 0.2.0 · Download}}</button></li>
+            <li class="tray-sep" role="separator"></li>
+            <li><button type="button">{{Çıkış||Quit}}</button></li>
+          </ul>
+          <div class="tray-legend" role="group" aria-label="{{Tepsi simgesinin durumları||States of the tray icon}}">
+            <button type="button" data-st="off"><i></i>{{kapalı||off}}</button><button type="button" data-st="on"><i></i>{{açık||on}}</button><button type="button" data-st="phone"><i></i>{{telefon bağlı||phone connected}}</button><button type="button" data-st="held"><i></i>{{tutuldu||held back}}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>

@@ -1,0 +1,30 @@
+
+  <!-- Security: the phone's own first-connection check. -->
+  <section class="sec safe" id="security" aria-labelledby="safe-title">
+    <div class="wrap safe-grid">
+      <div class="safe-copy">
+        <div class="sec-head">
+          <h2 class="h2" id="safe-title">{{Her şey kendi ağında kalır.||Everything stays on your network.}}</h2>
+          <p class="lede">{{Hesap açmazsın, internete çıkmazsın. Telefonla bilgisayar şifreli bir bağlantıyla konuşur.||You open no account and go nowhere on the internet. The phone and the computer talk over an encrypted connection.}}</p>
+        </div>
+        <dl class="spec">
+          <div><dt>{{Şifreli bağlantı||Encrypted connection}}</dt><dd>{{Wi-Fi’da giden her komut TLS ile şifrelenir.||Every command sent over Wi-Fi is encrypted with TLS.}}</dd></div>
+          <div><dt>{{Yalnızca yerel ağ||Local network only}}</dt><dd>{{Yerel ağ dışından gelen bağlantılar şifreleme başlamadan reddedilir. Tarayıcılar da bağlanamaz.||Connections from outside the local network are refused before encryption even starts. Web browsers cannot connect either.}}</dd></div>
+          <div><dt>{{Her başlatışta yeni PIN||A new PIN at every start}}</dt><dd>{{Sunucu her başladığında 6&nbsp;haneli yeni bir PIN üretilir; bir telefonu çıkardığında da yenilenir.||Each time the server starts it makes a new 6-digit PIN, and it is replaced again when you remove a phone.}}</dd></div>
+          <div><dt>{{QR kod bilgisayarı tanıtır||The QR code vouches for the computer}}</dt><dd>{{Telefon QR koddaki sertifikayı bekler. QR yoksa güvenlik kodunu sorar.||The phone expects the certificate in the QR code. Without a QR code it asks you to compare the security code.}}</dd></div>
+          <div><dt>{{Deneme sınırı||Attempt limit}}</dt><dd>{{5 yanlış PIN’den sonra o cihaz 60&nbsp;saniye bekletilir. Çok fazla hatalı denemede eşleştirme durur ve PIN yenilenir.||After 5 wrong PINs that device waits 60&nbsp;seconds. After too many wrong attempts pairing pauses and the PIN is replaced.}}</dd></div>
+          <div><dt>{{Kod perdeye yansımaz||The code stays off the screen}}</dt><dd>{{İlk telefon bağlanınca QR kod ve PIN ekrandan gizlenir.||When the first phone connects, the QR code and PIN are hidden.}}</dd></div>
+          <div><dt>{{Bağlı telefonlar||Connected phones}}</dt><dd>{{Kimin bağlı olduğunu PC’de görür, istemediğini çıkarırsın.||You see who is connected on the PC and can remove anyone.}}</dd></div>
+          <div><dt>{{Günlük sende kalır||The log stays with you}}</dt><dd>{{Hata günlüğü cihazında durur, hiçbir yere kendiliğinden gitmez. PIN, eşleştirme kodu, notlar ve dosya yolları yazılmaz.||The error log stays on your device and goes nowhere by itself. PINs, pairing codes, notes and file paths are never written.}}</dd></div>
+        </dl>
+      </div>
+      <figure class="verify" aria-label="{{Telefonun ilk bağlantıda gösterdiği ekran||The screen the phone shows on the first connection}}">
+        <svg class="verify-icon" aria-hidden="true"><use href="#i-lock"/></svg>
+        <p class="verify-title">{{Güvenlik Kodunu Karşılaştırın||Compare the Security Code}}</p>
+        <p class="verify-text">{{Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:||This is your first connection to this PC. The security code on the PC screen should be:}}</p>
+        <p class="verify-code" translate="no">4F2A-91C3-0B7E-D58A</p>
+        <p class="verify-text">{{Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.||If the codes differ, don’t connect: another device on the network may be pretending to be the PC. Scanning the QR code skips this step.}}</p>
+        <p class="verify-actions" aria-hidden="true"><span>{{İptal Et||Cancel}}</span><span class="verify-ok">{{Kodlar Aynı, Bağlan||Codes Match, Connect}}</span></p>
+      </figure>
+    </div>
+  </section>

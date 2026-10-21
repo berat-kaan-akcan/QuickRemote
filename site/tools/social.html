@@ -20,7 +20,7 @@
   .c-spine { position: absolute; left: 61px; width: 6px; border-radius: 3px; background: #2F4BE0; }
   .c-stop { position: absolute; left: 49px; width: 30px; height: 30px; box-sizing: border-box; border: 6px solid #2F4BE0; border-radius: 11px; background: #F4F5FA; }
   .c-lockup { position: absolute; display: flex; align-items: center; gap: 12px; }
-  .c-lockup svg { width: 46px; height: 46px; color: #2F4BE0; }
+  .c-lockup svg { width: 46px; height: 46px; border-radius: 12px; }
   .c-lockup span { font: 500 28px/1 var(--display); letter-spacing: -.01em; }
   .c-lockup b { font-weight: 700; }
   .c-copy { position: absolute; display: grid; gap: 22px; }
@@ -52,11 +52,23 @@
 <body>
 <svg class="sprite" aria-hidden="true">
 <defs><radialGradient id="laser-glow"><stop offset="0" stop-color="#FF6A3D" stop-opacity=".85"/><stop offset=".45" stop-color="#FF6A3D" stop-opacity=".28"/><stop offset="1" stop-color="#FF6A3D" stop-opacity="0"/></radialGradient></defs>
-<symbol id="mark" viewBox="-181 -181 368 368"><rect x="-118" y="-118" width="200" height="200" rx="70" fill="none" stroke="currentColor" stroke-width="38"/><line x1="16" y1="16" x2="74" y2="74" stroke="currentColor" stroke-width="38" stroke-linecap="round"/><circle cx="120" cy="120" r="64" fill="url(#laser-glow)"/><circle cx="120" cy="120" r="23" fill="#FF6A3D"/></symbol>
+<symbol id="mark" viewBox="0 0 512 512"><defs><mask id="mk-dot" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#FFFFFF"/><circle cx="388" cy="166" r="38" fill="#000000"/></mask><linearGradient id="mk-next" x1="0" y1="0" x2=".55" y2="1"><stop offset="0" stop-color="#3E63F5"/><stop offset=".55" stop-color="#2F4BE0"/><stop offset="1" stop-color="#1B28A3"/></linearGradient><linearGradient id="mk-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".28"/><stop offset=".3" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><radialGradient id="mk-light" cx=".1" cy="0" r=".9"><stop offset="0" stop-color="#3E63F5" stop-opacity="0.22"/><stop offset="1" stop-color="#3E63F5" stop-opacity="0"/></radialGradient></defs><g transform="scale(1)"><defs><linearGradient id="mk-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141A33"/><stop offset="1" stop-color="#0A0D18"/></linearGradient><clipPath id="mk-tile"><rect width="512" height="512" rx="118"/></clipPath></defs><g clip-path="url(#mk-tile)"><rect width="512" height="512" fill="url(#mk-bg)"/><rect width="512" height="512" fill="url(#mk-light)"/><g transform="translate(256 256) scale(1.12) translate(-233 -276)"><rect x="70" y="196" width="100" height="150" rx="30" fill="#1A1F36" stroke="#323A62" stroke-width="5"/><path d="M132 245 L106 271 L132 297" fill="none" stroke="#C9CEE6" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><g mask="url(#mk-dot)"><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-next)"/><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-sheen)"/><path d="M274 232 L318 276 L274 320" fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/></g><circle cx="388" cy="166" r="28" fill="#FF6A3D"/></g></g><rect x="1.5" y="1.5" width="509" height="509" rx="116.5" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/></g></symbol>
+<symbol id="i-slideshow" viewBox="0 -960 960 960"><path d="M629-467q7-4.5 7-12.75T629-493L410-634q-8-5-15.5-.5T387-621v282q0 9 7.5 13.5t15.5-.5l219-141ZM180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0-600v600-600Z"/></symbol>
+<symbol id="i-timer" viewBox="0 -960 960 960"><path d="M390-860q-13 0-21.5-8.5T360-890q0-13 8.5-21.5T390-920h180q13 0 21.5 8.5T600-890q0 13-8.5 21.5T570-860H390Zm111.5 438.5Q510-430 510-443v-170q0-13-8.5-21.5T480-643q-13 0-21.5 8.5T450-613v170q0 13 8.5 21.5T480-413q13 0 21.5-8.5Zm-161 312Q275-138 226-187t-77.5-114.5Q120-367 120-441t28.5-139.5Q177-646 226-695t114.5-77.5Q406-801 480-801q67 0 126 22.5T711-716l30-30q9-9 21-9t21 9q9 9 9 21t-9 21l-30 30q36 40 61.5 97T840-441q0 74-28.5 139.5T734-187q-49 49-114.5 77.5T480-81q-74 0-139.5-28.5Zm352-119Q780-316 780-441t-87.5-212.5Q605-741 480-741t-212.5 87.5Q180-566 180-441t87.5 212.5Q355-141 480-141t212.5-87.5ZM480-440Z"/></symbol>
+<symbol id="i-notes" viewBox="0 -960 960 960"><path d="M150-240q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h420q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 -960 960 960"><path d="M530-481 353-658q-9-9-8.5-21t9.5-21q9-9 21.5-9t21.5 9l198 198q5 5 7 10t2 11q0 6-2 11t-7 10L396-261q-9 9-21 8.5t-21-9.5q-9-9-9-21.5t9-21.5l176-176Z"/></symbol>
+<symbol id="i-grid-view" viewBox="0 -960 960 960"><path d="M180-510q-24.75 0-42.37-17.63Q120-545.25 120-570v-210q0-24.75 17.63-42.38Q155.25-840 180-840h210q24.75 0 42.38 17.62Q450-804.75 450-780v210q0 24.75-17.62 42.37Q414.75-510 390-510H180Zm0 390q-24.75 0-42.37-17.63Q120-155.25 120-180v-210q0-24.75 17.63-42.38Q155.25-450 180-450h210q24.75 0 42.38 17.62Q450-414.75 450-390v210q0 24.75-17.62 42.37Q414.75-120 390-120H180Zm390-390q-24.75 0-42.37-17.63Q510-545.25 510-570v-210q0-24.75 17.63-42.38Q545.25-840 570-840h210q24.75 0 42.38 17.62Q840-804.75 840-780v210q0 24.75-17.62 42.37Q804.75-510 780-510H570Zm0 390q-24.75 0-42.37-17.63Q510-155.25 510-180v-210q0-24.75 17.63-42.38Q545.25-450 570-450h210q24.75 0 42.38 17.62Q840-414.75 840-390v210q0 24.75-17.62 42.37Q804.75-120 780-120H570ZM180-570h210v-210H180v210Zm390 0h210v-210H570v210Zm0 390h210v-210H570v210Zm-390 0h210v-210H180v210Zm390-390Zm0 180Zm-180 0Zm0-180Z"/></symbol>
+<symbol id="i-stop" viewBox="0 -960 960 960"><path d="M240-300v-360q0-24.75 17.63-42.38Q275.25-720 300-720h360q24.75 0 42.38 17.62Q720-684.75 720-660v360q0 24.75-17.62 42.37Q684.75-240 660-240H300q-24.75 0-42.37-17.63Q240-275.25 240-300Z"/></symbol>
+<symbol id="i-play" viewBox="0 -960 960 960"><path d="M320-258v-450q0-14 9-22t21-8q4 0 8 1t8 3l354 226q7 5 10.5 11t3.5 14q0 8-3.5 14T720-458L366-232q-4 2-8 3t-8 1q-12 0-21-8t-9-22Z"/></symbol>
 <symbol id="i-arrow-back" viewBox="0 -960 960 960"><path d="m274-450 227 227q9 9 9 21t-9 21q-9 9-21 9t-21-9L181-459q-5-5-7-10t-2-11q0-6 2-11t7-10l278-278q9-9 21-9t21 9q9 9 9 21t-9 21L274-510h496q13 0 21.5 8.5T800-480q0 13-8.5 21.5T770-450H274Z"/></symbol>
 <symbol id="i-arrow-forward" viewBox="0 -960 960 960"><path d="M686-450H190q-13 0-21.5-8.5T160-480q0-13 8.5-21.5T190-510h496L459-737q-9-9-9-21t9-21q9-9 21-9t21 9l278 278q5 5 7 10t2 11q0 6-2 11t-7 10L501-181q-9 9-21 9t-21-9q-9-9-9-21t9-21l227-227Z"/></symbol>
-<symbol id="i-play" viewBox="0 -960 960 960"><path d="M320-273v-414q0-17 12-28.5t28-11.5q5 0 10.5 1.5T381-721l326 207q9 6 13.5 15t4.5 19q0 10-4.5 19T707-446L381-239q-5 3-10.5 4.5T360-233q-16 0-28-11.5T320-273Z"/></symbol>
-<symbol id="i-stop" viewBox="0 -960 960 960"><path d="M240-300v-360q0-25 17.5-42.5T300-720h360q25 0 42.5 17.5T720-660v360q0 25-17.5 42.5T660-240H300q-25 0-42.5-17.5T240-300Z"/></symbol>
+<symbol id="i-keyboard-arrow-down" viewBox="0 -960 960 960"><path d="M469-358q-5-2-10-7L261-563q-9-9-8.5-21.5T262-606q9-9 21.5-9t21.5 9l175 176 176-176q9-9 21-8.5t21 9.5q9 9 9 21.5t-9 21.5L501-365q-5 5-10 7t-11 2q-6 0-11-2Z"/></symbol>
+<symbol id="i-wifi" viewBox="0 -960 960 960"><path d="M417-154q-27-27-27-63t27-63q27-27 63-27t63 27q27 27 27 63t-27 63q-27 27-63 27t-63-27Zm209-378.5Q694-505 757-451q14 12 15 30.5T759-388q-14 14-32 13t-33-13q-53-44-106.5-63T480-470q-54 0-107.5 19T266-388q-15 12-33 13t-32-13q-14-14-13-32.5t15-30.5q63-54 131-81.5T480-560q78 0 146 27.5Zm95.5-219Q835-703 926-622q14 13 15.5 31.5T929-558q-14 14-33.5 13.5T861-558q-83-70-178-111t-203-41q-108 0-203 41T99-558q-15 13-34 13.5T32-558q-14-14-13-32.5T34-622q91-81 204.5-129.5T480-800q128 0 241.5 48.5Z"/></symbol>
+<symbol id="i-settings" viewBox="0 -960 960 960"><path d="M421-80q-14 0-25-9t-13-23l-15-94q-19-7-40-19t-37-25l-86 40q-14 6-28 1.5T155-226L97-330q-8-13-4.5-27t15.5-23l80-59q-2-9-2.5-20.5T185-480q0-9 .5-20.5T188-521l-80-59q-12-9-15.5-23t4.5-27l58-104q8-13 22-17.5t28 1.5l86 40q16-13 37-25t40-18l15-95q2-14 13-23t25-9h118q14 0 25 9t13 23l15 94q19 7 40.5 18.5T669-710l86-40q14-6 27.5-1.5T804-734l59 104q8 13 4.5 27.5T852-580l-80 57q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l80 58q12 8 15.5 22.5T863-330l-58 104q-8 13-22 17.5t-28-1.5l-86-40q-16 13-36.5 25.5T592-206l-15 94q-2 14-13 23t-25 9H421Zm15-60h88l14-112q33-8 62.5-25t53.5-41l106 46 40-72-94-69q4-17 6.5-33.5T715-480q0-17-2-33.5t-7-33.5l94-69-40-72-106 46q-23-26-52-43.5T538-708l-14-112h-88l-14 112q-34 7-63.5 24T306-642l-106-46-40 72 94 69q-4 17-6.5 33.5T245-480q0 17 2.5 33.5T254-413l-94 69 40 72 106-46q24 24 53.5 41t62.5 25l14 112Zm44-210q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Zm0-130Z"/></symbol>
+<symbol id="i-close" viewBox="0 -960 960 960"><path d="M480-438 270-228q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522-480l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480-438Z"/></symbol>
+<symbol id="i-gamepad" viewBox="0 -960 960 960"><path d="M480-634Zm154 154Zm-307 0Zm153 153Zm-21-245-81-82q-5-5-7-10t-2-11v-175q0-13 8.5-21.5T399-880h163q13 0 21.5 8.5T592-850v175q0 6-2 11t-7 10l-82 82q-5 5-10 6.5t-11 1.5q-6 0-11-1.5t-10-6.5Zm113 113q-5-5-6.5-10t-1.5-11q0-6 1.5-11t6.5-10l82-82q5-5 10-7t11-2h175q13 0 21.5 8.5T880-562v163q0 13-8.5 21.5T850-369H675q-6 0-11-2t-10-7l-82-81ZM80-399v-163q0-13 8.5-21.5T110-592h175q6 0 11 2t10 7l82 82q5 5 6.5 10t1.5 11q0 6-1.5 11t-6.5 10l-82 81q-5 5-10 7t-11 2H110q-13 0-21.5-8.5T80-399Zm289 289v-175q0-6 2-11t7-10l81-82q5-5 10-6.5t11-1.5q6 0 11 1.5t10 6.5l82 82q5 5 7 10t2 11v175q0 13-8.5 21.5T562-80H399q-13 0-21.5-8.5T369-110Zm111-524 52-52v-134H429v134l51 52ZM140-429h135l52-51-52-52H140v103Zm289 289h103v-135l-52-52-51 52v135Zm257-289h134v-103H686l-52 52 52 51Z"/></symbol>
+<symbol id="i-touch" viewBox="0 -960 960 960"><path d="M445-80q-29 0-56-12t-45-35L143-383q-7-9-7-20t8-19l4-4q14-15 34.5-18.5T221-438l99 53v-365q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v415q0 17-14.5 25.5t-29.5.5l-100-53 156 198q10 12 23.76 18 13.76 6 29.24 6h205q38 0 64-26t26-64v-170q0-25.5-17.25-42.75T680-460H490q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h190q50 0 85 35t35 85v170q0 63-43.5 106.5T650-80H445Zm43-250Zm-16.7-320q-13.3 0-21.8-8.63-8.5-8.62-8.5-21.37 0-1.5 4-15 7-12 11-26t4-29.48Q460-796 427.88-828q-32.12-32-78-32T272-827.92q-32 32.09-32 77.92 0 15 4 29t11 26q2 3 3 6.5t1 8.5q0 12.75-8.58 21.37-8.58 8.63-21.84 8.63-8.58 0-15.58-4t-11.17-11.84Q191-685 185.5-706.25q-5.5-21.25-5.5-44.2 0-70.55 49.5-120.05T350-920q71 0 120.5 49.5T520-750.31q0 22.99-5.7 44.28-5.71 21.29-16.3 40.03-4 8-11.04 12-7.05 4-15.66 4Z"/></symbol>
+<symbol id="i-music" viewBox="0 -960 960 960"><path d="M642.94-160q-47.94 0-81.44-33.56t-33.5-81.5q0-47.94 32.67-81.44Q593.33-390 640-390q15.97 0 30.48 3Q685-384 698-377v-308q0-14.88 10.35-24.94T734-720h111q14.88 0 24.94 10.29t10.06 25.5Q880-669 869.94-659T845-649h-87v375q0 47.5-33.56 80.75T642.94-160ZM150-320q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h246q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-170q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h413q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-170q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h413q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z"/></symbol>
 </svg>
 
 <div class="canvas" id="canvas">
@@ -75,25 +87,25 @@
   const T = {
     tr: {
       h: 'Sunumunu telefonundan yönet.',
-      p: 'Telefonun kumanda, touchpad ve lazer olur. PowerPoint, Impress ve WPS ile çalışır.',
+      p: 'Telefonun kumanda, touchpad ve lazer olur. PowerPoint, Impress, WPS ve PDF ile çalışır.',
       free: 'Android ve Wear OS için ücretsiz',
       slides: [
         ['Kahve Kulübü, Ekim buluşması', 'Kahvenin kısa tarihi', 'Yemen’den İstanbul’a, oradan dünyaya'],
         ['1554', 'İstanbul’un ilk kahvehanesi Tahtakale’de açıldı.'],
         ['2013', 'Türk kahvesi kültürü UNESCO listesine girdi.'],
       ],
-      pc: 'Ofis-PC', connected: 'Bağlı', slide: 'Slayt', notes: 'Notlar', start: 'Başlat', end: 'Bitir', black: 'Siyah ekran', white: 'Beyaz ekran', back: 'Geri', next: 'İleri', controls: 'Kontroller', media: 'Medya',
+      pc: 'Ofis-PC', connected: 'Bağlı', slide: 'SLAYT', notes: 'Kendini tanıt. Konuşma on dakika sürecek.', goto: 'Slayta git', end: 'Bitir', back: 'Önceki', next: 'Sonraki', controls: 'Kontroller', media: 'Medya',
     },
     en: {
       h: 'Run your slides from your phone.',
-      p: 'Your phone becomes a remote, a touchpad and a laser. Works with PowerPoint, Impress and WPS.',
+      p: 'Your phone becomes a remote, a touchpad and a laser. Works with PowerPoint, Impress, WPS and PDF.',
       free: 'Free for Android and Wear OS',
       slides: [
         ['Coffee Club, October meetup', 'A short history of coffee', 'From Yemen to Istanbul, then the world'],
         ['1554', 'Istanbul’s first coffeehouse opened in Tahtakale.'],
         ['2013', 'Turkish coffee culture joined the UNESCO list.'],
       ],
-      pc: 'Office-PC', connected: 'Connected', slide: 'Slide', notes: 'Notes', start: 'Start', end: 'End', black: 'Black screen', white: 'White screen', back: 'Back', next: 'Next', controls: 'Controls', media: 'Media',
+      pc: 'Office-PC', connected: 'Connected', slide: 'SLIDE', notes: 'Introduce yourself. The talk will take ten minutes.', goto: 'Go to slide', end: 'End', back: 'Previous', next: 'Next', controls: 'Controls', media: 'Media',
     },
   }[lang];
   const canvas = document.getElementById('canvas');
@@ -107,23 +119,23 @@
     : `<div class="slide"><p class="s-big">${s[0]}</p><p class="s-text">${s[1]}</p></div>`;
   document.getElementById('rig').innerHTML = `
     <svg class="beam" viewBox="0 0 600 690" preserveAspectRatio="none">
-      <path class="beam-line" pathLength="1" d="M 236 448 C 384 448 497 362 497 214"/>
-      <path class="beam-pulse" id="pulse" pathLength="1" d="M 236 448 C 384 448 497 362 497 214"/>
+      <path class="beam-line" pathLength="1" d="M 236 558 C 400 558 497 400 497 214"/>
+      <path class="beam-pulse" id="pulse" pathLength="1" d="M 236 558 C 400 558 497 400 497 214"/>
     </svg>
     <div class="screen"><div class="show"><div class="deck">${T.slides.map(slideHtml).join('')}</div><i class="laser" id="laser"></i></div></div>
-    <div class="phone"><div class="ph">
-      <div class="ph-status"><span>14:32</span><span class="ph-sys"><i class="ph-batt"></i></span></div>
-      <div class="ph-head"><span class="ph-tile"><svg><use href="#mark"/></svg></span><span class="ph-id"><b>${T.pc}</b><small>192.168.1.24</small></span><span class="ph-chip">${T.connected}</span></div>
+    <div class="phone" data-theme="cobalt" data-mode="dark"><div class="ph">
+      <div class="ph-status"><span>14:32</span><span class="ph-sys"><svg class="i"><use href="#i-wifi"/></svg><i class="ph-batt"></i></span></div>
+      <div class="ph-head"><svg class="ph-tile"><use href="#mark"/></svg><span class="ph-id"><b>${T.pc}</b><small><svg class="i"><use href="#i-slideshow"/></svg>PowerPoint<svg class="i"><use href="#i-keyboard-arrow-down"/></svg></small></span><span class="ph-chip"><i></i>${T.connected}</span><svg class="i ph-ib"><use href="#i-settings"/></svg><svg class="i ph-ib"><use href="#i-close"/></svg></div>
       <div class="ph-card">
-        <div class="ph-card-top"><span class="ph-over">${T.slide}</span><span class="ph-timer"><span>03:24</span></span></div>
-        <p class="ph-count"><span id="cur">1</span><span class="ph-tot"> / 5</span></p>
+        <div class="ph-card-top"><span class="ph-over"><svg class="i"><use href="#i-slideshow"/></svg>${T.slide}<i class="ph-live"></i></span><span class="ph-timer"><svg class="i"><use href="#i-timer"/></svg>03:24</span></div>
+        <div class="ph-numrow"><p class="ph-count"><span id="cur">1</span><span class="ph-tot"> /5</span></p></div>
         <div class="ph-track" id="track"><i></i><i></i><i></i><i></i><i></i></div>
-        <span class="ph-notes">${T.notes}</span>
+        <span class="ph-notes"><svg class="i"><use href="#i-notes"/></svg><span>${T.notes}</span><svg class="i ph-chev"><use href="#i-chevron-right"/></svg></span>
+        <div class="ph-keys"><span class="ph-sq"><i class="sw sw-black"></i></span><span class="ph-sq"><i class="sw sw-white"></i></span><span class="ph-goto" id="b-start"><svg class="i"><use href="#i-grid-view"/></svg>${T.goto}</span></div>
       </div>
-      <div class="ph-row"><span class="ph-act" id="b-start"><svg class="i"><use href="#i-play"/></svg>${T.start}</span><span class="ph-act ph-end"><svg class="i"><use href="#i-stop"/></svg>${T.end}</span></div>
-      <div class="ph-row"><span class="ph-act"><i class="sw sw-black"></i>${T.black}</span><span class="ph-act"><i class="sw sw-white"></i>${T.white}</span></div>
-      <div class="ph-row ph-slides"><span class="ph-big"><span class="ph-circ"><svg class="i"><use href="#i-arrow-back"/></svg></span>${T.back}</span><span class="ph-big ph-next" id="b-next"><span class="ph-circ"><svg class="i"><use href="#i-arrow-forward"/></svg></span>${T.next}</span></div>
-      <div class="ph-nav"><span class="is-on">${T.controls}</span><span>Touchpad</span><span>${T.media}</span></div>
+      <span class="ph-toggle"><svg class="i"><use href="#i-stop"/></svg>${T.end}</span>
+      <div class="ph-row ph-slides"><span class="ph-big ph-prev"><svg class="i"><use href="#i-arrow-back"/></svg>${T.back}</span><span class="ph-big ph-next" id="b-next"><svg class="i"><use href="#i-arrow-forward"/></svg>${T.next}</span></div>
+      <div class="ph-nav"><span class="is-on"><svg class="i"><use href="#i-gamepad"/></svg>${T.controls}</span><span><svg class="i"><use href="#i-touch"/></svg>Touchpad</span><span><svg class="i"><use href="#i-music"/></svg>${T.media}</span></div>
     </div></div>`;
 
   // The stop sits beside the headline's first line.

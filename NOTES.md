@@ -12,7 +12,7 @@ QuickRemote is a presentation/PC remote built as three Dart projects (no workspa
 
 `quick_remote_wear/` is the Wear OS watch app, a separate Kotlin + Compose for Wear OS Gradle project (no Flutter). It has no connection of its own: it uses the phone app's connection to the PC (see "Watch app").
 
-`landing-page/` is a static HTML/CSS site: `index.html` in Turkish and `en/index.html` in English, sharing `style.css`, `main.js` (the live demos; it holds no text, every word is in the HTML) and `assets/`; a text change goes into both. The phone, watch and PC pieces on the page copy the apps' components and strings, so a visible change to those screens may need the same change on the site. Icons are Material Symbols Rounded paths in each page's inline sprite. README and many code comments are in Turkish.
+`site/` is the promo site (static HTML/CSS/JS, no framework): `index.html` in Turkish and `en/index.html` in English share `style.css`, `main.js` (the live demos; it holds no text, every word is in the HTML) and `assets/`. The two pages are generated from `site/tools/parts/` by `site/tools/build_pages.py` (every sentence is a `{{tr||en}}` pair, icons are Material Symbols Rounded paths in `site/tools/icons/`), so edit a part and run the script, never the pages; `tools/verify.mjs` checks both in a headless browser and `tools/social.mjs` regenerates the share images (`tools/README.md`). The phone, watch and PC pieces on the page copy the apps' components, palettes and strings, so a visible change to those screens may need the same change on the site; features not yet tried on a real device are marked as such there (section "Neyi denedik"). `landing-page/` is the old site and is no longer updated. README and many code comments are in Turkish.
 
 ## Commands
 
