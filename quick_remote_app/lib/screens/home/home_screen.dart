@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -185,10 +186,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _scanAndConnect() async {
     _clearError();
-    final result = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(builder: (_) => const ScanScreen()),
+    final route = MaterialPageRoute<Map<String, dynamic>>(
+      builder: (_) => const ScanScreen(),
     );
+    final result = await Navigator.of(context).push(route);
     if (result == null || !mounted) return;
+    // The result comes as the scanner starts to slide away. Connecting (and
+    // opening the remote) during that slide made it stutter.
+    await _transitionDone(route);
+    if (!mounted) return;
 
     final host = result['host'] as String;
     final port = result['port'] as int;
@@ -196,6 +202,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final fingerprint = result['fingerprint'] as String?;
 
     await _executeConnection(host, port, pin, certFingerprint: fingerprint);
+  }
+
+  /// Waits until [route] has slid away (at most a second).
+  Future<void> _transitionDone(TransitionRoute<dynamic> route) async {
+    final animation = route.animation;
+    if (animation == null || animation.isDismissed) return;
+    final done = Completer<void>();
+    void listener(AnimationStatus status) {
+      if (status.isDismissed && !done.isCompleted) done.complete();
+    }
+    animation.addStatusListener(listener);
+    await done.future.timeout(const Duration(seconds: 1), onTimeout: () {});
+    animation.removeStatusListener(listener);
   }
 
   /// A PC found on the network that is also a recent connection is opened
