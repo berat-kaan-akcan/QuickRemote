@@ -22,7 +22,7 @@ pkgdesc='Computer side of QuickRemote: control LibreOffice Impress and WPS prese
 arch=('x86_64')
 url='https://github.com/berat-kaan-akcan/QuickRemote'
 license=('LicenseRef-QuickRemote')
-depends=('gtk3' 'libx11' 'libxi' 'python' 'hicolor-icon-theme')
+depends=('gtk3' 'libglvnd' 'libx11' 'libxi' 'python' 'hicolor-icon-theme')
 optdepends=(
   'libreoffice: control Impress slideshows (libreoffice-fresh or libreoffice-still)'
   'avahi: let phones find this computer on the network (mDNS)'
