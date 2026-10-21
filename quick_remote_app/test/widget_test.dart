@@ -29,7 +29,9 @@ void main() {
     expect(find.text('QR Kod ile Bağlan'), findsOneWidget);
   });
 
-  testWidgets('the recent PCs are kept but not listed on the home screen', (WidgetTester tester) async {
+  testWidgets('the recent PCs are kept but not listed on the home screen', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'language': 'en',
       'recent_devices': [
@@ -44,4 +46,26 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getStringList('recent_devices'), hasLength(1));
   });
+
+  for (final textScale in [1.0, 1.3]) {
+    testWidgets('the home screen fits a small phone at text scale $textScale', (
+      WidgetTester tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({'language': 'tr'});
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await tester.pumpWidget(const QuickRemoteApp());
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('QR Kod ile Bağlan'), findsOneWidget);
+      expect(find.text('Manuel bağlantı'), findsOneWidget);
+      expect(find.text('Ağdaki Cihazlar'.toUpperCase()), findsOneWidget);
+    });
+  }
 }
