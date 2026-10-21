@@ -360,6 +360,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remoteBackHome => 'Back to Home';
 
   @override
+  String get remoteNewPinTitle => 'The PC\'s PIN changed';
+
+  @override
+  String get remoteNewPinMessage =>
+      'The PC made a new PIN when it restarted. Enter the PIN shown on the PC to reconnect to it.';
+
+  @override
+  String get remoteEnterPin => 'Enter PIN';
+
+  @override
   String get remoteReconnect => 'Reconnect';
 
   @override

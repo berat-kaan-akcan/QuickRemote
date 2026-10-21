@@ -126,6 +126,10 @@ class WebSocketService extends ChangeNotifier {
   AppConnectionState get connectionState => _client.connectionState;
   String get serverAddress => _client.serverAddress;
 
+  /// The PC of the last attempt (also after it failed); null before the first.
+  String? get serverHost => _client.host;
+  int? get serverPort => _client.port;
+
   /// The connected PC's name; null from a PC that does not tell it.
   String? get pcName => isConnected ? _state.pcName : null;
 

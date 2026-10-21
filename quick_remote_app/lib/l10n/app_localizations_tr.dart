@@ -356,6 +356,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get remoteBackHome => 'Ana Ekrana Dön';
 
   @override
+  String get remoteNewPinTitle => 'PC\'nin PIN\'i değişti';
+
+  @override
+  String get remoteNewPinMessage =>
+      'PC yeniden başlatıldığı için yeni bir PIN üretti. PC ekranındaki PIN\'i girin, aynı bilgisayara yeniden bağlanalım.';
+
+  @override
+  String get remoteEnterPin => 'PIN\'i gir';
+
+  @override
   String get remoteReconnect => 'Yeniden Bağlan';
 
   @override
