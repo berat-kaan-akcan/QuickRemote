@@ -128,8 +128,11 @@ class _RemoteScreenState extends State<RemoteScreen> {
     final failure = _wsRef.lastCommandError;
     if (failure is ConnectionFailure && failure.error == ConnectionError.wrongPin) {
       _wsRef.clearCommandError();
-      setState(() => _wrongPin = true);
-      _askNewPin();
+      // Connected by now: an older attempt's answer.
+      if (!_wsRef.isConnected) {
+        setState(() => _wrongPin = true);
+        _askNewPin();
+      }
     } else if (failure != null) {
       final message = context.l10n.failure(failure);
       _persistentError = message;

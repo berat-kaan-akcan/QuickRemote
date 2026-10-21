@@ -115,6 +115,9 @@ class WebSocketService extends ChangeNotifier {
         if (error != null) {
           _lastCommandError = error;
           notifyListeners();
+        } else if (_lastCommandError is ConnectionFailure) {
+          // A refused attempt before this one is no news to the remote.
+          _lastCommandError = null;
         }
       },
     );
