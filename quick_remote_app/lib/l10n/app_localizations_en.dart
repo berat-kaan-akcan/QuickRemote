@@ -547,6 +547,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get volumeOn => 'Sound on';
 
   @override
+  String get volumeMuteToggle => 'Mute / Unmute';
+
+  @override
   String get btUnsupportedLong =>
       'This device doesn\'t support Bluetooth HID.\nUse Wi-Fi mode.';
 

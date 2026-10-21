@@ -1052,6 +1052,12 @@ abstract class AppLocalizations {
   /// **'Sesli'**
   String get volumeOn;
 
+  /// No description provided for @volumeMuteToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesi kapat / aç'**
+  String get volumeMuteToggle;
+
   /// No description provided for @btUnsupportedLong.
   ///
   /// In tr, this message translates to:
