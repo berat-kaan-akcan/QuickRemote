@@ -4,60 +4,89 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
-/// Connect with the QR code or, on Android, over Bluetooth: two tiles side
-/// by side.
-class ConnectButtons extends StatelessWidget {
-  const ConnectButtons({
+/// The fixed area at the bottom of the home screen: the wide QR key and,
+/// under it, two square tiles for Bluetooth (Android only) and manual entry.
+class ConnectDock extends StatelessWidget {
+  const ConnectDock({
     super.key,
     required this.connecting,
     required this.onScan,
     required this.onBluetooth,
+    required this.onManual,
   });
 
   final bool connecting;
   final VoidCallback onScan;
   final VoidCallback onBluetooth;
+  final VoidCallback onManual;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _ConnectTile(
-            primary: true,
-            icon: Icons.qr_code_scanner_rounded,
-            label: connecting ? context.l10n.homeConnecting : context.l10n.homeConnectQr,
+    final p = context.palette;
+    final l10n = context.l10n;
+    const top = Radius.circular(26);
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSpace.page,
+        14,
+        AppSpace.page,
+        MediaQuery.paddingOf(context).bottom + AppSpace.sm,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(top: top),
+        border: Border(top: BorderSide(color: p.border)),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [p.surface, p.surface.withValues(alpha: 0.92)],
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _QrKey(
+            label: connecting ? l10n.homeConnecting : l10n.homeConnectQr,
             busy: connecting,
             onTap: connecting ? null : onScan,
           ),
-        ),
-        if (Platform.isAndroid) ...[
-          const SizedBox(width: 10),
-          Expanded(
-            child: _ConnectTile(
-              primary: false,
-              icon: Icons.bluetooth_rounded,
-              label: context.l10n.homeConnectBluetooth,
-              onTap: connecting ? null : onBluetooth,
+          const SizedBox(height: 10),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (Platform.isAndroid) ...[
+                  Expanded(
+                    child: _SquareTile(
+                      icon: Icons.bluetooth_rounded,
+                      iconColor: p.info,
+                      label: l10n.homeConnectBluetooth,
+                      onTap: connecting ? null : onBluetooth,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: _SquareTile(
+                    icon: Icons.keyboard_alt_outlined,
+                    iconColor: p.primaryText,
+                    label: l10n.homeManualConnection,
+                    onTap: connecting ? null : onManual,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
-      ],
+      ),
     );
   }
 }
 
-class _ConnectTile extends StatelessWidget {
-  const _ConnectTile({
-    required this.primary,
-    required this.icon,
-    required this.label,
-    this.busy = false,
-    this.onTap,
-  });
+/// The main way in: full width, the brand gradient, QR icon and an arrow.
+class _QrKey extends StatelessWidget {
+  const _QrKey({required this.label, required this.busy, this.onTap});
 
-  final bool primary;
-  final IconData icon;
   final String label;
   final bool busy;
   final VoidCallback? onTap;
@@ -66,46 +95,108 @@ class _ConnectTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final radius = AppRadius.all(AppRadius.lg);
-    final fg = primary ? p.onPrimary : p.textPrimary;
+    final fg = p.onPrimary;
     return Pressable(
       onTap: onTap,
       semanticLabel: label,
       dimWhenDisabled: !busy,
-      pressedScale: 0.97,
+      pressedScale: 0.98,
       borderRadius: radius,
       child: Container(
-        height: 96,
-        padding: const EdgeInsets.all(14),
+        constraints: const BoxConstraints(minHeight: 64),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          gradient: primary
-              ? LinearGradient(
-                  begin: const Alignment(-0.8, -1),
-                  end: const Alignment(0.8, 1),
-                  colors: [p.primaryBright, p.primary, p.primaryDeep],
-                  stops: const [0, 0.6, 1],
-                )
-              : null,
-          color: primary ? null : p.surface,
+          gradient: LinearGradient(
+            begin: const Alignment(-0.8, -1),
+            end: const Alignment(0.8, 1),
+            colors: [p.primaryBright, p.primary, p.primaryDeep],
+            stops: const [0, 0.6, 1],
+          ),
           borderRadius: radius,
-          border: primary ? null : Border.all(color: p.border),
-          boxShadow: primary ? AppShadows.glow(p.primaryBright, strength: 1.2) : null,
+          boxShadow: AppShadows.glow(p.primaryBright, strength: 1.2),
         ),
         child: ExcludeSemantics(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Row(
             children: [
               busy
                   ? SizedBox.square(
-                      dimension: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.5, color: fg),
+                      dimension: 26,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: fg,
+                      ),
                     )
-                  : Icon(icon, color: primary ? fg : p.info, size: 26),
+                  : Icon(Icons.qr_code_scanner_rounded, color: fg, size: 28),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.label.copyWith(color: fg, fontSize: 16.5),
+                ),
+              ),
+              if (!busy) ...[
+                const SizedBox(width: AppSpace.xs),
+                Icon(Icons.arrow_forward_rounded, color: fg, size: 22),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A square-ish tile: the icon over a short label, both centred.
+class _SquareTile extends StatelessWidget {
+  const _SquareTile({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final radius = AppRadius.all(AppRadius.lg);
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: label,
+      pressedScale: 0.97,
+      borderRadius: radius,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 84),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.xs,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: p.surfaceRaised,
+          borderRadius: radius,
+          border: Border.all(color: p.border),
+        ),
+        child: ExcludeSemantics(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: iconColor, size: 26),
+              const SizedBox(height: 6),
               Text(
                 label,
                 maxLines: 2,
+                textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                style: AppType.label.copyWith(color: fg, fontSize: 14),
+                style: AppType.label.copyWith(
+                  color: p.textPrimary,
+                  fontSize: 12.5,
+                ),
               ),
             ],
           ),

@@ -55,13 +55,22 @@ class HomeBranding extends StatelessWidget {
           header: true,
           child: Text(
             context.l10n.homeTagline,
-            style: AppType.headline.copyWith(color: p.textPrimary, fontSize: 25, height: 1.15),
+            style: AppType.headline.copyWith(
+              color: p.textPrimary,
+              fontSize: 30,
+              height: 1.12,
+              letterSpacing: -0.6,
+            ),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
         Text(
           context.l10n.homeHeroSubtitle,
-          style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12.5),
+          style: AppType.bodySmall.copyWith(
+            color: p.textSecondary,
+            fontSize: 13.5,
+            height: 1.5,
+          ),
         ),
       ],
     );

@@ -6,8 +6,9 @@ import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 import 'spinning_refresh_icon.dart';
 
-/// PCs found over mDNS, in a card. The recent connections are not listed:
-/// a found PC that is one of them only carries a "saved" mark.
+/// PCs found over mDNS under a section heading, filling the space it is
+/// given. The recent connections are not listed: a found PC that is one of
+/// them only carries a "saved" mark. Needs a bounded height (an [Expanded]).
 class DeviceLists extends StatelessWidget {
   const DeviceLists({
     super.key,
@@ -25,44 +26,64 @@ class DeviceLists extends StatelessWidget {
     return Consumer<DiscoveryService>(
       builder: (context, discovery, child) {
         final p = context.palette;
-        final empty = discovery.devices.isEmpty && !discovery.isDiscovering;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ListCard(
-              icon: Icons.wifi_find_rounded,
-              title: context.l10n.homeNetworkDevices,
-              centered: empty,
-              trailing: Pressable(
-                onTap: discovery.isDiscovering
-                    ? null
-                    : () => discovery.startScanning(),
-                dimWhenDisabled: false,
-                pressedScale: 0.9,
-                tooltip: context.l10n.homeRescan,
-                semanticLabel: context.l10n.homeRescan,
-                borderRadius: AppRadius.all(AppRadius.pill),
-                child: SizedBox.square(
-                  dimension: 36,
-                  child: Center(
-                    child: SpinningRefreshIcon(
-                      isSpinning: discovery.isDiscovering,
+            SizedBox(
+              height: 36,
+              child: Row(
+                children: [
+                  Icon(Icons.wifi_find_rounded, color: p.primaryText, size: 18),
+                  const SizedBox(width: AppSpace.xs),
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        context.l10n.homeNetworkDevices.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppType.overline.copyWith(
+                          color: p.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Pressable(
+                    onTap: discovery.isDiscovering
+                        ? null
+                        : () => discovery.startScanning(),
+                    dimWhenDisabled: false,
+                    pressedScale: 0.9,
+                    tooltip: context.l10n.homeRescan,
+                    semanticLabel: context.l10n.homeRescan,
+                    borderRadius: AppRadius.all(AppRadius.pill),
+                    child: SizedBox.square(
+                      dimension: 36,
+                      child: Center(
+                        child: SpinningRefreshIcon(
+                          isSpinning: discovery.isDiscovering,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: AppSpace.xs),
+            Expanded(
               child: AnimatedSwitcher(
                 duration: AppMotion.of(context, AppMotion.base),
                 switchInCurve: AppMotion.enter,
+                layoutBuilder: (current, previous) => Stack(
+                  fit: StackFit.expand,
+                  children: [...previous, ?current],
+                ),
                 child: discovery.devices.isEmpty
-                    ? discovery.isDiscovering
-                          ? const _SearchingPlaceholder(
-                              key: ValueKey('searching'),
-                            )
-                          : _NothingFound(
-                              key: const ValueKey('empty'),
-                              onRescan: () => discovery.startScanning(),
-                            )
+                    ? _EmptyBox(
+                        key: ValueKey(discovery.isDiscovering),
+                        searching: discovery.isDiscovering,
+                        onRescan: () => discovery.startScanning(),
+                      )
                     : Column(
                         key: const ValueKey('devices'),
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -105,70 +126,6 @@ class DeviceLists extends StatelessWidget {
   }
 }
 
-/// A card with an icon and capitals over its rows.
-class _ListCard extends StatelessWidget {
-  const _ListCard({
-    required this.icon,
-    required this.title,
-    required this.child,
-    this.trailing,
-    this.centered = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final Widget child;
-  final Widget? trailing;
-
-  /// The heading in the middle, over a message rather than rows.
-  final bool centered;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final header = Row(
-      mainAxisSize: centered ? MainAxisSize.min : MainAxisSize.max,
-      children: [
-        Icon(icon, color: p.primaryText, size: 18),
-        const SizedBox(width: AppSpace.xs),
-        Flexible(
-          fit: centered ? FlexFit.loose : FlexFit.tight,
-          child: Semantics(
-            header: true,
-            child: Text(
-              title.toUpperCase(),
-              style: AppType.overline.copyWith(color: p.textSecondary),
-            ),
-          ),
-        ),
-        if (trailing != null) ...[
-          if (centered) const SizedBox(width: AppSpace.xs),
-          trailing!,
-        ],
-      ],
-    );
-    return Container(
-      padding: const EdgeInsets.all(AppSpace.sm),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: AppRadius.all(AppRadius.lg),
-        border: Border.all(color: p.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: 36,
-            child: centered ? Center(child: header) : header,
-          ),
-          const SizedBox(height: AppSpace.xs),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
 /// A PC in a list: its badge, name and address, and an action.
 class _PcRow extends StatelessWidget {
   const _PcRow({
@@ -203,9 +160,26 @@ class _PcRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
         decoration: BoxDecoration(
-          color: p.surfaceRaised,
+          color: saved ? null : p.surfaceRaised,
+          gradient: saved
+              ? LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color.alphaBlend(
+                      p.primaryText.withValues(alpha: p.isDark ? 0.12 : 0.08),
+                      p.surfaceRaised,
+                    ),
+                    p.surfaceRaised,
+                  ],
+                )
+              : null,
           borderRadius: radius,
-          border: Border.all(color: p.border),
+          border: Border.all(
+            color: saved
+                ? p.primaryText.withValues(alpha: p.isDark ? 0.5 : 0.4)
+                : p.border,
+          ),
         ),
         child: Row(
           children: [
@@ -287,116 +261,106 @@ class _SavedMark extends StatelessWidget {
   }
 }
 
-/// Nothing found on the network, and why that may be.
-class _NothingFound extends StatelessWidget {
-  const _NothingFound({super.key, required this.onRescan});
+/// No PC (yet): a dashed box filling the list's space, saying that the
+/// search runs or that it found nothing, with a rescan key then.
+class _EmptyBox extends StatelessWidget {
+  const _EmptyBox({super.key, required this.searching, required this.onRescan});
 
+  final bool searching;
   final VoidCallback onRescan;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpace.xs,
-        0,
-        AppSpace.xs,
-        AppSpace.xs,
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: p.surfaceSunken,
-              borderRadius: AppRadius.all(AppRadius.md),
-            ),
-            child: Icon(Icons.wifi_off_rounded, color: p.textMuted, size: 30),
+    return CustomPaint(
+      painter: _DashedBorder(color: p.border, radius: AppRadius.lg),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 74,
+                height: 74,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: searching
+                      ? p.primaryText.withValues(alpha: p.isDark ? 0.12 : 0.08)
+                      : p.surfaceSunken,
+                ),
+                child: Icon(
+                  searching ? Icons.wifi_find_rounded : Icons.wifi_off_rounded,
+                  color: searching ? p.primaryText : p.textMuted,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: AppSpace.md),
+              Text(
+                searching
+                    ? context.l10n.homeSearching
+                    : context.l10n.homeNoDevices,
+                textAlign: TextAlign.center,
+                style: AppType.titleSmall.copyWith(color: p.textPrimary),
+              ),
+              const SizedBox(height: AppSpace.xxs),
+              Text(
+                context.l10n.homeNoDevicesHint,
+                textAlign: TextAlign.center,
+                style: AppType.bodySmall.copyWith(
+                  color: p.textSecondary,
+                  fontSize: 12.5,
+                  height: 1.45,
+                ),
+              ),
+              if (!searching) ...[
+                const SizedBox(height: AppSpace.sm),
+                AppButton(
+                  label: context.l10n.homeRescan,
+                  icon: Icons.refresh_rounded,
+                  variant: AppButtonVariant.tonal,
+                  expand: false,
+                  height: 42,
+                  onPressed: onRescan,
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: AppSpace.sm),
-          Text(
-            context.l10n.homeNoDevices,
-            textAlign: TextAlign.center,
-            style: AppType.titleSmall.copyWith(color: p.textPrimary),
-          ),
-          const SizedBox(height: AppSpace.xxs),
-          Text(
-            context.l10n.homeNoDevicesHint,
-            textAlign: TextAlign.center,
-            style: AppType.bodySmall.copyWith(
-              color: p.textSecondary,
-              fontSize: 12.5,
-            ),
-          ),
-          const SizedBox(height: AppSpace.sm),
-          AppButton(
-            label: context.l10n.homeRescan,
-            icon: Icons.refresh_rounded,
-            variant: AppButtonVariant.tonal,
-            expand: false,
-            height: 42,
-            onPressed: onRescan,
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// A "searching" line and two placeholder rows while mDNS looks for PCs.
-class _SearchingPlaceholder extends StatelessWidget {
-  const _SearchingPlaceholder({super.key});
+/// A rounded rectangle drawn with dashes.
+class _DashedBorder extends CustomPainter {
+  const _DashedBorder({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
 
   @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    Widget row(double titleWidth) => Padding(
-      padding: const EdgeInsets.only(top: AppSpace.xs),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: p.surfaceRaised,
-          borderRadius: AppRadius.all(AppRadius.md),
-          border: Border.all(color: p.border),
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final outline = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          (Offset.zero & size).deflate(0.75),
+          Radius.circular(radius),
         ),
-        child: Row(
-          children: [
-            const Skeleton(width: 38, height: 38, radius: 13),
-            const SizedBox(width: AppSpace.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Skeleton(width: titleWidth, height: 11),
-                  const SizedBox(height: 6),
-                  const Skeleton(width: 90, height: 9),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Row(
-            children: [
-              Icon(Icons.radar_rounded, color: p.primaryText, size: 18),
-              const SizedBox(width: AppSpace.xs),
-              Text(
-                context.l10n.homeSearching,
-                style: AppType.bodySmall.copyWith(color: p.textSecondary),
-              ),
-            ],
-          ),
-        ),
-        row(150),
-        row(110),
-      ],
-    );
+      );
+    const dash = 7.0, gap = 5.0;
+    for (final metric in outline.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += dash + gap) {
+        canvas.drawPath(metric.extractPath(d, d + dash), paint);
+      }
+    }
   }
+
+  @override
+  bool shouldRepaint(_DashedBorder old) =>
+      old.color != color || old.radius != radius;
 }

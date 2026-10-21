@@ -322,75 +322,88 @@ class _HomeScreenState extends State<HomeScreen> {
           SafeArea(
             bottom: false,
             child: ContentWidth(
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppSpace.page,
-                        AppSpace.xs,
-                        AppSpace.page,
-                        MediaQuery.paddingOf(context).bottom + AppSpace.sm,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          HomeTopBar(
-                            onSettings: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: AppSpace.md),
-                          const FadeSlideIn(child: RepaintBoundary(child: HomeBranding())),
-                          const SizedBox(height: AppSpace.sm),
-                          FadeSlideIn(
-                            index: 1,
-                            child: ConnectButtons(
-                              connecting: _connecting,
-                              onScan: _scanAndConnect,
-                              onBluetooth: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => const BluetoothConnectScreen()),
-                                );
-                              },
+                      slivers: [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpace.page,
+                              AppSpace.xs,
+                              AppSpace.page,
+                              AppSpace.md,
                             ),
-                          ),
-                          Reveal(
-                            child: _error == null
-                                ? null
-                                : Padding(
-                                    key: ValueKey(_error),
-                                    padding: const EdgeInsets.only(top: AppSpace.sm),
-                                    child: InlineAlert(message: _error!, tone: AppTone.danger),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                HomeTopBar(
+                                  onSettings: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const SettingsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: AppSpace.lg),
+                                const FadeSlideIn(
+                                  child: RepaintBoundary(child: HomeBranding()),
+                                ),
+                                const SizedBox(height: AppSpace.lg),
+                                Expanded(
+                                  child: FadeSlideIn(
+                                    index: 1,
+                                    child: DeviceLists(
+                                      onDiscoveredTap: _connectDiscovered,
+                                      isSaved: (dev) =>
+                                          _savedPinOf(dev) != null,
+                                    ),
                                   ),
-                          ),
-                          const SizedBox(height: AppSpace.sm),
-                          FadeSlideIn(
-                            index: 2,
-                            child: DeviceLists(
-                              onDiscoveredTap: _connectDiscovered,
-                              isSaved: (dev) => _savedPinOf(dev) != null,
+                                ),
+                              ],
                             ),
                           ),
-                          const Spacer(),
-                          const SizedBox(height: AppSpace.md),
-                          Center(
-                            child: TextButton.icon(
-                              onPressed: () => _showManualConnect(context),
-                              icon: const Icon(Icons.keyboard_alt_outlined, size: 18),
-                              label: Text(context.l10n.homeManualConnection),
-                              style: TextButton.styleFrom(
-                                foregroundColor: p.primaryText,
-                                textStyle: AppType.label.copyWith(fontSize: 13),
-                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Reveal(
+                    child: _error == null
+                        ? null
+                        : Padding(
+                            key: ValueKey(_error),
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpace.page,
+                              0,
+                              AppSpace.page,
+                              AppSpace.sm,
+                            ),
+                            child: InlineAlert(
+                              message: _error!,
+                              tone: AppTone.danger,
                             ),
                           ),
-                        ],
-                      ),
+                  ),
+                  FadeSlideIn(
+                    index: 2,
+                    child: ConnectDock(
+                      connecting: _connecting,
+                      onScan: _scanAndConnect,
+                      onBluetooth: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const BluetoothConnectScreen(),
+                          ),
+                        );
+                      },
+                      onManual: () => _showManualConnect(context),
                     ),
                   ),
                 ],
