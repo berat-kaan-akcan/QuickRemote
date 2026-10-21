@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../app_version.dart';
 
@@ -192,9 +193,10 @@ Future<void> openInBrowser(Uri url) async {
       // explorer.exe hands a URL to the default browser.
       await Process.run('explorer', [url.toString()]);
     } else if (Platform.isLinux) {
-      await Process.start('xdg-open', [
-        url.toString(),
-      ], mode: ProcessStartMode.detached);
+      // gtk_show_uri_on_window, which hands the browser an activation
+      // token: KWin and Mutter keep a browser started by a bare xdg-open
+      // behind the window that asked for it.
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   } catch (e) {
     debugPrint('openInBrowser: $e');
