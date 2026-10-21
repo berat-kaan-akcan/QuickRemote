@@ -265,7 +265,8 @@ fun ToolsPage(
                         textAlign = TextAlign.Center,
                     )
                 } else {
-                    // The hole holds the slide number, in the figures' face; a longer word is cut.
+                    // The hole holds the slide number, in the figures' face, or a short
+                    // phrase on two lines ("Gösteri kapalı" did not fit on one); longer is cut.
                     val numbered = show != null && show.running && show.current > 0 && show.total > 0
                     Text(
                         showText(show),
@@ -276,7 +277,7 @@ fun ToolsPage(
                         },
                         color = palette.textSecondary,
                         textAlign = TextAlign.Center,
-                        maxLines = 1,
+                        maxLines = if (numbered) 1 else 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.widthIn(max = screen * HOLE * 0.9f),
                     )
