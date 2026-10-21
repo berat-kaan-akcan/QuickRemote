@@ -297,6 +297,11 @@ Site 2026-10-20'de yenilendi (`docs/raporlar/SITE_YENILEME.md`). Kalanlar:
 - [ ] **Lisans**: repoda LICENSE yok. Site "Açık kaynak", README "kişisel kullanım" diyor; AUR paketi yer tutucu lisans kullanıyor.
 - [ ] **Paket adı (`applicationId`)**: Play'e ilk yüklemeden önce son hâli verilmeli (PLAY, 0. bölüm).
 - [ ] **Uygulamanın adı**: şimdilik QuickRemote (boşta olan aday SlideMando'ydu). Play'deki benzer adlara bakılmalı.
+- [ ] **2026-10-21 listesinden cevap bekleyen sorular:**
+  - **Chrome/Firefox PDF'te Başlat F5'e basıyor:** Linux'ta mı, Windows'ta mı? Linux'taysa sebep büyük ihtimalle 1. bölümdeki "yerel Wayland pencereleri" bulgusu.
+  - **WPS PDF'te kaydırma:** telefonun İleri/Geri tuşlarıyla mı, touchpad kaydırmasıyla mı? Sayfa yarım mı kayıyor, iki sayfa arasında mı duruyor? Linux mu, Windows mu?
+  - **Sunucu görünümünde lazer:** parmak slayt resminde nereye dokunursa lazer perdede oraya mı gitsin (mutlak konum, protokole yeni kare gerekir), yoksa resim basit touchpad'e mi dönsün?
+  - **"Neler yapılabilir" ekranı:** gerçek cihazda denenmemiş özellikler sitedeki gibi "denenmedi" diye işaretlensin mi?
 
 ## 9. Bilerek sonraya bırakılanlar
 
