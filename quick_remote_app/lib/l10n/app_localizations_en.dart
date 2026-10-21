@@ -238,10 +238,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeRescan => 'Scan Again';
 
   @override
-  String get homeRecent => 'Recent Connections';
+  String get homeSaved => 'Saved';
 
   @override
-  String get homeRemoveFromHistory => 'Remove from History';
+  String get homeSavedHint => 'Connects with the saved PIN';
 
   @override
   String get launchNoRecentPc =>

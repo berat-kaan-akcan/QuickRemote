@@ -6,20 +6,19 @@ import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 import 'spinning_refresh_icon.dart';
 
-/// PCs found over mDNS, then the ones connected to before, each in a card.
+/// PCs found over mDNS, in a card. The recent connections are not listed:
+/// a found PC that is one of them only carries a "saved" mark.
 class DeviceLists extends StatelessWidget {
   const DeviceLists({
     super.key,
-    required this.recentDevices,
     required this.onDiscoveredTap,
-    required this.onRecentTap,
-    required this.onRecentRemove,
+    required this.isSaved,
   });
 
-  final List<Map<String, dynamic>> recentDevices;
   final void Function(DiscoveredDevice device) onDiscoveredTap;
-  final void Function(Map<String, dynamic> device) onRecentTap;
-  final void Function(int index) onRecentRemove;
+
+  /// A recent connection with a PIN: a tap connects without asking for one.
+  final bool Function(DiscoveredDevice device) isSaved;
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +86,7 @@ class DeviceLists extends StatelessWidget {
                                       ? context.l10n.unknownPc
                                       : dev.name,
                                   subtitle: '${dev.ip}:${dev.port}',
+                                  saved: isSaved(dev),
                                   trailing: Icon(
                                     Icons.arrow_forward_rounded,
                                     color: p.primaryText,
@@ -98,54 +98,6 @@ class DeviceLists extends StatelessWidget {
                       ),
               ),
             ),
-            if (recentDevices.isNotEmpty) ...[
-              const SizedBox(height: AppSpace.sm),
-              _ListCard(
-                icon: Icons.history_rounded,
-                title: context.l10n.homeRecent,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final (index, dev) in recentDevices.indexed)
-                      Padding(
-                        key: ValueKey('recent_${dev['host']}:${dev['port']}'),
-                        padding: EdgeInsets.only(
-                          top: index == 0 ? 0 : AppSpace.xs,
-                        ),
-                        child: FadeSlideIn(
-                          index: index,
-                          child: _PcRow(
-                            onTap: () => onRecentTap(dev),
-                            badge: Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: p.surfaceSunken,
-                                borderRadius: AppRadius.all(AppRadius.sm),
-                              ),
-                              child: Icon(
-                                Icons.desktop_windows_rounded,
-                                color: p.textSecondary,
-                                size: 20,
-                              ),
-                            ),
-                            title: dev['name'] ?? dev['host'],
-                            subtitle: '${dev['host']}:${dev['port']}',
-                            trailing: AppIconButton(
-                              icon: Icons.close_rounded,
-                              tooltip: context.l10n.homeRemoveFromHistory,
-                              size: 36,
-                              iconSize: 20,
-                              color: p.textMuted,
-                              onPressed: () => onRecentRemove(index),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
           ],
         );
       },
@@ -225,6 +177,7 @@ class _PcRow extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.trailing,
+    this.saved = false,
   });
 
   final VoidCallback onTap;
@@ -233,13 +186,18 @@ class _PcRow extends StatelessWidget {
   final String subtitle;
   final Widget trailing;
 
+  /// Shows the "saved" mark: connects with the saved PIN.
+  final bool saved;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     final radius = AppRadius.all(AppRadius.md);
     return Pressable(
       onTap: onTap,
-      semanticLabel: '$title, $subtitle',
+      semanticLabel: saved
+          ? '$title, $subtitle, ${context.l10n.homeSavedHint}'
+          : '$title, $subtitle',
       pressedScale: 0.98,
       borderRadius: radius,
       child: Container(
@@ -280,8 +238,48 @@ class _PcRow extends StatelessWidget {
                 ),
               ),
             ),
+            if (saved) ...[
+              const SizedBox(width: AppSpace.xs),
+              const ExcludeSemantics(child: _SavedMark()),
+              const SizedBox(width: AppSpace.xs),
+            ],
             trailing,
             const SizedBox(width: AppSpace.xxs),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Saved": the PC is a recent connection and a tap uses its saved PIN.
+class _SavedMark extends StatelessWidget {
+  const _SavedMark();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Tooltip(
+      message: context.l10n.homeSavedHint,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: p.primaryText.withValues(alpha: p.isDark ? 0.14 : 0.10),
+          borderRadius: AppRadius.all(AppRadius.pill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.key_rounded, size: 12, color: p.primaryText),
+            const SizedBox(width: 4),
+            Text(
+              context.l10n.homeSaved,
+              maxLines: 1,
+              style: AppType.labelSmall.copyWith(
+                color: p.primaryText,
+                fontSize: 11,
+              ),
+            ),
           ],
         ),
       ),

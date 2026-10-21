@@ -104,8 +104,8 @@
   "homeSearching": "Cihaz aranıyor...",
   "homeNoDevices": "Ağda cihaz bulunamadı",
   "homeRescan": "Yeniden Tara",
-  "homeRecent": "Son Bağlanılanlar",
-  "homeRemoveFromHistory": "Geçmişten Sil",
+  "homeSaved": "Kayıtlı",
+  "homeSavedHint": "Kayıtlı PIN ile bağlanır",
   "launchNoRecentPc": "Bağlanılacak bir PC henüz yok. Önce QR kodla ya da PIN ile bir kez bağlanın.",
   "launchPcNotFound": "{name} ağda bulunamadı. QuickRemote PC açık mı?",
   "@launchPcNotFound": {

@@ -235,10 +235,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeRescan => 'Yeniden Tara';
 
   @override
-  String get homeRecent => 'Son Bağlanılanlar';
+  String get homeSaved => 'Kayıtlı';
 
   @override
-  String get homeRemoveFromHistory => 'Geçmişten Sil';
+  String get homeSavedHint => 'Kayıtlı PIN ile bağlanır';
 
   @override
   String get launchNoRecentPc =>
