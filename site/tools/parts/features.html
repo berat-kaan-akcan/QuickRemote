@@ -1,0 +1,71 @@
+
+  <!-- Features: the presenter's view, on a dark stage. -->
+  <section class="sec stage-sec" id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="h2" id="features-title">{{Sahnede sen, notların telefonda.||You on stage, your notes on the phone.}}</h2>
+        <p class="lede">{{<span translate="no">QuickRemote&nbsp;PC</span> ile telefon hangi slaytta olduğunu bilir; slaytın resmini, sıradakini ve konuşmacı notlarını getirir, süreni tutar.||With <span translate="no">QuickRemote&nbsp;PC</span> the phone knows which slide you are on. It brings the slide’s picture, the next one and your speaker notes, and keeps your time.}}</p>
+      </div>
+
+      <div class="pv">
+        <div class="pv-main">
+          <div class="pv-slide" data-draw>
+            <div class="slide is-on">
+              <p class="s-big"><span class="ink-wrap">1554<svg class="ink-pen" viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 120 10 C 70 -2 16 8 8 44 C 0 76 54 96 110 92 C 168 88 198 64 190 36 C 184 14 150 4 112 12"/></svg></span></p>
+              <p class="s-text">{{İstanbul’un ilk kahvehanesi <span class="ink-hl">Tahtakale’de</span> açıldı.||Istanbul’s first coffeehouse opened in <span class="ink-hl">Tahtakale</span>.}}</p>
+            </div>
+            <i class="pv-laser" aria-hidden="true"></i>
+          </div>
+          <div class="pv-tools">
+            <div class="tools" role="toolbar" aria-label="{{Çizim araçları||Drawing tools}}" data-tools>
+              <button class="tool" type="button" data-tool="laser" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-laser"/></svg><span class="tool-label">{{Lazer||Laser}}</span></button>
+              <button class="tool" type="button" data-tool="pen" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-pen"/></svg><span class="tool-label">{{Kalem||Pen}}</span></button>
+              <button class="tool" type="button" data-tool="highlighter" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-highlighter"/></svg><span class="tool-label">{{Vurgula||Highlight}}</span></button>
+              <button class="tool" type="button" data-tool="eraser" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-eraser"/></svg><span class="tool-label">{{Silgi||Eraser}}</span></button>
+              <button class="tool" type="button" data-tool="clear"><svg class="i" aria-hidden="true"><use href="#i-clear"/></svg><span class="tool-label">{{Temizle||Clear}}</span></button>
+            </div>
+            <div class="swatches" role="radiogroup" aria-label="{{Kalem rengi||Pen color}}" data-swatches data-label-pen="{{Kalem rengi||Pen color}}" data-label-highlighter="{{Vurgulayıcı rengi||Highlighter color}}">
+              <button class="swatch" type="button" role="radio" aria-checked="true" aria-label="{{Kırmızı||Red}}" style="--c:#FF1744" data-ink="#FF1744"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="{{Mavi||Blue}}" style="--c:#2979FF" data-ink="#2979FF" tabindex="-1"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="{{Yeşil||Green}}" style="--c:#00E676" data-ink="#00E676" tabindex="-1"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="{{Sarı||Yellow}}" style="--c:#FFEA00" data-ink="#FFEA00" tabindex="-1"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="{{Beyaz||White}}" style="--c:#FFFFFF" data-ink="#FFFFFF" tabindex="-1"></button>
+              <button class="swatch" type="button" role="radio" aria-checked="false" aria-label="{{Mor||Purple}}" style="--c:#D500F9" data-ink="#D500F9" tabindex="-1"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pv-side">
+          <div class="pv-box pv-count" aria-hidden="true">
+            <p class="pv-k">{{Slayt||Slide}}</p>
+            <p class="pv-num">2<span> / 5</span></p>
+            <div class="ph-track"><i class="is-past"></i><i class="is-on"></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="pv-box pv-next" aria-hidden="true">
+            <p class="pv-k">{{Sıradaki||Next up}}</p>
+            <div class="show pv-thumb">
+              <div class="slide is-on">
+                <p class="s-q">{{“Bir fincan kahvenin kırk yıl hatırı vardır.”||“A cup of coffee is remembered for forty years.”}}</p>
+                <p class="s-cite">{{Atasözü||Proverb}}</p>
+              </div>
+            </div>
+          </div>
+          <div class="pv-box pv-timer" data-timer-demo>
+            <p class="pv-k">{{Kalan süre||Time left}}</p>
+            <button class="pv-clock" type="button" aria-pressed="false" aria-label="{{Sunum sayacı, başlat ya da duraklat||Talk timer, start or pause}}" data-t-btn><span data-t>05:09</span></button>
+            <p class="pv-snack" aria-hidden="true" data-snack><svg class="i"><use href="#i-watch-vibrate"/></svg>{{Bitimine 05:00 kaldı||05:00 left}}</p>
+          </div>
+          <div class="pv-box pv-notes" aria-hidden="true">
+            <p class="pv-k">{{Slayt notları||Slide notes}}</p>
+            <p class="pv-note">{{Tahtakale’deki ilk kahvehanenin hikâyesini anlat.||Tell the story of the first coffeehouse, in Tahtakale.}}</p>
+          </div>
+        </div>
+      </div>
+
+      <ul class="pv-caps">
+        <li><h3>{{Slayta çiz.||Draw on the slide.}}</h3><p>{{Lazer, kalem, vurgulayıcı ve silgi. Rengi telefondan seçersin; çizim slayt değişince silinir ya da istersen kalır. Temizle’ye basılı tutarsan son çizgi geri alınır.||Laser, pen, highlighter and eraser. You pick the color on the phone, and the drawing is erased when the slide changes, or stays if you want. Hold Clear to undo the last stroke.}}</p></li>
+        <li><h3>{{Slaytı gör, notu oku.||See the slide, read the note.}}</h3><p>{{Slaytın resmi ve sıradaki slayt telefonda. Resme dokununca sunucu görünümü açılır: büyük slayt, sıradaki ve notlar yan yana.||The slide’s picture and the next slide are on the phone. Tap the picture for the presenter view: the slide, the next one and the notes, together.}}</p></li>
+        <li><h3>{{Süreyi telefon tutar.||The phone keeps time.}}</h3><p>{{Sunumun süresini belirle. Bitmesine seçtiğin süreler kala telefon titrer, saatin de aynı süreyi gösterir.||Set the length of the talk. The phone buzzes when the times you chose are left, and the watch shows the same clock.}}</p></li>
+      </ul>
+    </div>
+  </section>

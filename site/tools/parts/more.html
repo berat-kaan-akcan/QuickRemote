@@ -1,0 +1,86 @@
+
+  <!-- More: touchpad, go to slide, media, report; each a stop on the line. -->
+  <section class="sec more" aria-labelledby="more-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="h2" id="more-title">{{Kumandadan fazlası.||More than a remote.}}</h2>
+      </div>
+      <div class="rows">
+        <article class="row">
+          <div class="row-text">
+            <h3>{{Telefon touchpad olur.||The phone becomes a touchpad.}}</h3>
+            <p>{{Parmağını gezdir, perdede lazer dolaşsın. Çift dokunup seçtiğin araçla çiz. Lazer tuşuna bir daha dokunursan lazerin türünü seçersin: lazer, spot ışığı ya da büyüteç.||Move your finger and the laser moves on the screen. Double-tap to draw with the tool you picked. Tap the laser key again to pick its style: laser, spotlight or magnifier.}}</p>
+          </div>
+          <div class="pad" aria-hidden="true" data-pad>
+            <svg class="pad-trail" viewBox="0 0 100 60" preserveAspectRatio="none"><path pathLength="1" d="M 8 48 C 20 18 36 54 52 30 S 78 10 88 22"/></svg>
+            <i class="pad-glow"></i>
+            <p class="pad-hints"><span>{{Tek dokunuş: lazer||Single tap: laser}}</span><span>{{Çift dokunuş: seçili araç||Double tap: chosen tool}}</span></p>
+          </div>
+        </article>
+        <article class="row">
+          <div class="row-text">
+            <h3>{{Küçük resimlerden slayta git.||Jump to a slide by its picture.}}</h3>
+            <p>{{Gösteri açıkken “Slayta git” numara tuşları yerine slaytların küçük resimlerini gösterir. Dokun, gösteri o slayta atlasın.||While a show runs, “Go to slide” shows the slides’ thumbnails instead of a number pad. Tap one and the show jumps to it.}}</p>
+          </div>
+          <div class="gotodemo" data-gotodemo>
+            <p class="gd-h"><svg class="i" aria-hidden="true"><use href="#i-grid-view"/></svg>{{Slayta git||Go to slide}}</p>
+            <div class="gd-grid" role="group" aria-label="{{Örnek küçük resimler||Sample thumbnails}}" data-gd-grid></div>
+            <p class="gd-foot" data-gd-foot data-text="{{Seçilen slayt: %n||Selected slide: %n}}" aria-live="polite"></p>
+          </div>
+        </article>
+        <article class="row row-media">
+          <div class="row-text">
+            <h3>{{Videoyu oynat, sesi ayarla.||Play the video, set the volume.}}</h3>
+            <p>{{Slayttaki videoyu başlat, durdur ya da başa sar. Bilgisayarın sesini telefondan değiştir; şu an ne çalıyorsa onu da yönet.||Start, pause or rewind the video on the slide. Change the computer’s volume from the phone, and control whatever is playing.}}</p>
+          </div>
+          <div class="media-demo" data-media>
+            <div class="m-card">
+              <p class="m-h"><svg class="i" aria-hidden="true"><use href="#i-volume"/></svg><label for="vol">{{Sistem Sesi||System Volume}}</label><output for="vol" data-vol-out>{{%64||64%}}</output></p>
+              <input class="vol" id="vol" type="range" min="0" max="100" value="64" data-vol>
+              <p class="vol-steps" aria-hidden="true"><span>0</span><span>50</span><span>100</span></p>
+            </div>
+            <div class="m-card" aria-hidden="true">
+              <p class="m-h"><svg class="i"><use href="#i-music"/></svg>{{Şu An Çalan||Now Playing}}</p>
+              <div class="m-now">
+                <span class="m-art"><svg class="i"><use href="#i-music"/></svg></span>
+                <span class="m-track"><b>Gymnopédie No. 1</b><small>Erik Satie</small></span>
+                <span class="m-trans"><svg class="i"><use href="#i-skip-prev"/></svg><svg class="i"><use href="#i-play"/></svg><svg class="i"><use href="#i-skip-next"/></svg></span>
+              </div>
+            </div>
+            <div class="m-card">
+              <p class="m-h"><svg class="i" aria-hidden="true"><use href="#i-video"/></svg>{{Slayt Medyası||Slide Media}}</p>
+              <div class="m-video" aria-hidden="true"><div class="m-bar" data-bar-box><i data-bar></i></div></div>
+              <div class="m-btns">
+                <button class="m-btn" type="button" data-media-cmd="rewind"><svg class="i" aria-hidden="true"><use href="#i-replay"/></svg>{{Başa Sar||Rewind}}</button>
+                <button class="m-btn m-play" type="button" data-media-cmd="play" data-play="{{Oynat||Play}}" data-pause="{{Duraklat||Pause}}"><svg class="i i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="i i-pause" aria-hidden="true"><use href="#i-pause"/></svg><span data-play-label>{{Oynat||Play}}</span></button>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article class="row">
+          <div class="row-text">
+            <h3>{{Sunumdan sonra raporun hazır.||Your report is ready after the talk.}}</h3>
+            <p>{{Hangi slaytta ne kadar kaldığını gör, raporu panoya kopyala.||See how long you stayed on each slide, and copy the report to the clipboard.}}</p>
+          </div>
+          <figure class="report" data-report>
+            <figcaption class="sr">{{Örnek rapor: sekiz slaytlık, 14 dakika 48 saniyelik bir sunum.||Sample report: an eight-slide talk of 14 minutes 48 seconds.}}</figcaption>
+            <dl class="rep-stats">
+              <div><dt>{{Toplam süre||Total time}}</dt><dd>{{14&nbsp;dk 48&nbsp;sn||14&nbsp;min 48&nbsp;s}}</dd></div>
+              <div><dt>{{Slayt||Slides}}</dt><dd>8</dd></div>
+              <div><dt>{{Slayt başına||Per slide}}</dt><dd>{{1&nbsp;dk 51&nbsp;sn||1&nbsp;min 51&nbsp;s}}</dd></div>
+            </dl>
+            <ol class="rep-bars" aria-hidden="true">
+              <li style="--v:.19;--n:0"><span>1</span><i></i><b>{{48&nbsp;sn||48&nbsp;s}}</b></li>
+              <li style="--v:.75;--n:1"><span>2</span><i></i><b>3:12</b></li>
+              <li style="--v:.25;--n:2"><span>3</span><i></i><b>1:05</b></li>
+              <li style="--v:.63;--n:3"><span>4</span><i></i><b>2:40</b></li>
+              <li style="--v:.21;--n:4"><span>5</span><i></i><b>{{55&nbsp;sn||55&nbsp;s}}</b></li>
+              <li style="--v:1;--n:5"><span>6</span><i></i><b>4:16</b></li>
+              <li style="--v:.35;--n:6"><span>7</span><i></i><b>1:30</b></li>
+              <li style="--v:.09;--n:7"><span>8</span><i></i><b>{{22&nbsp;sn||22&nbsp;s}}</b></li>
+            </ol>
+          </figure>
+        </article>
+      </div>
+    </div>
+  </section>
