@@ -137,6 +137,23 @@ void main() {
         [Evdev.keyPageDown]
       ]);
     });
+
+    test('a viewer whose PageDown scrolls by a screen gets its arrows', () async {
+      active = const X11Window(7, ['wpspdf', 'pdf']);
+      final s = service();
+      s.slideNext();
+      await pumpEventQueue();
+      s.slidePrev();
+      await pumpEventQueue();
+      active = const X11Window(8, ['okular']);
+      s.slideNext();
+      await pumpEventQueue();
+      expect(keys, [
+        [106], // Right
+        [105], // Left
+        [Evdev.keyPageDown],
+      ]);
+    });
   });
 
   group('start', () {

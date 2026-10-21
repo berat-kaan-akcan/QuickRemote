@@ -72,7 +72,7 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [x] "Sorun bildir" tarayıcıda dolu bir issue sayfası açıyor mu? (2026-10-21: açıyordu ama tarayıcı arkada kalıyordu; GTK üzerinden açılacak şekilde düzeltildi `70fb0ef`, artık öne geliyor.)
 
 ### PDF görüntüleyiciler (ESKI, CLAUDE.md)
-- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil; WPS PDF bu makinede hiç açılmıyor, `libtiff.so.5` eksik.)
+- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil. WPS PDF `libtiff5` kurulunca açıldı: telefon "PDF açık" diyor, Tam ekran F11 ile çalışıyor, ekran resmi geliyor. PageDown bir ekran kaydırıyordu, sağ/sol ok sayfa başına atlıyor; Linux artık görüntüleyicinin ok tuşlarını kullanıyor, bu değişiklik telefonla canlı denenmedi.)
 - [x] Linux'ta tarayıcıların PDF'inde Sonraki/Önceki hâlâ PageDown/PageUp gönderiyor. Windows'ta bu yüzden sağ/sol oka geçilmişti; Linux'ta da sayfalar arasında takılıyor mu? (2026-10-21: Firefox'un sunum kipinde PageDown sayfa sayfa geçiyor, takılmıyor. Chrome'da denenmedi.)
 
 ### WPS: Devral (2026-10-21)
@@ -81,7 +81,7 @@ Kullanıcının kendi açtığı WPS'e köprü bağlanamıyor. PC'deki WPS satı
 - [x] Gösteri sürerken aynı slayttan devam ediyor mu? (2026-10-21: evet. 119 slaytlık sunumda, animasyonu yarıda kalmış 4. slayt doğru bulundu, devralma 3 saniye sürdü, telefon "4 / 119" ve bütün araçları aldı. İlk denemede köprü, pencereleri daha önce kapatılmış eski WPS'ine açmaya çalışıp hata vermişti; köprü artık yanıt vermeyen WPS'i kapatıp yenisini başlatıyor, yine açamazsa dosyalar kullanıcının kendi WPS'inde yeniden açılıyor.)
 - [x] Yan bulgu: uygulamanın açtığı WPS gösterisinde, notunda boş bir metin kutusu olan slaytta köprünün durumu çöküyordu (telefon slayt numarasını göremiyordu). Düzeltildi.
 - [ ] Kaydedilmemiş değişiklik varken: WPS'in kaydetme sorusu yanıtlanınca devralma sürüyor mu? 60 saniyede yanıtlanmazsa telefon "WPS kapanmadı" diyor mu?
-- [ ] Telefondaki Devral düğmesi (yeni APK ile) ve PC'deki düğme, gerçek dokunuş ve tıklamayla.
+- [x] Telefondaki Devral düğmesi, gerçek dokunuşla (2026-10-21: gösteri telefondan başlatıldı, Devral'dan sonra kart "4 / 119", not ve resim geldi, Sonraki köprüden ilerletti). PC'deki düğmeye gerçek tıklama denenmedi (Wayland'de yapay tıklama yok).
 
 ### Yeni bulgu: yerel Wayland pencereleri (2026-10-21)
 - [ ] KDE Plasma'da Chrome ve Firefox artık varsayılan olarak yerel Wayland'de açılıyor. PC öndeki pencereyi yalnızca X11'den (WM_CLASS) okuyabildiği için bunlarda "PDF önde" bilinmiyor: telefon "Sunum açık değil" diyor, Başlat tam ekran yerine Impress'i (açıksa) ya da F5'i (sayfayı yeniler) deniyor, ekran resmi gelmiyor. Firefox `MOZ_ENABLE_WAYLAND=0` ile XWayland'de açılınca hepsi çalışıyor. Öneri: KDE'de etkin pencerenin sınıfını KWin'den okumak (KWin betiği ya da D-Bus); GNOME'da karşılığı yok.

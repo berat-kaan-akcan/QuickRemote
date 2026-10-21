@@ -438,10 +438,20 @@ class LinuxInputService implements InputService {
   // ── Presentation ──
   @override
   void slideNext({bool keepInk = false}) =>
-      _showOrKeys('next', args: _inkArgs(keepInk), fallbackKeys: [Evdev.keyPageDown]);
+      _showOrKeys('next', args: _inkArgs(keepInk), fallbackKeys: _pageKeys(next: true));
   @override
   void slidePrev({bool keepInk = false}) =>
-      _showOrKeys('prev', args: _inkArgs(keepInk), fallbackKeys: [Evdev.keyPageUp]);
+      _showOrKeys('prev', args: _inkArgs(keepInk), fallbackKeys: _pageKeys(next: false));
+
+  /// PageDown/PageUp, or the focused viewer's own page keys (the arrows in
+  /// browsers and WPS PDF, whose PageDown scrolls by a screen).
+  List<int> _pageKeys({required bool next}) {
+    final window = _activeWindow();
+    final viewer = window == null ? null : _viewerOf(window);
+    final keys = next ? viewer?.next : viewer?.prev;
+    if (keys != null) return _evdev(keys);
+    return [next ? Evdev.keyPageDown : Evdev.keyPageUp];
+  }
 
   /// The bridges erase the slide's ink before the show moves unless the
   /// phone that sent the command keeps it.
