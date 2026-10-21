@@ -31,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
       .read<WebSocketServerProvider>();
   bool _hasShownDialogForCurrentRun = false;
   bool _isShowingNetworkDialog = false;
+  BuildContext? _networkDialogContext;
 
   /// The user asked to see the QR code and PIN after a phone paired.
   bool _revealed = false;
@@ -58,6 +59,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } else {
       _hasShownDialogForCurrentRun = false;
+      // Stopped elsewhere (the tray) or no longer public: the question is moot.
+      final dialog = _networkDialogContext;
+      if (dialog != null && dialog.mounted) Navigator.of(dialog).pop();
     }
   }
 
@@ -71,11 +75,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final proceed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => PublicNetworkWarningDialog(server: _provider.server),
+      builder: (ctx) {
+        _networkDialogContext = ctx;
+        return PublicNetworkWarningDialog(server: _provider.server);
+      },
     );
     _isShowingNetworkDialog = false;
+    _networkDialogContext = null;
 
-    if (proceed != true && mounted) {
+    if (proceed == false && mounted) {
       await _provider.stopServer();
     }
   }

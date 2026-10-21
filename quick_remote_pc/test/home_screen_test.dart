@@ -49,6 +49,23 @@ class _FakeProvider extends WebSocketServerProvider {
       ];
 }
 
+/// A server on a public network that the test can stop from outside the
+/// screen, as the tray does.
+class _PublicProvider extends _FakeProvider {
+  _PublicProvider() : super(trust: NetworkTrust.untrusted);
+  bool stopped = false;
+  int stopCalls = 0;
+  @override
+  bool get isRunning => !stopped;
+  @override
+  bool get publicNetwork => true;
+  @override
+  Future<void> stopServer() async => stopCalls++;
+  void stopElsewhere() {
+    stopped = true;
+    notifyListeners();
+  }
+}
 
 Widget _app(WebSocketServerProvider provider) => MultiProvider(
       providers: [
@@ -145,6 +162,20 @@ void main() {
     final status = tester.getRect(find.text('Sunucu Açık'));
     expect(code.left, greaterThan(status.right));
     expect(find.text('Sunucuyu Durdur'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the public network warning goes when the server is stopped elsewhere', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final provider = _PublicProvider();
+    await _pump(tester, provider, const Size(440, 760));
+    await tester.pump();
+    expect(find.text('Devam Et'), findsOneWidget);
+    provider.stopElsewhere();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Devam Et'), findsNothing);
+    // It was already stopped; the dialog going away is no second stop.
+    expect(provider.stopCalls, 0);
     await tester.pumpWidget(const SizedBox());
   });
 }
