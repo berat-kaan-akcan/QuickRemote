@@ -122,20 +122,20 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 ## 1. Linux (bu makine)
 
 ### Lazer ve mürekkep katmanı (OVERLAY, "Bekleyen denemeler" 1–7)
-- [ ] Impress gösterisinde ve oynayan videonun üstünde lazer (`~/Masaüstü/LibreOffice Impress (gömülü video).odp`).
-- [ ] Lazer ya da mürekkep açıkken tıklamanın katmandan geçip slaytı ilerletmesi.
-- [ ] Chrome'da tam ekran PDF: gösteri olmadan lazer, kalem, silgi, spot ışığı ve siyah ekran.
-- [ ] Kalem ve fosforlu kalem:
+- [x] Impress gösterisinde ve oynayan videonun üstünde lazer (`~/Masaüstü/LibreOffice Impress (gömülü video).odp`). (2026-10-21: nokta oynayan videonun da üstünde. Yan bulgu: %125 ölçekte LibreOffice 26.8 videoyu kendisi kaydırıyor; doğru yerde siyah kutu, video sağ altta yarım. QuickRemote'tan bağımsız, slayt ilk açıldığında da öyle.)
+- [x] Lazer ya da mürekkep açıkken tıklamanın katmandan geçip slaytı ilerletmesi. (2026-10-21: **geçmiyordu**: katmanın giriş alanı bütün ekrandı, ekranda çizgi kaldıkça hiçbir yere tıklanamıyordu (masaüstü donmuş gibi kaldı, PC yeniden başlatıldı). Düzeltildi `a95c067`, X'ten okunan giriş alanı artık boş ve gerçek fareyle denendi. Son telefon ayrılınca katman da temizleniyor.)
+- [x] Chrome'da tam ekran PDF: gösteri olmadan lazer, kalem, silgi, spot ışığı ve siyah ekran. (2026-10-21: Firefox'u XWayland'de açarak denendi, hepsi çalışıyor. Chrome bu makinede yerel Wayland'de, aşağıdaki yeni maddeye bak.)
+- [x] Kalem ve fosforlu kalem: (2026-10-21: dördü de evet.)
   - Çizgi akıcı mı?
   - Fosforlu kalem kendi üstünden geçince koyulaşmıyor mu?
   - Slayt değişince siliniyor mu?
   - "Mürekkebi koru" açıkken geri geliyor mu?
-- [ ] Spot ışığının hızı ve görünüşü.
+- [x] Spot ışığının hızı ve görünüşü. (2026-10-21: ekran kararıyor, parmağın altı aydınlık; hız telefonla elle bakıldı.)
 - [ ] İki monitör: katman, gösterinin olduğu monitörde mi açılıyor?
-- [ ] Kesirli ölçek (%125) ve GNOME.
+- [ ] Kesirli ölçek (%125) ve GNOME. (2026-10-21: bu makine %125; katman doğru yerde çiziyor. GNOME denenmedi.)
 
 ### Slayt önizlemesi (ONIZLEME, "Yapılacaklar" 2)
-- [ ] Impress gösterisinde ve uygulamanın açtığı WPS gösterisinde:
+- [ ] Impress gösterisinde ve uygulamanın açtığı WPS gösterisinde: (2026-10-21: Impress'te üçü de çalışıyor, Sunucu görünümü dikey ve yatay, notlar geliyor. Uygulamanın açtığı WPS gösterisi denenmedi.)
   - Slayt kartındaki resim.
   - Sunucu görünümü.
   - "Slayta git" küçük resim ızgarası.
@@ -143,33 +143,36 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
   Bugüne kadar yalnızca gösteri dışında denendi.
 
 ### Ekran görüntüsüyle slayt resmi (ACIK 1)
-- [ ] Gerçek bir WPS gösterisinde (XWayland) resim geliyor mu?
-- [ ] Impress: OpenGL/Skia ile çizen gösteride resim boş mu dönüyor? LibreOffice'in penceresi X11 mi, native Wayland mı? Native Wayland'de resim olmaz.
+- [x] Gerçek bir WPS gösterisinde (XWayland) resim geliyor mu? (2026-10-21: evet, kullanıcının açtığı WPS'te resim slaytla birlikte değişiyor.)
+- [x] Impress: OpenGL/Skia ile çizen gösteride resim boş mu dönüyor? LibreOffice'in penceresi X11 mi, native Wayland mı? Native Wayland'de resim olmaz. (2026-10-21: LibreOffice burada yerel Wayland'de (KDE/Qt6 eklentisi), X penceresi yok; ekran resmi alınmıyor, telefon dışa aktarılan slaytı gösteriyor.)
 - [ ] Oynayan video resimde görünüyor mu? 2 saniyelik yoklama yalnızca resim değişince mi gönderiyor?
-- [ ] Firefox/Chrome'da tam ekran PDF'te resim geliyor mu? Pencereli tarayıcıda hiçbir şey gitmiyor mu?
-- [ ] Kaplamanın mürekkebi resimde doğru yere mi çiziliyor?
+- [x] Firefox/Chrome'da tam ekran PDF'te resim geliyor mu? Pencereli tarayıcıda hiçbir şey gitmiyor mu? (2026-10-21: XWayland Firefox'ta tam ekranda geliyor, pencereliyken gelmiyor. Yerel Wayland Chrome'da hiç gelmiyor.)
+- [x] Kaplamanın mürekkebi resimde doğru yere mi çiziliyor? (2026-10-21: evet.)
 
 ### PC: `caps`/`front` (ACIK 3) ve telefon başına mürekkep (ACIK 5)
-- [ ] LibreOffice pencere sınıfları (`libreoffice-impress`, `libreoffice-draw`) doğru mu? Telefon araçları doğru mu gösteriyor, doğru mu soluklaştırıyor?
-- [ ] PDF önde, gösteri yokken telefonda "PDF açık" metni ve "Tam ekran" tuşu çıkıyor mu?
-- [ ] İki telefon: biri "mürekkep kalsın", diğeri "temizle". Slaytı değiştirenin ayarı mı geçerli oluyor?
+- [ ] LibreOffice pencere sınıfları (`libreoffice-impress`, `libreoffice-draw`) doğru mu? Telefon araçları doğru mu gösteriyor, doğru mu soluklaştırıyor? (2026-10-21: LibreOffice burada yerel Wayland'de, X sınıfı okunamıyor; Impress gösterisinde araçlar doğru, WPS gösterisinde Slayta git soluk.)
+- [x] PDF önde, gösteri yokken telefonda "PDF açık" metni ve "Tam ekran" tuşu çıkıyor mu? (2026-10-21: XWayland Firefox'ta "Tarayıcı önde" ve "Tam ekran" çıkıyor, Slayta git gizli.)
+- [ ] İki telefon: biri "mürekkep kalsın", diğeri "temizle". Slaytı değiştirenin ayarı mı geçerli oluyor? (2026-10-21: ikinci telefon yok. Sunucu testi iki gerçek bağlantıyla kapsıyor; tek telefonla "koru" açık/kapalı canlı denendi, doğru.)
 
 ### PC: tepsi, tek örnek, otomatik başlama, güncelleme (ALTYAPI 2, 4)
 - [x] Tepsi simgesi görünüyor mu? Menü çalışıyor mu? Simgenin rengi duruma göre değişiyor mu? (2026-10-21, KDE, release derlemesi, D-Bus üzerinden: menü panele hiç bildirilmiyordu, düzeltildi `83004f7`; sol tık pencereyi açıyor, menüden Başlat/Durdur çalışıyor, nokta açıkken yeşil, kapalıyken gri.)
 - [x] Pencere kapanınca tepsiye iniyor mu? İlk seferki bilgi penceresi çıkıyor mu? Çıkış tam kapatıyor mu? (2026-10-21: üçü de evet. Yan bulgu: tepsiden durdurulan sunucunun "ortak ağ" uyarısı ekranda kalıyordu, düzeltildi `46e53b9`.)
 - [x] İkinci açılış yeni kopya açmadan ilk pencereyi gösteriyor mu? (2026-10-21: ikinci kopya hemen çıkıyor, tek süreç kalıyor.)
 - [ ] "Oturum açılınca başlat": oturumu kapatıp açınca uygulama küçültülmüş başlıyor mu? (`--minimized` ile elle başlatınca pencere gizli, yalnızca tepsi simgesi çıkıyor; oturum kapatıp açma denenmedi.)
-- [ ] Ortak (public) ağda sunucu kendiliğinden başlamıyor mu? Sarı satır çıkıyor mu?
+- [x] Ortak (public) ağda sunucu kendiliğinden başlamıyor mu? Sarı satır çıkıyor mu? (2026-10-21: başlamıyor, sarı satır ve tepsi ipucu çıkıyor.)
 - [ ] Güncelleme denetimi: ilk GitHub release'inden sonra "Yeni sürüm" satırı çıkıyor mu?
 
 ### PC: hata günlüğü (ALTYAPI 6)
 - [x] Günlük dosyası gerçekten yazılıyor mu? PIN ve dosya yolları gizleniyor mu? (2026-10-21: yazılıyor, yol `<path>` olarak gizli, PIN yok. Günlükte 20 Ekim'deki bir debug çalıştırmasından "RenderFlex overflowed by 17 pixels" hatası var; hangi ekran olduğu günlükten anlaşılmıyor.)
-- [ ] "Günlüğü dışa aktar" kaydetme penceresini açıyor mu?
-- [ ] "Sorun bildir" tarayıcıda dolu bir issue sayfası açıyor mu?
+- [x] "Günlüğü dışa aktar" kaydetme penceresini açıyor mu? (2026-10-21: evet.)
+- [x] "Sorun bildir" tarayıcıda dolu bir issue sayfası açıyor mu? (2026-10-21: açıyordu ama tarayıcı arkada kalıyordu; GTK üzerinden açılacak şekilde düzeltildi `70fb0ef`, artık öne geliyor.)
 
 ### PDF görüntüleyiciler (ESKI, CLAUDE.md)
-- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi.
-- [ ] Linux'ta tarayıcıların PDF'inde Sonraki/Önceki hâlâ PageDown/PageUp gönderiyor. Windows'ta bu yüzden sağ/sol oka geçilmişti; Linux'ta da sayfalar arasında takılıyor mu?
+- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil; WPS PDF bu makinede hiç açılmıyor, `libtiff.so.5` eksik.)
+- [x] Linux'ta tarayıcıların PDF'inde Sonraki/Önceki hâlâ PageDown/PageUp gönderiyor. Windows'ta bu yüzden sağ/sol oka geçilmişti; Linux'ta da sayfalar arasında takılıyor mu? (2026-10-21: Firefox'un sunum kipinde PageDown sayfa sayfa geçiyor, takılmıyor. Chrome'da denenmedi.)
+
+### Yeni bulgu: yerel Wayland pencereleri (2026-10-21)
+- [ ] KDE Plasma'da Chrome ve Firefox artık varsayılan olarak yerel Wayland'de açılıyor. PC öndeki pencereyi yalnızca X11'den (WM_CLASS) okuyabildiği için bunlarda "PDF önde" bilinmiyor: telefon "Sunum açık değil" diyor, Başlat tam ekran yerine Impress'i (açıksa) ya da F5'i (sayfayı yeniler) deniyor, ekran resmi gelmiyor. Firefox `MOZ_ENABLE_WAYLAND=0` ile XWayland'de açılınca hepsi çalışıyor. Öneri: KDE'de etkin pencerenin sınıfını KWin'den okumak (KWin betiği ya da D-Bus); GNOME'da karşılığı yok.
 
 ### Programa göre destek tablosu (DESTEK)
 - [ ] **†** işaretli hücreler kodu okuyarak yazıldı, gerçek programda denenmedi. Özellikle Impress satırlarında tek tek doğrulama yok. Fırsat oldukça birer birer denenip tablo güncellenmeli.
@@ -182,26 +185,26 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 
 **Kurulum engeli (2026-10-21):** telefondaki uygulama (versionCode 1000002) başka bir anahtarla imzalı, bu makinede derlenen release APK üstüne kurulamıyor (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`). Ya imzalayan makineden kurulur ya da uygulama kaldırılıp kurulur (kayıtlı PC'ler ve ayarlar gider). Yeni kurulumun versionCode'u en az 1000003 olmalı (`--build-number 1000003`).
 
-- [ ] **Kısayollar** (ALTYAPI 5): simgeye basılı tutunca "Bluetooth kumanda", "QR tara" ve "Bağlan: <PC>" çıkıyor ve çalışıyor mu?
+- [x] **Kısayollar** (ALTYAPI 5): simgeye basılı tutunca "Bluetooth kumanda", "QR tara" ve "Bağlan: <PC>" çıkıyor ve çalışıyor mu? (2026-10-21: üçü de çıkıyor ve çalışıyor, başlatıcı dışa kapalı etkinliği açabiliyor. "QR tara" ve "Bluetooth kumanda" açık kumandayı kapatıp bağlantıyı ekransız bırakıyordu, düzeltildi `8c4ceb7`.)
   - Başlatıcı, dışa kapalı (`exported=false`) olan `ShortcutActivity`'yi açamazsa manifest'te bu değer `true` yapılır.
   - Kısayol, açık bir kumanda ekranını kapatmıyor mu?
-- [ ] **Hızlı Ayarlar kutucuğu** (ALTYAPI 5): görünüşü, alt yazıda PC adı, bağlıyken "açık" görünmesi, Android 14+'ta dokununca panelin kapanıp uygulamanın açılması.
-- [ ] **Son PC'ye bağlanma** (ALTYAPI 5): PC'nin IP'si değişince mDNS'te adıyla bulunuyor mu?
-- [ ] **`caps`** (ACIK 3): çalışmayan araçlar soluk mu? PDF önde iken "Tam ekran" çıkıyor ve Slayta git gizleniyor mu?
-- [ ] **Slayt önizlemesi** (ONIZLEME): kart, Sunucu görünümü (dikey ve yatay), "Slayta git" ızgarası. Bunlar yalnızca widget testlerinden geçti.
-- [ ] **Ekran görüntüsü kartı** (ACIK 1): PDF'te "Bilgisayarın ekranı" resmi; Sunucu görünümünde büyük resim ve Önceki/Sonraki.
-- [ ] **Hata günlüğü** (ALTYAPI 6): "Hata günlüğünü paylaş" Android paylaşım menüsünü açıyor mu? "Sorun bildir" tarayıcıyı açıyor mu?
-- [ ] **Kaplama** (OVERLAY 8): gösterisiz dokunmatik lazer, lazer türü seçimi, Temizle'yi basılı tutunca geri alma.
+- [x] **Hızlı Ayarlar kutucuğu** (ALTYAPI 5): görünüşü, alt yazıda PC adı, bağlıyken "açık" görünmesi, Android 14+'ta dokununca panelin kapanıp uygulamanın açılması. (2026-10-21: dördü de evet, Android 16.)
+- [ ] **Son PC'ye bağlanma** (ALTYAPI 5): PC'nin IP'si değişince mDNS'te adıyla bulunuyor mu? (2026-10-21: kayıtlı PIN'le bağlanma ve yanlış PIN'de PIN sorma çalışıyor. IP değişimi için ikinci IP eklemek yönetici parolası istiyor, denenmedi.)
+- [x] **`caps`** (ACIK 3): çalışmayan araçlar soluk mu? PDF önde iken "Tam ekran" çıkıyor ve Slayta git gizleniyor mu? (2026-10-21: evet.)
+- [x] **Slayt önizlemesi** (ONIZLEME): kart, Sunucu görünümü (dikey ve yatay), "Slayta git" ızgarası. Bunlar yalnızca widget testlerinden geçti. (2026-10-21: Impress'te üçü de çalışıyor.)
+- [ ] **Ekran görüntüsü kartı** (ACIK 1): PDF'te "Bilgisayarın ekranı" resmi; Sunucu görünümünde büyük resim ve Önceki/Sonraki. (2026-10-21: kartta PDF ve WPS ekran resmi çalışıyor; Sunucu görünümünde büyük ekran resmi denenmedi.)
+- [x] **Hata günlüğü** (ALTYAPI 6): "Hata günlüğünü paylaş" Android paylaşım menüsünü açıyor mu? "Sorun bildir" tarayıcıyı açıyor mu? (2026-10-21: paylaşım menüsü günlük dosyasıyla açılıyor, "Sorun bildir" GitHub'da dolu bir issue sayfası açıyor.)
+- [x] **Kaplama** (OVERLAY 8): gösterisiz dokunmatik lazer, lazer türü seçimi, Temizle'yi basılı tutunca geri alma. (2026-10-21: üçü de çalışıyor.)
 
 ## 3. Saat (Galaxy Watch 6)
 
 APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kurulup telefon uygulamasının yerine geçmişti.
 
-- [ ] **Tema eşitleme** (ACIK 4):
+- [x] **Tema eşitleme** (ACIK 4): (2026-10-21: üçü de evet. Yan bulgu: Araçlar sayfasında "Gösteri kapalı" kesiliyordu, düzeltildi `30241cf`.)
   - Telefonda tema değişince saat de değişiyor mu?
   - Gün Batımı saatte Kobalt mı oluyor?
   - Anahtar kapalıyken saat kendi temasında mı kalıyor?
-- [ ] **Gösterisiz lazer** (OVERLAY 9): kaplama açıkken lazer düğmesi açık mı, lazer çalışıyor mu?
+- [x] **Gösterisiz lazer** (OVERLAY 9): kaplama açıkken lazer düğmesi açık mı, lazer çalışıyor mu? (2026-10-21: düğme açık, nokta PC'de görünüyor.)
 - [ ] Saat bölümü PowerPoint ile Windows'ta da denenecek (WIN-UI 15).
 
 ---
