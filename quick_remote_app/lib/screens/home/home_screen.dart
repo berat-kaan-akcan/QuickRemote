@@ -86,11 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return found?.name ?? context.read<WebSocketService>().pcName ?? host;
   }
 
-  Future<void> _removeRecentDevice(int index) async {
-    final data = await _repository.removeRecentDevice(index);
-    if (mounted) _setRecentDevices(data);
-  }
-
   /// A link from an app shortcut or the Quick Settings tile.
   void _onLaunchAction(LaunchAction action) {
     if (!mounted) return;
@@ -207,11 +202,8 @@ class _HomeScreenState extends State<HomeScreen> {
   /// PC has a new one since.
   Future<void> _connectDiscovered(DiscoveredDevice dev) async {
     _clearError();
-    final recent = _recentDevices
-        .where((d) => d['host'] == dev.ip && d['port'] == dev.port)
-        .firstOrNull;
-    final pin = recent?['pin'] as String? ?? '';
-    if (pin.isEmpty) {
+    final pin = _savedPinOf(dev);
+    if (pin == null) {
       await _showManualConnect(
         context,
         defaultIp: dev.ip,
@@ -229,6 +221,15 @@ class _HomeScreenState extends State<HomeScreen> {
         defaultPort: dev.port.toString(),
       );
     }
+  }
+
+  /// The PIN saved for [dev] (same host and port), null when there is none.
+  String? _savedPinOf(DiscoveredDevice dev) {
+    final recent = _recentDevices
+        .where((d) => d['host'] == dev.ip && d['port'] == dev.port)
+        .firstOrNull;
+    final pin = recent?['pin'] as String? ?? '';
+    return pin.isEmpty ? null : pin;
   }
 
   /// Returns the error of a failed attempt, null otherwise.
@@ -371,10 +372,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           FadeSlideIn(
                             index: 2,
                             child: DeviceLists(
-                              recentDevices: _recentDevices,
                               onDiscoveredTap: _connectDiscovered,
-                              onRecentTap: (dev) => _executeConnection(dev['host'], dev['port'], dev['pin']),
-                              onRecentRemove: _removeRecentDevice,
+                              isSaved: (dev) => _savedPinOf(dev) != null,
                             ),
                           ),
                           const Spacer(),
