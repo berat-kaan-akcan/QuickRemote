@@ -257,6 +257,49 @@ class ExportTest(unittest.TestCase):
                 wps.export(bad)
         self.assertEqual(slide.calls, [])
 
+    def test_without_a_show_the_active_presentation_is_exported(self):
+        def export(path, _filter, _width, _height):
+            with open(path, "wb") as f:
+                f.write(b"\xff\xd8")
+            return 0
+
+        wps, slide = self._wps(export)
+        pres = wps._show()[2]
+        wps._show = lambda: None
+        wps._presentation = lambda: pres
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "slide-1-64.jpg")
+            self.assertEqual(wps.export({"index": 1, "width": 64, "path": path}), {"height": 36})
+
+    def test_open_answers_the_slide_count(self):
+        with tempfile.NamedTemporaryFile(suffix=".pptx") as f:
+            pres = Obj(get_Slides=(0, Obj(get_Count=(0, 7))))
+            presentations = Obj(Open=(0, pres))
+            wps = bridge.Wps()
+            wps.app = Obj(get_Presentations=(0, presentations))
+            wps.wrapper_pid = os.getpid()
+            wps.pid = 42
+            self.assertEqual(wps.open({"path": f.name}), {"pid": 42, "total": 7})
+            self.assertEqual(presentations.calls, [("Open", os.path.abspath(f.name))])
+
+    def test_open_replaces_a_wps_that_stopped_answering(self):
+        with tempfile.NamedTemporaryFile(suffix=".pptx") as f:
+            pres = Obj(get_Slides=(0, Obj(get_Count=(0, 2))))
+            wps = bridge.Wps()
+            wps.app = Obj(get_Presentations=(-2147483640, None))
+            wps.wrapper_pid = os.getpid()
+            events = []
+
+            def start():
+                events.append("start")
+                wps.app = Obj(get_Presentations=(0, Obj(Open=(0, pres))))
+                wps.wrapper_pid, wps.pid = os.getpid(), 43
+
+            wps._stop_wps = lambda: events.append("stop") or wps.reset()
+            wps._start_wps = start
+            self.assertEqual(wps.open({"path": f.name}), {"pid": 43, "total": 2})
+            self.assertEqual(events, ["stop", "start"])
+
     def test_deck_key_names_the_file_and_its_save(self):
         self.assertEqual(bridge.deck_key(""), "")
         with tempfile.NamedTemporaryFile(suffix=".pptx") as f:

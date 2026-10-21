@@ -75,6 +75,13 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil; WPS PDF bu makinede hiç açılmıyor, `libtiff.so.5` eksik.)
 - [x] Linux'ta tarayıcıların PDF'inde Sonraki/Önceki hâlâ PageDown/PageUp gönderiyor. Windows'ta bu yüzden sağ/sol oka geçilmişti; Linux'ta da sayfalar arasında takılıyor mu? (2026-10-21: Firefox'un sunum kipinde PageDown sayfa sayfa geçiyor, takılmıyor. Chrome'da denenmedi.)
 
+### WPS: Devral (2026-10-21)
+Kullanıcının kendi açtığı WPS'e köprü bağlanamıyor. PC'deki WPS satırında ve telefonda çıkan "Devral" o WPS'i kapatıp sunumu QuickRemote'un WPS'inde açıyor. Gösteri sürüyorsa ekran resmini slaytların küçük resimleriyle karşılaştırıp aynı slayttan başlatıyor, bulamazsa 1. slayttan.
+- [x] Gösteri yokken: iki sekmeli WPS kapandı, iki dosya da köprünün WPS'inde açıldı, etkin sekme korundu. (2026-10-21, sunucuya bağlanan bir test istemcisiyle.)
+- [ ] Gösteri sürerken aynı slayttan devam ediyor mu? (2026-10-21: ilk denemede köprü, pencereleri daha önce kapatılmış eski WPS'ine açmaya çalıştı, hata verdi ve sunum ekranda kalmadı. Düzeltildi: köprü yanıt vermeyen WPS'i kapatıp yenisini başlatıyor; yine açamazsa dosyalar kullanıcının kendi WPS'inde yeniden açılıyor. Düzeltmeden sonra denenmedi.)
+- [ ] Kaydedilmemiş değişiklik varken: WPS'in kaydetme sorusu yanıtlanınca devralma sürüyor mu? 60 saniyede yanıtlanmazsa telefon "WPS kapanmadı" diyor mu?
+- [ ] Telefondaki Devral düğmesi (yeni APK ile) ve PC'deki düğme, gerçek dokunuş ve tıklamayla.
+
 ### Yeni bulgu: yerel Wayland pencereleri (2026-10-21)
 - [ ] KDE Plasma'da Chrome ve Firefox artık varsayılan olarak yerel Wayland'de açılıyor. PC öndeki pencereyi yalnızca X11'den (WM_CLASS) okuyabildiği için bunlarda "PDF önde" bilinmiyor: telefon "Sunum açık değil" diyor, Başlat tam ekran yerine Impress'i (açıksa) ya da F5'i (sayfayı yeniler) deniyor, ekran resmi gelmiyor. Firefox `MOZ_ENABLE_WAYLAND=0` ile XWayland'de açılınca hepsi çalışıyor. Öneri: KDE'de etkin pencerenin sınıfını KWin'den okumak (KWin betiği ya da D-Bus); GNOME'da karşılığı yok.
 

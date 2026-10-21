@@ -106,6 +106,14 @@ class FakeInputService implements InputService {
   Future<void> setHighlighterColor(int bgrColor) async =>
       calls.add('setHighlighterColor:$bgrColor');
 
+  /// What [takeOverWps] answers.
+  RemoteError? takeOverError;
+  @override
+  Future<RemoteError?> takeOverWps() async {
+    calls.add('takeOverWps');
+    return takeOverError;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) {
     calls.add(invocation.memberName.toString().split('"')[1]);

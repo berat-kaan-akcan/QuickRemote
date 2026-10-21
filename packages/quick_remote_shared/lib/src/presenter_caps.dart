@@ -56,6 +56,10 @@ abstract class RemoteCaps {
   static const zoom = 'zoom';
   static const undo = 'undo';
 
+  /// A WPS the user started runs, which only keys reach: WPS_TAKE_OVER
+  /// moves its presentation to the WPS the PC drives.
+  static const takeOver = 'takeOver';
+
   static const values = {
     laser,
     pen,
@@ -72,6 +76,7 @@ abstract class RemoteCaps {
     spotlight,
     zoom,
     undo,
+    takeOver,
   };
 }
 
