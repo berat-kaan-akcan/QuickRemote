@@ -111,34 +111,32 @@ class StoppedPanel extends StatelessWidget {
 
 /// The full-width key under everything: green Start while stopped, red
 /// Stop while the server starts or runs.
-class ServerToggleButton extends StatelessWidget {
-  const ServerToggleButton({super.key, required this.provider});
+/// The Stop key under the running server. A stopped server has none: the
+/// big power button in the middle starts it.
+class StopServerButton extends StatelessWidget {
+  const StopServerButton({super.key, required this.provider});
 
   final WebSocketServerProvider provider;
 
   @override
   Widget build(BuildContext context) {
     final running = provider.isRunning || provider.isStarting;
-    return AnimatedSwitcher(
+    return AnimatedSize(
       duration: AppMotion.of(context, AppMotion.base),
+      curve: AppMotion.enter,
       child: running
-          ? AppButton(
-              key: const ValueKey('stop'),
-              label: context.l10n.stopServer,
-              icon: Icons.power_settings_new_rounded,
-              variant: AppButtonVariant.tonal,
-              tone: AppTone.danger,
-              height: 48,
-              onPressed: provider.stopServer,
+          ? Padding(
+              padding: const EdgeInsets.only(top: AppSpace.sm),
+              child: AppButton(
+                label: context.l10n.stopServer,
+                icon: Icons.power_settings_new_rounded,
+                variant: AppButtonVariant.tonal,
+                tone: AppTone.danger,
+                height: 48,
+                onPressed: provider.stopServer,
+              ),
             )
-          : AppButton(
-              key: const ValueKey('start'),
-              label: context.l10n.startServer,
-              icon: Icons.play_arrow_rounded,
-              tone: AppTone.success,
-              height: 48,
-              onPressed: () => startServerFromUi(context),
-            ),
+          : const SizedBox(width: double.infinity),
     );
   }
 }

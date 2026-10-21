@@ -203,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _Header(provider: provider),
           const SizedBox(height: AppSpace.sm),
-          // A short window scrolls; Start and Stop stay at the bottom.
+          // A short window scrolls; Stop stays at the bottom.
           Expanded(
             child: CustomScrollView(
               slivers: [
@@ -230,8 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          const SizedBox(height: AppSpace.sm),
-          ServerToggleButton(provider: provider),
+          StopServerButton(provider: provider),
         ],
       ),
     );
@@ -281,8 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpace.sm),
-                    ServerToggleButton(provider: provider),
+                    StopServerButton(provider: provider),
                   ],
                 ),
               ),
