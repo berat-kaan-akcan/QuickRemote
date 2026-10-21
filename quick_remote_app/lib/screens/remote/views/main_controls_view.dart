@@ -349,7 +349,8 @@ class SlideCard extends StatelessWidget {
                                 ),
                                 const SizedBox(height: AppSpace.xxs),
                                 Text(
-                                  show.userWps
+                                  // The take-over alert below says why already.
+                                  show.userWps && !show.takeOver
                                       ? context.l10n.unreadableShowUserWps
                                       : context.l10n.unreadableShow,
                                   style: AppType.bodySmall.copyWith(
