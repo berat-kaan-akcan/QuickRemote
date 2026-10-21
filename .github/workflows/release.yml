@@ -249,7 +249,12 @@ jobs:
           test -f /usr/share/icons/hicolor/scalable/apps/com.quickremote.quick_remote_pc.svg
           grep -q 'TAG+="uaccess"' /usr/lib/udev/rules.d/70-quickremote-uinput.rules
           grep -qx uinput /usr/lib/modules-load.d/quickremote-uinput.conf
-          missing=$(find /opt/quickremote-pc -type f \( -name '*.so*' -o -perm -u+x \) -exec ldd {} \; 2> /dev/null | grep 'not found' || true)
+          # Plugins find libflutter_linux_gtk.so through the build machine's
+          # RUNPATH; at run time the app has already loaded it from lib/.
+          # libdartjni.so (jni, from path_provider_android) needs a JVM and is
+          # opened only on Android.
+          missing=$(find /opt/quickremote-pc -type f \( -name '*.so*' -o -perm -u+x \) ! -name libdartjni.so \
+            -exec env LD_LIBRARY_PATH=/opt/quickremote-pc/lib ldd {} \; 2> /dev/null | grep 'not found' || true)
           if [ -n "$missing" ]; then
             echo "::error::missing libraries:"; echo "$missing" | sort -u; exit 1
           fi
