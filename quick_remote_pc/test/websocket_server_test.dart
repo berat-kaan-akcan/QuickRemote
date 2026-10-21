@@ -235,6 +235,16 @@ void main() {
       await eventually(() => input.calls.contains('leftUp'));
     });
 
+    test('tells the input service when the last phone has gone', () async {
+      final first = await authed();
+      final second = await authed();
+      await first.ws.close();
+      await settle();
+      expect(input.calls, isNot(contains('phonesGone')));
+      await second.ws.close();
+      await eventually(() => input.calls.contains('phonesGone'));
+    });
+
     test('drops commands beyond 30 per second, but never a button release', () async {
       final client = await authed();
       for (var i = 1; i <= 50; i++) {

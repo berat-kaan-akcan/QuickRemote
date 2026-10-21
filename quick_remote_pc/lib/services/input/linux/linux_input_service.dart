@@ -531,6 +531,9 @@ class LinuxInputService implements InputService {
   void undoInk() {}
 
   @override
+  void phonesGone() {}
+
+  @override
   void laserOff() => _setMode('laserOff', wpsKeys: const []);
 
   @override
