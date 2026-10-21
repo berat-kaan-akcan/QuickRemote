@@ -291,6 +291,9 @@ class LinuxInputService implements InputService {
         caps = {..._fullShow};
       case 'wps':
         caps = {..._fullShow};
+        // WPS 11.1's Player does nothing (Play() leaves a video still, its
+        // State always reads playing), as WPS 12.2's on Windows.
+        caps.removeAll({RemoteCaps.media, RemoteCaps.rewind});
         // WPS's object model has no highlighter: its Ctrl+I needs the focus.
         if (window == null || !window.hasClass('wpp')) caps.remove(RemoteCaps.highlighter);
       default:

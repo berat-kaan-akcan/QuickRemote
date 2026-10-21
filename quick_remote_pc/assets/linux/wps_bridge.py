@@ -288,11 +288,10 @@ class Wps:
                 notes = slide_notes(slide)
             except Exception:  # noqa: BLE001 - notes are not worth the slide state
                 notes = ""
-            for shape in media_shapes(slide):
+            # Player.State always reads playing on WPS 11.1, and Play() does
+            # nothing: whether a video plays is unknown.
+            for _shape in media_shapes(slide):
                 has_media = True
-                player = self._player(view, shape)
-                if player is not None:
-                    playing = call(player, "get_State") == PLAYER_PLAYING
                 break
         return {
             "state": "RUNNING",

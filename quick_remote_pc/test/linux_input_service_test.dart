@@ -484,6 +484,7 @@ void main() {
       expect(caps.front, FrontWindow.pdf);
       expect(caps.has(RemoteCaps.highlighter), isFalse);
       expect(caps.has(RemoteCaps.pen), isTrue);
+      expect(caps.has(RemoteCaps.media), isFalse); // WPS's Player does nothing
       active = const X11Window(2, ['wpp', 'wpp'], pid: 200, fullscreen: true);
       caps = await capsAfterState(s);
       expect(caps.front, FrontWindow.show);
