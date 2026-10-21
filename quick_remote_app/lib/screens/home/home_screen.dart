@@ -171,6 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             defaultIp: pc.host,
             defaultPort: pc.port.toString(),
+            error: l10n.remoteNewPinTitle,
           );
         }
     }
@@ -219,6 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         defaultIp: dev.ip,
         defaultPort: dev.port.toString(),
+        error: context.l10n.remoteNewPinTitle,
       );
     }
   }
@@ -274,6 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
     BuildContext context, {
     String? defaultIp,
     String? defaultPort,
+    String? error,
   }) async {
     _clearError();
     String? resolvedPort = defaultPort;
@@ -285,6 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       defaultIp: defaultIp,
       defaultPort: resolvedPort,
+      error: error,
     );
 
     if (result != null && mounted) {

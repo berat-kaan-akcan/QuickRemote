@@ -137,6 +137,23 @@ void main() {
         [Evdev.keyPageDown]
       ]);
     });
+
+    test('a viewer whose PageDown scrolls by a screen gets its arrows', () async {
+      active = const X11Window(7, ['wpspdf', 'pdf']);
+      final s = service();
+      s.slideNext();
+      await pumpEventQueue();
+      s.slidePrev();
+      await pumpEventQueue();
+      active = const X11Window(8, ['okular']);
+      s.slideNext();
+      await pumpEventQueue();
+      expect(keys, [
+        [106], // Right
+        [105], // Left
+        [Evdev.keyPageDown],
+      ]);
+    });
   });
 
   group('start', () {
@@ -467,6 +484,7 @@ void main() {
       expect(caps.front, FrontWindow.pdf);
       expect(caps.has(RemoteCaps.highlighter), isFalse);
       expect(caps.has(RemoteCaps.pen), isTrue);
+      expect(caps.has(RemoteCaps.media), isFalse); // WPS's Player does nothing
       active = const X11Window(2, ['wpp', 'wpp'], pid: 200, fullscreen: true);
       caps = await capsAfterState(s);
       expect(caps.front, FrontWindow.show);
@@ -496,6 +514,21 @@ void main() {
       expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.editor, caps: {RemoteCaps.goto}));
       active = userWps;
       expect(await capsAfterState(s), const PresenterCaps(front: FrontWindow.editor));
+    });
+
+    test('a WPS the user started can be taken over once the bridge answers', () async {
+      windows = const [userWps, bridgeWps];
+      active = const X11Window(9, ['konsole']);
+      wps.replies['state'] = {'ok': true, 'state': 'NOT_RUNNING', 'pid': 200};
+      final s = service();
+      expect((await capsAfterState(s)).has(RemoteCaps.takeOver), isTrue);
+      // Only the bridge's own WPS: nothing to take over.
+      windows = const [bridgeWps];
+      expect((await capsAfterState(s)).has(RemoteCaps.takeOver), isFalse);
+      // Without pywpsrpc the bridge could not open the files.
+      windows = const [userWps];
+      wps.replies['state'] = {'ok': false, 'error': 'NO_RPC'};
+      expect((await capsAfterState(s)).has(RemoteCaps.takeOver), isFalse);
     });
 
     test('any other window, and an unknown one (native Wayland)', () async {

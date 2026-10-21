@@ -11,6 +11,7 @@ import '../presenter_view_screen.dart';
 import '../utils/remote_dialogs.dart';
 import '../utils/go_to_slide_sheet.dart';
 import '../utils/show_info.dart';
+import '../../../utils/ui/app_snackbar.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
@@ -61,6 +62,18 @@ class _MainControlsViewState extends State<MainControlsView> {
     }
 
     widget.ws.sendCommand(command);
+  }
+
+  /// WPS on the PC closes and opens again in the WPS the PC drives: it
+  /// takes a few seconds, and WPS may ask there to save first.
+  void _takeOver() {
+    HapticFeedback.mediumImpact();
+    _send(RemoteCommands.wpsTakeOver);
+    AppSnackbar.show(
+      context,
+      message: context.l10n.takeOverStarted,
+      duration: const Duration(seconds: 6),
+    );
   }
 
   @override
@@ -117,7 +130,19 @@ class _MainControlsViewState extends State<MainControlsView> {
                     ),
                   ),
                   Reveal(
-                    child: show.running
+                    child: show.takeOver
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: AppSpace.sm),
+                            child: InlineAlert(
+                              key: const ValueKey('takeOver'),
+                              tone: AppTone.info,
+                              icon: Icons.swap_horiz_rounded,
+                              message: context.l10n.takeOverHint,
+                              actionLabel: context.l10n.takeOverAction,
+                              onAction: connected ? _takeOver : null,
+                            ),
+                          )
+                        : show.running
                         ? null
                         : Padding(
                             padding: const EdgeInsets.only(top: AppSpace.sm),
@@ -324,7 +349,8 @@ class SlideCard extends StatelessWidget {
                                 ),
                                 const SizedBox(height: AppSpace.xxs),
                                 Text(
-                                  show.userWps
+                                  // The take-over alert below says why already.
+                                  show.userWps && !show.takeOver
                                       ? context.l10n.unreadableShowUserWps
                                       : context.l10n.unreadableShow,
                                   style: AppType.bodySmall.copyWith(

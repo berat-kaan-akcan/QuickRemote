@@ -18,12 +18,20 @@ class ManualConnectDialog extends StatefulWidget {
   final String? defaultIp;
   final String? defaultPort;
 
-  const ManualConnectDialog({super.key, this.defaultIp, this.defaultPort});
+  /// Why the dialog asks again (a PIN the PC refused), shown above the fields.
+  final String? error;
 
-  static Future<ManualConnectData?> show(BuildContext context, {String? defaultIp, String? defaultPort}) {
+  const ManualConnectDialog({super.key, this.defaultIp, this.defaultPort, this.error});
+
+  static Future<ManualConnectData?> show(
+    BuildContext context, {
+    String? defaultIp,
+    String? defaultPort,
+    String? error,
+  }) {
     return AppPopupTheme.showAppDialog<ManualConnectData>(
       context: context,
-      builder: (_) => ManualConnectDialog(defaultIp: defaultIp, defaultPort: defaultPort),
+      builder: (_) => ManualConnectDialog(defaultIp: defaultIp, defaultPort: defaultPort, error: error),
     );
   }
 
@@ -84,6 +92,10 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
                   ),
                 ],
               ),
+              if (widget.error != null) ...[
+                const SizedBox(height: AppSpace.sm),
+                InlineAlert(tone: AppTone.danger, dense: true, message: widget.error!),
+              ],
               const SizedBox(height: AppSpace.md),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,

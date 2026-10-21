@@ -172,6 +172,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wpsOpenFailed => 'Couldn\'t open the presentation in WPS.';
 
   @override
+  String get wpsUserStarted =>
+      'You opened WPS yourself: the phone drives it with keys only, without slide numbers or notes. \"Take over\" closes WPS and opens the presentation in QuickRemote\'s WPS at the same slide.';
+
+  @override
+  String get takeOver => 'Take over';
+
+  @override
+  String get wpsTakenOver => 'The presentation is open in QuickRemote\'s WPS.';
+
+  @override
+  String get wpsTakeOverNoWps => 'No open WPS was found.';
+
+  @override
+  String get wpsTakeOverNoFile =>
+      'The presentation isn\'t saved: save it in WPS first.';
+
+  @override
+  String get wpsTakeOverNotClosed =>
+      'WPS didn\'t close: answer its save question and try again.';
+
+  @override
+  String get wpsTakeOverFailed =>
+      'Couldn\'t open the presentation in QuickRemote\'s WPS.';
+
+  @override
   String get networkTrusted => 'Trusted Network';
 
   @override

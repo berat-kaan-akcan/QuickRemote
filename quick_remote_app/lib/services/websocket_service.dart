@@ -115,6 +115,9 @@ class WebSocketService extends ChangeNotifier {
         if (error != null) {
           _lastCommandError = error;
           notifyListeners();
+        } else if (_lastCommandError is ConnectionFailure) {
+          // A refused attempt before this one is no news to the remote.
+          _lastCommandError = null;
         }
       },
     );
@@ -125,6 +128,10 @@ class WebSocketService extends ChangeNotifier {
   bool get isConnected => _client.isConnected;
   AppConnectionState get connectionState => _client.connectionState;
   String get serverAddress => _client.serverAddress;
+
+  /// The PC of the last attempt (also after it failed); null before the first.
+  String? get serverHost => _client.host;
+  int? get serverPort => _client.port;
 
   /// The connected PC's name; null from a PC that does not tell it.
   String? get pcName => isConnected ? _state.pcName : null;
