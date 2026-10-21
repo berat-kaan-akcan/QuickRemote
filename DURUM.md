@@ -174,7 +174,8 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 ### WPS: Devral (2026-10-21)
 Kullanıcının kendi açtığı WPS'e köprü bağlanamıyor. PC'deki WPS satırında ve telefonda çıkan "Devral" o WPS'i kapatıp sunumu QuickRemote'un WPS'inde açıyor. Gösteri sürüyorsa ekran resmini slaytların küçük resimleriyle karşılaştırıp aynı slayttan başlatıyor, bulamazsa 1. slayttan.
 - [x] Gösteri yokken: iki sekmeli WPS kapandı, iki dosya da köprünün WPS'inde açıldı, etkin sekme korundu. (2026-10-21, sunucuya bağlanan bir test istemcisiyle.)
-- [ ] Gösteri sürerken aynı slayttan devam ediyor mu? (2026-10-21: ilk denemede köprü, pencereleri daha önce kapatılmış eski WPS'ine açmaya çalıştı, hata verdi ve sunum ekranda kalmadı. Düzeltildi: köprü yanıt vermeyen WPS'i kapatıp yenisini başlatıyor; yine açamazsa dosyalar kullanıcının kendi WPS'inde yeniden açılıyor. Düzeltmeden sonra denenmedi.)
+- [x] Gösteri sürerken aynı slayttan devam ediyor mu? (2026-10-21: evet. 119 slaytlık sunumda, animasyonu yarıda kalmış 4. slayt doğru bulundu, devralma 3 saniye sürdü, telefon "4 / 119" ve bütün araçları aldı. İlk denemede köprü, pencereleri daha önce kapatılmış eski WPS'ine açmaya çalışıp hata vermişti; köprü artık yanıt vermeyen WPS'i kapatıp yenisini başlatıyor, yine açamazsa dosyalar kullanıcının kendi WPS'inde yeniden açılıyor.)
+- [x] Yan bulgu: uygulamanın açtığı WPS gösterisinde, notunda boş bir metin kutusu olan slaytta köprünün durumu çöküyordu (telefon slayt numarasını göremiyordu). Düzeltildi.
 - [ ] Kaydedilmemiş değişiklik varken: WPS'in kaydetme sorusu yanıtlanınca devralma sürüyor mu? 60 saniyede yanıtlanmazsa telefon "WPS kapanmadı" diyor mu?
 - [ ] Telefondaki Devral düğmesi (yeni APK ile) ve PC'deki düğme, gerçek dokunuş ve tıklamayla.
 
