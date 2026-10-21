@@ -494,17 +494,17 @@ abstract class AppLocalizations {
   /// **'Yeniden Tara'**
   String get homeRescan;
 
-  /// No description provided for @homeRecent.
+  /// No description provided for @homeSaved.
   ///
   /// In tr, this message translates to:
-  /// **'Son Bağlanılanlar'**
-  String get homeRecent;
+  /// **'Kayıtlı'**
+  String get homeSaved;
 
-  /// No description provided for @homeRemoveFromHistory.
+  /// No description provided for @homeSavedHint.
   ///
   /// In tr, this message translates to:
-  /// **'Geçmişten Sil'**
-  String get homeRemoveFromHistory;
+  /// **'Kayıtlı PIN ile bağlanır'**
+  String get homeSavedHint;
 
   /// No description provided for @launchNoRecentPc.
   ///
