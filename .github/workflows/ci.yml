@@ -175,7 +175,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
       # compileSdk 37 (permission_handler_android 14.x) is not on the image.
       - name: Android platform 37
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37" > /dev/null
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" > /dev/null
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -203,7 +203,7 @@ jobs:
           java-version: '21'
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
       - name: Android platform 37
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37" > /dev/null
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" > /dev/null
       - run: sh ./gradlew :app:testDebugUnitTest :app:lintDebug
       - uses: actions/upload-artifact@v4
         if: failure()
