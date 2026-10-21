@@ -14,7 +14,12 @@ class X11Window {
   final int? pid;
   final bool fullscreen;
 
-  const X11Window(this.id, this.wmClass, {this.pid, this.fullscreen = false});
+  /// A dialog (`_NET_WM_WINDOW_TYPE_DIALOG`) or a window that belongs to
+  /// another (WM_TRANSIENT_FOR): a program's question, such as WPS's
+  /// "save the changes?".
+  final bool dialog;
+
+  const X11Window(this.id, this.wmClass, {this.pid, this.fullscreen = false, this.dialog = false});
 
   bool hasClass(String name) => wmClass.contains(name);
 }
@@ -116,11 +121,13 @@ class X11Windows {
     final wmClass = classBytes == null ? const <String>[] : parseWmClass(classBytes);
     final pid = _cardinals(_property(id, '_NET_WM_PID'));
     final states = _cardinals(_property(id, '_NET_WM_STATE'));
+    final types = _cardinals(_property(id, '_NET_WM_WINDOW_TYPE'));
     return X11Window(
       id,
       wmClass,
       pid: pid.isEmpty ? null : pid.first,
       fullscreen: states.contains(_atom('_NET_WM_STATE_FULLSCREEN')),
+      dialog: types.contains(_atom('_NET_WM_WINDOW_TYPE_DIALOG')) || _property(id, 'WM_TRANSIENT_FOR') != null,
     );
   }
 

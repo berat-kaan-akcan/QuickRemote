@@ -109,13 +109,17 @@ class WpsTakeOver {
       'WPS take-over: pid $pid, ${files.length} file(s), show ${show != null}',
     );
 
-    if (show != null) {
-      // Closing the show first ends it; the editor then closes as usual.
-      close(show.id);
-      await _until(() => !_hasWindow(show.id), const Duration(seconds: 3));
-    }
-    for (final w in userWindows(clientWindows(), bridgePid)) {
-      if (w.pid == pid) close(w.id);
+    // A question of WPS's own (save the changes?) waits for the user: a close
+    // sent to it answers "don't save". So with one open nothing is closed.
+    if (!own.any((w) => w.dialog)) {
+      if (show != null) {
+        // Closing the show first ends it; the editor then closes as usual.
+        close(show.id);
+        await _until(() => !_hasWindow(show.id), const Duration(seconds: 3));
+      }
+      for (final w in userWindows(clientWindows(), bridgePid)) {
+        if (w.pid == pid && !w.dialog) close(w.id);
+      }
     }
     if (!await _until(() => !_alive(pid), closeTimeout)) {
       return RemoteError.wpsTakeOverNotClosed;
