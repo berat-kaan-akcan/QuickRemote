@@ -34,6 +34,13 @@ enum LaunchAction {
       _ => null,
     };
   }
+
+  /// Whether the link is let through: never while a remote is in use
+  /// (connected or connecting over Wi-Fi, or the computer's Bluetooth
+  /// keyboard). Opening the scanner or the Bluetooth screen would close
+  /// that remote and leave its connection without a screen; the app just
+  /// comes back to the front, on the remote.
+  static bool handles({required bool remoteInUse}) => !remoteInUse;
 }
 
 /// The Dart end of the `…/launch` channel: hands the links to the home
