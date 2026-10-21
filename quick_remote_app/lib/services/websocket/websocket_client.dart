@@ -48,6 +48,10 @@ class WebSocketClient {
   AppConnectionState get connectionState => _connectionState;
   String get serverAddress => _serverAddress;
 
+  /// The PC of the last attempt; null before the first.
+  String? get host => _lastHost;
+  int? get port => _lastPort;
+
   void _setState(AppConnectionState state) {
     if (_connectionState != state) {
       _connectionState = state;

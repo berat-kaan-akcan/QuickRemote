@@ -28,6 +28,9 @@ import '../../models/draw_tool.dart';
 import '../../services/websocket/presentation_state.dart';
 import '../../widgets/status_view.dart';
 import '../../widgets/ui/ui.dart';
+import '../../repositories/device_history_repository.dart';
+import '../home/utils/connection_handler.dart';
+import '../home/widgets/manual_connect_dialog.dart';
 
 /// Main remote control screen for presentation control.
 /// Has three views: main controls, touchpad mode, and media controls.
@@ -56,6 +59,11 @@ class _RemoteScreenState extends State<RemoteScreen> {
   bool _canPop = false;
   String? _persistentError;
   bool _reportOpen = false;
+
+  /// The PC refused the PIN (it made a new one, e.g. after a restart): the
+  /// failed view asks for the new one instead of only going home.
+  bool _wrongPin = false;
+  bool _pinDialogOpen = false;
 
   @override
   void initState() {
@@ -115,7 +123,11 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
     // Check for command errors
     final failure = _wsRef.lastCommandError;
-    if (failure != null) {
+    if (failure is ConnectionFailure && failure.error == ConnectionError.wrongPin) {
+      _wsRef.clearCommandError();
+      setState(() => _wrongPin = true);
+      _askNewPin();
+    } else if (failure != null) {
       final message = context.l10n.failure(failure);
       _persistentError = message;
       AppSnackbar.show(
@@ -276,8 +288,60 @@ class _RemoteScreenState extends State<RemoteScreen> {
     );
   }
 
+  /// Asks for the PC's new PIN and connects to the same PC with it; the PIN
+  /// is kept for the next connection. A wrong one asks again.
+  Future<void> _askNewPin() async {
+    final host = _wsRef.serverHost, port = _wsRef.serverPort;
+    if (_pinDialogOpen || host == null || port == null) return;
+    _pinDialogOpen = true;
+    final data = await ManualConnectDialog.show(context, defaultIp: host, defaultPort: '$port');
+    _pinDialogOpen = false;
+    if (data == null || !mounted) return;
+    final result = await ConnectionHandler.connect(context, data.host, data.port, pin: data.pin);
+    if (!mounted || !result.success) {
+      if (mounted && result.error != ConnectionError.wrongPin && result.errorMessage != null) {
+        setState(() => _persistentError = result.errorMessage);
+      }
+      return;
+    }
+    setState(() => _wrongPin = false);
+    final repository = DeviceHistoryRepository();
+    final saved = (await repository.getRecentDevices())
+        .where((d) => d['host'] == data.host && d['port'] == data.port)
+        .firstOrNull;
+    final name = saved?['name'] as String? ?? _wsRef.pcName ?? data.host;
+    await repository.saveRecentDevice(data.host, data.port, data.pin, name);
+  }
+
   Widget _buildFailedView(WebSocketService ws) {
     final p = context.palette;
+    if (_wrongPin) {
+      return ContentWidth(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
+          child: StatusView(
+            icon: Icons.pin_rounded,
+            color: p.warning,
+            title: context.l10n.remoteNewPinTitle,
+            message: context.l10n.remoteNewPinMessage,
+            actions: [
+              AppButton(
+                label: context.l10n.remoteEnterPin,
+                icon: Icons.dialpad_rounded,
+                onPressed: _askNewPin,
+              ),
+              const SizedBox(height: AppSpace.sm),
+              AppButton(
+                label: context.l10n.remoteBackHome,
+                icon: Icons.home_rounded,
+                variant: AppButtonVariant.ghost,
+                onPressed: () => _performExit(skipDialog: true),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return ContentWidth(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
