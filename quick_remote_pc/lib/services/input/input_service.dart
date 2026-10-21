@@ -123,6 +123,11 @@ abstract class InputService {
   /// programs keep their own.
   void phonesGone();
 
+  /// Moves the presentation of a WPS the user started, which only keys
+  /// reach, into the WPS the PC drives, at the same slide when a show ran
+  /// (Linux; WPS_TAKE_OVER). Null when done, else why not.
+  Future<RemoteError?> takeOverWps();
+
   /// True when the service renders the laser pointer itself; the server then
   /// feeds [laserPointerMoved] instead of moving the OS cursor.
   bool get handlesLaserPointer;

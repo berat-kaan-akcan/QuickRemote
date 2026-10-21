@@ -168,6 +168,29 @@ class AppLocalizationsTr extends AppLocalizations {
   String get wpsOpenFailed => 'Sunum WPS\'te açılamadı.';
 
   @override
+  String get wpsUserStarted =>
+      'WPS\'i siz açtınız: telefon onu yalnızca tuşlarla yönetir, slayt numarası ve notlar görünmez. \"Devral\" WPS\'i kapatıp sunumu QuickRemote\'un WPS\'inde aynı slayttan açar.';
+
+  @override
+  String get takeOver => 'Devral';
+
+  @override
+  String get wpsTakenOver => 'Sunum QuickRemote\'un WPS\'inde açıldı.';
+
+  @override
+  String get wpsTakeOverNoWps => 'Açık bir WPS bulunamadı.';
+
+  @override
+  String get wpsTakeOverNoFile => 'Sunum kaydedilmemiş: önce WPS\'te kaydedin.';
+
+  @override
+  String get wpsTakeOverNotClosed =>
+      'WPS kapanmadı: kaydetme sorusunu yanıtlayıp tekrar deneyin.';
+
+  @override
+  String get wpsTakeOverFailed => 'Sunum QuickRemote\'un WPS\'inde açılamadı.';
+
+  @override
   String get networkTrusted => 'Güvenilir Ağ';
 
   @override

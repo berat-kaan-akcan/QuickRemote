@@ -35,6 +35,19 @@ void main() {
     }
   });
 
+  test('WPS_TAKE_OVER reports why it could not take over', () async {
+    final errors = <RemoteError>[];
+    service.onCommandError = (error, [info]) => errors.add(error);
+    run(RemoteCommands.wpsTakeOver);
+    await pumpEventQueue();
+    expect(service.calls, ['takeOverWps']);
+    expect(errors, isEmpty);
+    service.takeOverError = RemoteError.wpsTakeOverNotClosed;
+    run(RemoteCommands.wpsTakeOver);
+    await pumpEventQueue();
+    expect(errors, [RemoteError.wpsTakeOverNotClosed]);
+  });
+
   group('prefix commands', () {
     test('SET_KEEP_INK is parsed for the server and calls nothing', () {
       expect(run(RemoteCommands.keepInk(true)), isEmpty);

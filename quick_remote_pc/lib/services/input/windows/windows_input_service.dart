@@ -132,6 +132,9 @@ class WindowsInputService implements InputService {
   void undoInk() {}
   @override
   void phonesGone() {}
+  // COM reaches every WPS on Windows: there is nothing to take over.
+  @override
+  Future<RemoteError?> takeOverWps() async => RemoteError.wpsTakeOverNoWps;
   // PowerPoint's COM API has a single PointerColor, and Ctrl+P / Ctrl+I
   // switch to each tool with the color it had: the chosen colors are applied
   // again after the switch.
