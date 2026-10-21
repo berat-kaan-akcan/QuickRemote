@@ -3,7 +3,7 @@ Version: @VERSION@
 Architecture: amd64
 Maintainer: Berat Kaan Akcan <beratkaanakcan@gmail.com>
 Installed-Size: @SIZE@
-Depends: libc6, libstdc++6, libgtk-3-0, libx11-6, libxi6, python3
+Depends: libc6, libstdc++6, libgtk-3-0, libegl1, libgles2, libx11-6, libxi6, python3
 Recommends: python3-uno, avahi-daemon, pkexec | policykit-1
 Suggests: libreoffice-impress
 Section: utils
