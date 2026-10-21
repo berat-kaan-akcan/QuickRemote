@@ -150,7 +150,8 @@ def slide_notes(slide):
         try:
             if call(shape, "get_HasTextFrame") != MSO_TRUE:
                 continue
-            text = call(call(call(shape, "get_TextFrame"), "get_TextRange"), "get_Text").strip()
+            # An empty text box answers None.
+            text = (call(call(call(shape, "get_TextFrame"), "get_TextRange"), "get_Text") or "").strip()
         except BridgeError:
             continue
         if not text:
@@ -285,7 +286,7 @@ class Wps:
             slide = item(call(pres, "get_Slides"), current)
             try:
                 notes = slide_notes(slide)
-            except BridgeError:
+            except Exception:  # noqa: BLE001 - notes are not worth the slide state
                 notes = ""
             for shape in media_shapes(slide):
                 has_media = True
