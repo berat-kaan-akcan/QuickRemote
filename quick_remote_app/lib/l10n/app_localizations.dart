@@ -332,6 +332,30 @@ abstract class AppLocalizations {
   /// **'WPS\'te video başa sarılamıyor.'**
   String get errorWpsNoMediaRewind;
 
+  /// No description provided for @errorWpsTakeOverNoWps.
+  ///
+  /// In tr, this message translates to:
+  /// **'PC\'de açık bir WPS bulunamadı.'**
+  String get errorWpsTakeOverNoWps;
+
+  /// No description provided for @errorWpsTakeOverNoFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum kaydedilmemiş: önce WPS\'te kaydedin.'**
+  String get errorWpsTakeOverNoFile;
+
+  /// No description provided for @errorWpsTakeOverNotClosed.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS kapanmadı: PC\'deki kaydetme sorusunu yanıtlayıp tekrar deneyin.'**
+  String get errorWpsTakeOverNotClosed;
+
+  /// No description provided for @errorWpsTakeOverFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum QuickRemote\'un WPS\'inde açılamadı.'**
+  String get errorWpsTakeOverFailed;
+
   /// No description provided for @errorLockFailed.
   ///
   /// In tr, this message translates to:
@@ -1903,6 +1927,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu WPS\'i QuickRemote açmadı: slayt numarası ve notlar gelmez, tuşlar WPS penceresi öndeyken çalışır.'**
   String get unreadableShowUserWps;
+
+  /// No description provided for @takeOverHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu WPS\'i QuickRemote açmadı: slayt numarası ve notlar gelmiyor. Devral ile PC\'deki WPS kapanıp sunum aynı slayttan tam kontrolle açılır.'**
+  String get takeOverHint;
+
+  /// No description provided for @takeOverAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devral'**
+  String get takeOverAction;
+
+  /// No description provided for @takeOverStarted.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS PC\'de yeniden açılıyor; kaydetme sorusu çıkarsa PC\'de yanıtlayın.'**
+  String get takeOverStarted;
 
   /// No description provided for @drawToolsNeedShow.
   ///

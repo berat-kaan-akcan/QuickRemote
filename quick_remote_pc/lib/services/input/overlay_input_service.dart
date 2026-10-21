@@ -501,6 +501,9 @@ class OverlayInputService implements InputService {
   }
 
   @override
+  Future<RemoteError?> takeOverWps() => _inner.takeOverWps();
+
+  @override
   void eraseAllInk() {
     _clearInk();
     if (_page != null) _kept.remove(_page);

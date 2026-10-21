@@ -92,6 +92,10 @@ class ShowInfo {
   bool get spotlight => _can(RemoteCaps.spotlight, _overlay);
   bool get zoom => _can(RemoteCaps.zoom, _overlay && _zoom);
   bool get undo => _can(RemoteCaps.undo, _overlay);
+
+  /// A WPS the user started can move to the WPS the PC drives
+  /// (WPS_TAKE_OVER); only a PC that says so.
+  bool get takeOver => caps?.has(RemoteCaps.takeOver) ?? false;
 }
 
 /// The program the remote names: the one running the show, else the one the

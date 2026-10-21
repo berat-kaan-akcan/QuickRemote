@@ -10,6 +10,7 @@ import 'pactl_volume.dart';
 import 'script_bridge.dart';
 import 'uinput_device.dart';
 import 'wps_bridge.dart';
+import 'wps_take_over.dart';
 import 'x11_windows.dart';
 
 /// Linux implementation: LibreOffice Impress over UNO and WPS Presentation
@@ -29,6 +30,9 @@ class LinuxInputService implements InputService {
         _clientWindows = X11Windows.instance.clientWindows,
         _windowArea = X11Windows.instance.area,
         _captureWindow = X11Windows.instance.capture,
+        _windowTitle = X11Windows.instance.title,
+        _closeWindow = X11Windows.instance.close,
+        _takeOverOverride = null,
         _keys = UinputDevice.instance.combo {
     _device.ensureOpen();
     _impress.onEvent = _onImpressEvent;
@@ -44,12 +48,16 @@ class LinuxInputService implements InputService {
     required void Function(List<int> keys) keys,
     ScreenArea? Function(int window)? windowArea,
     ScreenCapture? Function(int window)? captureWindow,
+    WpsTakeOver? takeOver,
   })  : _impress = impress,
         _wps = wps,
         _activeWindow = activeWindow,
         _clientWindows = clientWindows,
         _windowArea = windowArea ?? ((_) => null),
         _captureWindow = captureWindow ?? ((_) => null),
+        _windowTitle = ((_) => null),
+        _closeWindow = ((_) => false),
+        _takeOverOverride = takeOver,
         _keys = keys;
 
   final UinputDevice _device = UinputDevice.instance;
@@ -59,6 +67,19 @@ class LinuxInputService implements InputService {
   final List<X11Window> Function() _clientWindows;
   final ScreenArea? Function(int window) _windowArea;
   final ScreenCapture? Function(int window) _captureWindow;
+  final String? Function(int window) _windowTitle;
+  final bool Function(int window) _closeWindow;
+  final WpsTakeOver? _takeOverOverride;
+
+  late final WpsTakeOver _takeOver = _takeOverOverride ??
+      WpsTakeOver(
+        clientWindows: _clientWindows,
+        title: _windowTitle,
+        close: _closeWindow,
+        capture: _captureWindow,
+        request: _wpsRequest,
+        exportPath: SlideFiles.path,
+      );
 
   /// The Impress show's window, from its last state (`window`); null when
   /// unknown or no Impress show runs.
@@ -90,6 +111,9 @@ class LinuxInputService implements InputService {
 
   /// pid of the WPS the bridge controls, from its last reply.
   int? _wpsRpcPid;
+
+  /// pywpsrpc answered: the bridge can open what a take-over moves.
+  bool _wpsRpc = false;
 
   /// Ink colors (BGR) for WPS, whose single pointer color the pen and the
   /// highlighter share; null until the phone picks one.
@@ -137,9 +161,19 @@ class LinuxInputService implements InputService {
   /// Whether the focused WPS is the one the bridge controls.
   bool _isBridgeWps(X11Window window) => window.pid != null && window.pid == _wpsRpcPid;
 
-  Future<Map<String, dynamic>> _wpsRequest(String cmd, [Map<String, Object?> args = const {}]) async {
-    final reply = await _wps.request(cmd, args);
+  Future<Map<String, dynamic>> _wpsRequest(
+    String cmd, [
+    Map<String, Object?> args = const {},
+    Duration timeout = const Duration(seconds: 6),
+  ]) async {
+    final reply = await _wps.request(cmd, args, timeout);
     if (reply['pid'] is int) _wpsRpcPid = reply['pid'] as int;
+    final error = reply['error'];
+    if (error == 'NO_RPC' || reply['rpc'] == false) {
+      _wpsRpc = false;
+    } else if (reply['ok'] == true || error == 'NOT_RUNNING' || error == 'NO_PRESENTATION') {
+      _wpsRpc = true;
+    }
     return reply;
   }
 
@@ -195,6 +229,13 @@ class LinuxInputService implements InputService {
     final known = RemoteError.fromCode(error);
     if (known != null && known != RemoteError.commandFailed) return (known, null);
     return (RemoteError.commandFailed, error);
+  }
+
+  @override
+  Future<RemoteError?> takeOverWps() async {
+    // A bridge that never answered has not told its WPS's pid yet.
+    if (_wpsRpcPid == null) await _wpsRequest('ping');
+    return _takeOver.run(bridgePid: _wpsRpcPid);
   }
 
   // ── States ──
@@ -270,6 +311,9 @@ class LinuxInputService implements InputService {
         } else {
           caps = {};
         }
+    }
+    if (_wpsRpc && WpsTakeOver.userWindows(_clientWindows(), _wpsRpcPid).isNotEmpty) {
+      caps.add(RemoteCaps.takeOver);
     }
     return PresenterCaps(front: front, caps: caps);
   }

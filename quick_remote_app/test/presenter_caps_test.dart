@@ -194,6 +194,28 @@ void main() {
       expect(find.text('Full screen'), findsOneWidget);
     });
 
+    testWidgets('a WPS the user started can be taken over', (tester) async {
+      final ws = _Ws()
+        ..handleMessage({
+          'type': 'STATUS',
+          'state': 'POWERPOINT_NOT_RUNNING',
+          'front': FrontWindow.editor,
+          'caps': [RemoteCaps.takeOver],
+        })
+        ..handleMessage({'type': 'SLIDE_STATE', 'data': null});
+      await pumpControls(tester, ws);
+      expect(find.textContaining('No Presentation Open'), findsNothing);
+      await tester.tap(find.text('Take over'));
+      expect(ws.sent, [RemoteCommands.wpsTakeOver]);
+      // In a show it stays under the card; without the cap it goes.
+      ws.show(caps: {RemoteCaps.takeOver, RemoteCaps.laser});
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Take over'), findsOneWidget);
+      ws.show(caps: {RemoteCaps.laser});
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Take over'), findsNothing);
+    });
+
     testWidgets('an older PC without a show: as before', (tester) async {
       final ws = _Ws()..noShow();
       await pumpControls(tester, ws);
