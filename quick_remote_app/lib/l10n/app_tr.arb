@@ -253,6 +253,7 @@
   "doubleTapSelected": "Çift dokunuş → Seçili araç",
   "volumeMuted": "Sessiz",
   "volumeOn": "Sesli",
+  "volumeMuteToggle": "Sesi kapat / aç",
   "btUnsupportedLong": "Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.",
   "btPermissionTitle": "İzin gerekiyor",
   "btPermissionDenied": "Telefonun klavye ve fare olarak bağlanabilmesi için “Yakındaki cihazlar” izni gerekiyor.",

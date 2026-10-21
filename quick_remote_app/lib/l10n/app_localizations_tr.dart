@@ -544,6 +544,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get volumeOn => 'Sesli';
 
   @override
+  String get volumeMuteToggle => 'Sesi kapat / aç';
+
+  @override
   String get btUnsupportedLong =>
       'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.';
 

@@ -55,6 +55,24 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
     WakelockPlus.enable();
     BackgroundSession.acquire();
     _sub = _bt.stateStream.listen(_onBtState);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _askProgram());
+  }
+
+  /// Asks which program the computer runs once the screen has slid in: the
+  /// keys differ per program, and the computer cannot tell.
+  Future<void> _askProgram() async {
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation != null && !animation.isCompleted) {
+      final done = Completer<void>();
+      void listener(AnimationStatus status) {
+        if (status == AnimationStatus.completed && !done.isCompleted) done.complete();
+      }
+      animation.addStatusListener(listener);
+      await done.future.timeout(const Duration(seconds: 2), onTimeout: () {});
+      animation.removeStatusListener(listener);
+    }
+    if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    await BtProgramSheet.show(context, closeOnPick: true);
   }
 
   @override

@@ -159,6 +159,7 @@
   "doubleTapSelected": "Double tap → Selected tool",
   "volumeMuted": "Muted",
   "volumeOn": "Sound on",
+  "volumeMuteToggle": "Mute / Unmute",
   "btUnsupportedLong": "This device doesn't support Bluetooth HID.\nUse Wi-Fi mode.",
   "btPermissionTitle": "Permission needed",
   "btPermissionDenied": "The phone needs the “Nearby devices” permission to connect as a keyboard and mouse.",
