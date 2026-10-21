@@ -178,6 +178,19 @@ void main() {
       expect(inner.calls, isNot(contains('eraseAllInk')));
     });
 
+    test('the last phone leaving takes the ink, the dot and the cover away', () async {
+      await showBy(null);
+      await service.modePen();
+      stroke(0.2, 0.2);
+      await service.whiteScreen();
+      await service.modeLaser();
+      overlay.calls.clear();
+      service.phonesGone();
+      expect(service.strokes, isEmpty);
+      expect(overlay.calls, containsAll(['hide', 'inkClear', 'blank:off']));
+      expect(inner.calls, contains('phonesGone'));
+    });
+
     test('in PowerPoint the program\'s pen, as before', () async {
       await showBy('powerpoint');
       await service.modePen();

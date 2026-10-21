@@ -491,6 +491,16 @@ class OverlayInputService implements InputService {
   }
 
   @override
+  void phonesGone() {
+    _hideOverlay();
+    _endInk();
+    _clearInk();
+    _kept.clear();
+    _unblank();
+    _inner.phonesGone();
+  }
+
+  @override
   void eraseAllInk() {
     _clearInk();
     if (_page != null) _kept.remove(_page);

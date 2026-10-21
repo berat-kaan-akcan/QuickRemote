@@ -187,12 +187,23 @@ gboolean on_draw(GtkWidget*, cairo_t* cr, gpointer) {
   return TRUE;
 }
 
-// Clicks go to the window below: the input shape is empty.
-void on_realize(GtkWidget* widget, gpointer) {
+// Clicks go to the window below: the input shape is empty. GtkWindow sets
+// the input shape back to the whole window on every size allocation
+// (update_csd_shape), so it is emptied again after each one and on map;
+// otherwise the overlay takes every click while it shows the ink.
+void make_click_through(GtkWidget* widget) {
+  GdkWindow* window = gtk_widget_get_window(widget);
+  if (window == nullptr) return;
   cairo_region_t* empty = cairo_region_create();
-  gdk_window_input_shape_combine_region(gtk_widget_get_window(widget), empty, 0, 0);
+  gdk_window_input_shape_combine_region(window, empty, 0, 0);
   cairo_region_destroy(empty);
 }
+
+void on_realize(GtkWidget* widget, gpointer) { make_click_through(widget); }
+
+void on_size_allocate(GtkWidget* widget, GdkRectangle*, gpointer) { make_click_through(widget); }
+
+void on_map(GtkWidget* widget, gpointer) { make_click_through(widget); }
 
 // Mapped while there is something to show.
 void update_mapped() {
@@ -485,6 +496,8 @@ int main(int argc, char** argv) {
   gtk_window_set_default_size(window, overlay.monitor.width, overlay.monitor.height);
   gtk_widget_set_size_request(overlay.window, overlay.monitor.width, overlay.monitor.height);
   g_signal_connect(overlay.window, "realize", G_CALLBACK(on_realize), nullptr);
+  g_signal_connect_after(overlay.window, "size-allocate", G_CALLBACK(on_size_allocate), nullptr);
+  g_signal_connect_after(overlay.window, "map", G_CALLBACK(on_map), nullptr);
   g_signal_connect(overlay.window, "draw", G_CALLBACK(on_draw), nullptr);
   gtk_widget_realize(overlay.window);
 
