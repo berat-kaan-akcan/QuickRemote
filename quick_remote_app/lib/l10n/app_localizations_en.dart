@@ -1308,4 +1308,165 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote $version (phone)\nPlatform: $platform\nPrograms on the PC: $presenters\nBluetooth target: $btTarget\n\nYou can attach the log (Settings → Share error log) on this page.';
   }
+
+  @override
+  String get settingsCapabilitiesTitle => 'What works where';
+
+  @override
+  String get settingsCapabilitiesSubtitle =>
+      'Which feature works in which program, side by side';
+
+  @override
+  String get capTitle => 'What works where';
+
+  @override
+  String get capIntro =>
+      'Pick the connection, the computer and the program to see what works. Compare puts every program on that computer side by side.';
+
+  @override
+  String get capConnection => 'Connection';
+
+  @override
+  String get capComputer => 'Computer';
+
+  @override
+  String get capViewOne => 'One program';
+
+  @override
+  String get capViewCompare => 'Compare';
+
+  @override
+  String get capFootnoteWifi =>
+      'With the PC app\'s Laser setting on Auto. In Compare, tap a ringed mark to read its note.';
+
+  @override
+  String get capFootnoteBluetooth =>
+      'Over Bluetooth the phone is the computer\'s keyboard and mouse: no PC app is needed, but the computer tells the phone nothing. In Compare, tap a ringed mark to read its note.';
+
+  @override
+  String get capProgramWpsApp => 'WPS (opened by the app)';
+
+  @override
+  String get capProgramWpsOwn => 'WPS (opened by you)';
+
+  @override
+  String get capProgramPdf => 'PDF and browser';
+
+  @override
+  String get capShortWpsApp => 'WPS\nby app';
+
+  @override
+  String get capShortWpsOwn => 'WPS\nby you';
+
+  @override
+  String get capNextPrev => 'Next / previous slide';
+
+  @override
+  String get capStartEnd => 'Start / end the show';
+
+  @override
+  String get capGoTo => 'Go to slide';
+
+  @override
+  String get capLaser => 'Laser';
+
+  @override
+  String get capInk => 'Pen and highlighter';
+
+  @override
+  String get capEraser => 'Eraser and clear';
+
+  @override
+  String get capBlank => 'Black / white screen';
+
+  @override
+  String get capSlideInfo => 'Slide number and notes';
+
+  @override
+  String get capPreview => 'Slide preview';
+
+  @override
+  String get capSlideMedia => 'Video on the slide';
+
+  @override
+  String get capSpotlight => 'Spotlight and magnifier';
+
+  @override
+  String get capVolume => 'Computer\'s volume and media';
+
+  @override
+  String get capNoteOverlay =>
+      'QuickRemote draws it on its own layer, over videos too.';
+
+  @override
+  String get capNoteFocus => 'Only while the WPS window is in front.';
+
+  @override
+  String get capNoteFullscreen => 'Goes full screen or into presentation mode.';
+
+  @override
+  String get capNoteNoJump => 'Does not jump to the page.';
+
+  @override
+  String get capNoteFirstSlide => 'The show starts at the first slide.';
+
+  @override
+  String get capNoteShowOnly => 'Only that a show is open is known.';
+
+  @override
+  String get capNoteScreenOnly =>
+      'Only a picture of the screen; no next slide.';
+
+  @override
+  String get capNoteFullscreenOnly =>
+      'Only in full screen, a picture of the screen.';
+
+  @override
+  String get capNotePlayOnly => 'Play and pause, no rewind.';
+
+  @override
+  String get capNoteMediaReload => 'The first press may reload the slide once.';
+
+  @override
+  String get capNoteNoMagnifier => 'Spotlight, no magnifier.';
+
+  @override
+  String get capNoteWpsArrow =>
+      'An arrow pointer instead of the laser while the show is not in front.';
+
+  @override
+  String get capNoteHighlighterFocus =>
+      'The highlighter needs the show in front.';
+
+  @override
+  String get capNoteCursor => 'No laser shortcut; the mouse pointer is used.';
+
+  @override
+  String get capNotePenOnly => 'Pen only; no highlighter.';
+
+  @override
+  String get capNoteClearOnly => 'Clear all only; no eraser.';
+
+  @override
+  String get capNoteWpsEraser =>
+      'In WPS on Windows the eraser shortcut may do something else.';
+
+  @override
+  String get capNoteNoAnswer =>
+      'Over Bluetooth the computer sends the phone nothing.';
+
+  @override
+  String get capNoteKeysOnly => 'Keys only; no level or song title.';
+
+  @override
+  String get capNoteWpsNoMedia => 'Videos in WPS cannot be played remotely.';
+
+  @override
+  String get capLevelYes => 'Works';
+
+  @override
+  String get capLevelPartial => 'Partly';
+
+  @override
+  String get capLevelNo => 'Doesn\'t work';
 }

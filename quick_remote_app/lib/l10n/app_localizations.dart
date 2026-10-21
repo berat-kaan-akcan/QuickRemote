@@ -2328,6 +2328,306 @@ abstract class AppLocalizations {
     String presenters,
     String btTarget,
   );
+
+  /// No description provided for @settingsCapabilitiesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Neler yapılabilir?'**
+  String get settingsCapabilitiesTitle;
+
+  /// No description provided for @settingsCapabilitiesSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi programda hangi özellik çalışır, karşılaştır'**
+  String get settingsCapabilitiesSubtitle;
+
+  /// No description provided for @capTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Neler yapılabilir?'**
+  String get capTitle;
+
+  /// No description provided for @capIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı, bilgisayarı ve programı seç; çalışan özellikleri gör. Karşılaştır, o bilgisayardaki bütün programları yan yana koyar.'**
+  String get capIntro;
+
+  /// No description provided for @capConnection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı'**
+  String get capConnection;
+
+  /// No description provided for @capComputer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayar'**
+  String get capComputer;
+
+  /// No description provided for @capViewOne.
+  ///
+  /// In tr, this message translates to:
+  /// **'Program seç'**
+  String get capViewOne;
+
+  /// No description provided for @capViewCompare.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karşılaştır'**
+  String get capViewCompare;
+
+  /// No description provided for @capFootnoteWifi.
+  ///
+  /// In tr, this message translates to:
+  /// **'PC uygulamasının Lazer ayarı Otomatik\'ken. Karşılaştır\'da halkalı işarete dokununca notu görünür.'**
+  String get capFootnoteWifi;
+
+  /// No description provided for @capFootnoteBluetooth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth\'ta telefon bilgisayarın klavyesi ve faresi olur; PC uygulaması gerekmez ama bilgisayar hiçbir şey bildirmez. Karşılaştır\'da halkalı işarete dokununca notu görünür.'**
+  String get capFootnoteBluetooth;
+
+  /// No description provided for @capProgramWpsApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS (uygulamanın açtığı)'**
+  String get capProgramWpsApp;
+
+  /// No description provided for @capProgramWpsOwn.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS (kendin açtığın)'**
+  String get capProgramWpsOwn;
+
+  /// No description provided for @capProgramPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF ve tarayıcı'**
+  String get capProgramPdf;
+
+  /// No description provided for @capShortWpsApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS\nuygulama'**
+  String get capShortWpsApp;
+
+  /// No description provided for @capShortWpsOwn.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS\nkendin'**
+  String get capShortWpsOwn;
+
+  /// No description provided for @capNextPrev.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki / önceki slayt'**
+  String get capNextPrev;
+
+  /// No description provided for @capStartEnd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösteriyi başlat / bitir'**
+  String get capStartEnd;
+
+  /// No description provided for @capGoTo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayta git'**
+  String get capGoTo;
+
+  /// No description provided for @capLaser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lazer'**
+  String get capLaser;
+
+  /// No description provided for @capInk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem ve vurgulayıcı'**
+  String get capInk;
+
+  /// No description provided for @capEraser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgi ve temizle'**
+  String get capEraser;
+
+  /// No description provided for @capBlank.
+  ///
+  /// In tr, this message translates to:
+  /// **'Siyah / beyaz ekran'**
+  String get capBlank;
+
+  /// No description provided for @capSlideInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt numarası ve notlar'**
+  String get capSlideInfo;
+
+  /// No description provided for @capPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt önizlemesi'**
+  String get capPreview;
+
+  /// No description provided for @capSlideMedia.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayttaki video'**
+  String get capSlideMedia;
+
+  /// No description provided for @capSpotlight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Spot ışığı ve büyüteç'**
+  String get capSpotlight;
+
+  /// No description provided for @capVolume.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayarın sesi ve medyası'**
+  String get capVolume;
+
+  /// No description provided for @capNoteOverlay.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote kendi katmanında çizer, videonun üstünde de görünür.'**
+  String get capNoteOverlay;
+
+  /// No description provided for @capNoteFocus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca WPS penceresi öndeyken.'**
+  String get capNoteFocus;
+
+  /// No description provided for @capNoteFullscreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekrana ya da sunum moduna geçer.'**
+  String get capNoteFullscreen;
+
+  /// No description provided for @capNoteNoJump.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya atlamaz.'**
+  String get capNoteNoJump;
+
+  /// No description provided for @capNoteFirstSlide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösteri ilk slayttan başlar.'**
+  String get capNoteFirstSlide;
+
+  /// No description provided for @capNoteShowOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca gösterinin açık olduğu bilinir.'**
+  String get capNoteShowOnly;
+
+  /// No description provided for @capNoteScreenOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca o anki ekranın resmi; sıradaki slayt görünmez.'**
+  String get capNoteScreenOnly;
+
+  /// No description provided for @capNoteFullscreenOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca tam ekrandayken, o anki ekranın resmi.'**
+  String get capNoteFullscreenOnly;
+
+  /// No description provided for @capNotePlayOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oynat ve duraklat var, başa sarma yok.'**
+  String get capNotePlayOnly;
+
+  /// No description provided for @capNoteMediaReload.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk basışta slayt bir kez yeniden yüklenebilir.'**
+  String get capNoteMediaReload;
+
+  /// No description provided for @capNoteNoMagnifier.
+  ///
+  /// In tr, this message translates to:
+  /// **'Spot ışığı var, büyüteç yok.'**
+  String get capNoteNoMagnifier;
+
+  /// No description provided for @capNoteWpsArrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösteri önde değilken lazer yerine ok imleci.'**
+  String get capNoteWpsArrow;
+
+  /// No description provided for @capNoteHighlighterFocus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vurgulayıcı için gösteri önde olmalı.'**
+  String get capNoteHighlighterFocus;
+
+  /// No description provided for @capNoteCursor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lazer kısayolu yok; fare imleci kullanılır.'**
+  String get capNoteCursor;
+
+  /// No description provided for @capNotePenOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca kalem; vurgulayıcı yok.'**
+  String get capNotePenOnly;
+
+  /// No description provided for @capNoteClearOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca hepsini temizle; silgi yok.'**
+  String get capNoteClearOnly;
+
+  /// No description provided for @capNoteWpsEraser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Windows\'taki WPS\'te silgi kısayolu başka bir iş yapabilir.'**
+  String get capNoteWpsEraser;
+
+  /// No description provided for @capNoteNoAnswer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth\'ta bilgisayar telefona bilgi göndermez.'**
+  String get capNoteNoAnswer;
+
+  /// No description provided for @capNoteKeysOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca tuşlar; ses seviyesi ve şarkı adı görünmez.'**
+  String get capNoteKeysOnly;
+
+  /// No description provided for @capNoteWpsNoMedia.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS\'teki video uzaktan oynatılamıyor.'**
+  String get capNoteWpsNoMedia;
+
+  /// No description provided for @capLevelYes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çalışır'**
+  String get capLevelYes;
+
+  /// No description provided for @capLevelPartial.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısmen'**
+  String get capLevelPartial;
+
+  /// No description provided for @capLevelNo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çalışmaz'**
+  String get capLevelNo;
 }
 
 class _AppLocalizationsDelegate
