@@ -716,6 +716,24 @@ abstract class AppLocalizations {
   /// **'Ana Ekrana Dön'**
   String get remoteBackHome;
 
+  /// No description provided for @remoteNewPinTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PC\'nin PIN\'i değişti'**
+  String get remoteNewPinTitle;
+
+  /// No description provided for @remoteNewPinMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'PC yeniden başlatıldığı için yeni bir PIN üretti. PC ekranındaki PIN\'i girin, aynı bilgisayara yeniden bağlanalım.'**
+  String get remoteNewPinMessage;
+
+  /// No description provided for @remoteEnterPin.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'i gir'**
+  String get remoteEnterPin;
+
   /// No description provided for @remoteReconnect.
   ///
   /// In tr, this message translates to:
