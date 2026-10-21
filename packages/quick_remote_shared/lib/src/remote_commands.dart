@@ -42,6 +42,11 @@ abstract class RemoteCommands {
   /// Takes back the last stroke the overlay drew (`overlay` PCs only).
   static const undoInk = 'UNDO_INK';
 
+  /// Closes the WPS Presentation the user started and opens its files again
+  /// in the WPS the PC drives, at the same slide when a show ran (Linux;
+  /// sent only while SLIDE_STATE's `caps` has `takeOver`).
+  static const wpsTakeOver = 'WPS_TAKE_OVER';
+
   // Legacy alias kept for backwards‑compat (maps to modeLaser on PC)
   static const laserCursor = 'LASER_CURSOR';
 
@@ -65,6 +70,7 @@ abstract class RemoteCommands {
     modeArrow, modeLaser, modePen, modeHighlighter, modeEraser, modeSpotlight, modeZoom,
     leftClick, rightClick, leftDown, leftUp,
     laserOff, laserCursor, blackScreen, whiteScreen, eraseAll, undoInk,
+    wpsTakeOver,
     // Medya & ses
     mediaPlayPause, mediaRewind,
     volumeUp, volumeDown, volumeMute,

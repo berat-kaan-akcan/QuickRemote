@@ -386,6 +386,48 @@ abstract class AppLocalizations {
   /// **'Sunum WPS\'te açılamadı.'**
   String get wpsOpenFailed;
 
+  /// No description provided for @wpsUserStarted.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS\'i siz açtınız: telefon onu yalnızca tuşlarla yönetir, slayt numarası ve notlar görünmez. \"Devral\" WPS\'i kapatıp sunumu QuickRemote\'un WPS\'inde aynı slayttan açar.'**
+  String get wpsUserStarted;
+
+  /// No description provided for @takeOver.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devral'**
+  String get takeOver;
+
+  /// No description provided for @wpsTakenOver.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum QuickRemote\'un WPS\'inde açıldı.'**
+  String get wpsTakenOver;
+
+  /// No description provided for @wpsTakeOverNoWps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık bir WPS bulunamadı.'**
+  String get wpsTakeOverNoWps;
+
+  /// No description provided for @wpsTakeOverNoFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum kaydedilmemiş: önce WPS\'te kaydedin.'**
+  String get wpsTakeOverNoFile;
+
+  /// No description provided for @wpsTakeOverNotClosed.
+  ///
+  /// In tr, this message translates to:
+  /// **'WPS kapanmadı: kaydetme sorusunu yanıtlayıp tekrar deneyin.'**
+  String get wpsTakeOverNotClosed;
+
+  /// No description provided for @wpsTakeOverFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum QuickRemote\'un WPS\'inde açılamadı.'**
+  String get wpsTakeOverFailed;
+
   /// No description provided for @networkTrusted.
   ///
   /// In tr, this message translates to:

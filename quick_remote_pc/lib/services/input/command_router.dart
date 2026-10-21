@@ -66,6 +66,10 @@ class CommandRouter {
         service.undoInk();
       case RemoteCommands.lock:
         service.lockPC();
+      case RemoteCommands.wpsTakeOver:
+        service.takeOverWps().then((error) {
+          if (error != null) service.onCommandError?.call(error);
+        });
 
       // ── Çizim / imleç modları ──
       case RemoteCommands.laserCursor:

@@ -19,7 +19,8 @@ class ViewerKeys {
 
 /// PDF viewers and browsers. Their F5 does not start a presentation: browsers
 /// reload the page (and lose the PDF's place), LibreOffice Draw opens its
-/// navigator. Next and previous are PageDown/PageUp, except in browsers.
+/// navigator. Next and previous are PageDown/PageUp, except in browsers and
+/// WPS PDF.
 class PdfViewers {
   PdfViewers._();
 
@@ -44,10 +45,11 @@ class PdfViewers {
   static const okular = ViewerKeys([_ctrl, _shift, _p]);
 
   /// WPS PDF: its F5 does nothing, F11 is full screen (Esc leaves it).
-  /// Verified on WPS 11.1 (Linux), whose window class is "pdf". WPS 12 on
-  /// Windows opens PDFs in a tab of its wps.exe window, so it is not told
-  /// apart from WPS's other documents there.
-  static const wpsPdf = ViewerKeys([_f11]);
+  /// PageDown scrolls by a screen, the arrows jump to the next page's top,
+  /// also in full screen. Verified on WPS 11.1 (Linux), whose window class
+  /// is "pdf". WPS 12 on Windows opens PDFs in a tab of its wps.exe window,
+  /// so it is not told apart from WPS's other documents there.
+  static const wpsPdf = ViewerKeys([_f11], next: [_right], prev: [_left]);
 
   static const _chromium = ['chrome', 'msedge', 'brave', 'vivaldi', 'opera'];
 

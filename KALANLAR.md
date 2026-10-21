@@ -39,7 +39,7 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [ ] Kesirli ölçek (%125) ve GNOME. (2026-10-21: bu makine %125; katman doğru yerde çiziyor. GNOME denenmedi.)
 
 ### Slayt önizlemesi (ONIZLEME, "Yapılacaklar" 2)
-- [ ] Impress gösterisinde ve uygulamanın açtığı WPS gösterisinde: (2026-10-21: Impress'te üçü de çalışıyor, Sunucu görünümü dikey ve yatay, notlar geliyor. Uygulamanın açtığı WPS gösterisi denenmedi.)
+- [x] Impress gösterisinde ve uygulamanın açtığı WPS gösterisinde: (2026-10-21: Impress'te üçü de çalışıyor, Sunucu görünümü dikey ve yatay, notlar geliyor. Uygulamanın açtığı (Devral ile alınan) WPS gösterisinde kart resmi, not ve "Slayta git" küçük resim ızgarası çalışıyor; ızgaradan 3. slayta atlandı.)
   - Slayt kartındaki resim.
   - Sunucu görünümü.
   - "Slayta git" küçük resim ızgarası.
@@ -49,7 +49,8 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 ### Ekran görüntüsüyle slayt resmi (ACIK 1)
 - [x] Gerçek bir WPS gösterisinde (XWayland) resim geliyor mu? (2026-10-21: evet, kullanıcının açtığı WPS'te resim slaytla birlikte değişiyor.)
 - [x] Impress: OpenGL/Skia ile çizen gösteride resim boş mu dönüyor? LibreOffice'in penceresi X11 mi, native Wayland mı? Native Wayland'de resim olmaz. (2026-10-21: LibreOffice burada yerel Wayland'de (KDE/Qt6 eklentisi), X penceresi yok; ekran resmi alınmıyor, telefon dışa aktarılan slaytı gösteriyor.)
-- [ ] Oynayan video resimde görünüyor mu? 2 saniyelik yoklama yalnızca resim değişince mi gönderiyor?
+- [ ] Oynayan video resimde görünüyor mu? 2 saniyelik yoklama yalnızca resim değişince mi gönderiyor? (2026-10-21: denenemedi. LibreOffice burada yerel Wayland'de, ekran resmi yok. WPS 11.1'de video hiç oynamıyor: köprünün `Player.Play()` çağrısı bir şey yapmıyor, `State` hep "oynuyor" diyor. Bu yüzden köprünün WPS gösterisinde telefonun slayt medyası düğmeleri artık soluk, oynatma durumu "bilinmiyor".)
+- [ ] Küçük bulgu: Devral'dan sonra gösteri yokken telefon "Sunum Açık Değil, LibreOffice Impress'i başlatın" diyor, öndeki WPS düzenleyicisi olduğu hâlde (program adı ilk programdan geliyor).
 - [x] Firefox/Chrome'da tam ekran PDF'te resim geliyor mu? Pencereli tarayıcıda hiçbir şey gitmiyor mu? (2026-10-21: XWayland Firefox'ta tam ekranda geliyor, pencereliyken gelmiyor. Yerel Wayland Chrome'da hiç gelmiyor.)
 - [x] Kaplamanın mürekkebi resimde doğru yere mi çiziliyor? (2026-10-21: evet.)
 
@@ -72,8 +73,16 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [x] "Sorun bildir" tarayıcıda dolu bir issue sayfası açıyor mu? (2026-10-21: açıyordu ama tarayıcı arkada kalıyordu; GTK üzerinden açılacak şekilde düzeltildi `70fb0ef`, artık öne geliyor.)
 
 ### PDF görüntüleyiciler (ESKI, CLAUDE.md)
-- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil; WPS PDF bu makinede hiç açılmıyor, `libtiff.so.5` eksik.)
+- [ ] Okular (Ctrl+Shift+P) ve WPS PDF (F11) ile Başlat/Bitir. Diğer görüntüleyiciler Windows'ta doğrulandı, bu ikisi hiç denenmedi. (2026-10-21: Okular kurulu değil. WPS PDF `libtiff5` kurulunca açıldı: telefon "PDF açık" diyor, Tam ekran F11 ile çalışıyor, ekran resmi geliyor. PageDown bir ekran kaydırıyordu, sağ/sol ok sayfa başına atlıyor; Linux artık görüntüleyicinin ok tuşlarını kullanıyor; telefondan Sonraki/Önceki sayfa sayfa geçiyor.)
 - [x] Linux'ta tarayıcıların PDF'inde Sonraki/Önceki hâlâ PageDown/PageUp gönderiyor. Windows'ta bu yüzden sağ/sol oka geçilmişti; Linux'ta da sayfalar arasında takılıyor mu? (2026-10-21: Firefox'un sunum kipinde PageDown sayfa sayfa geçiyor, takılmıyor. Chrome'da denenmedi.)
+
+### WPS: Devral (2026-10-21)
+Kullanıcının kendi açtığı WPS'e köprü bağlanamıyor. PC'deki WPS satırında ve telefonda çıkan "Devral" o WPS'i kapatıp sunumu QuickRemote'un WPS'inde açıyor. Gösteri sürüyorsa ekran resmini slaytların küçük resimleriyle karşılaştırıp aynı slayttan başlatıyor, bulamazsa 1. slayttan.
+- [x] Gösteri yokken: iki sekmeli WPS kapandı, iki dosya da köprünün WPS'inde açıldı, etkin sekme korundu. (2026-10-21, sunucuya bağlanan bir test istemcisiyle.)
+- [x] Gösteri sürerken aynı slayttan devam ediyor mu? (2026-10-21: evet. 119 slaytlık sunumda, animasyonu yarıda kalmış 4. slayt doğru bulundu, devralma 3 saniye sürdü, telefon "4 / 119" ve bütün araçları aldı. İlk denemede köprü, pencereleri daha önce kapatılmış eski WPS'ine açmaya çalışıp hata vermişti; köprü artık yanıt vermeyen WPS'i kapatıp yenisini başlatıyor, yine açamazsa dosyalar kullanıcının kendi WPS'inde yeniden açılıyor.)
+- [x] Yan bulgu: uygulamanın açtığı WPS gösterisinde, notunda boş bir metin kutusu olan slaytta köprünün durumu çöküyordu (telefon slayt numarasını göremiyordu). Düzeltildi.
+- [x] Kaydedilmemiş değişiklik varken: (2026-10-21: WPS kaydetme sorusunu soruyor. 60 saniyede yanıtlanmazsa telefona `WPS_TAKEOVER_NOT_CLOSED` gidiyor ve değişiklik duruyor; "Yes" denince dosya kaydedilip devralma kaydedilen hâliyle sürüyor. Bulunan hata: soru açıkken ikinci bir Devral sorunun penceresine de "kapat" gönderiyordu, WPS bunu "kaydetme" sayıp değişikliği siliyordu. Düzeltildi: diyaloglara hiç kapat gönderilmiyor, soru açıksa yalnızca yanıt bekleniyor.)
+- [x] Telefondaki Devral düğmesi, gerçek dokunuşla (2026-10-21: gösteri telefondan başlatıldı, Devral'dan sonra kart "4 / 119", not ve resim geldi, Sonraki köprüden ilerletti). PC'deki düğmeye gerçek tıklama denenmedi (Wayland'de yapay tıklama yok).
 
 ### Yeni bulgu: yerel Wayland pencereleri (2026-10-21)
 - [ ] KDE Plasma'da Chrome ve Firefox artık varsayılan olarak yerel Wayland'de açılıyor. PC öndeki pencereyi yalnızca X11'den (WM_CLASS) okuyabildiği için bunlarda "PDF önde" bilinmiyor: telefon "Sunum açık değil" diyor, Başlat tam ekran yerine Impress'i (açıksa) ya da F5'i (sayfayı yeniler) deniyor, ekran resmi gelmiyor. Firefox `MOZ_ENABLE_WAYLAND=0` ile XWayland'de açılınca hepsi çalışıyor. Öneri: KDE'de etkin pencerenin sınıfını KWin'den okumak (KWin betiği ya da D-Bus); GNOME'da karşılığı yok.
@@ -96,7 +105,7 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [ ] **Son PC'ye bağlanma** (ALTYAPI 5): PC'nin IP'si değişince mDNS'te adıyla bulunuyor mu? (2026-10-21: kayıtlı PIN'le bağlanma ve yanlış PIN'de PIN sorma çalışıyor. IP değişimi için ikinci IP eklemek yönetici parolası istiyor, denenmedi.)
 - [x] **`caps`** (ACIK 3): çalışmayan araçlar soluk mu? PDF önde iken "Tam ekran" çıkıyor ve Slayta git gizleniyor mu? (2026-10-21: evet.)
 - [x] **Slayt önizlemesi** (ONIZLEME): kart, Sunucu görünümü (dikey ve yatay), "Slayta git" ızgarası. Bunlar yalnızca widget testlerinden geçti. (2026-10-21: Impress'te üçü de çalışıyor.)
-- [ ] **Ekran görüntüsü kartı** (ACIK 1): PDF'te "Bilgisayarın ekranı" resmi; Sunucu görünümünde büyük resim ve Önceki/Sonraki. (2026-10-21: kartta PDF ve WPS ekran resmi çalışıyor; Sunucu görünümünde büyük ekran resmi denenmedi.)
+- [x] **Ekran görüntüsü kartı** (ACIK 1): PDF'te "Bilgisayarın ekranı" resmi; Sunucu görünümünde büyük resim ve Önceki/Sonraki. (2026-10-21: kartta PDF ve WPS ekran resmi çalışıyor; tam ekran WPS PDF'te Sunucu görünümü resmi büyük gösteriyor, yalnızca Önceki/Sonraki var, Sonraki'den sonra resim 3 saniyede yeni sayfaya geçiyor.)
 - [x] **Hata günlüğü** (ALTYAPI 6): "Hata günlüğünü paylaş" Android paylaşım menüsünü açıyor mu? "Sorun bildir" tarayıcıyı açıyor mu? (2026-10-21: paylaşım menüsü günlük dosyasıyla açılıyor, "Sorun bildir" GitHub'da dolu bir issue sayfası açıyor.)
 - [x] **Kaplama** (OVERLAY 8): gösterisiz dokunmatik lazer, lazer türü seçimi, Temizle'yi basılı tutunca geri alma. (2026-10-21: üçü de çalışıyor.)
 
