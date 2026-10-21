@@ -9,6 +9,10 @@ import '../../../widgets/ui/ui.dart';
 
 class NowPlayingCard extends StatefulWidget {
   final bool hasMedia;
+
+  /// False where the computer tells nothing (a Bluetooth keyboard): the card
+  /// says so, its keys stay bright and play and pause show together.
+  final bool infoKnown;
   final String? title;
   final String? artist;
   final String? thumbnailBase64;
@@ -24,6 +28,7 @@ class NowPlayingCard extends StatefulWidget {
   const NowPlayingCard({
     super.key,
     required this.hasMedia,
+    this.infoKnown = true,
     this.title,
     this.artist,
     this.thumbnailBase64,
@@ -120,11 +125,16 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
 
     final thumbnail = _thumbnail;
     final placeholderIcon = Icon(
-      widget.hasMedia ? Icons.music_note_rounded : Icons.music_off_rounded,
+      widget.hasMedia || !widget.infoKnown ? Icons.music_note_rounded : Icons.music_off_rounded,
       color: widget.hasMedia ? AppColors.white : p.textMuted,
     );
-    final displayTitle = widget.hasMedia ? (widget.title?.isNotEmpty == true ? widget.title! : context.l10n.unknownMedia) : context.l10n.noMedia;
-    final displayArtist = widget.hasMedia ? (widget.artist?.isNotEmpty == true ? widget.artist! : context.l10n.unknownArtist) : context.l10n.nothingPlaying;
+    final known = widget.infoKnown;
+    final displayTitle = !known
+        ? context.l10n.systemMedia
+        : widget.hasMedia ? (widget.title?.isNotEmpty == true ? widget.title! : context.l10n.unknownMedia) : context.l10n.noMedia;
+    final displayArtist = !known
+        ? context.l10n.btNoMediaInfo
+        : widget.hasMedia ? (widget.artist?.isNotEmpty == true ? widget.artist! : context.l10n.unknownArtist) : context.l10n.nothingPlaying;
     final connected = widget.isConnected;
 
     return Container(
@@ -202,9 +212,10 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
           ],
           const SizedBox(height: AppSpace.sm),
           // Nothing playing: the keys stay usable (a player may resume) but fade.
+          // Unknown: they stay bright.
           AnimatedOpacity(
             duration: AppMotion.of(context, AppMotion.base),
-            opacity: widget.hasMedia ? 1 : 0.4,
+            opacity: widget.hasMedia || !known ? 1 : 0.4,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
@@ -213,9 +224,12 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
                   MediaRoundKey(icon: Icons.skip_previous_rounded, label: context.l10n.actionPrev, onTap: connected ? widget.onPrev : null),
                   MediaRoundKey(
                     icon: widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    label: widget.isPlaying ? context.l10n.mediaPause : context.l10n.mediaPlay,
+                    label: !known
+                        ? context.l10n.mediaPlayPause
+                        : widget.isPlaying ? context.l10n.mediaPause : context.l10n.mediaPlay,
                     onTap: connected ? widget.onPlayPause : null,
                     main: true,
+                    both: !known,
                   ),
                   MediaRoundKey(icon: Icons.skip_next_rounded, label: context.l10n.actionNext, onTap: connected ? widget.onNext : null),
                   MediaRoundKey(icon: Icons.stop_rounded, label: context.l10n.mediaStop, onTap: connected ? widget.onStop : null),

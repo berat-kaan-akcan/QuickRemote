@@ -10,6 +10,10 @@ import '../../../widgets/ui/ui.dart';
 
 class VolumePanel extends StatefulWidget {
   final bool isConnected;
+
+  /// False where the computer tells nothing (a Bluetooth keyboard): only the
+  /// mute and step keys, no slider, level or mute state.
+  final bool levelKnown;
   final int volume; // 0-100, -1 = bilinmiyor
   final bool muted;
   final VoidCallback onVolumeUp;
@@ -20,6 +24,7 @@ class VolumePanel extends StatefulWidget {
   const VolumePanel({
     super.key,
     required this.isConnected,
+    this.levelKnown = true,
     required this.volume,
     required this.muted,
     required this.onVolumeUp,
@@ -109,6 +114,10 @@ class _VolumePanelState extends State<VolumePanel> {
         ? NumberFormat.percentPattern(Localizations.localeOf(context).toLanguageTag()).format(_displayVolume / 100)
         : '–';
     final muteColor = isMuted ? p.danger : p.textPrimary;
+    // Unknown: the key toggles mute, whatever the state.
+    final muteLabel = !widget.levelKnown
+        ? context.l10n.volumeMuteToggle
+        : isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn;
     final connected = widget.isConnected;
 
     return Column(
@@ -117,10 +126,12 @@ class _VolumePanelState extends State<VolumePanel> {
         MediaSectionHeader(
           icon: isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
           label: context.l10n.systemVolume,
-          trailing: Text(
-            percent,
-            style: AppType.numeric.copyWith(color: isMuted ? p.textMuted : p.textPrimary, fontSize: 18, letterSpacing: 0),
-          ),
+          trailing: widget.levelKnown
+              ? Text(
+                  percent,
+                  style: AppType.numeric.copyWith(color: isMuted ? p.textMuted : p.textPrimary, fontSize: 18, letterSpacing: 0),
+                )
+              : null,
         ),
         const SizedBox(height: AppSpace.sm),
         Container(
@@ -132,6 +143,7 @@ class _VolumePanelState extends State<VolumePanel> {
           ),
           child: Column(
             children: [
+              if (widget.levelKnown) ...[
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 12,
@@ -156,6 +168,7 @@ class _VolumePanelState extends State<VolumePanel> {
                 ),
               ),
               const SizedBox(height: AppSpace.xs),
+              ],
               Row(
                 children: [
                   Expanded(
@@ -166,8 +179,8 @@ class _VolumePanelState extends State<VolumePanel> {
                               widget.onMute();
                             }
                           : null,
-                      semanticLabel: isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn,
-                      selected: isMuted,
+                      semanticLabel: muteLabel,
+                      selected: widget.levelKnown && isMuted,
                       borderRadius: AppRadius.all(AppRadius.md),
                       child: AnimatedContainer(
                         duration: AppMotion.of(context, AppMotion.base),
@@ -180,10 +193,10 @@ class _VolumePanelState extends State<VolumePanel> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded, color: muteColor, size: 19),
+                              Icon(isMuted || !widget.levelKnown ? Icons.volume_off_rounded : Icons.volume_up_rounded, color: muteColor, size: 19),
                               const SizedBox(width: AppSpace.xs),
                               Text(
-                                isMuted ? context.l10n.volumeMuted : context.l10n.volumeOn,
+                                muteLabel,
                                 style: AppType.label.copyWith(color: muteColor, fontSize: 13.5),
                               ),
                             ],

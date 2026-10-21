@@ -9,19 +9,23 @@ import '../../../utils/ui/app_bottom_sheet.dart';
 import '../../../widgets/ui/ui.dart';
 import '../../remote/widgets/program_sheet.dart';
 
-/// The program whose shortcuts the Bluetooth remote sends, opened from the
-/// header's program line. Over Bluetooth the computer cannot tell it, so the
-/// user picks it here.
+/// The program whose shortcuts the Bluetooth remote sends, asked on every
+/// connection and opened again from the header's program line. Over
+/// Bluetooth the computer cannot tell it, so the user picks it here.
 class BtProgramSheet {
   BtProgramSheet._();
 
-  static Future<void> show(BuildContext context) {
-    return AppBottomSheet.show(context: context, builder: (ctx) => const _BtProgramList());
+  /// [closeOnPick] closes the sheet with the tap that picks a program, as
+  /// when it is asked on connecting.
+  static Future<void> show(BuildContext context, {bool closeOnPick = false}) {
+    return AppBottomSheet.show(context: context, builder: (ctx) => _BtProgramList(closeOnPick: closeOnPick));
   }
 }
 
 class _BtProgramList extends StatelessWidget {
-  const _BtProgramList();
+  const _BtProgramList({required this.closeOnPick});
+
+  final bool closeOnPick;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,7 @@ class _BtProgramList extends StatelessWidget {
             onTap: () {
               HapticFeedback.selectionClick();
               settings.setBtTarget(target);
+              if (closeOnPick) Navigator.pop(context);
             },
           ),
           const SizedBox(height: AppSpace.xs),
