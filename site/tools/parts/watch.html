@@ -1,0 +1,85 @@
+
+  <!-- Watch: a cobalt field; the command's route from wrist to PC. -->
+  <section class="sec field watch-sec" id="watch" aria-labelledby="watch-title">
+    <div class="wrap watch-grid">
+      <div class="watch-copy">
+        <h2 class="h2" id="watch-title">{{Çerçeveyi çevir, slayt ilerlesin.||Turn the bezel, the slide moves.}}</h2>
+        <p class="lede">{{QuickRemote Wear&nbsp;OS saatlerde de var. Saat, telefonunun bilgisayarla kurduğu bağlantıyı kullanır: saatte eşleştirme yok, telefon cebinde kalır.||QuickRemote is on Wear&nbsp;OS watches too. The watch uses the connection your phone already has to the computer: no pairing on the watch, and the phone stays in your pocket.}}</p>
+        <dl class="facts">
+          <div><dt>{{Her tık bir slayt||One click, one slide}}</dt><dd>{{Galaxy&nbsp;Watch’ta çerçeveyi, Pixel&nbsp;Watch’ta kuronu çevir.||Turn the bezel on a Galaxy&nbsp;Watch, the crown on a Pixel&nbsp;Watch.}}</dd></div>
+          <div><dt>{{Basılı tut, lazer olsun||Hold it, get the laser}}</dt><dd>{{Büyük Sonraki tuşuna basılı tutunca parmağın lazer olur; bırakınca kapanır.||Hold the large Next key and your finger becomes the laser; let go and it turns off.}}</dd></div>
+          <div><dt>{{Süre bileğinde||Your time, on your wrist}}</dt><dd>{{Konuşmanın süresini saatte seç. Sayaç saatte akar; bitime seçtiğin süreler kala saat titrer.||Pick the length of the talk on the watch. The clock runs there, and the watch buzzes when the times you chose are left.}}</dd></div>
+          <div><dt>{{Bitir bir adım ötede||End is a step away}}</dt><dd>{{Bitir, araçlar sayfasında bir saniye basılı tutulur; gösteriyi yanlışlıkla bitirmezsin.||End sits on the tools page and takes a one-second hold, so you never end the show by accident.}}</dd></div>
+        </dl>
+      </div>
+      <div class="watch-demo" data-watch-demo>
+        <div class="watch" tabindex="0" role="group" aria-keyshortcuts="ArrowRight ArrowLeft" aria-roledescription="{{saat||watch}}" aria-label="{{Saat kumandası, örnek. Ok tuşlarıyla çerçeve döner.||Watch remote, sample. The arrow keys turn the bezel.}}" aria-describedby="watch-live" data-watch data-theme="cobalt">
+          <div class="watch-bezel" aria-hidden="true" data-bezel></div>
+          <div class="watch-screen" data-wscreen>
+            <p class="w-live sr" id="watch-live" aria-live="polite" data-live="{{Slayt %n / %t||Slide %n of %t}}" data-ended="{{Gösteri bitti||The show has ended}}"></p>
+
+            <!-- Start: one large Start, the talk's length under it. -->
+            <div class="wp wp-start" data-page="start">
+              <p class="w-pill"><i></i><span data-wpill data-on="{{Bağlı · Gösteri açık||Connected · Slideshow on}}" data-off="{{Bağlı · Gösteri kapalı||Connected · No slideshow}}">{{Bağlı · Gösteri kapalı||Connected · No slideshow}}</span></p>
+              <span class="w-ring" aria-hidden="true"></span>
+              <button class="w-start" type="button" data-cmd="start" aria-label="{{Gösteriyi başlat||Start slideshow}}"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></button>
+              <button class="w-dur" type="button" data-dur data-none="{{Süre yok||No time limit}}" data-min="{{%n dk||%n min}}" aria-label="{{Sunum süresi||Talk length}}"><span data-dur-text>{{20 dk||20 min}}</span><svg class="i" aria-hidden="true"><use href="#i-edit"/></svg></button>
+            </div>
+
+            <!-- Remote: a large Next below, small Previous and laser above, dots along the edge. -->
+            <div class="wp wp-remote" data-page="remote" hidden>
+              <svg class="w-dots" viewBox="0 0 100 100" aria-hidden="true" data-dots></svg>
+              <button class="wh-prev w-disc" type="button" data-cmd="prev" aria-label="{{Önceki slayt||Previous slide}}"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+              <button class="wh-laser w-disc" type="button" data-wlaser aria-label="{{Lazer imleci||Laser pointer}}"><svg class="i" aria-hidden="true"><use href="#i-laser"/></svg></button>
+              <div class="w-mid" aria-hidden="true">
+                <p class="w-num"><span data-wnum>1</span><small data-wtot>/5</small></p>
+                <p class="w-clock" data-wclock><svg class="i" aria-hidden="true"><use href="#i-timer"/></svg><span data-wtime>20:00</span></p>
+              </div>
+              <button class="w-next" type="button" data-cmd="next" aria-label="{{Sonraki slayt||Next slide}}" data-hold-laser>
+                <svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+                <span class="w-next-word">{{İleri||Next}}</span>
+                <span class="w-hint" data-whint>{{Basılı tut: lazer||Hold: laser}}</span>
+              </button>
+              <i class="w-finger" aria-hidden="true" data-wfinger></i>
+            </div>
+
+            <!-- Tools: four quarters around the slide number. -->
+            <div class="wp wp-tools" data-page="tools" hidden>
+              <button class="wq wq-laser" type="button" data-wlaser aria-label="{{Lazer imleci||Laser pointer}}"><svg class="i" aria-hidden="true"><use href="#i-laser"/></svg><span>{{Lazer||Laser}}</span></button>
+              <button class="wq wq-white" type="button" data-cmd="white" aria-label="{{Beyaz ekran||White screen}}"><i class="sw sw-white" aria-hidden="true"></i><span>{{Beyaz||White}}</span></button>
+              <button class="wq wq-black" type="button" data-cmd="black" aria-label="{{Siyah ekran||Black screen}}"><i class="sw sw-black" aria-hidden="true"></i><span>{{Siyah||Black}}</span></button>
+              <button class="wq wq-end" type="button" data-wend aria-label="{{Gösteriyi bitir, bir saniye basılı tut||End slideshow, hold for one second}}"><svg class="i" aria-hidden="true"><use href="#i-stop"/></svg><span data-wend-text data-hold="{{Basılı tut||Hold}}" data-ending="{{Bitiriliyor…||Ending…}}">{{Basılı tut||Hold}}</span></button>
+              <p class="w-cnt" aria-hidden="true" data-wcnt>1/5</p>
+              <svg class="w-endring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" pathLength="1" data-wendring/></svg>
+            </div>
+
+            <!-- Laser: the whole screen is a touchpad. -->
+            <div class="wp wp-laser" data-page="laser" hidden>
+              <p class="w-laser-hint">{{Sürükleyerek taşı||Drag to move}}</p>
+              <i class="w-finger is-on" aria-hidden="true" data-wfinger2></i>
+              <button class="w-close" type="button" data-wlaser-close aria-label="{{Lazeri kapat||Close laser}}"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg></button>
+            </div>
+
+            <!-- A black or white screen is on: tap to bring the slide back. -->
+            <button class="wp wp-blank" type="button" data-wblank hidden>
+              <span data-blank-text data-black="{{Perde siyah||Screen is black}}" data-white="{{Perde beyaz||Screen is white}}"></span>
+              <small>{{Dokun: slayta dön||Tap to show the slide}}</small>
+            </button>
+          </div>
+        </div>
+        <div class="w-pages" role="group" aria-label="{{Saatin sayfaları||Watch pages}}" data-wpages>
+          <button type="button" data-goto-page="start">{{Başlat||Start}}</button>
+          <button type="button" data-goto-page="remote">{{Kumanda||Remote}}</button>
+          <button type="button" data-goto-page="tools">{{Araçlar||Tools}}</button>
+        </div>
+        <div class="route" aria-hidden="true">
+          <span class="hop" data-hop><svg class="i"><use href="#i-watch"/></svg>{{Saat||Watch}}</span>
+          <i class="wire"></i>
+          <span class="hop" data-hop><svg class="i"><use href="#i-phone"/></svg>{{Telefon||Phone}}</span>
+          <i class="wire"></i>
+          <span class="hop" data-hop><svg class="i"><use href="#i-computer"/></svg>{{Bilgisayar||Computer}}</span>
+        </div>
+        <p class="demo-hint">{{Çerçeveyi sürükleyerek çevir, Sonraki’ne basılı tut ya da sayfaları değiştir.||Drag the bezel to turn it, hold Next, or switch pages.}}</p>
+      </div>
+    </div>
+  </section>
