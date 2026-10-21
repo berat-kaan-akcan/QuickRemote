@@ -159,6 +159,15 @@ void main() {
     expect(requests, isEmpty);
   });
 
+  test('a question of WPS already open is never closed: it waits for the user', () async {
+    holdOpen(['b.pptx']);
+    const question = X11Window(9, ['wpp', 'wpp'], pid: 100, dialog: true);
+    windows = [editor, question];
+    expect(await takeOver().run(), RemoteError.wpsTakeOverNotClosed);
+    expect(closed, isEmpty);
+    expect(requests, isEmpty);
+  });
+
   test('nothing to take over: no WPS of the user, no saved file', () async {
     windows = [bridgeEditor];
     expect(await takeOver().run(bridgePid: 200), RemoteError.wpsTakeOverNoWps);
