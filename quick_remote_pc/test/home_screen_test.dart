@@ -98,10 +98,11 @@ Future<void> _pump(WidgetTester tester, WebSocketServerProvider provider, Size s
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({'hide_public_network_warning': true}));
 
-  testWidgets('stopped: the status card and a Start key at the bottom', (tester) async {
+  testWidgets('stopped: the status card and only the power button starts it', (tester) async {
     await _pump(tester, _FakeProvider(running: false), const Size(440, 760));
     expect(find.text('Sunucu Kapalı'), findsOneWidget);
-    expect(find.text('Sunucuyu Başlat'), findsOneWidget);
+    expect(find.byTooltip('Sunucuyu Başlat'), findsOneWidget);
+    expect(find.text('Sunucuyu Başlat'), findsNothing);
     expect(find.text('Sunucuyu Durdur'), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
