@@ -742,5 +742,7 @@
   "capNoteWpsNoMedia": "WPS'teki video uzaktan oynatılamıyor.",
   "capLevelYes": "Çalışır",
   "capLevelPartial": "Kısmen",
-  "capLevelNo": "Çalışmaz"
+  "capLevelNo": "Çalışmaz",
+  "capUntried": "Denenmedi",
+  "capUntriedLegend": "Kodda yazıldı ve testlerden geçti, gerçek bir cihazda henüz denenmedi."
 }

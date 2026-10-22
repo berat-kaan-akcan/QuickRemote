@@ -1472,4 +1472,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get capLevelNo => 'Doesn\'t work';
+
+  @override
+  String get capUntried => 'Not tried';
+
+  @override
+  String get capUntriedLegend =>
+      'Written and tested in code, not yet tried on a real device.';
 }
