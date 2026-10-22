@@ -2634,6 +2634,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Çalışmaz'**
   String get capLevelNo;
+
+  /// No description provided for @capUntried.
+  ///
+  /// In tr, this message translates to:
+  /// **'Denenmedi'**
+  String get capUntried;
+
+  /// No description provided for @capUntriedLegend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kodda yazıldı ve testlerden geçti, gerçek bir cihazda henüz denenmedi.'**
+  String get capUntriedLegend;
 }
 
 class _AppLocalizationsDelegate

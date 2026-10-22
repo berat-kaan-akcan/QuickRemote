@@ -339,6 +339,9 @@ class _FeatureList extends StatelessWidget {
               final cell = CapabilityTable.cell(link, os, program, feature);
               final note = cell.note;
               final faded = cell.level == CapLevel.no;
+              final untried =
+                  !faded &&
+                  CapabilityTable.untried(link, os, program, feature);
               return MergeSemantics(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -357,12 +360,22 @@ class _FeatureList extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              capFeatureName(l10n, feature),
-                              style: AppType.label.copyWith(
-                                color: faded ? p.textSecondary : p.textPrimary,
-                                fontSize: 14,
-                              ),
+                            Wrap(
+                              spacing: AppSpace.xs,
+                              runSpacing: AppSpace.xxs,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  capFeatureName(l10n, feature),
+                                  style: AppType.label.copyWith(
+                                    color: faded
+                                        ? p.textSecondary
+                                        : p.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (untried) const _UntriedTag(),
+                              ],
                             ),
                             if (note != null) ...[
                               const SizedBox(height: 2),
@@ -451,6 +464,12 @@ class _CompareTable extends StatelessWidget {
                     child: _CompareCell(
                       program: capProgramName(l10n, program),
                       cell: CapabilityTable.cell(link, os, program, feature),
+                      untried: CapabilityTable.untried(
+                        link,
+                        os,
+                        program,
+                        feature,
+                      ),
                     ),
                   ),
               ],
@@ -462,38 +481,94 @@ class _CompareTable extends StatelessWidget {
 }
 
 class _CompareCell extends StatelessWidget {
-  const _CompareCell({required this.program, required this.cell});
+  const _CompareCell({
+    required this.program,
+    required this.cell,
+    this.untried = false,
+  });
 
   final String program;
   final CapCell cell;
+
+  /// Not tried on a real device: a small dot at the mark's corner.
+  final bool untried;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final note = cell.note;
+    final dot = untried && cell.level != CapLevel.no;
     final mark = Center(child: _LevelMark(cell.level, size: 24));
-    if (note == null) return SizedBox(height: 36, child: mark);
+    if (note == null && !dot) return SizedBox(height: 36, child: mark);
+    final message = [
+      if (note != null) capNoteText(l10n, note),
+      if (dot) l10n.capUntriedLegend,
+    ].join(' ');
     return Tooltip(
       triggerMode: TooltipTriggerMode.tap,
       showDuration: const Duration(seconds: 4),
-      message: '$program: ${capNoteText(l10n, note)}',
+      message: '$program: $message',
       child: SizedBox(
         height: 36,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: p.border, width: 1.5),
+            if (note != null)
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: p.border, width: 1.5),
+                ),
               ),
-            ),
             mark,
+            if (dot)
+              const Positioned(top: 0, right: 10, child: _UntriedDot()),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// "Not tried" next to a feature's name.
+class _UntriedTag extends StatelessWidget {
+  const _UntriedTag();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: p.info.withValues(alpha: p.isDark ? 0.16 : 0.10),
+        borderRadius: AppRadius.all(AppRadius.pill),
+        border: Border.all(color: p.info.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        context.l10n.capUntried,
+        style: AppType.labelSmall.copyWith(color: p.info, fontSize: 11),
+      ),
+    );
+  }
+}
+
+/// The compare table's mark for "not tried".
+class _UntriedDot extends StatelessWidget {
+  const _UntriedDot();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Container(
+      width: 9,
+      height: 9,
+      decoration: BoxDecoration(
+        color: p.info,
+        shape: BoxShape.circle,
+        border: Border.all(color: p.surface, width: 1.5),
       ),
     );
   }
@@ -517,10 +592,37 @@ class _Legend extends StatelessWidget {
         ),
       ],
     );
-    return Wrap(
-      spacing: AppSpace.md,
-      runSpacing: AppSpace.xs,
-      children: [for (final level in CapLevel.values) item(level)],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpace.md,
+          runSpacing: AppSpace.xs,
+          children: [for (final level in CapLevel.values) item(level)],
+        ),
+        const SizedBox(height: AppSpace.xs),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: _UntriedTag(),
+            ),
+            const SizedBox(width: AppSpace.xs),
+            const Padding(
+              padding: EdgeInsets.only(top: 5),
+              child: _UntriedDot(),
+            ),
+            const SizedBox(width: AppSpace.xs),
+            Expanded(
+              child: Text(
+                l10n.capUntriedLegend,
+                style: AppType.bodySmall.copyWith(color: p.textSecondary),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
