@@ -296,6 +296,15 @@ class SettingsProvider extends ChangeNotifier {
     await _persistHistory();
   }
 
+  /// Put back a record removed with [deletePresentationAnalytics] at its
+  /// old [index] (the Undo of the history screen).
+  Future<void> restorePresentationAnalytics(PresentationAnalytics analytics, int index) async {
+    if (_presentationHistory.any((a) => a.id == analytics.id)) return;
+    _presentationHistory.insert(index.clamp(0, _presentationHistory.length), analytics);
+    notifyListeners();
+    await _persistHistory();
+  }
+
   /// Clear all presentation history.
   Future<void> clearPresentationHistory() async {
     _presentationHistory.clear();

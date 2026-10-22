@@ -2635,6 +2635,12 @@ abstract class AppLocalizations {
   /// **'Çalışmaz'**
   String get capLevelNo;
 
+  /// No description provided for @historyUndo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri al'**
+  String get historyUndo;
+
   /// No description provided for @capUntried.
   ///
   /// In tr, this message translates to:
