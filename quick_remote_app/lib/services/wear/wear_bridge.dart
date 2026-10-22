@@ -106,6 +106,11 @@ class WearBridge {
   /// One mouse report's limit per axis.
   static const _mouseStep = 127;
 
+  /// One movement message's limit per axis, in Wi-Fi touchpad units (a watch
+  /// swipe is a few hundred at most). A finite but huge value made the
+  /// splitting into reports of 127 run for ever.
+  static const maxMove = 2000.0;
+
   /// The watch's name for a color theme (WearTheme.wire there). A watch is
   /// always dark, so light-only Sunset shows as Cobalt.
   static String watchThemeOf(AppColorTheme theme) => switch (theme) {
@@ -242,6 +247,8 @@ class WearBridge {
 
   void _onMove(double dx, double dy) {
     if (!_hasPc || !dx.isFinite || !dy.isFinite) return;
+    dx = dx.clamp(-maxMove, maxMove);
+    dy = dy.clamp(-maxMove, maxMove);
     // The laser was put away after a silence, or MODE_LASER was lost on the
     // way: movement means the finger is down.
     if (!_laserOn) _onCommand(RemoteCommands.modeLaser);

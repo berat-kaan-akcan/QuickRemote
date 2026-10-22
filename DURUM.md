@@ -205,6 +205,10 @@ Kullanıcının kendi açtığı WPS'e köprü bağlanamıyor. PC'deki WPS satı
 - [x] **Hata günlüğü** (ALTYAPI 6): "Hata günlüğünü paylaş" Android paylaşım menüsünü açıyor mu? "Sorun bildir" tarayıcıyı açıyor mu? (2026-10-21: paylaşım menüsü günlük dosyasıyla açılıyor, "Sorun bildir" GitHub'da dolu bir issue sayfası açıyor.)
 - [x] **Kaplama** (OVERLAY 8): gösterisiz dokunmatik lazer, lazer türü seçimi, Temizle'yi basılı tutunca geri alma. (2026-10-21: üçü de çalışıyor.)
 
+- [ ] **Pil izni kaldırıldı, denenmedi** (store/izinler.md): `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` manifestten çıkarıldı, `BackgroundSession` `shouldRequestBatteryOptimizationsOff: false` veriyor. Kilitli telefonla, ekran kapalı, yarım saatten uzun oturumda Doze bağlantıyı koparıyor mu? Koparırsa geri alma `store/izinler.md` bölüm 4'te.
+- [ ] **Bildirim izni reddi** (2026-10-22): Android 13+'ta reddedince kumanda ekranında bir kez "Bildirim izni kapalı" notu ve "Ayarları aç" tuşu çıkıyor mu (`NotificationDeniedHost`)? Yalnız widget testinden geçti; ikinci kez gösterilmemeli.
+- [ ] **48 dp hedefler** (`Pressable.minTarget`) ve yeni kontrast renkleri cihazda göz ile bakılacak (küçük tuşlar bitişik mi, soluk metinler okunuyor mu).
+
 ## 3. Saat (Galaxy Watch 6)
 
 APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kurulup telefon uygulamasının yerine geçmişti.
@@ -215,6 +219,8 @@ APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kur
   - Anahtar kapalıyken saat kendi temasında mı kalıyor?
 - [x] **Gösterisiz lazer** (OVERLAY 9): kaplama açıkken lazer düğmesi açık mı, lazer çalışıyor mu? (2026-10-21: düğme açık, nokta PC'de görünüyor.)
 - [ ] Saat bölümü PowerPoint ile Windows'ta da denenecek (WIN-UI 15).
+- [ ] Saat renkleri phone'daki yeni soluk metin değerlerine eşitlendi (`Theme.kt`: `paperTextMuted` 8087A9, `inkTextMuted` 686E91, yüksek karşıtlık kenarlığı 3A3A3A); bu makinede Android SDK olmadığı için saat derlenmedi, derleyip `WearProtocolTest`'i çalıştır.
+- [ ] Saat kod incelemesi (2026-10-22, düzeltilmedi): `DirectLink.run` içinde `connection.inputStream`/`outputStream` ve `createRfcommSocket`/`connect` `SecurityException` atabilir (izin çalışırken geri alınırsa), yalnız `IOException` yakalanıyor, okuma iş parçacığı çöker. `close()` ile `socket = connection` atamasının arasında yarış var: kapatılmış oturumun soketi `out`'a yazılabilir ve okuma iş parçacığı sızar (atamadan sonra `mine != session` yeniden bakılmalı). `writer` `HandlerThread` hiç `quit` edilmiyor. `PresentingService.start` `LaunchedEffect` içinde korumasız; `startForeground` fırlatırsa `running` true kalır. Bildirim izni reddedilirse Ongoing Activity görünmez ve saat yüzüne dönülür (hata değil, ama saat bunu söylemiyor).
 
 ---
 
@@ -254,6 +260,7 @@ Windows için yazılan kodların çoğu **hiç derlenmedi ya da hiç çalıştı
   - Pencereler odak almıyor mu, yani tuşlar gösteriye gitmeye devam ediyor mu?
   - Tıklamalar katmandan geçiyor mu?
 - [ ] DPI %125/150 ve iki monitör.
+- [ ] **"Neler yapılabilir?" tablosundaki † işaretleri** (2026-10-22): Windows'ta spot ışığı/büyüteç (kaplama) ve PowerPoint slayt resimleri tabloda "Windows'ta denenmedi †" notuyla duruyor (`CapNote.unverifiedWindows`). Windows'ta denenince notu `capability_table.dart`'tan kaldır.
 
 ### 2026-10-20 işleri (ACIK, ALTYAPI)
 - [ ] `caps`/`front`: PowerPoint ve WPS'te öndeki pencere ve araçlar doğru mu? NEXT/PREV'de mürekkep telefon başına mı siliniyor?

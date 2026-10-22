@@ -242,6 +242,7 @@ String capNoteText(AppLocalizations l10n, CapNote note) => switch (note) {
   CapNote.noAnswer => l10n.capNoteNoAnswer,
   CapNote.keysOnly => l10n.capNoteKeysOnly,
   CapNote.wpsNoMedia => l10n.capNoteWpsNoMedia,
+  CapNote.unverifiedWindows => l10n.capNoteUnverifiedWindows,
 };
 
 String _levelName(AppLocalizations l10n, CapLevel level) => switch (level) {

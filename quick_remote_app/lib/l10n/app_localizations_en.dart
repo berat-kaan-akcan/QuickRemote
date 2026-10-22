@@ -1014,6 +1014,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundNotification => 'Staying connected in the background...';
 
   @override
+  String get notificationDeniedNote =>
+      'Notifications are off. The remote still works, but the notification that keeps the connection alive may be hidden and Android may stop the app while the screen is off.';
+
+  @override
+  String get notificationDeniedAction => 'Open settings';
+
+  @override
   String get homeHeroSubtitle =>
       'Scan the QR code shown by QuickRemote PC, or connect the phone over Bluetooth as a keyboard and mouse.';
 
@@ -1460,6 +1467,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get capNoteWpsNoMedia => 'Videos in WPS cannot be played remotely.';
+
+  @override
+  String get capNoteUnverifiedWindows =>
+      '† Written, but not yet tried on a real Windows PC.';
 
   @override
   String get capLevelYes => 'Works';

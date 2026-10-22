@@ -1009,6 +1009,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backgroundNotification => 'Arka planda bağlantı devam ediyor...';
 
   @override
+  String get notificationDeniedNote =>
+      'Bildirim izni kapalı. Bağlantı yine de çalışır, ancak ekran kapalıyken bağlantıyı tutan bildirim görünmeyebilir ve Android uygulamayı durdurabilir.';
+
+  @override
+  String get notificationDeniedAction => 'Ayarları aç';
+
+  @override
   String get homeHeroSubtitle =>
       'Bilgisayardaki QuickRemote PC\'nin QR kodunu tarayın ya da telefonu Bluetooth ile klavye ve fare olarak bağlayın.';
 
@@ -1461,6 +1468,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get capNoteWpsNoMedia => 'WPS\'teki video uzaktan oynatılamıyor.';
+
+  @override
+  String get capNoteUnverifiedWindows =>
+      '† Yazıldı, ancak gerçek bir Windows bilgisayarda henüz denenmedi.';
 
   @override
   String get capLevelYes => 'Çalışır';
