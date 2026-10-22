@@ -1475,6 +1475,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get capLevelNo => 'Çalışmaz';
 
   @override
+  String get historyUndo => 'Geri al';
+
+  @override
   String get capUntried => 'Denenmedi';
 
   @override

@@ -422,6 +422,7 @@
   "capLevelYes": "Works",
   "capLevelPartial": "Partly",
   "capLevelNo": "Doesn't work",
+  "historyUndo": "Undo",
   "capUntried": "Not tried",
   "capUntriedLegend": "Written and tested in code, not yet tried on a real device."
 }
