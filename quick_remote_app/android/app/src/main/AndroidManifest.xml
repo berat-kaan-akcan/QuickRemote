@@ -42,6 +42,7 @@
         android:label="QuickRemote"
         android:name="${applicationName}"
         android:allowBackup="false"
+        android:usesCleartextTraffic="false"
         android:localeConfig="@xml/locales_config"
         android:icon="@mipmap/ic_launcher">
         <activity

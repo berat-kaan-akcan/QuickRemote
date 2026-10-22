@@ -48,6 +48,18 @@ class ConnectedClient {
   }
 }
 
+enum _Rate { ok, dropped, flood }
+
+/// What one client sent in the current second (see [WebSocketServer]).
+class _CommandWindow {
+  _CommandWindow(this.start);
+
+  final Duration start;
+  int commands = 0;
+  int releases = 0;
+  int total = 0;
+}
+
 /// WebSocket server that listens for commands from mobile clients.
 class WebSocketServer {
   HttpServer? _server;
@@ -115,8 +127,8 @@ class WebSocketServer {
   final Map<WebSocket, int> _invalidMessageCount = {};
   final Map<WebSocket, MoveCoalescer> _moves = {};
   final Map<WebSocket, PreAuthByteLimit> _byteLimits = {};
-  /// Start and count of each client's current one-second command window.
-  final Map<WebSocket, (Duration, int)> _commandWindows = {};
+  /// Each client's current one-second command window.
+  final Map<WebSocket, _CommandWindow> _commandWindows = {};
 
   /// Each phone's "keep the ink on slide change" (SET_KEEP_INK), passed
   /// with its own NEXT, PREV, START and START_AT. A phone that never sent
@@ -160,7 +172,16 @@ class WebSocketServer {
   /// and bridge queues. Motion goes in binary frames and is not counted.
   static const _maxCommandsPerSecond = 30;
 
-  /// Never dropped by the rate limit: they release a button or end a mode.
+  /// A phone sending more than this many times [_maxCommandsPerSecond] text
+  /// messages in a second (of any kind, refused ones included) is flooding,
+  /// not pressing keys: it is disconnected.
+  static const _floodFactor = 10;
+
+  /// Not counted against [_maxCommandsPerSecond]: they release a button or
+  /// end a mode, and a phone whose budget the volume slider used up must
+  /// still be able to let go. They have a budget of their own, of the same
+  /// size, since each one reaches the program (a PowerShell script on
+  /// Windows) and an unlimited stream of them would fill its queue.
   static const _releaseCommands = {
     RemoteCommands.leftUp,
     RemoteCommands.modeArrow,
@@ -770,18 +791,17 @@ class WebSocketServer {
     return _gestureOwner;
   }
 
-  /// Counts a command of [ws]; false once it sent [_maxCommandsPerSecond]
-  /// this second.
-  bool _withinCommandRate(WebSocket ws) {
+  /// Counts a text message of [ws] (a command or not: refused ones cost the
+  /// server work too) against its one-second windows.
+  _Rate _countCommand(WebSocket ws, {required bool release}) {
     final now = _clock.elapsed;
-    final (start, count) = _commandWindows[ws] ?? (now, 0);
-    if (now - start >= const Duration(seconds: 1)) {
-      _commandWindows[ws] = (now, 1);
-      return true;
+    var window = _commandWindows[ws];
+    if (window == null || now - window.start >= const Duration(seconds: 1)) {
+      window = _commandWindows[ws] = _CommandWindow(now);
     }
-    if (count >= _maxCommandsPerSecond) return false;
-    _commandWindows[ws] = (start, count + 1);
-    return true;
+    if (++window.total > _maxCommandsPerSecond * _floodFactor) return _Rate.flood;
+    final used = release ? ++window.releases : ++window.commands;
+    return used > _maxCommandsPerSecond ? _Rate.dropped : _Rate.ok;
   }
 
   /// Whether [command] repeats what another phone sent a moment ago. The
@@ -799,15 +819,21 @@ class WebSocketServer {
   }
 
   void _handleCommand(WebSocket ws, String command) {
-    final baseCommand = command.contains(':') ? command.split(':')[0] : command;
-    if (!RemoteCommands.allowedCommands.contains(command) &&
-        !RemoteCommands.allowedPrefixes.contains(baseCommand)) {
-      debugPrint('Rejected unknown command: $command');
-      return;
+    switch (_countCommand(ws, release: _releaseCommands.contains(command))) {
+      case _Rate.flood:
+        debugPrint('More than ${_maxCommandsPerSecond * _floodFactor} messages in a second — disconnecting client');
+        _closeConnection(ws, 4008, 'Too many commands');
+        return;
+      case _Rate.dropped:
+        debugPrint('Ignored a command: more than $_maxCommandsPerSecond per second');
+        return;
+      case _Rate.ok:
+        break;
     }
-
-    if (!_releaseCommands.contains(command) && !_withinCommandRate(ws)) {
-      debugPrint('Ignored $command: more than $_maxCommandsPerSecond commands per second');
+    // Exactly a known command, or a known prefix with a short number. The
+    // text is kept out of the log: it is whatever the sender made up.
+    if (!RemoteCommands.isValid(command)) {
+      debugPrint('Rejected an unknown command (${command.length} chars)');
       return;
     }
 
