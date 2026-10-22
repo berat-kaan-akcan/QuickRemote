@@ -94,7 +94,7 @@ Rapor: `docs/raporlar/OVERLAY_RAPOR.md`.
 - **Paketler:** README'de "Hazır paketler" bölümü.
 
 ## Play Store hazırlığı
-- Liste hazır: [PLAY_STORE_YAPILACAKLAR.md](PLAY_STORE_YAPILACAKLAR.md). Henüz hiçbir maddesi yapılmadı.
+- Liste hazır: [PLAY_STORE_YAPILACAKLAR.md](PLAY_STORE_YAPILACAKLAR.md). Metinler, formlar, izin denetimi ve kontrol listesi `store/` klasöründe hazır (2026-10-22); pil izni kaldırıldı; AAB derlemesi SDK olmadığı için denenmedi, hesap/imza/Console işleri sende.
 
 ---
 

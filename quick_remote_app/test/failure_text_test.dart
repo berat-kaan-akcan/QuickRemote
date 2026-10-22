@@ -38,7 +38,8 @@ void main() {
         expect(l10n.connectionError(error, 'x'), isNotEmpty, reason: '$error');
       }
     }
-    expect(tr.connectionError(ConnectionError.serverNotFound, 'refused'), 'Sunucuya ulaşılamadı: refused');
+    expect(tr.connectionError(ConnectionError.serverNotFound, 'refused'), isNot(contains('refused')));
+    expect(en.connectionError(ConnectionError.unknown, 'SocketException: boom'), isNot(contains('Exception')));
   });
 
   test('the legacy Turkish text matches the phone\'s Turkish', () {

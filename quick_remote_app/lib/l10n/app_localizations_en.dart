@@ -189,12 +189,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String connectionServerNotFound(String detail) {
-    return 'Couldn\'t reach the server: $detail';
+    return 'Couldn\'t reach the PC. Make sure QuickRemote PC is running and both devices are on the same Wi-Fi network.';
   }
 
   @override
   String get connectionCertMismatch =>
-      'The certificate changed! This may be a MITM attack, or the PC was reinstalled.';
+      'This PC\'s security certificate has changed. That happens after the PC app is reinstalled, but it can also mean someone is posing as your PC. Only continue if you expected it.';
 
   @override
   String get connectionCertRejected =>
@@ -213,7 +213,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String connectionUnknown(String detail) {
-    return 'Connection error: $detail';
+    return 'Couldn\'t connect. Try again; if it keeps failing, share the error log from Settings → Help.';
   }
 
   @override
@@ -1469,4 +1469,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get capLevelNo => 'Doesn\'t work';
+
+  @override
+  String get scanPermissionTitle => 'Camera access needed';
+
+  @override
+  String get scanPermissionDenied =>
+      'QuickRemote uses the camera only to read the QR code on your PC. Allow it in Settings, or go back and connect by typing the address.';
+
+  @override
+  String get scanUnavailableTitle => 'Camera unavailable';
+
+  @override
+  String get scanUnavailable =>
+      'The camera could not be started. Close other apps that use it, or go back and connect by typing the address.';
+
+  @override
+  String get scanOpenSettings => 'Open settings';
+
+  @override
+  String get scanGoBack => 'Go back';
+
+  @override
+  String get settingsSectionAbout => 'About';
+
+  @override
+  String get settingsVersionTitle => 'Version';
+
+  @override
+  String get settingsLicensesTitle => 'Open-source licenses';
+
+  @override
+  String get settingsLicensesSubtitle =>
+      'Flutter, the packages and the Inter and Space Grotesk fonts.';
+
+  @override
+  String get settingsPrivacyTitle => 'Privacy';
+
+  @override
+  String get settingsPrivacySubtitle =>
+      'What the app uses and what leaves your phone.';
+
+  @override
+  String get privacyBody =>
+      'QuickRemote works only inside your local network: there is no account, no analytics and no ads, and nothing is sent to a server of ours.\n\nThe camera is used only to read the pairing QR code. “Nearby devices” is used for the Bluetooth remote and the watch. Notifications keep the connection alive while the screen is off.\n\nThe error log stays on this phone until you share it yourself.';
+
+  @override
+  String get homeGetPcApp => 'Get QuickRemote PC';
+
+  @override
+  String timerStartLabel(Object time) {
+    return '$time, start timer';
+  }
+
+  @override
+  String timerPauseLabel(Object time) {
+    return '$time, pause timer';
+  }
+
+  @override
+  String get timerResetLabel => 'Reset timer';
 }

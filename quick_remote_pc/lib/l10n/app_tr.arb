@@ -218,5 +218,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "startErrorPortsInUse": "8090-8099 portları kullanımda. Bu portları kullanan uygulamaları kapatıp yeniden deneyin.",
+  "settingsAbout": "Hakkında",
+  "settingsVersion": "QuickRemote PC {version}",
+  "@settingsVersion": {"placeholders": {"version": {"type": "String"}}},
+  "settingsLicenses": "Açık kaynak lisansları"
 }
