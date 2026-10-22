@@ -421,5 +421,7 @@
   "capNoteWpsNoMedia": "Videos in WPS cannot be played remotely.",
   "capLevelYes": "Works",
   "capLevelPartial": "Partly",
-  "capLevelNo": "Doesn't work"
+  "capLevelNo": "Doesn't work",
+  "capUntried": "Not tried",
+  "capUntriedLegend": "Written and tested in code, not yet tried on a real device."
 }
