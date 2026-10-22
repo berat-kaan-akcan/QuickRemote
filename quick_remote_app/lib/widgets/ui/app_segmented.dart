@@ -21,7 +21,7 @@ class AppSegmented<T> extends StatelessWidget {
     required this.segments,
     required this.selected,
     required this.onChanged,
-    this.height = 44,
+    this.height = 56,
     this.color,
   });
 

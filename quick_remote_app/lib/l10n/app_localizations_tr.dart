@@ -186,12 +186,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String connectionServerNotFound(String detail) {
-    return 'Sunucuya ulaşılamadı: $detail';
+    return 'PC\'ye ulaşılamadı. QuickRemote PC\'nin açık olduğundan ve iki cihazın aynı Wi-Fi ağında olduğundan emin olun.';
   }
 
   @override
   String get connectionCertMismatch =>
-      'Sertifika değişti! Olası MITM saldırısı veya cihaz formatlanmış olabilir.';
+      'Bu PC\'nin güvenlik sertifikası değişti. PC uygulaması yeniden kurulunca böyle olur; ama biri PC\'nizin yerine geçmeye çalışıyor da olabilir. Yalnızca beklediğiniz bir değişiklikse devam edin.';
 
   @override
   String get connectionCertRejected =>
@@ -210,7 +210,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String connectionUnknown(String detail) {
-    return 'Bağlantı hatası: $detail';
+    return 'Bağlanılamadı. Yeniden deneyin; sürerse Ayarlar → Yardım\'dan hata günlüğünü paylaşın.';
   }
 
   @override
@@ -1470,4 +1470,64 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get capLevelNo => 'Çalışmaz';
+
+  @override
+  String get scanPermissionTitle => 'Kamera izni gerekli';
+
+  @override
+  String get scanPermissionDenied =>
+      'QuickRemote kamerayı yalnızca bilgisayarınızdaki QR kodu okumak için kullanır. İzni Ayarlar\'dan verin ya da geri dönüp adresi elle girerek bağlanın.';
+
+  @override
+  String get scanUnavailableTitle => 'Kamera kullanılamıyor';
+
+  @override
+  String get scanUnavailable =>
+      'Kamera başlatılamadı. Kamerayı kullanan diğer uygulamaları kapatın ya da geri dönüp adresi elle girerek bağlanın.';
+
+  @override
+  String get scanOpenSettings => 'Ayarları aç';
+
+  @override
+  String get scanGoBack => 'Geri dön';
+
+  @override
+  String get settingsSectionAbout => 'Hakkında';
+
+  @override
+  String get settingsVersionTitle => 'Sürüm';
+
+  @override
+  String get settingsLicensesTitle => 'Açık kaynak lisansları';
+
+  @override
+  String get settingsLicensesSubtitle =>
+      'Flutter, paketler ve Inter ile Space Grotesk yazı tipleri.';
+
+  @override
+  String get settingsPrivacyTitle => 'Gizlilik';
+
+  @override
+  String get settingsPrivacySubtitle =>
+      'Uygulamanın neleri kullandığı ve telefondan neyin çıktığı.';
+
+  @override
+  String get privacyBody =>
+      'QuickRemote yalnızca yerel ağınızda çalışır: hesap, analiz ve reklam yoktur; bizim bir sunucumuza hiçbir şey gönderilmez.\n\nKamera yalnızca eşleştirme QR kodunu okumak için kullanılır. “Yakındaki cihazlar” izni Bluetooth kumandası ve saat için kullanılır. Bildirim, ekran kapalıyken bağlantıyı canlı tutar.\n\nHata günlüğü siz paylaşmadıkça bu telefonda kalır.';
+
+  @override
+  String get homeGetPcApp => 'QuickRemote PC\'yi indir';
+
+  @override
+  String timerStartLabel(Object time) {
+    return '$time, zamanlayıcıyı başlat';
+  }
+
+  @override
+  String timerPauseLabel(Object time) {
+    return '$time, zamanlayıcıyı duraklat';
+  }
+
+  @override
+  String get timerResetLabel => 'Zamanlayıcıyı sıfırla';
 }

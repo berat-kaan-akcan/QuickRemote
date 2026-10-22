@@ -136,5 +136,10 @@
   "settingsLogPrivacy": "The log stays on this computer and is never sent anywhere by itself. PINs, pairing codes, security codes, notes and file paths are not written; IP addresses and device names are. \"Report a problem\" opens a new issue on GitHub; you attach the log there yourself.",
   "logExported": "Log saved.",
   "logExportFailed": "Could not save the log.",
-  "issueBody": "**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nPrograms: {presenters}\n\nYou can drag the log (Settings → Export log) onto this page."
+  "issueBody": "**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nPrograms: {presenters}\n\nYou can drag the log (Settings → Export log) onto this page.",
+  "startErrorPortsInUse": "ports 8090-8099 are in use. Close the apps using them and try again.",
+  "settingsAbout": "About",
+  "settingsVersion": "QuickRemote PC {version}",
+  "@settingsVersion": {"placeholders": {"version": {"type": "String"}}},
+  "settingsLicenses": "Open-source licenses"
 }
