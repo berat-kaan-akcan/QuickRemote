@@ -1474,6 +1474,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get capLevelNo => 'Doesn\'t work';
 
   @override
+  String get historyUndo => 'Undo';
+
+  @override
   String get capUntried => 'Not tried';
 
   @override

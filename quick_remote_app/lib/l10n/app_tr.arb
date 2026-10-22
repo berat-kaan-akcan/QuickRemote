@@ -743,6 +743,7 @@
   "capLevelYes": "Çalışır",
   "capLevelPartial": "Kısmen",
   "capLevelNo": "Çalışmaz",
+  "historyUndo": "Geri al",
   "capUntried": "Denenmedi",
   "capUntriedLegend": "Kodda yazıldı ve testlerden geçti, gerçek bir cihazda henüz denenmedi."
 }

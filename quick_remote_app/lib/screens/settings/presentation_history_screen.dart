@@ -57,7 +57,7 @@ class PresentationHistoryScreen extends StatelessWidget {
                       FadeSlideIn(
                         key: Key(analytics.id),
                         index: index,
-                        child: _buildHistoryTile(context, analytics, settings),
+                        child: _buildHistoryTile(context, analytics, index, settings),
                       ),
                     const SizedBox(height: AppSpace.xs),
                     Text(
@@ -72,15 +72,25 @@ class PresentationHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryTile(BuildContext context, PresentationAnalytics analytics, SettingsProvider settings) {
+  Widget _buildHistoryTile(
+    BuildContext context,
+    PresentationAnalytics analytics,
+    int index,
+    SettingsProvider settings,
+  ) {
     final p = context.palette;
     final meta = AppType.bodySmall.copyWith(color: p.textSecondary);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpace.sm),
-      child: Dismissible(
-        key: Key(analytics.id),
-        direction: DismissDirection.endToStart,
-        background: Container(
+    // The gap below the card is inside the Dismissible, so the row shrinks
+    // to nothing together with it (a gap outside stayed behind and jumped
+    // away when the row left the list).
+    return Dismissible(
+      key: Key(analytics.id),
+      direction: DismissDirection.endToStart,
+      resizeDuration: AppMotion.of(context, AppMotion.base),
+      movementDuration: AppMotion.of(context, AppMotion.base),
+      background: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpace.sm),
+        child: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: AppSpace.lg),
           decoration: BoxDecoration(
@@ -90,15 +100,22 @@ class PresentationHistoryScreen extends StatelessWidget {
           ),
           child: Icon(Icons.delete_rounded, color: p.danger),
         ),
-        onDismissed: (_) {
-          settings.deletePresentationAnalytics(analytics.id);
-          AppSnackbar.show(
-            context,
-            message: context.l10n.historyDeleted,
-            type: SnackbarType.success,
-            duration: const Duration(seconds: 2),
-          );
-        },
+      ),
+      onDismissed: (_) {
+        // Removed from the provider in this frame, so the dismissed row is
+        // never built again.
+        settings.deletePresentationAnalytics(analytics.id);
+        AppSnackbar.show(
+          context,
+          message: context.l10n.historyDeleted,
+          type: SnackbarType.success,
+          duration: const Duration(seconds: 4),
+          actionLabel: context.l10n.historyUndo,
+          onAction: () => settings.restorePresentationAnalytics(analytics, index),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpace.sm),
         child: AppCard(
           radius: AppRadius.md,
           padding: const EdgeInsets.all(AppSpace.sm),
