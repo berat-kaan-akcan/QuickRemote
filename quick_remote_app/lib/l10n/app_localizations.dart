@@ -1832,6 +1832,18 @@ abstract class AppLocalizations {
   /// **'Arka planda bağlantı devam ediyor...'**
   String get backgroundNotification;
 
+  /// No description provided for @notificationDeniedNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim izni kapalı. Bağlantı yine de çalışır, ancak ekran kapalıyken bağlantıyı tutan bildirim görünmeyebilir ve Android uygulamayı durdurabilir.'**
+  String get notificationDeniedNote;
+
+  /// No description provided for @notificationDeniedAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarları aç'**
+  String get notificationDeniedAction;
+
   /// Home screen: how to connect, under the tagline.
   ///
   /// In tr, this message translates to:
@@ -2610,6 +2622,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'WPS\'teki video uzaktan oynatılamıyor.'**
   String get capNoteWpsNoMedia;
+
+  /// No description provided for @capNoteUnverifiedWindows.
+  ///
+  /// In tr, this message translates to:
+  /// **'† Yazıldı, ancak gerçek bir Windows bilgisayarda henüz denenmedi.'**
+  String get capNoteUnverifiedWindows;
 
   /// No description provided for @capLevelYes.
   ///
