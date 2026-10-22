@@ -533,7 +533,7 @@
             <li><h3>Without a slideshow</h3><p>In a PDF, a browser or on the desktop, the laser, the pen and the black or white screen stay on, and so does the touchpad on your phone.</p></li>
             <li><h3>As much layer as you want</h3><p>On the PC, Settings → Laser: <b>Automatic</b> (PowerPoint and WPS keep their own laser and pen, the layer draws everywhere else), <b>QuickRemote</b> (the layer everywhere) or <b>Program</b> (only the program’s own tools).</p></li>
           </ul>
-          <p class="honest"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Early days: on Linux (X11 and XWayland) the layer has been tried on screen, but cases like over a video, several monitors and GNOME have not been tried yet. The Windows version is written but has never been built or run. The magnifier will be Windows only, and is untried too.</span></p>
+          <p class="honest"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Early days: the layer has been tried on screen on Linux (X11 and XWayland) and Windows&nbsp;11; on Windows over the desktop, a full-screen Chrome PDF and a PowerPoint show, the magnifier included. Over a video, several monitors, other scale settings and GNOME are not tried yet. The magnifier is Windows only.</span></p>
         </div>
       </div>
     </div>
@@ -784,9 +784,9 @@
               <button type="button" role="radio" aria-checked="false" data-laser="never" tabindex="-1">Program</button>
             </div>
             <p class="dk-note" data-dk-laser-note aria-live="polite"
-               data-auto="PowerPoint and WPS keep their own laser; the layer draws in Impress, PDFs, browsers and outside a show."
-               data-always="QuickRemote draws the laser above every window."
-               data-never="The program’s own tools are used, only during a show."></p>
+               data-auto="Recommended. PowerPoint and WPS use their own laser; everywhere else QuickRemote’s laser draws."
+               data-always="Always QuickRemote’s laser: works above every window (PDFs, browsers, over a video)."
+               data-never="The presentation program’s own laser: works only while a slideshow runs."></p>
             <p class="dk-h">Startup and tray</p>
             <label class="dk-sw"><input type="checkbox" role="switch" checked data-dk-sw="close"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>Minimize to tray on close</b><small>Connected phones stay connected.</small></span></label>
             <label class="dk-sw"><input type="checkbox" role="switch" data-dk-sw="login"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>Start at login</b><small>Starts in the tray, without a window.</small></span></label>
@@ -926,15 +926,16 @@
         <section class="st-col st-part" aria-labelledby="st-part">
           <h3 id="st-part"><svg class="i" aria-hidden="true"><use href="#i-schedule"/></svg>Partly tried</h3>
           <ul>
-            <li>Laser layer: tried on screen on Linux; over a video, several monitors and GNOME are not tried yet</li>
-            <li>Slide picture: verified outside a show on Linux; not yet during a show, or with PowerPoint</li>
+            <li>Laser and ink layer: tried on screen on Linux and Windows&nbsp;11 (on Windows also the magnifier, the spotlight and the blank screen); over a video, several monitors, other scale settings and GNOME are not tried yet</li>
+            <li>Slide picture: verified on Windows with PowerPoint and WPS, in a show and outside, and on Linux outside a show; not yet looked at on a phone</li>
             <li>The slide picture is the slide as saved: the animation step, drawings and a playing video do not show. In a full-screen show the screen picture does show them.</li>
           </ul>
         </section>
         <section class="st-col st-todo" aria-labelledby="st-todo">
           <h3 id="st-todo"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg>Written and tested in code, not tried yet</h3>
           <ul>
-            <li>On Windows: the laser and ink layer, the magnifier, screen pictures, slide pictures with PowerPoint</li>
+            <li>The laser that goes where you touch in the presenter view</li>
+            <li>Recognising a PDF in a browser on KDE Wayland</li>
             <li>The tray, start at login and the update check</li>
             <li>On the phone: app shortcuts, the Quick Settings tile and the presenter view</li>
             <li>The Windows installer, the .deb and the AUR package</li>
