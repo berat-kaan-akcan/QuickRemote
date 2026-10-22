@@ -51,6 +51,7 @@ class PresentationState {
     previewsSupported = authReply['previews'] == true;
     toolsAnywhere = authReply['overlay'] == true;
     zoomAvailable = authReply['zoom'] == true;
+    absLaserSupported = authReply['absLaser'] == true;
   }
 
   /// The PC draws the laser on its own overlay, so it works outside a
@@ -59,6 +60,10 @@ class PresentationState {
 
   /// The PC's overlay has a magnifier (MODE_ZOOM; `zoom`, Windows).
   bool zoomAvailable = false;
+
+  /// The PC takes the laser as a point of the slide (MoveFrame.laserAbs;
+  /// `absLaser`).
+  bool absLaserSupported = false;
 
   // ── Slide pictures (SlideImageFrame) ──
 

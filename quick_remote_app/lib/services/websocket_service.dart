@@ -181,6 +181,9 @@ class WebSocketService extends ChangeNotifier {
   /// The laser can be a magnifier (the PC's overlay has one).
   bool get zoomAvailable => _state.zoomAvailable;
 
+  /// The laser can be put at a point of the slide picture ([sendLaserAt]).
+  bool get absLaserAvailable => _state.absLaserSupported;
+
   // 🖼️ Slide pictures 🖼️
 
   /// Whether slide pictures can come: the PC sends them and the setting is on.
@@ -387,6 +390,12 @@ class WebSocketService extends ChangeNotifier {
   /// Send TOUCH or LASER data in binary format to reduce overhead
   void sendTouchOrLaser(String type, double dx, double dy) {
     _client.sendTouchOrLaser(type, dx, dy);
+  }
+
+  /// Puts the laser at ([x], [y]), fractions (0..1) of the slide; only to a
+  /// PC with [absLaserAvailable].
+  void sendLaserAt(double x, double y) {
+    if (_state.absLaserSupported) _client.sendMove(MoveFrame(MoveFrame.laserAbs, x, y));
   }
 
   Future<void> disconnect() async {

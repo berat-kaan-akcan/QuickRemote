@@ -52,6 +52,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presenterLastSlide => 'Last slide';
 
   @override
+  String get presenterLaserHint => 'Touch the slide to point the laser there';
+
+  @override
   String slidePreviewLabel(int slide) {
     return 'Preview of slide $slide';
   }

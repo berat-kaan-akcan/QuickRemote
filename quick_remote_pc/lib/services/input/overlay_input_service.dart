@@ -311,6 +311,9 @@ class OverlayInputService implements InputService {
   Future<ScreenArea?> laserArea() => _inner.laserArea();
 
   @override
+  void moveCursorInShow(double relX, double relY) => _inner.moveCursorInShow(relX, relY);
+
+  @override
   bool get handlesLaserPointer => _overlayPointer || _inner.handlesLaserPointer;
 
   @override

@@ -334,14 +334,13 @@ class WebSocketClient {
     }
   }
 
-  void sendTouchOrLaser(String type, double dx, double dy) {
+  void sendTouchOrLaser(String type, double dx, double dy) =>
+      sendMove(MoveFrame(type == 'TOUCH' ? MoveFrame.touch : MoveFrame.laser, dx, dy));
+
+  void sendMove(MoveFrame frame) {
     if (isConnected && _channel != null) {
       try {
-        final bytes = ByteData(9);
-        bytes.setUint8(0, type == 'TOUCH' ? 0 : 1);
-        bytes.setFloat32(1, dx, Endian.little);
-        bytes.setFloat32(5, dy, Endian.little);
-        _channel!.sink.add(bytes.buffer.asUint8List());
+        _channel!.sink.add(frame.encode());
       } catch (e) {
         debugPrint('Failed to send binary data: $e');
       }
