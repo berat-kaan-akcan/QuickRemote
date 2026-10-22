@@ -533,7 +533,7 @@
             <li><h3>Gösteri olmadan da</h3><p>PDF’te, tarayıcıda ya da masaüstünde lazer, kalem ve siyah ya da beyaz ekran açık kalır; telefondaki touchpad de.</p></li>
             <li><h3>İstediğin kadar katman</h3><p>PC’de Ayarlar → Lazer: <b>Otomatik</b> (PowerPoint ve WPS kendi lazerini ve kalemini kullanır, kalan her yerde katman çizer), <b>QuickRemote</b> (her yerde katman) ya da <b>Program</b> (yalnız programın araçları).</p></li>
           </ul>
-          <p class="honest"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Henüz erken: Linux’ta (X11 ve XWayland) katman ekranda denendi; videonun üstü, birden çok monitör ve GNOME gibi durumlar henüz denenmedi. Windows sürümü yazıldı ama hiç derlenip çalıştırılmadı. Büyüteç yalnız Windows’a gelecek ve o da denenmedi.</span></p>
+          <p class="honest"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Henüz erken: katman Linux’ta (X11 ve XWayland) ve Windows&nbsp;11’de ekranda denendi; Windows’ta masaüstünün, tam ekran Chrome PDF’in ve PowerPoint gösterisinin üstünde, büyüteçle birlikte. Videonun üstü, birden çok monitör, başka ölçek ayarları ve GNOME henüz denenmedi. Büyüteç yalnız Windows’ta var.</span></p>
         </div>
       </div>
     </div>
@@ -784,9 +784,9 @@
               <button type="button" role="radio" aria-checked="false" data-laser="never" tabindex="-1">Program</button>
             </div>
             <p class="dk-note" data-dk-laser-note aria-live="polite"
-               data-auto="PowerPoint ve WPS kendi lazerini kullanır; Impress, PDF, tarayıcı ve gösteri dışında katman çizer."
-               data-always="QuickRemote lazeri her pencerenin üstünde çizer."
-               data-never="Programın kendi araçları kullanılır, yalnız gösteri sırasında."></p>
+               data-auto="Önerilen. PowerPoint ve WPS kendi lazerini kullanır, diğer her yerde QuickRemote’un lazeri çizer."
+               data-always="Her zaman QuickRemote lazeri: her pencerenin üstünde çalışır (PDF, tarayıcı, videonun üstü)."
+               data-never="Sunum programının kendi lazeri: yalnızca slayt gösterisi açıkken çalışır."></p>
             <p class="dk-h">Başlangıç ve tepsi</p>
             <label class="dk-sw"><input type="checkbox" role="switch" checked data-dk-sw="close"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>Kapatınca tepsiye küçült</b><small>Bağlı telefonlar kopmaz.</small></span></label>
             <label class="dk-sw"><input type="checkbox" role="switch" data-dk-sw="login"><span class="tp-track" aria-hidden="true"><i></i></span><span><b>Oturum açılınca başlat</b><small>Pencere açılmadan, tepside başlar.</small></span></label>
@@ -926,15 +926,16 @@
         <section class="st-col st-part" aria-labelledby="st-part">
           <h3 id="st-part"><svg class="i" aria-hidden="true"><use href="#i-schedule"/></svg>Kısmen denendi</h3>
           <ul>
-            <li>Lazer katmanı: Linux’ta ekranda denendi; videonun üstü, birden çok monitör ve GNOME henüz denenmedi</li>
-            <li>Slayt resmi: Linux’ta gösteri dışında doğrulandı; gösteri sırasında ve PowerPoint’te henüz denenmedi</li>
+            <li>Lazer ve mürekkep katmanı: Linux’ta ve Windows&nbsp;11’de ekranda denendi (Windows’ta büyüteç, spot ışığı ve boş ekran da); videonun üstü, birden çok monitör, başka ölçek ayarları ve GNOME henüz denenmedi</li>
+            <li>Slayt resmi: Windows’ta PowerPoint ve WPS ile gösteride ve dışında, Linux’ta gösteri dışında doğrulandı; telefonda henüz bakılmadı</li>
             <li>Slayt resmi, slaytın kaydedilmiş hâlidir: animasyon adımı, çizim ve oynayan video görünmez. Tam ekran gösteride ekran resmi bunları da gösterir.</li>
           </ul>
         </section>
         <section class="st-col st-todo" aria-labelledby="st-todo">
           <h3 id="st-todo"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg>Yazıldı, testlerden geçti, henüz denenmedi</h3>
           <ul>
-            <li>Windows’ta lazer ve mürekkep katmanı, büyüteç, ekran resmi, PowerPoint’te slayt resmi</li>
+            <li>Sunucu görünümünde dokunulan yere giden lazer</li>
+            <li>KDE Wayland’da tarayıcıdaki PDF’in tanınması</li>
             <li>Tepsi, oturum açılınca başlatma ve güncelleme denetimi</li>
             <li>Telefonda uygulama kısayolları, Hızlı Ayarlar kutucuğu ve sunucu görünümü</li>
             <li>Windows kurulum paketi, .deb ve AUR paketi</li>
