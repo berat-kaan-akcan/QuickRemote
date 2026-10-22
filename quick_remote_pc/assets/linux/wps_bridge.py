@@ -469,13 +469,24 @@ COMMANDS = {
 }
 
 
+def parse_request(line):
+    """The request on a stdin line, or None when it is not a JSON object.
+    A deeply nested line raises RecursionError, not ValueError: it must not
+    end the reader."""
+    try:
+        request = json.loads(line)
+    except (ValueError, RecursionError):
+        return None
+    return request if isinstance(request, dict) else None
+
+
 def handle(wps, request):
     cmd = request.get("cmd")
     if createWppRpcInstance is None:
         if cmd == "ping":
             return {"ok": True, "rpc": False, "connected": False}
         return {"ok": False, "error": "NO_RPC"}
-    if cmd not in COMMANDS:
+    if not isinstance(cmd, str) or cmd not in COMMANDS:
         return {"ok": False, "error": "UNKNOWN_COMMAND"}
     try:
         result = getattr(wps, cmd)(request) or {}
@@ -495,11 +506,8 @@ def main():
         line = line.strip()
         if not line:
             continue
-        try:
-            request = json.loads(line)
-        except ValueError:
-            continue
-        if not isinstance(request, dict):
+        request = parse_request(line)
+        if request is None:
             continue
         reply = handle(wps, request)
         if request.get("noreply"):
