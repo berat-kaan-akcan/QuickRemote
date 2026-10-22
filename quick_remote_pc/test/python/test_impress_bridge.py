@@ -486,6 +486,7 @@ class ExportTest(unittest.TestCase):
         self.assertEqual(bridge.export_height(28000, 21000, 640), 480)
         self.assertEqual(bridge.export_height(0, 0, 320), 180)
 
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Unix absolute paths")
     def test_request_needs_a_slide_of_the_show_and_an_absolute_jpg(self):
         good = {"index": 2, "width": 640, "path": "/tmp/slide-2-640.jpg"}
         self.assertEqual(bridge.export_request(good, 3), (2, 640, "/tmp/slide-2-640.jpg"))

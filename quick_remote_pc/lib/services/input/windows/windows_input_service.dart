@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart';
 import 'package:win32/win32.dart';
 import '../input_service.dart';
 import 'keyboard_simulator.dart';
@@ -54,14 +55,14 @@ class WindowsInputService implements InputService {
   /// The show the last slide state found ([PresenterCom.active]) and the
   /// foreground window, read with a few Win32 calls (no PowerShell), so it
   /// is cheap enough to poll. Both programs do everything but WPS's media
-  /// rewind and its slide pictures (COM `Player` and `Export` are not
-  /// verified there); their editors start a show at a slide (COM GotoSlide).
+  /// rewind (its COM `Player` does nothing); their editors start a show at a
+  /// slide (COM GotoSlide).
   @override
   Future<PresenterCaps> capabilities() async {
     final front = PptController.frontWindow();
     final caps = switch (PresenterCom.active) {
       'powerpoint' => {..._showCaps, RemoteCaps.rewind, RemoteCaps.previews},
-      'wps' => _showCaps,
+      'wps' => {..._showCaps, RemoteCaps.previews},
       _ => front == FrontWindow.editor ? const {RemoteCaps.goto} : const <String>{},
     };
     return PresenterCaps(front: front, caps: caps);
@@ -179,7 +180,22 @@ class WindowsInputService implements InputService {
   @override
   void laserOff() => _switchMode(0x41, laser: false, wpsPointer: PptController.pointerAutoArrow); // Ctrl + A
 
-  Future<void> _switchMode(int key, {required bool laser, int? color, int? wpsPointer}) async {
+  /// The last mode change, which the button presses wait for: WPS gets its
+  /// pen through COM, which took longer than the phone's double tap leaves
+  /// before LEFT_DOWN, and that press clicked the slide on (measured, WPS
+  /// 12.1).
+  Future<void> _mode = Future.value();
+
+  /// LEFT_DOWN and LEFT_UP in order, each after the mode change before it.
+  Future<void> _buttons = Future.value();
+
+  Future<void> _switchMode(int key, {required bool laser, int? color, int? wpsPointer}) =>
+      _mode = _applyMode(key, laser: laser, color: color, wpsPointer: wpsPointer).catchError((Object e) {
+        debugPrint('Mode switch failed: $e');
+      });
+
+  Future<void> _applyMode(int key, {required bool laser, int? color, int? wpsPointer}) async {
+    PptController.pointerTurn++;
     final bool switched;
     if (PresenterCom.wpsActive && laser) {
       switched = await PptController.wpsLaser(true);
@@ -213,9 +229,13 @@ class WindowsInputService implements InputService {
   @override
   void rightClick() => MouseSimulator.rightClick();
   @override
-  void leftDown() => MouseSimulator.leftDown();
+  void leftDown() {
+    final mode = _mode;
+    _buttons = _buttons.then((_) => mode).then((_) => MouseSimulator.leftDown());
+  }
+
   @override
-  void leftUp() => MouseSimulator.leftUp();
+  void leftUp() => _buttons = _buttons.then((_) => MouseSimulator.leftUp());
 
   @override
   void lockPC() => LockWorkStation();

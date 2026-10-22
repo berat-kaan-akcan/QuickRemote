@@ -8,9 +8,8 @@ import '../input_service.dart' show ScreenCapture;
 
 /// Takes a window's picture with `PrintWindow(PW_RENDERFULLCONTENT)`, which
 /// also draws DirectX content and works while the window is behind another
-/// one (Windows 8.1 and later). **Never run on Windows yet**: whether
-/// PowerPoint's and WPS's shows and the browsers come out whole (not black)
-/// is still to be tried.
+/// one (Windows 8.1 and later). PowerPoint 365's and WPS 12.1's shows and
+/// full-screen Chrome come out whole, not black (measured, Windows 11).
 class WindowCapture {
   WindowCapture._();
 

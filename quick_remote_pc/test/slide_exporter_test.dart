@@ -10,7 +10,7 @@ void main() {
     expect(SlideExporter.parseHeight('EXPORTED:12x'), isNull);
   });
 
-  test('the script exports from PowerPoint only, to a literal path', () {
+  test('the script exports from the running show, to a literal path', () {
     final script = SlideExporter.script(
       7,
       1280,
@@ -23,7 +23,8 @@ void main() {
         r"$presentation.Slides.Item(7).Export($path, 'JPG', 1280, $height)",
       ),
     );
-    expect(script, contains(r"$qrPresenter -eq 'powerpoint'"));
+    expect(script, contains(r'$ppt.SlideShowWindows.Item(1).Presentation'));
+    expect(script, isNot(contains(r"$qrPresenter -eq 'powerpoint'")));
     expect(
       script,
       contains(r'[Math]::Round(1280 * $setup.SlideHeight / $setup.SlideWidth)'),

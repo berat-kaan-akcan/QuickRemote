@@ -17,6 +17,12 @@ class PowerShellRunner {
   final List<PSJob> _jobQueue = [];
   bool _isProcessing = false;
   Timer? _executionTimeout;
+
+  /// Whether the process has run no job yet. Its start (~2 s, more while the
+  /// app itself starts) counts against the first job's time: with 5 s the
+  /// first poll timed out on every app start (measured, Windows 11), and its
+  /// replacement started cold again.
+  bool _fresh = false;
   final String name;
 
   PowerShellRunner(this.name);
@@ -59,6 +65,7 @@ class PowerShellRunner {
         '-',
       ]);
       _process = process;
+      _fresh = true;
 
       process.stdin.writeln('[Console]::OutputEncoding = [System.Text.Encoding]::UTF8');
 
@@ -158,8 +165,10 @@ class PowerShellRunner {
 
     try {
       _executionTimeout?.cancel();
-      _executionTimeout = Timer(const Duration(seconds: 5), () {
-        debugPrint('PowerShell script execution timed out (5s) in [$name] runner. Killing process.');
+      final limit = Duration(seconds: _fresh ? 15 : 5);
+      _fresh = false;
+      _executionTimeout = Timer(limit, () {
+        debugPrint('PowerShell script execution timed out (${limit.inSeconds}s) in [$name] runner. Killing process.');
         _killProcessAndReset();
       });
 

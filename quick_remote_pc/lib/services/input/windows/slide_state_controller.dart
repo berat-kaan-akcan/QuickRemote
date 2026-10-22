@@ -17,17 +17,23 @@ try {
         $current = $view.CurrentShowPosition
         $total = $presentation.Slides.Count
         
-        $isBlackScreen = $false
+        $atEnd = $false
         if ($current -gt $total) {
-            $isBlackScreen = $true
+            $atEnd = $true
             $current = $total
         }
+        # The show's own black or white screen (B, W; PpSlideShowState 3, 4,
+        # PowerPoint 365 and WPS 12.1): no screen picture goes to the phones
+        # then, as with the black slide after the last one.
+        $showState = 0
+        try { $showState = $view.State } catch {}
+        $isBlackScreen = $atEnd -or $showState -eq 3 -or $showState -eq 4
 
         $notes = ""
         $hasMedia = $false
         $isMediaPlaying = $null
 
-        if (-not $isBlackScreen) {
+        if (-not $atEnd) {
             $slide = $presentation.Slides.Item($current)
             if ($slide.HasNotesPage) {
                 $shapes = $slide.NotesPage.Shapes
