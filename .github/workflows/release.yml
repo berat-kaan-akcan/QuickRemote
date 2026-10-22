@@ -9,6 +9,11 @@
 #                                              only when the signing secrets exist
 #   SHA256SUMS.txt
 #
+# Play uploads: QuickRemote-<v>-android.aab and QuickRemote-<v>-wear-os.aab
+# are built for final tags only (a prerelease tag has the final tag's
+# versionCode) and kept as the Actions artifact "android-aab" for 30 days;
+# they are not put on the release.
+#
 # The version comes from the tag alone: --build-name, --dart-define=APP_VERSION
 # (lib/app_version.dart, read by the update check), the installer and the
 # packages. Android's versionCode is MAJOR*10000 + MINOR*100 + PATCH (the watch
@@ -92,8 +97,10 @@ jobs:
       VERSION: ${{ needs.version.outputs.version }}
       NUMERIC: ${{ needs.version.outputs.numeric }}
       CODE: ${{ needs.version.outputs.code }}
+      # Chocolatey package version (the windows-latest image may already have Inno Setup 6).
+      INNO_SETUP_VERSION: '6.7.3'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
@@ -130,9 +137,11 @@ jobs:
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) {
-            choco install innosetup -y --no-progress
+            # Pinned: the script is written for Inno Setup 6 (7.x exists).
+            choco install innosetup --version=$env:INNO_SETUP_VERSION -y --no-progress
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
           }
+          Write-Host "Inno Setup: $((Get-Item $iscc).VersionInfo.ProductVersion)"
           $build = "$env:GITHUB_WORKSPACE\quick_remote_pc\build\windows\x64\runner\Release"
           $out = "$env:RUNNER_TEMP\dist"
           & $iscc "/DAppVersion=$env:VERSION" "/DAppVersionNumeric=$env:NUMERIC" "/DBuildDir=$build" "/DVcRuntimeDir=$env:VC_CRT" "/DOutputDir=$out" quick_remote_pc\windows\installer\quickremote.iss
@@ -147,7 +156,7 @@ jobs:
             if (-not (Test-Path "$app\$f")) { Get-Content "$env:RUNNER_TEMP\setup.log"; throw "$f was not installed" }
           }
           Write-Host "Installed into $app"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows-installer
           path: ${{ runner.temp }}/dist/*-setup.exe
@@ -165,7 +174,7 @@ jobs:
       VERSION: ${{ needs.version.outputs.version }}
       CODE: ${{ needs.version.outputs.code }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - name: Linux build dependencies
@@ -202,14 +211,14 @@ jobs:
           grep -q "^_ver=$VERSION " "$RUNNER_TEMP/aur/PKGBUILD"
           grep -q "$sha" "$RUNNER_TEMP/aur/PKGBUILD"
           ls -l "$out"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: linux-packages
           path: |
             ${{ runner.temp }}/dist/*.tar.gz
             ${{ runner.temp }}/dist/*.deb
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: aur-pkgbuild
           path: ${{ runner.temp }}/aur/
@@ -226,7 +235,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: linux-packages
           path: dist
@@ -302,11 +311,11 @@ jobs:
             echo "present=false" >> "$GITHUB_OUTPUT"
             echo "::notice::ANDROID_KEYSTORE_BASE64 is not set: no APKs in this release."
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
         if: steps.key.outputs.present == 'true'
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         if: steps.key.outputs.present == 'true'
         with:
           distribution: temurin
@@ -364,15 +373,42 @@ jobs:
           mkdir -p "$RUNNER_TEMP/dist"
           cp "$phone" "$RUNNER_TEMP/dist/QuickRemote-$VERSION-android.apk"
           cp "$watch" "$RUNNER_TEMP/dist/QuickRemote-$VERSION-wear-os.apk"
+      # Play re-signs with its own key, so the Play upload is an AAB, kept as
+      # an Actions artifact only (the release job does not collect it). A
+      # prerelease tag gives the same versionCode as its final release, which
+      # Play would refuse the second time: no AAB for those.
+      - name: Phone and watch AAB
+        id: aab
+        if: steps.key.outputs.present == 'true' && needs.version.outputs.prerelease != 'true'
+        run: |
+          (cd quick_remote_app && flutter build appbundle --release --build-name "$VERSION" --build-number "$CODE" \
+            --dart-define=APP_VERSION="$VERSION")
+          (cd quick_remote_wear && sh ./gradlew :app:bundleRelease -PphoneVersionCode="$CODE" -PappVersionName="$VERSION")
+          phone=quick_remote_app/build/app/outputs/bundle/release/app-release.aab
+          watch=quick_remote_wear/app/build/outputs/bundle/release/app-release.aab
+          # apksigner cannot read an AAB; keytool prints the signer of the jar.
+          p=$(keytool -printcert -jarfile "$phone" | grep 'SHA256:' | head -n 1)
+          w=$(keytool -printcert -jarfile "$watch" | grep 'SHA256:' | head -n 1)
+          if [ -z "$p" ] || [ "$p" != "$w" ]; then echo "::error::phone and watch AABs have different signers"; exit 1; fi
+          mkdir -p "$RUNNER_TEMP/aab"
+          cp "$phone" "$RUNNER_TEMP/aab/QuickRemote-$VERSION-android.aab"
+          cp "$watch" "$RUNNER_TEMP/aab/QuickRemote-$VERSION-wear-os.aab"
       - name: Remove the signing key
         if: always() && steps.key.outputs.present == 'true'
         run: rm -f quick_remote_app/android/app/upload-keystore.jks quick_remote_app/android/key.properties
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: steps.key.outputs.present == 'true'
         with:
           name: android-apks
           path: ${{ runner.temp }}/dist/*.apk
           if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.aab.outcome == 'success'
+        with:
+          name: android-aab
+          path: ${{ runner.temp }}/aab/*.aab
+          if-no-files-found: error
+          retention-days: 30
 
   release:
     needs: [version, windows, linux, deb-test, android]
@@ -384,11 +420,11 @@ jobs:
       VERSION: ${{ needs.version.outputs.version }}
       PRERELEASE: ${{ needs.version.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: artifacts
       - name: Collect

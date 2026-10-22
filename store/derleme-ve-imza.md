@@ -99,25 +99,15 @@ Yeni uygulamalarda zorunlu. İlk AAB'yi yüklenen yükleme anahtarıyla imzalars
 - Play üst sınırı 2 100 000 000: sorun yok.
 - 0. bölümdeki karar: Play'e `1.0.0` ile çıkmak (önceki `0.1.0` GitHub'daki deneme sürümü). Etiket `v1.0.0`.
 
-## 6. `release.yml` için önerilen değişiklik (**yapılmadı**, `.github/` bu iş kapsamı dışındaydı)
+## 6. `release.yml` ve AAB (**yapıldı**, 2026-10-22; gerçek çalıştırma bekliyor)
 
-Play, uygulamayı kendi anahtarıyla yeniden imzalar; GitHub'daki yükleme anahtarıyla imzalı APK ile Play'den kurulan sürüm birbirinin üstüne kurulamaz ve saat (Play'den) telefonla (APK'dan) konuşamaz. Öneri: `android` işinde APK yerine AAB üret, GitHub release'e **ekleme**, yalnız Actions artefaktı olarak sakla:
-```yaml
-      - name: Phone AAB
-        working-directory: quick_remote_app
-        run: |
-          flutter config --jdk-dir "$JAVA_HOME"
-          flutter pub get
-          flutter build appbundle --release --build-name "$VERSION" --build-number "$CODE" \
-            --dart-define=APP_VERSION="$VERSION"
-      - name: Watch AAB
-        working-directory: quick_remote_wear
-        run: sh ./gradlew :app:bundleRelease -PphoneVersionCode="$CODE" -PappVersionName="$VERSION"
-      # ... imza karşılaştırması için jarsigner -verify -verbose -certs kullanılır (apksigner AAB'yi okumaz)
-      # artefakt yolu: quick_remote_app/build/app/outputs/bundle/release/app-release.aab
-      #                quick_remote_wear/app/build/outputs/bundle/release/app-release.aab
-```
-GitHub release'ten telefon APK'sını da kaldırmak istemiyorsan yan yana yan kurulum uyarısını Readme'ye yaz. Karar sende (PLAY listesi 1. bölüm).
+Play, uygulamayı kendi anahtarıyla yeniden imzalar; GitHub'daki yükleme anahtarıyla imzalı APK ile Play'den kurulan sürüm birbirinin üstüne kurulamaz ve saat (Play'den) telefonla (APK'dan) konuşamaz. Bu yüzden `release.yml` `android` işi, imza sırları varsa, APK'ların yanında telefon ve saat AAB'sini de derler (`Phone and watch AAB` adımı):
+
+- Yalnız **son** etiketlerde (`v1.0.0`). Ön sürüm etiketi (`v1.0.0-rc1`, elle çalıştırmada `0.0.1-test`) son etiketle aynı versionCode'u üretir, Play ikincisini reddeder; bu yüzden AAB atlanır (APK yine derlenir).
+- versionCode etiketten aynı formülle (`CODE`, 5. bölüm); `--build-number "$CODE"` ve `-PphoneVersionCode="$CODE"`.
+- Telefon ve saat AAB'sinin imzacısı `keytool -printcert -jarfile` ile karşılaştırılır (apksigner AAB okumaz); farklıysa iş başarısız olur.
+- Çıktı: Actions artefaktı `android-aab` (30 gün), dosyalar `QuickRemote-<sürüm>-android.aab` ve `QuickRemote-<sürüm>-wear-os.aab`. `release` işi yalnız `windows-installer`, `linux-packages` ve `android-apks` artefaktlarını topladığı için AAB GitHub sürümüne **girmez**; Play Console'a elle yüklenir.
+- GitHub sürümünde APK kalıyor (karar: kaldırılmadı). Play'den ve APK'dan kurulumun birbirinin üstüne kurulamayacağını README'ye yazmak sende.
 
 ## 7. Bağımlılıklar ve lisans
 
