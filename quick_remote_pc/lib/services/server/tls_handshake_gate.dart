@@ -14,6 +14,13 @@ import 'package:flutter/foundation.dart';
 /// gets [handshakeTimeout], and only [maxPerClient] (per [clientKey]) and
 /// [maxTotal] may be under way at once; the rest are closed at once.
 ///
+/// A finished handshake is not the end of it: dart:io's HttpServer times out
+/// a connection that sends no request only after 120 s, and a request head
+/// that never ends grows up to ~1 MB. So a connection must also complete its
+/// request head (the blank line) within [requestTimeout] and [maxHeaderBytes],
+/// and only [maxAwaitingPerClient] (per [clientKey]) and [maxAwaitingTotal]
+/// may be waiting for it at once.
+///
 /// dart:io cannot cancel the handshake of a [SecureSocket], so it runs on a
 /// [RawSecureSocket] and the result is wrapped in [_RawSocketAdapter].
 class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
@@ -23,6 +30,10 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
     required this.handshakeTimeout,
     required this.maxPerClient,
     required this.maxTotal,
+    required this.requestTimeout,
+    required this.maxHeaderBytes,
+    required this.maxAwaitingPerClient,
+    required this.maxAwaitingTotal,
     required this.accepts,
     required this.clientKey,
   }) {
@@ -36,6 +47,10 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
     Duration handshakeTimeout = const Duration(seconds: 10),
     int maxPerClient = 8,
     int maxTotal = 64,
+    Duration requestTimeout = const Duration(seconds: 10),
+    int maxHeaderBytes = 16 * 1024,
+    int maxAwaitingPerClient = 16,
+    int maxAwaitingTotal = 128,
     bool Function(InternetAddress remote) accepts = _acceptAll,
     required String Function(InternetAddress remote) clientKey,
   }) async {
@@ -46,6 +61,10 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
       handshakeTimeout: handshakeTimeout,
       maxPerClient: maxPerClient,
       maxTotal: maxTotal,
+      requestTimeout: requestTimeout,
+      maxHeaderBytes: maxHeaderBytes,
+      maxAwaitingPerClient: maxAwaitingPerClient,
+      maxAwaitingTotal: maxAwaitingTotal,
       accepts: accepts,
       clientKey: clientKey,
     );
@@ -59,6 +78,13 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
   final int maxPerClient;
   final int maxTotal;
 
+  /// How long a connection may take from the end of its handshake to the end
+  /// of its first request head, and how large that head may be.
+  final Duration requestTimeout;
+  final int maxHeaderBytes;
+  final int maxAwaitingPerClient;
+  final int maxAwaitingTotal;
+
   /// Connections from addresses it refuses are closed before the handshake.
   final bool Function(InternetAddress remote) accepts;
 
@@ -69,9 +95,37 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
   late final StreamSubscription<RawSocket> _subscription;
   final Map<String, int> _handshaking = {};
   int _handshakingTotal = 0;
+  final Map<String, int> _awaiting = {};
+  int _awaitingTotal = 0;
 
   @visibleForTesting
   int get handshakesInProgress => _handshakingTotal;
+
+  /// Connections through the handshake that have not sent a whole request
+  /// head yet.
+  @visibleForTesting
+  int get awaitingRequest => _awaitingTotal;
+
+  /// Takes a slot for a connection waiting for its request head; the returned
+  /// function gives it back (once). Null when the limits are reached.
+  void Function()? _awaitRequest(String key) {
+    final current = _awaiting[key] ?? 0;
+    if (current >= maxAwaitingPerClient || _awaitingTotal >= maxAwaitingTotal) return null;
+    _awaiting[key] = current + 1;
+    _awaitingTotal++;
+    var released = false;
+    return () {
+      if (released) return;
+      released = true;
+      final left = (_awaiting[key] ?? 1) - 1;
+      if (left <= 0) {
+        _awaiting.remove(key);
+      } else {
+        _awaiting[key] = left;
+      }
+      _awaitingTotal--;
+    };
+  }
 
   void _onConnection(RawSocket raw) {
     final InternetAddress remote;
@@ -98,10 +152,17 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
 
     RawSecureSocket.secureServer(raw, _context).timeout(handshakeTimeout).then(
       (secure) {
-        if (_controller.isClosed) {
+        final release = _controller.isClosed ? null : _awaitRequest(key);
+        if (release == null) {
+          if (!_controller.isClosed) debugPrint('Refused connection from $key: too many wait for their request');
           secure.close();
         } else {
-          _controller.add(_RawSocketAdapter(secure));
+          _controller.add(_RawSocketAdapter(
+            secure,
+            requestTimeout: requestTimeout,
+            maxHeaderBytes: maxHeaderBytes,
+            onRequestHead: release,
+          ));
         }
       },
       onError: (Object e) {
@@ -151,8 +212,21 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
 /// handling dart:io's own socket has: one read per read event, writes
 /// buffered until the socket takes them, and the send side shut down (TLS
 /// close_notify) once everything is written after [close].
+///
+/// Until the first request head is complete (a blank line) it also enforces
+/// the gate's [requestTimeout] and [maxHeaderBytes]; [onRequestHead] is
+/// called once, when the head is complete or the socket is gone.
 class _RawSocketAdapter extends Stream<Uint8List> implements Socket {
-  _RawSocketAdapter(this._raw) {
+  _RawSocketAdapter(
+    this._raw, {
+    required Duration requestTimeout,
+    required int maxHeaderBytes,
+    required void Function() onRequestHead,
+  })  : _maxHeaderBytes = maxHeaderBytes,
+        _onRequestHead = onRequestHead {
+    _headTimer = Timer(requestTimeout, () {
+      if (!_headSeen) _finish();
+    });
     _controller = StreamController<Uint8List>(
       sync: true,
       onPause: () => _raw.readEventsEnabled = false,
@@ -169,6 +243,12 @@ class _RawSocketAdapter extends Stream<Uint8List> implements Socket {
   }
 
   final RawSecureSocket _raw;
+  final int _maxHeaderBytes;
+  final void Function() _onRequestHead;
+  Timer? _headTimer;
+  bool _headSeen = false;
+  int _headBytes = 0;
+  int _lastBytes = 0; // the last four bytes seen, for the blank line
   late final StreamController<Uint8List> _controller;
   final _done = Completer<void>();
 
@@ -188,16 +268,45 @@ class _RawSocketAdapter extends Stream<Uint8List> implements Socket {
       case RawSocketEvent.read:
         if (_destroyed) return;
         final data = _raw.read();
-        if (data != null && !_controller.isClosed) _controller.add(data);
+        if (data == null) return;
+        if (!_headSeen && !_withinHead(data)) {
+          _finish();
+          return;
+        }
+        if (!_controller.isClosed) _controller.add(data);
       case RawSocketEvent.write:
         _flushWrites();
       case RawSocketEvent.readClosed:
         _readClosed = true;
         if (!_controller.isClosed) _controller.close();
+        // The peer left before it finished its request: nothing to answer.
+        if (!_headSeen) _finish();
         _closeIfDone();
       case RawSocketEvent.closed:
         _finish();
     }
+  }
+
+  /// Follows the bytes up to the blank line that ends the request head; false
+  /// once the head is longer than [_maxHeaderBytes].
+  bool _withinHead(Uint8List data) {
+    for (final byte in data) {
+      _headBytes++;
+      _lastBytes = ((_lastBytes << 8) | byte) & 0xFFFFFFFF;
+      if (_lastBytes == 0x0D0A0D0A || (_lastBytes & 0xFFFF) == 0x0A0A) {
+        _endHead();
+        return true;
+      }
+      if (_headBytes > _maxHeaderBytes) return false;
+    }
+    return true;
+  }
+
+  void _endHead() {
+    if (_headSeen) return;
+    _headSeen = true;
+    _headTimer?.cancel();
+    _onRequestHead();
   }
 
   void _onError(Object error, [StackTrace? stackTrace]) {
@@ -214,6 +323,7 @@ class _RawSocketAdapter extends Stream<Uint8List> implements Socket {
   }
 
   void _finish([Object? error, StackTrace? stackTrace]) {
+    _endHead();
     if (!_destroyed) {
       _destroyed = true;
       try {

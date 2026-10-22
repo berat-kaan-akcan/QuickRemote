@@ -256,6 +256,51 @@ void main() {
       expect(input.calls.where((c) => c.startsWith('setVolume')).length, 30);
     });
 
+    test('a prefix command with anything but a short number is not run, acked or shown', () async {
+      final client = await authed();
+      client.command('SLIDE_PREVIEW:${'A' * 900}');
+      client.command('START_AT:0x10');
+      client.command('START_AT:5\nNEXT');
+      client.command('NEXT');
+      await client.next('ack');
+      await settle();
+      expect(input.calls.where((c) => c.startsWith('slideStartAt')), isEmpty);
+      expect(
+        client.received.where((m) => m is Map && '${m['command']}'.contains(RegExp('SLIDE_PREVIEW|START_AT'))),
+        isEmpty,
+      );
+      expect(server.lastCommand.value, 'NEXT');
+    });
+
+    test('the button releases have a budget of their own, not an unlimited one', () async {
+      final client = await authed();
+      for (var i = 0; i < 100; i++) {
+        client.command('LEFT_UP');
+      }
+      client.command('NEXT'); // acked after the releases are handled
+      await client.next('ack');
+      await settle();
+      expect(input.calls.where((c) => c == 'leftUp').length, 30);
+      expect(input.calls, contains('slideNext'));
+    });
+
+    test('a release is not dropped because the other commands used their budget up', () async {
+      final client = await authed();
+      for (var i = 1; i <= 40; i++) {
+        client.command('VOLUME_SET:$i');
+      }
+      client.command('LEFT_UP');
+      await eventually(() => input.calls.contains('leftUp'));
+    });
+
+    test('commands refused by the allowlist count too, and a flood ends the connection', () async {
+      final client = await authed();
+      for (var i = 0; i < 400; i++) {
+        client.command('FORMAT_C');
+      }
+      expect(await client.closed.future.timeout(const Duration(seconds: 3)), 4008);
+    });
+
     test('closes after three malformed messages', () async {
       final client = await authed();
       for (var i = 0; i < 3; i++) {
