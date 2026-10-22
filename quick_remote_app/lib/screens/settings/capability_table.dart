@@ -61,6 +61,10 @@ enum CapNote {
   noAnswer,
   keysOnly,
   wpsNoMedia,
+
+  /// Written but never run on a real Windows PC (the laser overlay's
+  /// spotlight and magnifier, slide pictures; CLAUDE.md).
+  unverifiedWindows,
 }
 
 class CapCell {
@@ -115,7 +119,9 @@ class CapabilityTable {
   }
 
   static Map<CapFeature, CapCell> _wifi(CapOs os, CapProgram program) {
-    final spotlight = os == CapOs.windows ? _yes : _p(CapNote.noMagnifier);
+    final spotlight = os == CapOs.windows
+        ? _y(CapNote.unverifiedWindows)
+        : _p(CapNote.noMagnifier);
     return switch (program) {
       CapProgram.powerpoint || CapProgram.wps when os == CapOs.windows => {
         CapFeature.nextPrev: _yes,
@@ -128,7 +134,7 @@ class CapabilityTable {
         CapFeature.slideInfo: _yes,
         CapFeature.preview: program == CapProgram.wps
             ? _p(CapNote.screenOnly)
-            : _yes,
+            : _y(CapNote.unverifiedWindows),
         CapFeature.slideMedia: program == CapProgram.wps
             ? _p(CapNote.playOnly)
             : _yes,

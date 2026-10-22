@@ -507,6 +507,8 @@
   "reportCopied": "Rapor panoya kopyalandı",
   "noSlideData": "Slayt verisi bulunamadı",
   "backgroundNotification": "Arka planda bağlantı devam ediyor...",
+  "notificationDeniedNote": "Bildirim izni kapalı. Bağlantı yine de çalışır, ancak ekran kapalıyken bağlantıyı tutan bildirim görünmeyebilir ve Android uygulamayı durdurabilir.",
+  "notificationDeniedAction": "Ayarları aç",
   "homeHeroSubtitle": "Bilgisayardaki QuickRemote PC'nin QR kodunu tarayın ya da telefonu Bluetooth ile klavye ve fare olarak bağlayın.",
   "@homeHeroSubtitle": {
     "description": "Home screen: how to connect, under the tagline."
@@ -739,6 +741,7 @@
   "capNoteNoAnswer": "Bluetooth'ta bilgisayar telefona bilgi göndermez.",
   "capNoteKeysOnly": "Yalnızca tuşlar; ses seviyesi ve şarkı adı görünmez.",
   "capNoteWpsNoMedia": "WPS'teki video uzaktan oynatılamıyor.",
+  "capNoteUnverifiedWindows": "† Yazıldı, ancak gerçek bir Windows bilgisayarda henüz denenmedi.",
   "capLevelYes": "Çalışır",
   "capLevelPartial": "Kısmen",
   "capLevelNo": "Çalışmaz",
