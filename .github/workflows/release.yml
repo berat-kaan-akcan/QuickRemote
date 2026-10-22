@@ -94,6 +94,8 @@ jobs:
       CODE: ${{ needs.version.outputs.code }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -164,6 +166,8 @@ jobs:
       CODE: ${{ needs.version.outputs.code }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Linux build dependencies
         working-directory: .
         run: |
@@ -299,6 +303,8 @@ jobs:
             echo "::notice::ANDROID_KEYSTORE_BASE64 is not set: no APKs in this release."
           fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
         if: steps.key.outputs.present == 'true'
       - uses: actions/setup-java@v4
         if: steps.key.outputs.present == 'true'
@@ -377,11 +383,11 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
       PRERELEASE: ${{ needs.version.outputs.prerelease }}
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -414,6 +420,9 @@ jobs:
           } > notes.md
           cat notes.md
       - name: Draft release
+        env:
+          # Step level, like the signing secrets: no other step sees the token.
+          GH_TOKEN: ${{ github.token }}
         run: |
           tag=$GITHUB_REF_NAME
           if gh release view "$tag" > /dev/null 2>&1; then
