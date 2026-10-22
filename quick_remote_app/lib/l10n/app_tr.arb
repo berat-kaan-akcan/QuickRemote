@@ -13,6 +13,7 @@
   "presenterViewOpenHint": "Sunucu görünümünü aç",
   "presenterNextUp": "Sıradaki",
   "presenterLastSlide": "Son slayt",
+  "presenterLaserHint": "Lazeri perdede göstermek için slayta dokun",
   "slidePreviewLabel": "Slayt {slide} önizlemesi",
   "@slidePreviewLabel": {
     "placeholders": {
