@@ -8,11 +8,10 @@ import '../../../l10n/app_language.dart';
 import '../../../providers/appearance_provider.dart';
 import '../../../providers/desktop_provider.dart';
 import '../../../providers/language_provider.dart';
-import '../../../providers/laser_overlay_provider.dart';
 import '../../../services/desktop/problem_report.dart';
-import '../../../services/overlay/laser_overlay.dart';
 import '../../../widgets/status_snack_bar.dart';
 import '../../../widgets/ui/ui.dart';
+import 'laser_setting_section.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -183,7 +182,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
     final l10n = context.l10n;
     final languages = context.watch<LanguageProvider>();
     final appearance = context.watch<AppearanceProvider>();
-    final laser = context.watch<LaserOverlayProvider>();
     final p = context.palette;
     return AlertDialog(
       // A short window scrolls the content instead of cutting it off.
@@ -289,37 +287,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
             ),
             if (Platform.isLinux || Platform.isWindows) ...[
               Divider(color: p.border, height: AppSpace.lg),
-              Row(
-                children: [
-                  Icon(Icons.adjust_rounded, size: 20, color: p.textSecondary),
-                  const SizedBox(width: AppSpace.sm),
-                  Expanded(
-                    child: Text(
-                      l10n.settingsLaser,
-                      style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpace.sm - 3),
-              AppSegmented<LaserOverlayMode>(
-                height: 40,
-                selected: laser.mode,
-                onChanged: laser.setMode,
-                segments: [
-                  AppSegment(value: LaserOverlayMode.auto, label: l10n.laserOverlayAuto, icon: Icons.auto_awesome_rounded),
-                  AppSegment(value: LaserOverlayMode.always, label: l10n.laserOverlayAlways, icon: Icons.layers_rounded),
-                  AppSegment(value: LaserOverlayMode.never, label: l10n.laserOverlayNever, icon: Icons.slideshow_rounded),
-                ],
-              ),
-              const SizedBox(height: AppSpace.xs + 1),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.laserOverlayNote,
-                  style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
-                ),
-              ),
+              const LaserSettingSection(),
             ],
             ..._desktopSection(context),
             ..._troubleshootingSection(context),

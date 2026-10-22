@@ -343,17 +343,50 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsLaser => 'Lazer';
 
   @override
-  String get laserOverlayAuto => 'Otomatik';
+  String get laserOverlayAuto => 'Otomatik (önerilen)';
 
   @override
-  String get laserOverlayAlways => 'QuickRemote';
+  String get laserOverlayAlways => 'Her zaman QuickRemote lazeri';
 
   @override
-  String get laserOverlayNever => 'Program';
+  String get laserOverlayNever => 'Sunum programının kendi lazeri';
+
+  @override
+  String get laserOverlayAutoDetail =>
+      'PowerPoint ve WPS kendi lazerini kullanır, diğer her yerde QuickRemote\'un lazeri çizer.';
+
+  @override
+  String get laserOverlayAlwaysDetail =>
+      'Her pencerenin üstünde çalışır: PDF, tarayıcı, videonun üstü.';
+
+  @override
+  String get laserOverlayNeverDetail =>
+      'Yalnızca slayt gösterisi açıkken çalışır.';
+
+  @override
+  String get laserTableWhere => 'Nerede';
+
+  @override
+  String get laserTableAuto => 'Otomatik';
+
+  @override
+  String get laserTableAlways => 'QuickRemote';
+
+  @override
+  String get laserTableNever => 'Program';
+
+  @override
+  String get laserTableProgram => 'Program';
+
+  @override
+  String get laserTablePdf => 'PDF, tarayıcı';
+
+  @override
+  String get laserTableOutsideShow => 'Gösteri dışında';
 
   @override
   String get laserOverlayNote =>
-      'QuickRemote lazeri her pencerenin üstünde çizer: Impress\'te videonun üstünde, PDF\'te, tarayıcıda ve gösteri dışında da. Otomatik\'te PowerPoint ve WPS kendi lazerini kullanır. Gösteri dışındaki lazer, telefon yeniden bağlanınca açılır.';
+      'Gösteri dışındaki lazer, telefon yeniden bağlanınca açılır.';
 
   @override
   String phonesConnected(int count) {
