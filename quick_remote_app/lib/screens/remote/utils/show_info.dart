@@ -98,10 +98,13 @@ class ShowInfo {
   bool get takeOver => caps?.has(RemoteCaps.takeOver) ?? false;
 }
 
-/// The program the remote names: the one running the show, else the one the
-/// user marked for this PC in the program sheet, else the PC's first.
+/// The program the remote names: the one running the show, else the one in
+/// front when the PC tells, else the one the user marked for this PC in the
+/// program sheet, else the PC's first.
 String remoteProgram(WebSocketService ws, SettingsProvider settings) {
   if (ws.isPptRunning) return ws.presenter;
+  final front = ws.frontPresenter;
+  if (front != null && ws.presenters.contains(front)) return front;
   final marked = settings.presenterFor(ws.serverAddress);
   if (marked != null && ws.presenters.contains(marked)) return marked;
   return ws.presenters.isNotEmpty ? ws.presenters.first : ws.presenter;
