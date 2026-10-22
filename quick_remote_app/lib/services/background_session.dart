@@ -24,13 +24,17 @@ class BackgroundSession {
     notificationText: notificationText,
     notificationImportance: AndroidNotificationImportance.normal,
     notificationIcon: AndroidResource(name: 'ic_launcher', defType: 'mipmap'),
+    // The manifest removes REQUEST_IGNORE_BATTERY_OPTIMIZATIONS (Google Play
+    // restricts it); the foreground service, its wake lock and Wi-Fi lock keep
+    // the session. Without this the plugin fails when the permission is missing.
+    shouldRequestBatteryOptimizationsOff: false,
   );
 
   static int _holders = 0;
 
   /// Result of the one initialization attempt per app run (null: not tried).
-  /// It asks for the notification permission and the battery optimization
-  /// exemption the plugin requires; a refusal is not asked again until restart.
+  /// It asks for the notification permission; a refusal is not asked again
+  /// until restart.
   static bool? _available;
 
   static Future<void> _queue = Future.value();
@@ -70,7 +74,7 @@ class BackgroundSession {
       _available = await FlutterBackground.initialize(androidConfig: _config);
     }
     if (_available != true) {
-      debugPrint('Background execution unavailable: battery optimization exemption not granted');
+      debugPrint('Background execution unavailable: the plugin could not be initialized');
       return;
     }
     // The screen may have closed while the permission dialogs were open.
