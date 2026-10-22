@@ -43,6 +43,8 @@ ScreenCapture screenOf(int Function(int x, int y) paint) {
 }
 
 void main() {
+  // The take-over reads /proc/<pid>/fd, absolute Unix links: Linux-only.
+  final noProc = !Platform.isLinux;
   late Directory tmp;
   late String proc;
   late List<(String, Map<String, Object?>)> requests;
@@ -130,6 +132,7 @@ void main() {
       expect(closed, [editor.id]);
       expect([for (final r in requests) (r.$1, r.$2['path'])], [('open', a), ('open', b)]);
     },
+    skip: noProc,
   );
 
   test('a running show goes on at the slide on screen', () async {
@@ -140,7 +143,7 @@ void main() {
     expect(closed.first, show.id);
     expect(commands(), ['open', 'export', 'export', 'export', 'startAt']);
     expect(requests.last.$2, {'slide': 2});
-  });
+  }, skip: noProc);
 
   test('a show whose slide matches none starts at the first', () async {
     holdOpen(['b.pptx']);
@@ -149,7 +152,7 @@ void main() {
     expect(await takeOver().run(), isNull);
     expect(commands().last, 'startAt');
     expect(requests.last.$2, {'slide': 1});
-  });
+  }, skip: noProc);
 
   test('a WPS that does not close (its save question) is left alone', () async {
     holdOpen(['b.pptx']);
@@ -157,7 +160,7 @@ void main() {
     exitsOnClose = false;
     expect(await takeOver().run(), RemoteError.wpsTakeOverNotClosed);
     expect(requests, isEmpty);
-  });
+  }, skip: noProc);
 
   test('a question of WPS already open is never closed: it waits for the user', () async {
     holdOpen(['b.pptx']);
@@ -166,7 +169,7 @@ void main() {
     expect(await takeOver().run(), RemoteError.wpsTakeOverNotClosed);
     expect(closed, isEmpty);
     expect(requests, isEmpty);
-  });
+  }, skip: noProc);
 
   test('nothing to take over: no WPS of the user, no saved file', () async {
     windows = [bridgeEditor];
@@ -183,7 +186,7 @@ void main() {
     replies['open'] = {'ok': false, 'error': 'WPS_START_FAILED'};
     expect(await takeOver().run(), RemoteError.wpsTakeOverFailed);
     expect(reopened, [b]);
-  });
+  }, skip: noProc);
 
   group('presentationFiles', () {
     test('presentations only, lock files lead to their file', () {
@@ -200,7 +203,7 @@ void main() {
         deck.path,
       ]);
       expect(WpsTakeOver.presentationFiles(8, proc: proc), isEmpty);
-    });
+    }, skip: noProc);
 
     test('the file a title names goes last, with or without its extension', () {
       const files = ['/d/a.pptx', '/d/ab.pptx', '/d/c.dps'];
