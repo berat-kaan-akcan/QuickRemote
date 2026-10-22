@@ -33,6 +33,8 @@ class LinuxInputService implements InputService {
         _captureWindow = X11Windows.instance.capture,
         _windowTitle = X11Windows.instance.title,
         _closeWindow = X11Windows.instance.close,
+        _rootArea = X11Windows.instance.rootArea,
+        _moveCursor = UinputDevice.pointer.moveAbsolute,
         _kwinWindow = (() => KWinActiveWindow.instance.current),
         _takeOverOverride = null,
         _keys = UinputDevice.instance.combo {
@@ -53,6 +55,8 @@ class LinuxInputService implements InputService {
     ScreenCapture? Function(int window)? captureWindow,
     KWinWindow? Function()? kwinWindow,
     WpsTakeOver? takeOver,
+    ScreenArea? Function()? rootArea,
+    void Function(double fx, double fy)? moveCursor,
   })  : _impress = impress,
         _wps = wps,
         _activeWindow = activeWindow,
@@ -62,6 +66,8 @@ class LinuxInputService implements InputService {
         _windowTitle = ((_) => null),
         _closeWindow = ((_) => false),
         _kwinWindow = kwinWindow ?? (() => null),
+        _rootArea = rootArea ?? (() => null),
+        _moveCursor = moveCursor ?? ((_, _) {}),
         _takeOverOverride = takeOver,
         _keys = keys;
 
@@ -73,6 +79,10 @@ class LinuxInputService implements InputService {
   final ScreenArea? Function(int window) _windowArea;
   final ScreenCapture? Function(int window) _captureWindow;
   final String? Function(int window) _windowTitle;
+  final ScreenArea? Function() _rootArea;
+
+  /// Moves the absolute pointer to fractions of the desktop.
+  final void Function(double fx, double fy) _moveCursor;
   final bool Function(int window) _closeWindow;
   final KWinWindow? Function() _kwinWindow;
   final WpsTakeOver? _takeOverOverride;
@@ -403,6 +413,33 @@ class LinuxInputService implements InputService {
   Future<ScreenCapture?> captureScreen() async {
     final window = _audienceWindow();
     return window == null ? null : _captureWindow(window.id);
+  }
+
+  /// The show's window and the desktop for [moveCursorInShow], read again
+  /// at most once a second, not for every frame.
+  (ScreenArea, ScreenArea)? _cursorAreas;
+  DateTime _cursorAreasAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// The cursor goes to that point of the audience's window (a WPS show;
+  /// Impress draws its laser itself), through the absolute uinput pointer,
+  /// whose position is a fraction of the X root. Under XWayland only, like
+  /// the window lookup. Not tried on a real show yet.
+  @override
+  void moveCursorInShow(double relX, double relY) {
+    final now = DateTime.now();
+    if (now.difference(_cursorAreasAt) > const Duration(seconds: 1)) {
+      _cursorAreasAt = now;
+      final window = _audienceWindow();
+      final area = window == null ? null : _windowArea(window.id);
+      final root = area == null ? null : _rootArea();
+      _cursorAreas = area == null || root == null || root.width <= 0 || root.height <= 0 ? null : (area, root);
+    }
+    final (area, root) = _cursorAreas ?? (null, null);
+    if (area == null || root == null) return;
+    _moveCursor(
+      (area.x - root.x + relX * (area.width - 1)) / root.width,
+      (area.y - root.y + relY * (area.height - 1)) / root.height,
+    );
   }
 
   X11Window? _audienceWindow() {

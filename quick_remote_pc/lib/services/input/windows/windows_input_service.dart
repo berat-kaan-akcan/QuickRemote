@@ -13,6 +13,7 @@ import 'slide_state_controller.dart';
 import 'smtc_controller.dart';
 import 'volume_controller.dart';
 import 'window_capture.dart';
+import 'windows_mouse_controller.dart';
 
 class WindowsInputService implements InputService {
   @override
@@ -223,6 +224,35 @@ class WindowsInputService implements InputService {
   bool get handlesDrawPointer => false;
   @override
   void drawPointerMoved(double relX, double relY) {}
+
+  /// The show's window for [moveCursorInShow], looked up again (it enumerates
+  /// the windows) at most once a second, not for every frame.
+  HWND? _cursorShow;
+  DateTime _cursorShowAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// The cursor goes to that point of the show's window rectangle, whose
+  /// slide fills its monitor. Not tried on Windows yet.
+  @override
+  void moveCursorInShow(double relX, double relY) {
+    final now = DateTime.now();
+    var show = _cursorShow;
+    if (show == null || now.difference(_cursorShowAt) > const Duration(seconds: 1) || !IsWindow(show)) {
+      show = _cursorShow = PptController.showWindow(PresenterCom.active);
+      _cursorShowAt = now;
+    }
+    if (show == null) return;
+    final rect = calloc<RECT>();
+    try {
+      if (!GetWindowRect(show, rect).value) return;
+      final r = rect.ref;
+      WindowsMouseController.moveTo(
+        r.left + relX * (r.right - r.left - 1),
+        r.top + relY * (r.bottom - r.top - 1),
+      );
+    } finally {
+      calloc.free(rect);
+    }
+  }
 
   @override
   void leftClick() => MouseSimulator.leftClick();

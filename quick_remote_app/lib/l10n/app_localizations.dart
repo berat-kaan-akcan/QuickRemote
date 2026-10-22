@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'Son slayt'**
   String get presenterLastSlide;
 
+  /// No description provided for @presenterLaserHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lazeri perdede göstermek için slayta dokun'**
+  String get presenterLaserHint;
+
   /// No description provided for @slidePreviewLabel.
   ///
   /// In tr, this message translates to:

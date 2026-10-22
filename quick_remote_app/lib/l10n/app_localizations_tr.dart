@@ -52,6 +52,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get presenterLastSlide => 'Son slayt';
 
   @override
+  String get presenterLaserHint => 'Lazeri perdede göstermek için slayta dokun';
+
+  @override
   String slidePreviewLabel(int slide) {
     return 'Slayt $slide önizlemesi';
   }

@@ -19,6 +19,12 @@ import 'widgets/slide_image.dart';
 /// It opens over the remote screen, which keeps the volume keys, the
 /// background session and the timer running. While the link is down the
 /// last state stays, faded.
+///
+/// With a PC that takes the laser as a point (`absLaser`) and a picture on
+/// screen, the Laser key turns the picture into a pointing area: the laser
+/// is where the finger is (MoveFrame.laserAbs), and the phone draws its dot
+/// on the picture at once, so the picture's delay does not show. The picture
+/// grows then, and the next slide goes.
 class PresenterViewScreen extends StatefulWidget {
   const PresenterViewScreen({
     super.key,
@@ -62,14 +68,56 @@ class _Shown {
 class _PresenterViewScreenState extends State<PresenterViewScreen> {
   final _Shown _shown = _Shown();
 
+  /// The picture is a pointing area (the Laser key).
+  bool _laser = false;
+
+  /// The finger is on it: the laser is on at the PC.
+  bool _pointing = false;
+
+  /// Where the dot is, fractions of the picture's frame.
+  Offset? _dot;
+
+  WebSocketService? _ws;
+
   void _send(String command) {
     HapticFeedback.mediumImpact();
     widget.onSend(command);
   }
 
+  void _pointAt(Offset local, Size size, {bool start = false}) {
+    final ws = _ws;
+    if (ws == null || size.isEmpty) return;
+    final at = Offset(
+      (local.dx / size.width).clamp(0.0, 1.0),
+      (local.dy / size.height).clamp(0.0, 1.0),
+    );
+    if (start) {
+      HapticFeedback.selectionClick();
+      _pointing = true;
+      ws.sendCommand(RemoteCommands.modeLaser);
+    }
+    ws.sendLaserAt(at.dx, at.dy);
+    setState(() => _dot = at);
+  }
+
+  /// The finger left: the laser goes, as when the touchpad's finger lifts.
+  void _endPointing() {
+    if (!_pointing) return;
+    _pointing = false;
+    _ws?.sendCommand(RemoteCommands.laserOff);
+    _ws?.sendCommand(RemoteCommands.modeArrow);
+    if (mounted) setState(() => _dot = null);
+  }
+
+  @override
+  void dispose() {
+    _endPointing();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ws = context.watch<WebSocketService>();
+    final ws = _ws = context.watch<WebSocketService>();
     final connected = ws.isConnected;
     if (connected) {
       _shown
@@ -83,15 +131,40 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
     }
     // A viewer in front turns its pages with Next and Previous too.
     final canSend = connected && (_shown.running || _shown.screen);
+    // The PC ignores the laser outside a show unless its overlay draws it.
+    final canPoint = connected && (_shown.running || ws.toolsAnywhere);
+    final laserKey = ws.absLaserAvailable && _shown.image != null;
+    final laser = _laser && laserKey && canPoint;
+    if (!laser && _pointing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _endPointing());
+    }
     final landscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
-    final current = SlideImage(
+    final picture = SlideImage(
       slide: _shown.current,
       image: _shown.image,
       radius: AppRadius.md,
       label: _shown.screen ? context.l10n.screenPreviewLabel : null,
     );
+    final Widget current = laser
+        ? _PointingArea(
+            dot: _dot,
+            hint: context.l10n.presenterLaserHint,
+            onDown: (local, size) => _pointAt(local, size, start: true),
+            onMove: (local, size) {
+              if (_pointing) _pointAt(local, size);
+            },
+            onUp: _endPointing,
+            child: picture,
+          )
+        : picture;
+    final laserToggle = laserKey
+        ? _LaserToggle(
+            on: laser,
+            onTap: canPoint ? () => setState(() => _laser = !_laser) : null,
+          )
+        : null;
     final keys = _Keys(
       onPrev: canSend ? () => _send(RemoteCommands.prev) : null,
       onNext: canSend ? () => _send(RemoteCommands.next) : null,
@@ -103,7 +176,7 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
         ? Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(flex: 3, child: Center(child: current)),
+              Expanded(flex: laser ? 4 : 3, child: Center(child: current)),
               const SizedBox(width: AppSpace.md),
               Expanded(
                 flex: 2,
@@ -113,8 +186,10 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
                     if (_shown.screen)
                       const Spacer()
                     else ...[
-                      nextUp,
-                      const SizedBox(height: AppSpace.sm),
+                      if (!laser) ...[
+                        nextUp,
+                        const SizedBox(height: AppSpace.sm),
+                      ],
                       Expanded(child: notes),
                     ],
                     const SizedBox(height: AppSpace.sm),
@@ -132,8 +207,10 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
               if (_shown.screen)
                 const Spacer()
               else ...[
-                nextUp,
-                const SizedBox(height: AppSpace.sm),
+                if (!laser) ...[
+                  nextUp,
+                  const SizedBox(height: AppSpace.sm),
+                ],
                 Expanded(child: notes),
               ],
               const SizedBox(height: AppSpace.sm),
@@ -153,7 +230,7 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _TopBar(shown: _shown, timer: widget.timer),
+              _TopBar(shown: _shown, timer: widget.timer, laser: laserToggle),
               Reveal(
                 child: connected && !_shown.running && !_shown.screen
                     ? Padding(
@@ -182,10 +259,13 @@ class _PresenterViewScreenState extends State<PresenterViewScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.shown, required this.timer});
+  const _TopBar({required this.shown, required this.timer, this.laser});
 
   final _Shown shown;
   final PresentationTimerController timer;
+
+  /// The Laser key, when the picture can point.
+  final Widget? laser;
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +292,7 @@ class _TopBar extends StatelessWidget {
                 ),
               ),
             ),
+            ?laser,
             PresentationTimer(controller: timer),
           ],
         ),
@@ -258,8 +339,133 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
+          ?laser,
           PresentationTimer(controller: timer),
         ],
+      ),
+    );
+  }
+}
+
+/// The Laser key of the top bar: on, the picture points.
+class _LaserToggle extends StatelessWidget {
+  const _LaserToggle({required this.on, required this.onTap});
+
+  final bool on;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpace.xs),
+      child: Pressable(
+        onTap: onTap,
+        selected: on,
+        semanticLabel: context.l10n.toolLaser,
+        tooltip: context.l10n.presenterLaserHint,
+        borderRadius: AppRadius.all(AppRadius.pill),
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.fast),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: on ? p.accent : p.surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: on ? p.accent : p.border),
+          ),
+          child: Icon(
+            Icons.highlight_rounded,
+            size: 22,
+            color: on ? readableOn(p.accent) : p.accentText,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The slide picture as a pointing area: the finger's place, as fractions
+/// of the picture's 16:9 frame, which matches the show's 16:9 screen (a
+/// slide of another shape is fitted into both the same way). The dot shows
+/// where the laser is.
+class _PointingArea extends StatelessWidget {
+  const _PointingArea({
+    required this.dot,
+    required this.hint,
+    required this.onDown,
+    required this.onMove,
+    required this.onUp,
+    required this.child,
+  });
+
+  final Offset? dot;
+  final String hint;
+  final void Function(Offset local, Size size) onDown;
+  final void Function(Offset local, Size size) onMove;
+  final VoidCallback onUp;
+  final Widget child;
+
+  static const _dotSize = 16.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Semantics(
+      label: hint,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final size = constraints.biggest;
+            final at = dot;
+            return Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (e) => onDown(e.localPosition, size),
+              onPointerMove: (e) => onMove(e.localPosition, size),
+              onPointerUp: (_) => onUp(),
+              onPointerCancel: (_) => onUp(),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  child,
+                  IgnorePointer(
+                    child: DecoratedBox(
+                      position: DecorationPosition.foreground,
+                      decoration: BoxDecoration(
+                        borderRadius: AppRadius.all(AppRadius.md),
+                        border: Border.all(color: p.accent, width: 2),
+                      ),
+                    ),
+                  ),
+                  if (at != null)
+                    Positioned(
+                      key: const ValueKey('laserDot'),
+                      left: at.dx * size.width - _dotSize / 2,
+                      top: at.dy * size.height - _dotSize / 2,
+                      width: _dotSize,
+                      height: _dotSize,
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: p.accent,
+                            boxShadow: [
+                              BoxShadow(
+                                color: p.accent.withValues(alpha: 0.6),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
