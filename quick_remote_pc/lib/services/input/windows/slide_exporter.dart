@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../powershell_runner.dart';
 import '../input_service.dart';
 import '../slide_files.dart';
+import 'ppt_controller.dart';
 import 'presenter_com.dart';
 
 /// Exports slides of the running show as JPEGs with COM `Slide.Export`.
@@ -10,8 +11,10 @@ import 'presenter_com.dart';
 /// Runs in the polling PowerShell, never the command one, so NEXT and PREV
 /// never wait for an export. The file goes through [SlideFiles].
 ///
-/// PowerPoint only: WPS 12.2 has COM calls that silently do nothing
-/// (`Player`), and its `Export` has not been checked on a real WPS yet.
+/// PowerPoint and WPS (measured on PowerPoint 365 16.0.20430 and WPS
+/// 12.1.0.29162, in a show and outside one: ~20 ms a slide, the first
+/// ~430 ms). An export takes the keyboard focus from PowerPoint's show, so
+/// it is given back after each one ([PptController.restoreShowFocus]).
 class SlideExporter {
   SlideExporter._();
 
@@ -20,6 +23,8 @@ class SlideExporter {
     try {
       final file = await SlideFiles.path(index, width);
       final output = await PowerShellRunner.execute(script(index, width, file), isPolling: true);
+      // The export takes the keyboard focus from the show.
+      PptController.restoreShowFocus();
       final height = parseHeight(output);
       if (height == null) {
         await SlideFiles.discard(file);
@@ -52,7 +57,7 @@ class SlideExporter {
     return '${PresenterCom.lookup}'
         '''
 try {
-    if (\$ppt -ne \$null -and \$qrPresenter -eq 'powerpoint' -and \$ppt.SlideShowWindows.Count -gt 0) {
+    if (\$ppt -ne \$null -and \$ppt.SlideShowWindows.Count -gt 0) {
         \$presentation = \$ppt.SlideShowWindows.Item(1).Presentation
         if ($index -le \$presentation.Slides.Count) {
             \$setup = \$presentation.PageSetup

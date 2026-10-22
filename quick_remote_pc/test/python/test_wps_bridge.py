@@ -275,6 +275,7 @@ class ExportTest(unittest.TestCase):
             path = os.path.join(tmp, "slide-1-64.jpg")
             self.assertEqual(wps.export({"index": 1, "width": 64, "path": path}), {"height": 36})
 
+    @unittest.skipUnless(sys.platform.startswith("linux"), "needs waitpid")
     def test_open_answers_the_slide_count(self):
         with tempfile.NamedTemporaryFile(suffix=".pptx") as f:
             pres = Obj(get_Slides=(0, Obj(get_Count=(0, 7))))
@@ -286,6 +287,7 @@ class ExportTest(unittest.TestCase):
             self.assertEqual(wps.open({"path": f.name}), {"pid": 42, "total": 7})
             self.assertEqual(presentations.calls, [("Open", os.path.abspath(f.name))])
 
+    @unittest.skipUnless(sys.platform.startswith("linux"), "needs waitpid")
     def test_open_replaces_a_wps_that_stopped_answering(self):
         with tempfile.NamedTemporaryFile(suffix=".pptx") as f:
             pres = Obj(get_Slides=(0, Obj(get_Count=(0, 2))))
