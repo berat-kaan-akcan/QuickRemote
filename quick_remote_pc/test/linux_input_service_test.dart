@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/input/input_service.dart';
 import 'package:quick_remote_pc/services/input/slide_files.dart';
 import 'package:quick_remote_pc/services/input/linux/evdev_keys.dart';
+import 'package:quick_remote_pc/services/input/linux/kwin_active_window.dart';
 import 'package:quick_remote_pc/services/input/linux/linux_input_service.dart';
 import 'package:quick_remote_pc/services/input/linux/script_bridge.dart';
 import 'package:quick_remote_pc/services/input/linux/x11_windows.dart';
@@ -67,6 +68,7 @@ void main() {
   late List<List<int>> keys;
   late List<(RemoteError, String?)> errors;
   X11Window? active;
+  KWinWindow? kwin;
   List<X11Window> windows = const [];
 
   /// The windows captureScreen took a picture of.
@@ -79,6 +81,7 @@ void main() {
       activeWindow: () => active,
       clientWindows: () => windows,
       keys: keys.add,
+      kwinWindow: () => kwin,
       windowArea: (id) => id == 7 ? (x: 1920, y: 0, width: 1920, height: 1080) : null,
       captureWindow: (id) {
         captured.add(id);
@@ -95,6 +98,7 @@ void main() {
     keys = [];
     errors = [];
     active = null;
+    kwin = null;
     windows = const [];
     captured = [];
   });
@@ -426,6 +430,64 @@ void main() {
       active = null;
       await s.slideEnd();
       expect(keys.last, [Evdev.keyEsc]);
+    });
+
+    group('a native Wayland browser KWin reports', () {
+      test('START and END toggle Chrome\'s full screen, not F5', () async {
+        kwin = const KWinWindow('google-chrome', 'google-chrome', id: '{a}');
+        final s = service();
+        await s.slideStart();
+        await s.slideEnd();
+        expect(keys, [
+          [Evdev.fromVk(0x7A)],
+          [Evdev.fromVk(0x7A)],
+        ]);
+        expect(impress.requests, isEmpty);
+      });
+
+      test('START opens Firefox\'s presentation mode', () async {
+        kwin = const KWinWindow('org.mozilla.firefox', 'org.mozilla.firefox', id: '{b}');
+        await service().slideStart();
+        expect(keys, [
+          [Evdev.keyLeftCtrl, Evdev.keyLeftAlt, Evdev.keyP]
+        ]);
+      });
+
+      test('NEXT and PREV are the arrows', () async {
+        kwin = const KWinWindow('firefox', 'firefox', id: '{b}');
+        final s = service();
+        s.slideNext();
+        s.slidePrev();
+        await pumpEventQueue();
+        expect(keys, [
+          [Evdev.fromVk(0x27)],
+          [Evdev.fromVk(0x25)],
+        ]);
+      });
+
+      test('END in another window is the usual Esc', () async {
+        kwin = const KWinWindow('google-chrome', 'google-chrome', id: '{a}');
+        final s = service();
+        await s.slideStart();
+        kwin = const KWinWindow('google-chrome', 'google-chrome', id: '{c}');
+        await s.slideEnd();
+        expect(keys.last, [Evdev.keyEsc]);
+      });
+
+      test('the phone hears a browser is in front', () async {
+        kwin = const KWinWindow('google-chrome', 'google-chrome', id: '{a}');
+        expect((await service().capabilities()).front, 'browser');
+      });
+    });
+
+    test('a stale X11 answer does not win over KWin', () {
+      const stale = X11Window(9, ['wpp', 'Wpp']);
+      const chromeWindow = KWinWindow('google-chrome', 'google-chrome', id: '{a}');
+      expect(LinuxInputService.frontWindow(stale, chromeWindow)!.wmClass, contains('google-chrome'));
+      expect(LinuxInputService.frontWindow(stale, chromeWindow)!.id, isNegative);
+      // The same window as X11's: X11's, with its id.
+      expect(LinuxInputService.frontWindow(stale, const KWinWindow('wpp', 'wpp'))!.id, 9);
+      expect(LinuxInputService.frontWindow(stale, null)!.id, 9);
     });
 
     test('START gives Impress time to open a PDF as a presentation', () async {

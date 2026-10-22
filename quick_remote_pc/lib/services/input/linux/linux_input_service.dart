@@ -5,6 +5,7 @@ import '../pdf_viewers.dart';
 import '../slide_files.dart';
 import 'evdev_keys.dart';
 import 'impress_bridge.dart';
+import 'kwin_active_window.dart';
 import 'mpris_controller.dart';
 import 'pactl_volume.dart';
 import 'script_bridge.dart';
@@ -32,9 +33,11 @@ class LinuxInputService implements InputService {
         _captureWindow = X11Windows.instance.capture,
         _windowTitle = X11Windows.instance.title,
         _closeWindow = X11Windows.instance.close,
+        _kwinWindow = (() => KWinActiveWindow.instance.current),
         _takeOverOverride = null,
         _keys = UinputDevice.instance.combo {
     _device.ensureOpen();
+    KWinActiveWindow.instance.start();
     _impress.onEvent = _onImpressEvent;
   }
 
@@ -48,6 +51,7 @@ class LinuxInputService implements InputService {
     required void Function(List<int> keys) keys,
     ScreenArea? Function(int window)? windowArea,
     ScreenCapture? Function(int window)? captureWindow,
+    KWinWindow? Function()? kwinWindow,
     WpsTakeOver? takeOver,
   })  : _impress = impress,
         _wps = wps,
@@ -57,6 +61,7 @@ class LinuxInputService implements InputService {
         _captureWindow = captureWindow ?? ((_) => null),
         _windowTitle = ((_) => null),
         _closeWindow = ((_) => false),
+        _kwinWindow = kwinWindow ?? (() => null),
         _takeOverOverride = takeOver,
         _keys = keys;
 
@@ -69,6 +74,7 @@ class LinuxInputService implements InputService {
   final ScreenCapture? Function(int window) _captureWindow;
   final String? Function(int window) _windowTitle;
   final bool Function(int window) _closeWindow;
+  final KWinWindow? Function() _kwinWindow;
   final WpsTakeOver? _takeOverOverride;
 
   late final WpsTakeOver _takeOver = _takeOverOverride ??
@@ -141,6 +147,26 @@ class LinuxInputService implements InputService {
   List<String> get presenters => const ['impress', 'wps'];
 
   // ── Presenter lookup ──
+
+  /// The focused window: the X11 one, else (KDE Wayland) the native Wayland
+  /// window KWin reports, as an [X11Window] with a negative id that no X11
+  /// call is made with. Firefox and Chrome run as native Wayland windows
+  /// there, and X11 alone left them unknown: START pressed F5, which
+  /// reloads the page. Used where the program in front picks the keys;
+  /// the WPS, picture and laser paths stay with X11, which they need.
+  X11Window? _frontWindow() => frontWindow(_activeWindow(), _kwinWindow());
+
+  /// [x11], unless KWin names another window: then that one. KWin clears
+  /// `_NET_ACTIVE_WINDOW` when a Wayland window gets the focus, but a
+  /// stale X11 answer must not win over KWin's.
+  @visibleForTesting
+  static X11Window? frontWindow(X11Window? x11, KWinWindow? kwin) {
+    if (kwin == null) return x11;
+    final names = {kwin.resourceClass.toLowerCase(), kwin.resourceName.toLowerCase()}..remove('');
+    if (x11 != null && x11.wmClass.any((c) => names.contains(c.toLowerCase()))) return x11;
+    return X11Window(-1 - (kwin.id.hashCode & 0x3FFFFFFF), [kwin.resourceName, kwin.resourceClass],
+        fullscreen: kwin.fullscreen);
+  }
 
   /// The focused window when it belongs to WPS Presentation.
   X11Window? _focusedWps() {
@@ -283,7 +309,7 @@ class LinuxInputService implements InputService {
   /// the window list for a WPS show), so it is cheap enough to poll.
   @override
   Future<PresenterCaps> capabilities() async {
-    final window = _activeWindow();
+    final window = _frontWindow();
     final front = window == null ? null : _frontOf(window);
     final Set<String> caps;
     switch (_showBy) {
@@ -449,7 +475,7 @@ class LinuxInputService implements InputService {
   /// PageDown/PageUp, or the focused viewer's own page keys (the arrows in
   /// browsers and WPS PDF, whose PageDown scrolls by a screen).
   List<int> _pageKeys({required bool next}) {
-    final window = _activeWindow();
+    final window = _frontWindow();
     final viewer = window == null ? null : _viewerOf(window);
     final keys = next ? viewer?.next : viewer?.prev;
     if (keys != null) return _evdev(keys);
@@ -474,7 +500,7 @@ class LinuxInputService implements InputService {
   /// (a PDF open in Draw becomes a presentation there) or the bridge's WPS;
   /// F5 when none of them can.
   Future<void> _start(String cmd, Map<String, Object?> args) async {
-    final window = _activeWindow();
+    final window = _frontWindow();
     if (window != null && window.hasClass('wpp')) {
       if (!_isBridgeWps(window) || (await _wpsRequest(cmd, args))['ok'] != true) {
         _keys([Evdev.keyF5]);
@@ -488,6 +514,10 @@ class LinuxInputService implements InputService {
       _toggled = end == null ? null : (window!.id, end);
       return;
     }
+    // F5 also when nothing tells what is in front (a native Wayland window
+    // outside KDE): the programs left unseen there are mostly those whose
+    // F5 starts a show (a native-Wayland LibreOffice without the bridge,
+    // Evince, Papers), while a browser's reload only costs the place.
     await _showOrKeys(cmd,
         args: args, fallbackKeys: [Evdev.keyF5], impressTimeout: const Duration(seconds: 65));
   }
@@ -514,7 +544,7 @@ class LinuxInputService implements InputService {
     _wpsLaser = false;
     final toggled = _toggled;
     _toggled = null;
-    if (toggled != null && _activeWindow()?.id == toggled.$1) {
+    if (toggled != null && _frontWindow()?.id == toggled.$1) {
       _keys(_evdev(toggled.$2));
       return;
     }
