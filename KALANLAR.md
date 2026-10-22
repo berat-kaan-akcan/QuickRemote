@@ -50,7 +50,7 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [x] Gerçek bir WPS gösterisinde (XWayland) resim geliyor mu? (2026-10-21: evet, kullanıcının açtığı WPS'te resim slaytla birlikte değişiyor.)
 - [x] Impress: OpenGL/Skia ile çizen gösteride resim boş mu dönüyor? LibreOffice'in penceresi X11 mi, native Wayland mı? Native Wayland'de resim olmaz. (2026-10-21: LibreOffice burada yerel Wayland'de (KDE/Qt6 eklentisi), X penceresi yok; ekran resmi alınmıyor, telefon dışa aktarılan slaytı gösteriyor.)
 - [ ] Oynayan video resimde görünüyor mu? 2 saniyelik yoklama yalnızca resim değişince mi gönderiyor? (2026-10-21: denenemedi. LibreOffice burada yerel Wayland'de, ekran resmi yok. WPS 11.1'de video hiç oynamıyor: köprünün `Player.Play()` çağrısı bir şey yapmıyor, `State` hep "oynuyor" diyor. Bu yüzden köprünün WPS gösterisinde telefonun slayt medyası düğmeleri artık soluk, oynatma durumu "bilinmiyor".)
-- [ ] Küçük bulgu: Devral'dan sonra gösteri yokken telefon "Sunum Açık Değil, LibreOffice Impress'i başlatın" diyor, öndeki WPS düzenleyicisi olduğu hâlde (program adı ilk programdan geliyor).
+- [x] (2026-10-23, kodla ve testle; gerçek WPS ile denenmedi) Küçük bulgu: Devral'dan sonra gösteri yokken telefon "Sunum Açık Değil, LibreOffice Impress'i başlatın" diyor, öndeki WPS düzenleyicisi olduğu hâlde (program adı ilk programdan geliyor).
 - [x] Firefox/Chrome'da tam ekran PDF'te resim geliyor mu? Pencereli tarayıcıda hiçbir şey gitmiyor mu? (2026-10-21: XWayland Firefox'ta tam ekranda geliyor, pencereliyken gelmiyor. Yerel Wayland Chrome'da hiç gelmiyor.)
 - [x] Kaplamanın mürekkebi resimde doğru yere mi çiziliyor? (2026-10-21: evet.)
 
