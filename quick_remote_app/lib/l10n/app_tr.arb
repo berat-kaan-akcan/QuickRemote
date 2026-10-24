@@ -127,6 +127,7 @@
   "certWarningTitle": "Güvenlik Uyarısı",
   "certWarningConfirm": "Yine de Bağlan ve Güncelle",
   "manualTitle": "Manuel Bağlantı",
+  "pinDialogTitle": "PIN'i girin",
   "manualIp": "IP Adresi",
   "manualPinHint": "PC ekranındaki PIN",
   "manualConnect": "Bağlan",

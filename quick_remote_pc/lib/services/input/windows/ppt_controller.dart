@@ -427,11 +427,18 @@ try {
   /// focus, bringing it forward when another window has it. Ctrl+A, B, E,
   /// ... in a focused Word window, or in the presentation's own editor, would
   /// select all and replace the text. Returns whether the keys were sent.
-  static Future<bool> pressInSlideShow(List<int> keys) async {
+  ///
+  /// With [turn], a pointer mode's [pointerTurn]: the keys are not pressed
+  /// when a newer mode came while the show was brought forward. A double
+  /// tap's MODE_ARROW, slowed by that, once pressed its Ctrl+A after the
+  /// highlighter's Ctrl+I, and the stroke's click moved the slide on
+  /// (2026-10-24, PowerPoint 365).
+  static Future<bool> pressInSlideShow(List<int> keys, {int? turn}) async {
     if (!await _focusShow()) {
       debugPrint('Slideshow shortcut skipped: no slideshow window could get the focus');
       return false;
     }
+    if (turn != null && turn != pointerTurn) return false;
     restoreShowFocus();
     KeyboardSimulator.pressKeyCombo(keys);
     return true;

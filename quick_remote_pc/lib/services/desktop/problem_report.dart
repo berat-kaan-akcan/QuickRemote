@@ -15,7 +15,15 @@ class ProblemReport {
   ProblemReport._();
 
   static String get platform =>
-      '${Platform.operatingSystem} (${Platform.operatingSystemVersion})';
+      '${Platform.operatingSystem} (${osVersion(Platform.operatingSystemVersion)})';
+
+  /// Windows 11 still calls itself "Windows 10" in the registry name Dart
+  /// reads ("Windows 10 Home" 10.0 (Build 26300)); from build 22000 it is 11.
+  static String osVersion(String version) {
+    final build = int.tryParse(RegExp(r'Build (\d+)').firstMatch(version)?.group(1) ?? '');
+    if (build == null || build < 22000) return version;
+    return version.replaceFirst('Windows 10', 'Windows 11');
+  }
 
   /// The programs this build controls (InputSimulator would create the input
   /// devices just to say so).

@@ -205,9 +205,9 @@ class WindowsInputService implements InputService {
       if (PptController.laserActive) await PptController.wpsLaser(false);
       switched = wpsPointer != null
           ? await PptController.setPointerType(wpsPointer)
-          : await PptController.pressInSlideShow([VK_CONTROL, key]);
+          : await PptController.pressInSlideShow([VK_CONTROL, key], turn: turn);
     } else {
-      switched = await PptController.pressInSlideShow([VK_CONTROL, key]);
+      switched = await PptController.pressInSlideShow([VK_CONTROL, key], turn: turn);
     }
     if (switched) {
       PptController.setLaserActive(laser);

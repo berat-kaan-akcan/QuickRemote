@@ -18,6 +18,7 @@ import 'providers/server_provider.dart';
 import 'providers/desktop_provider.dart';
 import 'services/app_log_setup.dart';
 import 'services/desktop/desktop_policy.dart';
+import 'services/desktop/problem_report.dart';
 import 'services/linux/bluez_hid_repair.dart';
 import 'services/linux/desktop_entry.dart';
 import 'theme/app_theme.dart';
@@ -27,7 +28,7 @@ void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   // debugPrint and uncaught errors go to a local log file (Settings exports it).
   installAppLog(getApplicationSupportDirectory().then((dir) => Directory(p.join(dir.path, 'logs'))));
-  debugPrint('QuickRemote PC $appVersion, ${Platform.operatingSystem} ${Platform.operatingSystemVersion}');
+  debugPrint('QuickRemote PC $appVersion, ${ProblemReport.platform}');
   _registerFontLicense();
 
   await windowManager.ensureInitialized();

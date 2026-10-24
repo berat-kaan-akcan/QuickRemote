@@ -82,6 +82,7 @@
   "certWarningTitle": "Security Warning",
   "certWarningConfirm": "Connect Anyway and Update",
   "manualTitle": "Manual Connection",
+  "pinDialogTitle": "Enter the PIN",
   "manualIp": "IP Address",
   "manualPinHint": "PIN shown on the PC",
   "manualConnect": "Connect",

@@ -29,6 +29,18 @@ void main() {
     expect(body, contains(ProblemReport.presenters));
   });
 
+  test('Windows 11 is not reported as Windows 10', () {
+    expect(
+      ProblemReport.osVersion('"Windows 10 Home" 10.0 (Build 26300)'),
+      '"Windows 11 Home" 10.0 (Build 26300)',
+    );
+    expect(
+      ProblemReport.osVersion('"Windows 10 Pro" 10.0 (Build 19045)'),
+      '"Windows 10 Pro" 10.0 (Build 19045)',
+    );
+    expect(ProblemReport.osVersion('Linux 6.17.1-arch1-1'), 'Linux 6.17.1-arch1-1');
+  });
+
   test('the exported file is named after the day', () {
     expect(
       ProblemReport.fileName(DateTime(2026, 3, 4, 5, 6)),

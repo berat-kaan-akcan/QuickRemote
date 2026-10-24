@@ -289,6 +289,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get manualTitle => 'Manuel Bağlantı';
 
   @override
+  String get pinDialogTitle => 'PIN\'i girin';
+
+  @override
   String get manualIp => 'IP Adresi';
 
   @override

@@ -11,11 +11,18 @@ void main() {
 
   setUpAll(() async {
     dir = await Directory.systemTemp.createTemp('qr_tls_gate');
-    final result = await Process.run('openssl', [
-      'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
-      '-keyout', '${dir.path}/key.pem', '-out', '${dir.path}/cert.pem',
-      '-days', '1', '-subj', '/CN=QuickRemoteTest',
-    ]);
+    // An empty config: some openssl builds on Windows (Strawberry Perl's)
+    // look for one at a path baked in at build time and fail without it.
+    final config = File('${dir.path}/openssl.cnf')..writeAsStringSync('');
+    final result = await Process.run(
+      'openssl',
+      [
+        'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
+        '-keyout', '${dir.path}/key.pem', '-out', '${dir.path}/cert.pem',
+        '-days', '1', '-subj', '/CN=QuickRemoteTest',
+      ],
+      environment: {'OPENSSL_CONF': config.path},
+    );
     expect(result.exitCode, 0, reason: '${result.stderr}');
     context = SecurityContext()
       ..useCertificateChain('${dir.path}/cert.pem')

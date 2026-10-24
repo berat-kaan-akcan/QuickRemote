@@ -38,9 +38,12 @@ class DirectLink(
     private val context = context.applicationContext
     private val main = Handler(Looper.getMainLooper())
 
-    /** Writes happen here: a socket's write blocks while the link is busy. */
-    private val writer = HandlerThread("QuickRemoteDirect").apply { start() }
-    private val writes = Handler(writer.looper)
+    /**
+     * Writes happen on a thread of their own (a socket's write blocks while
+     * the link is busy), started by [open] and ended by [close].
+     */
+    @Volatile
+    private var writes: Handler? = null
 
     /** Counts [open] and [close]: a connecting thread from before a close gives up. */
     @Volatile
@@ -64,9 +67,11 @@ class DirectLink(
         close()
         if (!permitted()) return
         val mine = session
+        writes = Handler(HandlerThread("QuickRemoteDirect").apply { start() }.looper)
         Thread({ run(mine, phoneName) }, "QuickRemoteDirectReader").start()
     }
 
+    @Synchronized
     fun close() {
         session++
         out = null
@@ -75,6 +80,21 @@ class DirectLink(
         } catch (_: IOException) {
         }
         socket = null
+        writes?.looper?.quitSafely()
+        writes = null
+    }
+
+    /**
+     * Makes [connection] the session's socket, unless [close] came since
+     * [mine] began: then the socket is closed and false returned. Under the
+     * same lock as [close], so a closed session never gets a socket.
+     */
+    @Synchronized
+    private fun adopt(mine: Int, connection: BluetoothSocket, stream: OutputStream): Boolean {
+        if (mine != session) return false
+        socket = connection
+        out = stream
+        return true
     }
 
     fun move(bytes: ByteArray) = write(WearProtocol.FRAME_MOVE, bytes)
@@ -83,10 +103,11 @@ class DirectLink(
 
     private fun write(type: Int, payload: ByteArray) {
         val to = out ?: return
+        val thread = writes ?: return
         val frame = ByteArray(WearProtocol.FRAME_SIZE)
         frame[0] = type.toByte()
         payload.copyInto(frame, 1, 0, minOf(payload.size, WearProtocol.FRAME_SIZE - 1))
-        writes.post {
+        thread.post {
             try {
                 to.write(frame)
                 to.flush()
@@ -104,14 +125,9 @@ class DirectLink(
                 Thread.sleep(RETRY_MS)
                 continue
             }
-            if (mine != session) {
-                connection.close()
-                return
-            }
-            socket = connection
             try {
                 val input = DataInputStream(connection.inputStream)
-                out = connection.outputStream
+                if (!adopt(mine, connection, connection.outputStream)) return
                 Log.d(TAG, "Direct link open")
                 val frame = ByteArray(WearProtocol.FRAME_SIZE)
                 while (true) {
@@ -123,6 +139,9 @@ class DirectLink(
                 }
             } catch (e: IOException) {
                 Log.d(TAG, "Direct link lost: ${e.message}")
+            } catch (e: SecurityException) {
+                // "Nearby devices" was taken back while the link ran.
+                Log.d(TAG, "Direct link not permitted: ${e.message}")
             } finally {
                 if (mine == session) out = null
                 try {
@@ -149,10 +168,15 @@ class DirectLink(
                 device.createRfcommSocketToServiceRecord(UUID.fromString(WearProtocol.DIRECT_UUID))
             } catch (_: IOException) {
                 continue
+            } catch (_: SecurityException) {
+                return null
             }
             try {
                 attempt.connect()
                 return attempt
+            } catch (e: SecurityException) {
+                attempt.close()
+                return null
             } catch (e: IOException) {
                 Log.d(TAG, "No direct link to ${device.name}: ${e.message}")
                 try {
