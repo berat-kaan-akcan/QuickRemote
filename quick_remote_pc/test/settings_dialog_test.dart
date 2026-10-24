@@ -8,6 +8,7 @@ import 'package:quick_remote_pc/l10n/app_language.dart';
 import 'package:quick_remote_pc/providers/appearance_provider.dart';
 import 'package:quick_remote_pc/providers/language_provider.dart';
 import 'package:quick_remote_pc/providers/laser_overlay_provider.dart';
+import 'package:quick_remote_pc/screens/home/widgets/laser_setting_section.dart';
 import 'package:quick_remote_pc/screens/home/widgets/settings_dialog.dart';
 import 'package:quick_remote_pc/services/overlay/laser_overlay.dart';
 import 'package:quick_remote_pc/theme/app_palette.dart';
@@ -79,12 +80,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(LaserOverlaySettings.mode, LaserOverlayMode.auto);
 
-    await tester.ensureVisible(find.text('QuickRemote'));
-    await tester.tap(find.text('QuickRemote'));
+    await tester.ensureVisible(find.text('Always QuickRemote’s laser'));
+    await tester.tap(find.text('Always QuickRemote’s laser'));
     await tester.pumpAndSettle();
     expect(LaserOverlaySettings.mode, LaserOverlayMode.always);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('laser_overlay'), 'always');
     LaserOverlaySettings.mode = LaserOverlayMode.auto;
-  }, skip: !Platform.isLinux); // the overlay is Linux-only so far
+  }, skip: !(Platform.isLinux || Platform.isWindows));
+
+  testWidgets('the laser choices and their table fit the narrow window', (tester) async {
+    tester.view.physicalSize = const Size(440, 760);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final language = LanguageProvider();
+    await language.setLanguage(AppLanguage.tr);
+    await tester.pumpWidget(_app(language));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Otomatik (önerilen)'), findsOneWidget);
+    expect(find.text('Sunum programının kendi lazeri'), findsOneWidget);
+    expect(find.text('Gösteri dışında'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, skip: !(Platform.isLinux || Platform.isWindows));
+
+  test('the table says whose laser shows where, as the overlay decides', () {
+    LaserDrawer at(LaserOverlayMode mode, LaserPlace place) => laserDrawer(mode, place);
+    expect(at(LaserOverlayMode.auto, LaserPlace.powerPoint), LaserDrawer.program);
+    expect(at(LaserOverlayMode.auto, LaserPlace.wps), LaserDrawer.program);
+    expect(at(LaserOverlayMode.auto, LaserPlace.impress), LaserDrawer.quickRemote);
+    expect(at(LaserOverlayMode.auto, LaserPlace.pdf), LaserDrawer.quickRemote);
+    expect(at(LaserOverlayMode.auto, LaserPlace.outsideShow), LaserDrawer.quickRemote);
+    for (final place in LaserPlace.values) {
+      expect(at(LaserOverlayMode.always, place), LaserDrawer.quickRemote);
+    }
+    expect(at(LaserOverlayMode.never, LaserPlace.impress), LaserDrawer.program);
+    expect(at(LaserOverlayMode.never, LaserPlace.pdf), LaserDrawer.none);
+    expect(at(LaserOverlayMode.never, LaserPlace.outsideShow), LaserDrawer.none);
+  });
 }

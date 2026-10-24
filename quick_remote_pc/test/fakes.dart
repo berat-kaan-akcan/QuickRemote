@@ -21,6 +21,9 @@ class FakeInputService implements InputService {
   void laserPointerMoved(double relX, double relY) =>
       calls.add('laserPointerMoved');
   @override
+  void moveCursorInShow(double relX, double relY) =>
+      calls.add('moveCursorInShow:$relX,$relY');
+  @override
   bool handlesDrawPointer = false;
   @override
   void drawPointerMoved(double relX, double relY) =>
@@ -164,7 +167,13 @@ class FakeLaserOverlay implements LaserOverlay {
   void show() => calls.add('show');
 
   @override
-  void move(double relX, double relY) => calls.add('move');
+  void move(double relX, double relY) {
+    calls.add('move');
+    positions.add((relX, relY));
+  }
+
+  /// Every [move]'s position.
+  final List<(double, double)> positions = [];
 
   @override
   void hide() => calls.add('hide');

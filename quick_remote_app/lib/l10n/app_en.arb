@@ -13,6 +13,7 @@
   "presenterViewOpenHint": "Open the presenter view",
   "presenterNextUp": "Next up",
   "presenterLastSlide": "Last slide",
+  "presenterLaserHint": "Touch the slide to point the laser there",
   "slidePreviewLabel": "Preview of slide {slide}",
   "screenPreviewLabel": "The PC's screen",
   "settingsLanguageTitle": "Language",
@@ -420,7 +421,6 @@
   "capNoteNoAnswer": "Over Bluetooth the computer sends the phone nothing.",
   "capNoteKeysOnly": "Keys only; no level or song title.",
   "capNoteWpsNoMedia": "Videos in WPS cannot be played remotely.",
-  "capNoteUnverifiedWindows": "† Written, but not yet tried on a real Windows PC.",
   "capLevelYes": "Works",
   "capLevelPartial": "Partly",
   "capLevelNo": "Doesn't work",
@@ -440,5 +440,8 @@
   "homeGetPcApp": "Get QuickRemote PC",
   "timerStartLabel": "{time}, start timer",
   "timerPauseLabel": "{time}, pause timer",
-  "timerResetLabel": "Reset timer"
+  "timerResetLabel": "Reset timer",
+  "historyUndo": "Undo",
+  "capUntried": "Not tried",
+  "capUntriedLegend": "Written and tested in code, not yet tried on a real device."
 }

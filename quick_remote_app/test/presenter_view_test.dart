@@ -17,12 +17,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// A show on slide [current] of 10 with pictures, connected or not.
 class _Ws extends WebSocketService {
-  _Ws({int current = 3}) {
-    handleMessage({'type': 'auth', 'status': 'ok', 'previews': true});
+  _Ws({int current = 3, bool absLaser = false}) {
+    handleMessage({'type': 'auth', 'status': 'ok', 'previews': true, 'absLaser': absLaser});
     show(current);
   }
 
   bool connected = true;
+
+  /// Commands sent past the screen's onSend (the laser's).
+  final List<String> commands = [];
+
+  /// Every sendLaserAt position.
+  final List<(double, double)> points = [];
+
+  @override
+  void sendCommand(String command) => commands.add(command);
+
+  @override
+  void sendLaserAt(double x, double y) => points.add((x, y));
 
   @override
   bool get isConnected => connected;
@@ -186,5 +198,43 @@ void main() {
     expect(find.text('No slideshow is running.'), findsNothing);
     await tester.tap(find.bySemanticsLabel('Next'));
     expect(sent, [RemoteCommands.next], reason: 'the viewer turns its page');
+  });
+
+  testWidgets('no Laser key for a PC that cannot point at the slide', (tester) async {
+    await pumpView(tester, _Ws(), const Size(400, 860));
+    expect(find.bySemanticsLabel('Laser'), findsNothing);
+  });
+
+  testWidgets('Laser: the finger on the slide puts the laser there, the dot shows at once', (tester) async {
+    final ws = _Ws(absLaser: true);
+    await pumpView(tester, ws, const Size(400, 860));
+    await tester.tap(find.bySemanticsLabel('Laser'));
+    await tester.pump();
+    expect(find.text('NEXT UP'), findsNothing, reason: 'the picture grows, the next slide goes');
+
+    final area = tester.getRect(find.byWidgetPredicate((w) => w is SlideImage && w.slide == 3));
+    final gesture = await tester.startGesture(area.topLeft + Offset(area.width / 4, area.height * 3 / 4));
+    await tester.pump();
+    await gesture.moveTo(area.center);
+    await tester.pump();
+    expect(ws.commands, [RemoteCommands.modeLaser]);
+    expect(ws.points.first.$1, closeTo(0.25, 0.01));
+    expect(ws.points.first.$2, closeTo(0.75, 0.01));
+    expect(ws.points.last.$1, closeTo(0.5, 0.01));
+    expect(ws.points.last.$2, closeTo(0.5, 0.01));
+    final dot = find.byKey(const ValueKey('laserDot'));
+    expect(tester.getCenter(dot).dx, closeTo(area.center.dx, 1));
+
+    await gesture.up();
+    await tester.pump();
+    expect(ws.commands, [RemoteCommands.modeLaser, RemoteCommands.laserOff, RemoteCommands.modeArrow]);
+    expect(dot, findsNothing);
+    expect(sent, isEmpty, reason: 'no slide command');
+
+    // Off again: a tap on the picture points nowhere.
+    await tester.tap(find.bySemanticsLabel('Laser'));
+    await tester.pump();
+    await tester.tapAt(area.center);
+    expect(ws.points, hasLength(2));
   });
 }

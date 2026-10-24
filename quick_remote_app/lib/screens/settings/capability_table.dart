@@ -61,10 +61,6 @@ enum CapNote {
   noAnswer,
   keysOnly,
   wpsNoMedia,
-
-  /// Written but never run on a real Windows PC (the laser overlay's
-  /// spotlight and magnifier, slide pictures; CLAUDE.md).
-  unverifiedWindows,
 }
 
 class CapCell {
@@ -120,7 +116,7 @@ class CapabilityTable {
 
   static Map<CapFeature, CapCell> _wifi(CapOs os, CapProgram program) {
     final spotlight = os == CapOs.windows
-        ? _y(CapNote.unverifiedWindows)
+        ? _yes
         : _p(CapNote.noMagnifier);
     return switch (program) {
       CapProgram.powerpoint || CapProgram.wps when os == CapOs.windows => {
@@ -134,7 +130,7 @@ class CapabilityTable {
         CapFeature.slideInfo: _yes,
         CapFeature.preview: program == CapProgram.wps
             ? _p(CapNote.screenOnly)
-            : _y(CapNote.unverifiedWindows),
+            : _yes,
         CapFeature.slideMedia: program == CapProgram.wps
             ? _p(CapNote.playOnly)
             : _yes,
@@ -199,6 +195,36 @@ class CapabilityTable {
       },
     };
   }
+
+  /// Whether the cell was written from the code but not yet tried on a
+  /// real device, as the site's "What we tried" section and DURUM.md say.
+  /// Remove an entry once it has been tried.
+  static bool untried(
+    CapLink link,
+    CapOs os,
+    CapProgram program,
+    CapFeature feature,
+  ) => _untried.contains((link, os, program, feature));
+
+  static const _untried = {
+    // Windows: the program's own eraser, the media of a slide and the
+    // volume and now-playing panel have not been tried; the slide picture
+    // of PowerPoint only on the PC's side, not on the phone.
+    (CapLink.wifi, CapOs.windows, CapProgram.powerpoint, CapFeature.eraser),
+    (CapLink.wifi, CapOs.windows, CapProgram.powerpoint, CapFeature.preview),
+    (CapLink.wifi, CapOs.windows, CapProgram.powerpoint, CapFeature.slideMedia),
+    (CapLink.wifi, CapOs.windows, CapProgram.powerpoint, CapFeature.volume),
+    (CapLink.wifi, CapOs.windows, CapProgram.wps, CapFeature.eraser),
+    (CapLink.wifi, CapOs.windows, CapProgram.wps, CapFeature.slideMedia),
+    (CapLink.wifi, CapOs.windows, CapProgram.wps, CapFeature.volume),
+    // Windows PDF: the overlay's laser, pen and spotlight were tried in
+    // full-screen Chrome, its eraser was not.
+    (CapLink.wifi, CapOs.windows, CapProgram.pdf, CapFeature.eraser),
+    (CapLink.wifi, CapOs.windows, CapProgram.pdf, CapFeature.volume),
+    // Linux: no video played in WPS 11.1, so its media keys were never seen
+    // working; the arrow of an unfocused WPS was not tried.
+    (CapLink.wifi, CapOs.linux, CapProgram.wpsApp, CapFeature.laser),
+  };
 
   /// Over Bluetooth the phone is the computer's keyboard and mouse: the
   /// program's own shortcuts, no answer from the computer.

@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'Son slayt'**
   String get presenterLastSlide;
 
+  /// No description provided for @presenterLaserHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lazeri perdede göstermek için slayta dokun'**
+  String get presenterLaserHint;
+
   /// No description provided for @slidePreviewLabel.
   ///
   /// In tr, this message translates to:
@@ -2623,12 +2629,6 @@ abstract class AppLocalizations {
   /// **'WPS\'teki video uzaktan oynatılamıyor.'**
   String get capNoteWpsNoMedia;
 
-  /// No description provided for @capNoteUnverifiedWindows.
-  ///
-  /// In tr, this message translates to:
-  /// **'† Yazıldı, ancak gerçek bir Windows bilgisayarda henüz denenmedi.'**
-  String get capNoteUnverifiedWindows;
-
   /// No description provided for @capLevelYes.
   ///
   /// In tr, this message translates to:
@@ -2748,6 +2748,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Zamanlayıcıyı sıfırla'**
   String get timerResetLabel;
+
+  /// No description provided for @historyUndo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri al'**
+  String get historyUndo;
+
+  /// No description provided for @capUntried.
+  ///
+  /// In tr, this message translates to:
+  /// **'Denenmedi'**
+  String get capUntried;
+
+  /// No description provided for @capUntriedLegend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kodda yazıldı ve testlerden geçti, gerçek bir cihazda henüz denenmedi.'**
+  String get capUntriedLegend;
 }
 
 class _AppLocalizationsDelegate
