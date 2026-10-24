@@ -10,7 +10,7 @@ class _PythonBridge extends ScriptBridge {
   }
 
   @override
-  Future<String?> interpreter() async => 'python3';
+  Future<String?> interpreter() async => Platform.isWindows ? 'python' : 'python3';
 }
 
 void main() {
