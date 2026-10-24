@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../../l10n/app_language.dart';
@@ -108,7 +107,6 @@ class _ScanScreenState extends State<ScanScreen> with SingleTickerProviderStateM
             MobileScanner(
               controller: _controller,
               onDetect: _onDetect,
-              errorBuilder: (context, error) => ScanErrorView(error: error.errorCode),
             ),
 
             // Scrim with the frame cut out, corners and the laser line.
@@ -174,66 +172,6 @@ class _ScanScreenState extends State<ScanScreen> with SingleTickerProviderStateM
   }
 }
 
-/// Shown in place of the camera when it cannot start: a refused permission
-/// gets a way to Settings, anything else a plain note. Both point back to
-/// typing the address, so the user is never left on a black screen.
-class ScanErrorView extends StatelessWidget {
-  const ScanErrorView({super.key, required this.error, this.onOpenSettings});
-
-  final MobileScannerErrorCode error;
-  final VoidCallback? onOpenSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final denied = error == MobileScannerErrorCode.permissionDenied;
-    return ColoredBox(
-      color: AppColors.black,
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpace.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.no_photography_rounded, color: AppColors.white, size: 56),
-                const SizedBox(height: AppSpace.md),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    denied ? l10n.scanPermissionTitle : l10n.scanUnavailableTitle,
-                    textAlign: TextAlign.center,
-                    style: AppType.title.copyWith(color: AppColors.white, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                const SizedBox(height: AppSpace.sm),
-                Text(
-                  denied ? l10n.scanPermissionDenied : l10n.scanUnavailable,
-                  textAlign: TextAlign.center,
-                  style: AppType.label.copyWith(color: AppColors.white),
-                ),
-                const SizedBox(height: AppSpace.lg),
-                if (denied)
-                  AppButton(
-                    label: l10n.scanOpenSettings,
-                    icon: Icons.settings_rounded,
-                    onPressed: onOpenSettings ?? openAppSettings,
-                  ),
-                AppButton(
-                  label: l10n.scanGoBack,
-                  variant: AppButtonVariant.ghost,
-                  tone: AppTone.neutral,
-                  onPressed: () => Navigator.of(context).maybePop(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _GlassCircleButton extends StatelessWidget {
   const _GlassCircleButton({required this.icon, required this.tooltip, required this.onTap});
 
@@ -249,7 +187,6 @@ class _GlassCircleButton extends StatelessWidget {
       tooltip: tooltip,
       semanticLabel: tooltip,
       pressedScale: 0.9,
-      minTarget: 48,
       borderRadius: radius,
       child: Container(
         width: 44,

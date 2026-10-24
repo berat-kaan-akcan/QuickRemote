@@ -312,13 +312,9 @@ class SlideCard extends StatelessWidget {
                 size: 18,
               ),
               const SizedBox(width: AppSpace.xs),
-              Flexible(
-                child: Text(
-                  context.l10n.slideLabel.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppType.overline.copyWith(color: p.textSecondary),
-                ),
+              Text(
+                context.l10n.slideLabel.toUpperCase(),
+                style: AppType.overline.copyWith(color: p.textSecondary),
               ),
               if (show.running) ...[
                 const SizedBox(width: AppSpace.xs),
@@ -426,15 +422,9 @@ class SlideCard extends StatelessWidget {
                     ? null
                     : () => onScreen!(RemoteCommands.whiteScreen),
               ),
-              const SizedBox(width: AppSpace.xs),
+              const Spacer(),
               // A PDF has no slides to jump to.
-              if (!show.viewer)
-                Expanded(
-                  child: Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: _GoToSlideKey(onTap: onGoTo),
-                  ),
-                ),
+              if (!show.viewer) _GoToSlideKey(onTap: onGoTo),
             ],
           ),
         ],
@@ -514,7 +504,6 @@ class _NotePreview extends StatelessWidget {
       semanticLabel: notes,
       tooltip: tooltip,
       pressedScale: 0.98,
-      minTarget: 48,
       borderRadius: radius,
       child: Container(
         padding: const EdgeInsets.fromLTRB(AppSpace.sm, 10, 10, 10),
@@ -563,7 +552,6 @@ class _GoToSlideKey extends StatelessWidget {
       onTap: onTap,
       semanticLabel: context.l10n.goToSlide,
       borderRadius: radius,
-      minTarget: 48,
       child: Container(
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -577,15 +565,11 @@ class _GoToSlideKey extends StatelessWidget {
             children: [
               Icon(Icons.grid_view_rounded, color: p.primaryText, size: 18),
               const SizedBox(width: AppSpace.xs),
-              Flexible(
-                child: Text(
-                  context.l10n.goToSlide,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppType.labelSmall.copyWith(
-                    color: p.primaryText,
-                    fontSize: 13,
-                  ),
+              Text(
+                context.l10n.goToSlide,
+                style: AppType.labelSmall.copyWith(
+                  color: p.primaryText,
+                  fontSize: 13,
                 ),
               ),
             ],

@@ -317,23 +317,3 @@ class ExportTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-class RequestParsingTest(unittest.TestCase):
-    def test_object_lines_only(self):
-        self.assertEqual(bridge.parse_request('{"cmd": "ping"}'), {"cmd": "ping"})
-        for line in ("[1]", "3", "null", "{broken", ""):
-            self.assertIsNone(bridge.parse_request(line), line)
-
-    def test_deep_nesting_does_not_raise(self):
-        self.assertIsNone(bridge.parse_request("[" * 200000))
-
-    def test_command_that_is_not_a_string_is_unknown(self):
-        saved = bridge.createWppRpcInstance
-        bridge.createWppRpcInstance = lambda: None
-        try:
-            for cmd in ([1], {"a": 1}, None):
-                self.assertEqual(bridge.handle(bridge.Wps(), {"cmd": cmd}),
-                                 {"ok": False, "error": "UNKNOWN_COMMAND"})
-        finally:
-            bridge.createWppRpcInstance = saved

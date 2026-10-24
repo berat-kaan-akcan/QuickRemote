@@ -110,22 +110,6 @@ void main() {
       expect(sent.last, containsPair('current', 2));
     });
 
-    test('"not running" names the program in front, and a change of it is news', () async {
-      input.slideState = {'error': 'POWERPOINT_NOT_RUNNING', 'presenter': 'wps'};
-      await broadcaster.fetchAndBroadcastSlideState();
-      expect(sent.map((m) => m['type']), ['STATUS', 'SLIDE_STATE']);
-      expect(sent.first, containsPair('presenter', 'wps'));
-      expect(sent.last, containsPair('presenter', 'wps'));
-
-      await broadcaster.fetchAndBroadcastSlideState();
-      expect(sent, hasLength(2), reason: 'unchanged');
-
-      input.slideState = {'error': 'POWERPOINT_NOT_RUNNING', 'presenter': 'impress'};
-      await broadcaster.fetchAndBroadcastSlideState();
-      expect(sent, hasLength(3));
-      expect(sent.last, containsPair('presenter', 'impress'));
-    });
-
     test('go with "not running" too, which a new window in front repeats', () async {
       await broadcaster.fetchAndBroadcastSlideState();
       expect(sent.map((m) => m['type']), ['STATUS', 'SLIDE_STATE']);

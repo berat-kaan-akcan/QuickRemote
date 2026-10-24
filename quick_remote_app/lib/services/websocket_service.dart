@@ -152,9 +152,6 @@ class WebSocketService extends ChangeNotifier {
   /// The program running the show ('powerpoint', 'impress', 'wps').
   String get presenter => _state.presenter;
 
-  /// The program in front while no show runs, when the PC tells.
-  String? get frontPresenter => _state.frontPresenter;
-
   /// The PC's system ('windows' or 'linux'); null from an older PC.
   String? get pcPlatform => _state.platform;
   bool get pptHasMedia => _state.pptHasMedia;
@@ -276,12 +273,10 @@ class WebSocketService extends ChangeNotifier {
         // Presentation ended (slideshow closed)
         _autoStopTracking();
         final caps = _state.caps;
-        final frontPresenter = _state.frontPresenter;
         final screen = _state.rawScreenImage;
         _state.reset();
         // The STATUS just before may have told what is in front now.
         _state.caps = caps;
-        _state.frontPresenter = frontPresenter;
         _state.rawScreenImage = screen;
         _state.updateCaps(message, keep: true);
         _thumbnails.reset();

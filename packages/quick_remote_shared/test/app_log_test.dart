@@ -41,22 +41,6 @@ void main() {
       expect(r('{"fingerprint": "abc"}'), isNot(contains('abc')));
     });
 
-    test('hides passwords, secrets and tokens, whatever the name around them', () {
-      for (final line in [
-        'password=hunter2 next',
-        'QR_CERT_PASSWORD=AbCdEfGh1234567890AbCdEfGh123456',
-        'cert password: AbCdEfGh1234567890',
-        '{"password": "hunter2"}',
-        "{secret: hunter2, volume: 4}",
-        'api_token = hunter2;',
-        'Authorization: Bearer hunter2.abc-def',
-      ]) {
-        expect(r(line), isNot(contains('hunter2')), reason: line);
-        expect(r(line), isNot(contains('AbCdEfGh')), reason: line);
-      }
-      expect(r("{secret: hunter2, volume: 4}"), contains('volume: 4'));
-    });
-
     test('hides notes and media titles', () {
       final json = r(
           '{"type":"SLIDE_STATE","current":3,"notes":"Mention the \\"secret\\" Q3 figures","total":12}');

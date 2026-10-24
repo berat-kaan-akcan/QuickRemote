@@ -8,18 +8,7 @@ class DeviceHistoryRepository {
   Future<List<Map<String, dynamic>>> getRecentDevices() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getStringList(_key) ?? [];
-    // A damaged entry is skipped, so it cannot take the whole list (and the
-    // home screen with it) down.
-    final devices = <Map<String, dynamic>>[];
-    for (final entry in data) {
-      try {
-        final decoded = jsonDecode(entry);
-        if (decoded is Map<String, dynamic>) devices.add(decoded);
-      } on FormatException {
-        continue;
-      }
-    }
-    return devices;
+    return data.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
   }
 
   /// Saves a new device or updates an existing one, keeping only the 5 most recent.

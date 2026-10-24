@@ -358,14 +358,9 @@ class _Header extends StatelessWidget {
           ),
           const SizedBox(width: AppSpace.xs),
         ],
-        // Grows with the system's text size up to 1.3, then holds: the
-        // header also carries the wordmark and two keys.
-        MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 1.3,
-          child: StatusChip(
-            isRunning: provider.isRunning,
-            clientCount: provider.clientCount,
-          ),
+        StatusChip(
+          isRunning: provider.isRunning,
+          clientCount: provider.clientCount,
         ),
         const SizedBox(width: AppSpace.xs),
         _HeaderKey(
@@ -403,8 +398,6 @@ class _HeaderKey extends StatelessWidget {
       semanticLabel: tooltip,
       pressedScale: 0.9,
       hoveredScale: 1.06,
-      // A mouse key: the 38 px square is its touch area too.
-      minTarget: 0,
       borderRadius: radius,
       child: Container(
         width: 38,

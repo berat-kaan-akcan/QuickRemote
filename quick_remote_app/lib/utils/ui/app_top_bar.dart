@@ -33,7 +33,6 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
             semanticLabel: back,
             tooltip: back,
             pressedScale: 0.9,
-            minTarget: 48,
             borderRadius: radius,
             child: Container(
               width: 44,
@@ -52,11 +51,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppType.title.copyWith(
-                color: p.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20, fontWeight: FontWeight.w700),
             ),
           ),
           ?action,
@@ -68,12 +63,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
 
 /// A square key in the top bar, on the surface like the back key.
 class AppTopBarAction extends StatelessWidget {
-  const AppTopBarAction({
-    super.key,
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
+  const AppTopBarAction({super.key, required this.icon, required this.tooltip, required this.onTap});
 
   final IconData icon;
   final String tooltip;
@@ -88,7 +78,6 @@ class AppTopBarAction extends StatelessWidget {
       semanticLabel: tooltip,
       tooltip: tooltip,
       pressedScale: 0.9,
-      minTarget: 48,
       borderRadius: radius,
       child: Container(
         width: 44,

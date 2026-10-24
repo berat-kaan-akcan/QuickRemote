@@ -141,7 +141,6 @@ class AppButton extends StatelessWidget {
       semanticLabel: semanticLabel,
       tooltip: tooltip,
       hoveredScale: 1.02,
-      minTarget: 48,
       dimWhenDisabled: variant != AppButtonVariant.primary && variant != AppButtonVariant.solid,
       child: AnimatedContainer(
         duration: AppMotion.of(context, AppMotion.base),
@@ -190,7 +189,6 @@ class AppIconButton extends StatelessWidget {
       semanticLabel: tooltip,
       pressedScale: 0.9,
       hoveredScale: 1.08,
-      minTarget: 48,
       borderRadius: AppRadius.all(size / 2),
       child: Container(
         width: size,

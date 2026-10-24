@@ -31,9 +31,7 @@ class SetupStatusRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: p.isDark ? 0.09 : 0.07),
         borderRadius: AppRadius.all(13),
-        border: Border.all(
-          color: color.withValues(alpha: p.isDark ? 0.24 : 0.22),
-        ),
+        border: Border.all(color: color.withValues(alpha: p.isDark ? 0.24 : 0.22)),
       ),
       child: Row(
         children: [
@@ -42,54 +40,33 @@ class SetupStatusRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: AppType.bodySmall.copyWith(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                height: 1.35,
-              ),
+              style: AppType.bodySmall.copyWith(color: color, fontSize: 12, fontWeight: FontWeight.w500, height: 1.35),
             ),
           ),
           if (action != null && onTap != null) ...[
             const SizedBox(width: AppSpace.xs),
-            // Wraps to a second line at large text sizes instead of pushing the
-            // row's text out; the row has the room for about a third of it.
-            Flexible(
-              flex: 0,
-              child: Pressable(
-                onTap: busy ? () {} : onTap,
-                pressedScale: 0.94,
-                hoveredScale: 1.04,
-                borderRadius: AppRadius.all(AppRadius.sm),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 30),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 4,
-                  ),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: p.isDark ? 0.18 : 0.14),
-                    borderRadius: AppRadius.all(9),
-                  ),
-                  child: busy
-                      ? SizedBox.square(
-                          dimension: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: color,
-                          ),
-                        )
-                      : Text(
-                          action!,
-                          textAlign: TextAlign.center,
-                          style: AppType.labelSmall.copyWith(
-                            color: color,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+            Pressable(
+              onTap: busy ? () {} : onTap,
+              pressedScale: 0.94,
+              hoveredScale: 1.04,
+              borderRadius: AppRadius.all(AppRadius.sm),
+              child: Container(
+                height: 30,
+                padding: const EdgeInsets.symmetric(horizontal: 11),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: p.isDark ? 0.18 : 0.14),
+                  borderRadius: AppRadius.all(9),
                 ),
+                child: busy
+                    ? SizedBox.square(
+                        dimension: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: color),
+                      )
+                    : Text(
+                        action!,
+                        style: AppType.labelSmall.copyWith(color: color, fontSize: 11.5, fontWeight: FontWeight.w700),
+                      ),
               ),
             ),
           ],

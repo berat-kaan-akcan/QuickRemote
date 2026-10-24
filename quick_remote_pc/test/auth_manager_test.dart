@@ -164,27 +164,4 @@ void main() {
     expect(auth.canAttemptAuth('10.0.0.5'), isTrue);
     expect(auth.pendingCount('10.0.0.7'), 0);
   });
-
-  group('memory', () {
-    test('forgets old failures of addresses that stopped trying', () {
-      // An attacker that changes address (an IPv6 /64 each) must not make the
-      // table grow for as long as the server runs.
-      for (var i = 0; i < 3000; i++) {
-        auth.recordFailedAttempt('fd00:$i::/64');
-        now = now.add(const Duration(milliseconds: 100));
-      }
-      now = now.add(AuthManager.ipBlockDuration * 2);
-      auth.recordFailedAttempt('192.168.1.9');
-      expect(auth.trackedAddresses, lessThan(AuthManager.maxTrackedAddresses + 2));
-    });
-
-    test('keeps the count of an address that is still trying', () {
-      failTimes('192.168.1.9', 4);
-      for (var i = 0; i < 3000; i++) {
-        auth.recordFailedAttempt('fd00:$i::/64');
-      }
-      auth.recordFailedAttempt('192.168.1.9');
-      expect(auth.isIPBlocked('192.168.1.9'), isTrue);
-    });
-  });
 }

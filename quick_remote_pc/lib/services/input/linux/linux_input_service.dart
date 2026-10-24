@@ -309,17 +309,7 @@ class LinuxInputService implements InputService {
     }
     _laserOn = false;
     _wpsLaser = false;
-    // No show: the program of the window in front still tells the phone
-    // which one to ask the user to start (a WPS editor after a take-over).
-    final window = _activeWindow();
-    final inFront = window == null
-        ? null
-        : window.hasClass('wpp')
-            ? 'wps'
-            : (window.hasClass('libreoffice-impress') || window.hasClass('libreoffice-draw'))
-                ? 'impress'
-                : null;
-    return {'error': 'POWERPOINT_NOT_RUNNING', 'presenter': ?inFront};
+    return {'error': 'POWERPOINT_NOT_RUNNING'};
   }
 
   /// The show [getSlideState] last found is the one described: Impress and

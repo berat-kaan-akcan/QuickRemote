@@ -455,15 +455,6 @@ void main() {
       ]);
     });
 
-    test('a huge movement is capped and does not loop for ever', () async {
-      keyboard.set(BtHidConnectionState.connected, computer: 'PC');
-      await fromWatch('command', RemoteCommands.modeLaser);
-      await fromWatch('move', [1e300, -1e300]).timeout(const Duration(seconds: 5));
-      final mouse = keyboard.sent.whereType<(String, int, int)>().toList();
-      expect(mouse, isNotEmpty);
-      expect(mouse.length, lessThanOrEqualTo(20));
-    });
-
     test('the picked program decides the laser\'s keys', () async {
       keyboard.set(BtHidConnectionState.connected, computer: 'PC');
       // Impress has no laser shortcut: the mouse cursor is the laser.

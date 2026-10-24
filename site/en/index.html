@@ -20,10 +20,10 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="QuickRemote: a cobalt line leaves the Next key on a phone and ends in the laser dot on a slide.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="QuickRemote: run your slides from your phone">
-  <meta name="twitter:description" content="Your phone becomes a remote, touchpad and laser. The slide and your notes in your pocket; turn the watch bezel to change slides.">
-  <meta name="twitter:image:alt" content="QuickRemote: a cobalt line leaves the Next key on a phone and ends in the laser dot on a slide.">
 
+  <link rel="alternate" hreflang="tr" href="../">
+  <link rel="alternate" hreflang="en" href="./">
+  <link rel="alternate" hreflang="x-default" href="../">
 
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
@@ -882,7 +882,7 @@
           <ul>
             <li>On Windows: the basics, slide number, notes, and WPS’s laser pen</li>
             <li>On Linux the slide number, notes and colors come with a talk opened from QuickRemote (“Open presentation with WPS”). In a WPS you opened yourself, the keys work while its window is in front.</li>
-            <li>Video: play and pause on Windows (no rewind). On Linux, WPS cannot play a video from outside.</li>
+            <li>Video: play and pause (no rewind)</li>
           </ul>
         </article>
         <article class="prog">
@@ -892,7 +892,7 @@
             <li>Start opens full screen, next and previous turn the page</li>
             <li>The laser, pen and spotlight work with QuickRemote’s layer</li>
             <li>A full-screen PDF’s picture reaches the phone as “The PC’s screen”</li>
-            <li>Okular’s shortcut is written but not tried. WPS PDF was tried on Linux only. Chrome and Firefox opened on native Wayland under KDE are not recognised; on XWayland they work.</li>
+            <li>Shortcuts for Okular and WPS PDF are written but not tried yet</li>
           </ul>
         </article>
       </div>
@@ -920,14 +920,7 @@
             <li>PDF viewers: Acrobat, SumatraPDF, Chrome, Edge, Firefox (Windows)</li>
             <li>Control of Impress and WPS (Linux)</li>
             <li>Control and laser from the watch, on a Galaxy Watch 6</li>
-            <li>Bluetooth keyboard and mouse mode (Android phone, Linux computer)</li>
-            <li>The laser and ink layer (Linux, X11 and XWayland), also over a playing Impress video; clicks pass through it</li>
-            <li>Slide picture, presenter view and the “Go to slide” grid, during an Impress and a WPS show (Linux)</li>
-            <li>The screen picture of a full-screen PDF (WPS PDF, and Firefox on XWayland)</li>
-            <li>“Take over”: moving a WPS you opened yourself into QuickRemote’s WPS at the same slide (Linux)</li>
-            <li>On the phone: app shortcuts, the Quick Settings tile, presenter view, sharing the error log</li>
-            <li>The PC tray, minimize to tray, a single copy, no auto-start on a public network (Linux, KDE)</li>
-            <li>The .deb package, installed and started on Debian&nbsp;12 and Ubuntu&nbsp;22.04</li>
+            <li>Bluetooth keyboard and mouse mode</li>
           </ul>
         </section>
         <section class="st-col st-part" aria-labelledby="st-part">
@@ -935,9 +928,6 @@
           <ul>
             <li>Laser and ink layer: tried on screen on Linux and Windows&nbsp;11 (on Windows also the magnifier, the spotlight and the blank screen); over a video, several monitors, other scale settings and GNOME are not tried yet</li>
             <li>Slide picture: verified on Windows with PowerPoint and WPS, in a show and outside, and on Linux outside a show; not yet looked at on a phone</li>
-            <li>The screen picture: on KDE, Chrome and Firefox now open on native Wayland; the PC cannot recognise those windows, so no screen picture comes and “PDF in front” is unknown. On XWayland they work.</li>
-            <li>Playing a slide video remotely does not work in WPS: WPS does not allow it from outside (Linux)</li>
-            <li>Two phones at once: covered by server tests, not yet tried with two real phones</li>
             <li>The slide picture is the slide as saved: the animation step, drawings and a playing video do not show. In a full-screen show the screen picture does show them.</li>
           </ul>
         </section>
@@ -969,12 +959,12 @@
         <details><summary>Does it work with an iPhone or Apple&nbsp;Watch?</summary><p>Not for now. The remote app runs on Android, and the watch app on Wear&nbsp;OS.</p></details>
         <details><summary>Which watches does it work with?</summary><p>Watches running Wear&nbsp;OS&nbsp;3 and up. The watch works through QuickRemote on the Android phone it is paired with, and does not pair with the computer. The bezel on a Galaxy&nbsp;Watch and the crown on a Pixel&nbsp;Watch turn the slides. We tried the watch on a Galaxy&nbsp;Watch&nbsp;6.</p></details>
         <details><summary>Do I have to install anything on the computer?</summary><p>In Wi-Fi mode you need <span translate="no">QuickRemote&nbsp;PC</span>. In Bluetooth mode you install nothing; the computer sees the phone as a keyboard. The watch works through the phone in both modes.</p></details>
-        <details><summary>Can I present from a PDF?</summary><p>Yes. In Wi-Fi mode it opens full screen in Acrobat, SumatraPDF, Okular (not tried yet) and browsers, and turns the pages. The phone shows a “Full screen” key, and the laser and pen work with QuickRemote’s layer. On Linux it can also turn a PDF open in LibreOffice into a presentation.</p></details>
+        <details><summary>Can I present from a PDF?</summary><p>Yes. In Wi-Fi mode it opens full screen in Acrobat, SumatraPDF, Okular and browsers, and turns the pages. The phone shows a “Full screen” key, and the laser and pen work with QuickRemote’s layer. On Linux it can also turn a PDF open in LibreOffice into a presentation.</p></details>
         <details><summary>How does the slide’s picture reach the phone?</summary><p><span translate="no">QuickRemote&nbsp;PC</span> takes the slide from the program as a picture and sends it only to a phone that turned previews on; you can turn it off in Settings. The picture is the slide as saved: the current animation step, drawings and a playing video do not show. For full-screen shows and PDFs the screen itself is sent.</p></details>
         <details><summary>Can more than one phone connect at once?</summary><p>Yes. The phone that picks up the laser or pen keeps it until its gesture ends. If two people press Next at the same time, the slide moves once.</p></details>
         <details><summary>Does the connection drop when the phone locks?</summary><p>No. While the remote screen is open, the connection carries on in the background even if you lock the phone.</p></details>
         <details><summary>Does <span translate="no">QuickRemote PC</span> quit when I close its window?</summary><p>By default, no: it goes to the tray and connected phones stay connected. To quit completely use Quit in the tray menu, or turn off “Minimize to tray on close” in Settings. On desktops without a tray, closing the window quits the app.</p></details>
-        <details><summary>Does it collect data?</summary><p>No. It sends no crash reports and no usage statistics. The error log stays on your device, and you attach it yourself if you want to share it. With the update check on, <span translate="no">QuickRemote&nbsp;PC</span> asks GitHub for a new version, and GitHub sees your IP address then; you can turn it off. See the <a href="privacy/">privacy policy</a> for details.</p></details>
+        <details><summary>Does it collect data?</summary><p>No. It sends no crash reports and no usage statistics. The error log stays on your device, and you attach it yourself if you want to share it. With the update check on, <span translate="no">QuickRemote&nbsp;PC</span> asks GitHub for a new version, and GitHub sees your IP address then; you can turn it off.</p></details>
         <details><summary>What do I do if something goes wrong?</summary><p>On the phone: Settings → Help. On the PC: Settings → Troubleshooting. Share the error log, or tap “Report a problem” to open a pre-filled page on GitHub. You attach the log there yourself.</p></details>
         <details><summary>Which languages does it support?</summary><p>Turkish and English. The apps follow the device’s language, and you can change it in Settings. On Android&nbsp;13 and up you can also pick the app’s language in the system settings.</p></details>
       </div>
@@ -992,7 +982,7 @@
         <li class="get-card" data-os="android">
           <svg class="i" aria-hidden="true"><use href="#i-android"/></svg>
           <h3>Android phone</h3>
-          <p>Download <code>QuickRemote-…-android.apk</code> from the releases page and open it. Android may ask you to allow installing from unknown sources. It is not on Google Play yet; the link will be put here once it is.</p>
+          <p>Download <code>QuickRemote-…-android.apk</code> from the releases page and open it. Android may ask you to allow installing from unknown sources. It is not on the Play Store yet.</p>
           <a class="get-link" href="https://github.com/berat-kaan-akcan/QuickRemote/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Releases page</a>
         </li>
         <li class="get-card" data-os="watch">
@@ -1010,12 +1000,12 @@
         <li class="get-card" data-os="linux">
           <svg class="i" aria-hidden="true"><use href="#i-terminal"/></svg>
           <h3>Linux</h3>
-          <p>A .deb for Debian, Ubuntu and Pardus; for the rest, <code>quickremote-pc-…-linux-x64.tar.gz</code>: unpack it and run <code>sudo quickremote-pc/share/install-uinput-rule.sh</code> once. The package adds the udev rule the virtual keyboard and mouse need by itself.</p>
+          <p>A .deb for Debian, Ubuntu and Pardus, a .tar.gz for the rest. The package also adds the udev rule the virtual keyboard and mouse need.</p>
           <div class="cmd"><code>sudo apt install ./quickremote-pc_…_amd64.deb</code><button type="button" data-copy aria-label="Copy the command" data-done="Copied"><svg class="i" aria-hidden="true"><use href="#i-content-copy"/></svg></button></div>
           <p class="get-sub">An AUR package, <code>quickremote-pc-bin</code>, is on its way for Arch.</p>
         </li>
       </ul>
-      <p class="get-src">If no files show on the releases page, the first release has not been published yet. The version number takes the place of “…” in the file names. <a href="privacy/">Privacy policy</a>. The source code is <a href="https://github.com/berat-kaan-akcan/QuickRemote">on GitHub</a>.</p>
+      <p class="get-src">The source code is <a href="https://github.com/berat-kaan-akcan/QuickRemote">on GitHub</a>.</p>
     </div>
   </section>
 </main>
@@ -1039,11 +1029,10 @@
     <nav aria-label="Links">
       <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub</a>
       <a href="https://github.com/berat-kaan-akcan/QuickRemote/issues">Report a problem</a>
-      <a href="privacy/">Privacy policy</a>
       <a href="../" hreflang="tr" lang="tr">Türkçe</a>
     </nav>
   </div>
-  <p class="wrap foot-base">© 2026 QuickRemote. A personal project, with no ads and no account.</p>
+  <p class="wrap foot-base">© 2026 QuickRemote. For personal use.</p>
 </footer>
 </body>
 </html>

@@ -17,37 +17,12 @@ class SlideFiles {
 
   static Directory? _dir;
 
-  /// Folders already made private and swept in this run.
-  static final Set<String> _prepared = {};
-
-  /// Creates the folder, owner-only where the system has modes (the slides
-  /// of a private talk must not be readable by other users of the computer
-  /// while a picture waits there), and removes pictures a crashed run left.
-  static Future<void> _prepare(Directory dir) async {
-    await dir.create(recursive: true);
-    if (!_prepared.add(dir.path)) return;
-    if (!Platform.isWindows) {
-      try {
-        await Process.run('chmod', ['700', dir.path]);
-      } catch (e) {
-        debugPrint('Slide folder not made private: $e');
-      }
-    }
-    try {
-      await for (final entity in dir.list(followLinks: false)) {
-        if (entity is File && RegExp(r'^slide-\d+-\d+\.jpg$').hasMatch(p.basename(entity.path))) {
-          await discard(entity.path);
-        }
-      }
-    } catch (_) {}
-  }
-
   /// A fresh path for slide [index] at [width] pixels; an old file there is
   /// removed first.
   static Future<String> path(int index, int width) async {
     final dir = directoryOverride ??
         (_dir ??= Directory(p.join((await getApplicationSupportDirectory()).path, 'slide-previews')));
-    await _prepare(dir);
+    await dir.create(recursive: true);
     final file = File(p.join(dir.path, 'slide-$index-$width.jpg'));
     await discard(file.path);
     return file.path;

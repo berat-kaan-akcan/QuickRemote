@@ -162,21 +162,18 @@ class StateBroadcaster {
         _pptNotRunningSkipCount = 3;
         onShow?.call(null, caps?.front);
         final stateChanged = _lastSlideState == null || _lastSlideState!['error'] != 'POWERPOINT_NOT_RUNNING';
-        final programChanged = !stateChanged && _lastSlideState!['presenter'] != state['presenter'];
-        if (stateChanged || capsChanged || programChanged) {
+        if (stateChanged || capsChanged) {
           _lastSlideState = state;
           _lastCaps = caps;
           if (stateChanged) {
             onBroadcast({
               'type': 'STATUS',
               'state': 'POWERPOINT_NOT_RUNNING',
-              if (state['presenter'] != null) 'presenter': state['presenter'],
             });
           }
           onBroadcast({
             'type': 'SLIDE_STATE',
             'data': null,
-            if (state['presenter'] != null) 'presenter': state['presenter'],
             ...?caps?.toJson(),
           });
         }
