@@ -236,10 +236,8 @@ class _ToolKey extends StatelessWidget {
                         child: Text(
                           label,
                           maxLines: 1,
-                          // The icon carries the tool's color; its name stays
-                          // readable (4.5:1) on the tinted key in every theme.
                           style: AppType.labelSmall.copyWith(
-                            color: active ? p.textPrimary : p.textSecondary,
+                            color: color,
                             fontSize: 11,
                           ),
                         ),

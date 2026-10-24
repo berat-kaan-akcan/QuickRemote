@@ -2,8 +2,6 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
-
 /// PIN generation and rate limiting for the pairing handshake.
 ///
 /// Limits apply per remote IP and globally, and they are checked both when a
@@ -28,15 +26,10 @@ class AuthManager {
   static const globalFailureWindow = Duration(seconds: 60);
   static const globalPauseDuration = Duration(seconds: 60);
 
-  /// Addresses with a failure count kept at once; beyond this the ones that
-  /// have not failed for [ipBlockDuration] are forgotten.
-  static const maxTrackedAddresses = 1024;
-
   final DateTime Function() _now;
   final Random _rng = Random.secure();
 
   final Map<String, int> _failedAttempts = {};
-  final Map<String, DateTime> _lastFailure = {};
   final Map<String, DateTime> _blockedIPs = {};
   final Map<String, int> _pending = {};
   int _pendingTotal = 0;
@@ -69,7 +62,6 @@ class AuthManager {
     if (_now().isAfter(blockedUntil)) {
       _blockedIPs.remove(ip);
       _failedAttempts.remove(ip);
-      _lastFailure.remove(ip);
       return false;
     }
     return true;
@@ -134,8 +126,6 @@ class AuthManager {
     final now = _now();
     final failures = (_failedAttempts[ip] ?? 0) + 1;
     _failedAttempts[ip] = failures;
-    _lastFailure[ip] = now;
-    if (_failedAttempts.length > maxTrackedAddresses) _forgetOldFailures(now);
     if (failures >= maxFailedAttemptsPerIp) {
       _blockedIPs[ip] = now.add(ipBlockDuration);
     }
@@ -153,19 +143,7 @@ class AuthManager {
     return false;
   }
 
-  void _forgetOldFailures(DateTime now) {
-    _lastFailure.removeWhere((ip, at) {
-      final old = now.difference(at) > ipBlockDuration && !_blockedIPs.containsKey(ip);
-      if (old) _failedAttempts.remove(ip);
-      return old;
-    });
-  }
-
-  @visibleForTesting
-  int get trackedAddresses => _failedAttempts.length;
-
   void recordSuccessfulAuth(String ip) {
-    _lastFailure.remove(ip);
     _failedAttempts.remove(ip);
     _blockedIPs.remove(ip);
   }
@@ -176,7 +154,6 @@ class AuthManager {
 
   void reset() {
     _failedAttempts.clear();
-    _lastFailure.clear();
     _blockedIPs.clear();
     _pending.clear();
     _pendingTotal = 0;

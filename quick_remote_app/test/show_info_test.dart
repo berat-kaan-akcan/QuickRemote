@@ -24,9 +24,6 @@ class _Ws extends WebSocketService {
   String get presenter => presenterId;
   @override
   String? get pcPlatform => platform;
-  String? front;
-  @override
-  String? get frontPresenter => front;
   @override
   String get serverAddress => '192.168.1.24:8443';
   @override
@@ -35,15 +32,6 @@ class _Ws extends WebSocketService {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  test('without a show the remote names the program in front', () async {
-    SharedPreferences.setMockInitialValues({});
-    final settings = SettingsProvider();
-    final ws = _Ws(running: false, platform: 'linux')..front = 'wps';
-    expect(remoteProgram(ws, settings), 'wps');
-    ws.front = null;
-    expect(remoteProgram(ws, settings), 'impress');
-  });
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 

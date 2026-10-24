@@ -37,19 +37,13 @@ String formatTimerSeconds(int seconds) {
 
 /// Connects [controller] to the timer settings: early warnings, vibration
 /// patterns and the snackbars shown on [context].
-void bindTimerToSettings(
-  BuildContext context,
-  PresentationTimerController controller,
-) {
+void bindTimerToSettings(BuildContext context, PresentationTimerController controller) {
   final settings = context.read<SettingsProvider>();
-  controller.warningTimes = () =>
-      settings.earlyWarningHaptic ? settings.warningTimes : const [];
+  controller.warningTimes = () => settings.earlyWarningHaptic ? settings.warningTimes : const [];
   controller.onAlert = (alert) {
     if (!context.mounted) return;
     if (alert.kind == TimerAlertKind.timeUp) {
-      if (settings.timeOutVibrationEnabled) {
-        vibrateTimerPattern(settings.timeOutVibrationPattern);
-      }
+      if (settings.timeOutVibrationEnabled) vibrateTimerPattern(settings.timeOutVibrationPattern);
       AppSnackbar.show(
         context,
         message: context.l10n.timeUp,
@@ -57,14 +51,10 @@ void bindTimerToSettings(
         duration: const Duration(seconds: 3),
       );
     } else {
-      vibrateTimerPattern(
-        settings.warningVibrations[alert.remainingSeconds] ?? 'double',
-      );
+      vibrateTimerPattern(settings.warningVibrations[alert.remainingSeconds] ?? 'double');
       AppSnackbar.show(
         context,
-        message: context.l10n.timeRemaining(
-          formatTimerSeconds(alert.remainingSeconds),
-        ),
+        message: context.l10n.timeRemaining(formatTimerSeconds(alert.remainingSeconds)),
         type: SnackbarType.warning,
         duration: const Duration(seconds: 2),
       );
@@ -107,9 +97,7 @@ class PresentationTimer extends StatelessWidget {
     AppBottomSheet.show(
       context: context,
       builder: (ctx) => DurationPicker(
-        initialSeconds: controller.isDurationSelected
-            ? controller.targetSeconds
-            : null,
+        initialSeconds: controller.isDurationSelected ? controller.targetSeconds : null,
         onSelected: (seconds, start) {
           Navigator.of(ctx).pop();
           if (start) HapticFeedback.lightImpact();
@@ -132,76 +120,50 @@ class PresentationTimer extends StatelessWidget {
         final iconColor = isOvertime
             ? p.danger
             : controller.isRunning
-            ? p.warning
-            : p.textMuted;
-        // Large text leaves no room for the key that only mirrors the chip.
-        final compact = MediaQuery.textScalerOf(context).scale(16) > 18.4;
+                ? p.warning
+                : p.textMuted;
         final canReset = controller.isRunning || controller.elapsedSeconds > 0;
 
-        // The digits are a few characters in a chip beside other keys: they
-        // grow with the system's text size, but stop at 1.3 so the chip never
-        // pushes its neighbours off the screen.
-        return MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 1.3,
-          child: Pressable(
-            // The reset key inside is a button of its own.
-            keepChildSemantics: true,
-            onTap: () => _toggle(context),
-            onLongPress: () => showDurationPicker(context),
-            semanticLabel: controller.isRunning
-                ? context.l10n.timerPauseLabel(timeStr)
-                : context.l10n.timerStartLabel(timeStr),
-            borderRadius: AppRadius.all(AppRadius.sm),
-            child: AnimatedContainer(
-              duration: AppMotion.of(context, AppMotion.base),
-              height: tall ? 50 : null,
-              padding: const EdgeInsets.fromLTRB(10, 0, 6, 0),
-              decoration: BoxDecoration(
-                color: p.surfaceSunken,
-                borderRadius: AppRadius.all(AppRadius.sm),
-                border: Border.all(
-                  color: isOvertime
-                      ? p.danger.withValues(alpha: 0.5)
-                      : p.border,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!compact) ...[
-                    ExcludeSemantics(child: Icon(Icons.timer_outlined, color: iconColor, size: 18)),
-                    const SizedBox(width: 6),
-                  ],
-                  ExcludeSemantics(child: Text(
-                    timeStr,
-                    style: AppType.numeric.copyWith(
-                      color: isOvertime ? p.danger : p.textPrimary,
-                      fontSize: 18,
-                      letterSpacing: 0,
-                    ),
-                  )),
-                  const SizedBox(width: 6),
-                  if (!compact) ...[
-                    // The chip itself starts and pauses; this only shows which.
-                    ExcludeSemantics(
-                      child: _TimerKey(
-                        icon: controller.isRunning
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
-                        semanticLabel: '',
-                        onTap: () => _toggle(context),
-                        touchTarget: false,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  _TimerKey(
-                    icon: Icons.refresh_rounded,
-                    semanticLabel: context.l10n.timerResetLabel,
-                    onTap: canReset ? _reset : null,
+        return Pressable(
+          onTap: () => _toggle(context),
+          onLongPress: () => showDurationPicker(context),
+          semanticLabel: timeStr,
+          borderRadius: AppRadius.all(AppRadius.sm),
+          child: AnimatedContainer(
+            duration: AppMotion.of(context, AppMotion.base),
+            height: tall ? 50 : null,
+            padding: const EdgeInsets.fromLTRB(10, 5, 6, 5),
+            decoration: BoxDecoration(
+              color: p.surfaceSunken,
+              borderRadius: AppRadius.all(AppRadius.sm),
+              border: Border.all(color: isOvertime ? p.danger.withValues(alpha: 0.5) : p.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.timer_outlined, color: iconColor, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  timeStr,
+                  style: AppType.numeric.copyWith(
+                    color: isOvertime ? p.danger : p.textPrimary,
+                    fontSize: 18,
+                    letterSpacing: 0,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 6),
+                _TimerKey(
+                  icon: controller.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  semanticLabel: timeStr,
+                  onTap: () => _toggle(context),
+                ),
+                const SizedBox(width: 6),
+                _TimerKey(
+                  icon: Icons.refresh_rounded,
+                  semanticLabel: MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
+                  onTap: canReset ? _reset : null,
+                ),
+              ],
             ),
           ),
         );
@@ -212,18 +174,10 @@ class PresentationTimer extends StatelessWidget {
 
 /// A small square key inside the timer.
 class _TimerKey extends StatelessWidget {
-  const _TimerKey({
-    required this.icon,
-    required this.semanticLabel,
-    this.onTap,
-    this.touchTarget = true,
-  });
+  const _TimerKey({required this.icon, required this.semanticLabel, this.onTap});
 
   final IconData icon;
   final String semanticLabel;
-
-  /// Gives the key the 48 px touch area; off for the one the chip duplicates.
-  final bool touchTarget;
   final VoidCallback? onTap;
 
   @override
@@ -232,7 +186,6 @@ class _TimerKey extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       pressedScale: 0.85,
-      minTarget: touchTarget ? 48 : 0,
       semanticLabel: semanticLabel,
       borderRadius: AppRadius.all(AppRadius.xs),
       child: Container(
