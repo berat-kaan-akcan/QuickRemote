@@ -6,8 +6,10 @@ import '../../services/problem_report.dart';
 import '../../services/websocket_service.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../../utils/ui/app_bottom_sheet.dart';
+import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_top_bar.dart';
 import '../../widgets/ui/ui.dart';
+import '../../app_version.dart';
 import 'capabilities_screen.dart';
 import 'theme_screen.dart';
 import 'timer_settings_screen.dart';
@@ -166,6 +168,49 @@ class SettingsScreen extends StatelessWidget {
                             subtitle: l10n.settingsReportProblemSubtitle,
                             alignTop: true,
                             onTap: () => _reportProblem(context, settings),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.sm),
+                    FadeSlideIn(
+                      index: 6,
+                      child: SettingsSectionLabel(l10n.settingsSectionAbout),
+                    ),
+                    FadeSlideIn(
+                      index: 7,
+                      child: SettingsGroup(
+                        children: [
+                          SettingsRow(
+                            icon: Icons.info_outline_rounded,
+                            iconColor: p.info,
+                            title: l10n.settingsVersionTitle,
+                            subtitle: appVersion,
+                          ),
+                          SettingsRow(
+                            icon: Icons.lock_outline_rounded,
+                            iconColor: p.success,
+                            title: l10n.settingsPrivacyTitle,
+                            subtitle: l10n.settingsPrivacySubtitle,
+                            alignTop: true,
+                            onTap: () => AppDialog.showInfo(
+                              context: context,
+                              title: l10n.settingsPrivacyTitle,
+                              content: Text(l10n.privacyBody),
+                              icon: Icons.lock_outline_rounded,
+                            ),
+                          ),
+                          SettingsRow(
+                            icon: Icons.description_outlined,
+                            iconColor: p.textSecondary,
+                            title: l10n.settingsLicensesTitle,
+                            subtitle: l10n.settingsLicensesSubtitle,
+                            alignTop: true,
+                            onTap: () => showLicensePage(
+                              context: context,
+                              applicationName: 'QuickRemote',
+                              applicationVersion: appVersion,
+                            ),
                           ),
                         ],
                       ),

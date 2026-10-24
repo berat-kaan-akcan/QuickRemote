@@ -20,10 +20,10 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="QuickRemote: telefondaki Sonraki tuşundan çıkan kobalt bir çizgi, slayttaki lazer noktasında bitiyor.">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="QuickRemote: sunumunu telefonundan yönet">
+  <meta name="twitter:description" content="Telefonun kumanda, touchpad ve lazer olur. Slayt resmi ve notların cebinde, saatte çerçeveyi çevirince slayt ilerler.">
+  <meta name="twitter:image:alt" content="QuickRemote: telefondaki Sonraki tuşundan çıkan kobalt bir çizgi, slayttaki lazer noktasında bitiyor.">
 
-  <link rel="alternate" hreflang="tr" href="./">
-  <link rel="alternate" hreflang="en" href="en/">
-  <link rel="alternate" hreflang="x-default" href="./">
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
@@ -882,7 +882,7 @@
           <ul>
             <li>Windows’ta temel komutlar, slayt numarası, notlar; WPS’in lazer kalemi</li>
             <li>Linux’ta slayt numarası, notlar ve renkler, “Sunumu WPS ile aç” ile QuickRemote’tan açılan sunumda gelir. Kendi açtığın WPS’te tuşlar, WPS penceresi öndeyken çalışır.</li>
-            <li>Video: oynat ve duraklat (başa sarma yok)</li>
+            <li>Video: Windows’ta oynat ve duraklat (başa sarma yok). Linux’ta WPS videoyu dışarıdan oynatamıyor.</li>
           </ul>
         </article>
         <article class="prog">
@@ -892,7 +892,7 @@
             <li>Başlat tam ekranı açar, sonraki ve önceki sayfayı çevirir</li>
             <li>Lazer, kalem ve spot ışığı QuickRemote’un katmanıyla çalışır</li>
             <li>Tam ekran PDF’in ekran resmi telefona “Bilgisayarın ekranı” diye gelir</li>
-            <li>Okular ve WPS PDF’in kısayolları yazıldı, henüz denenmedi</li>
+            <li>Okular’ın kısayolu yazıldı, henüz denenmedi. WPS PDF yalnız Linux’ta denendi. KDE’de yerel Wayland’de açılan Chrome ve Firefox tanınmaz; XWayland’de çalışırlar.</li>
           </ul>
         </article>
       </div>
@@ -920,7 +920,14 @@
             <li>PDF görüntüleyiciler: Acrobat, SumatraPDF, Chrome, Edge, Firefox (Windows)</li>
             <li>Impress ve WPS ile kumanda (Linux)</li>
             <li>Saatten kumanda ve lazer, bir Galaxy Watch 6 ile</li>
-            <li>Bluetooth klavye ve fare modu</li>
+            <li>Bluetooth klavye ve fare modu (Android telefon, Linux bilgisayar)</li>
+            <li>Lazer ve mürekkep katmanı (Linux, X11 ve XWayland): Impress’te oynayan videonun üstünde de, tıklamalar katmandan geçer</li>
+            <li>Slayt resmi, sunucu görünümü ve “Slayta git” ızgarası: Impress ve WPS gösterisinde (Linux)</li>
+            <li>Tam ekran PDF’in ekran resmi (WPS PDF ve XWayland’de Firefox)</li>
+            <li>“Devral”: kendi açtığın WPS’i QuickRemote’un WPS’ine aynı slayttan taşımak (Linux)</li>
+            <li>Telefonda uygulama kısayolları, Hızlı Ayarlar kutucuğu, sunucu görünümü, hata günlüğünü paylaşma</li>
+            <li>PC tepsisi, pencereyi kapatınca tepsiye inme, tek kopya, ortak ağda kendiliğinden başlamama (Linux, KDE)</li>
+            <li>.deb paketi, Debian&nbsp;12 ve Ubuntu&nbsp;22.04’te kurulup açıldı</li>
           </ul>
         </section>
         <section class="st-col st-part" aria-labelledby="st-part">
@@ -928,6 +935,9 @@
           <ul>
             <li>Lazer ve mürekkep katmanı: Linux’ta ve Windows&nbsp;11’de ekranda denendi (Windows’ta büyüteç, spot ışığı ve boş ekran da); videonun üstü, birden çok monitör, başka ölçek ayarları ve GNOME henüz denenmedi</li>
             <li>Slayt resmi: Windows’ta PowerPoint ve WPS ile gösteride ve dışında, Linux’ta gösteri dışında doğrulandı; telefonda henüz bakılmadı</li>
+            <li>Ekran resmi: KDE’de Chrome ve Firefox artık yerel Wayland’de açılıyor; bu pencereleri PC tanıyamaz, ekran resmi gelmez ve “PDF önde” bilinmez. XWayland’de çalışırlar.</li>
+            <li>WPS’te slayt videosunu uzaktan oynatma yok: WPS buna dışarıdan izin vermiyor (Linux)</li>
+            <li>İki telefon aynı anda: sunucu testleriyle sınandı, iki gerçek telefonla henüz denenmedi</li>
             <li>Slayt resmi, slaytın kaydedilmiş hâlidir: animasyon adımı, çizim ve oynayan video görünmez. Tam ekran gösteride ekran resmi bunları da gösterir.</li>
           </ul>
         </section>
@@ -959,12 +969,12 @@
         <details><summary>iPhone ya da Apple&nbsp;Watch ile çalışır mı?</summary><p>Şimdilik hayır. Kumanda uygulaması Android’de, saat uygulaması Wear&nbsp;OS’ta çalışır.</p></details>
         <details><summary>Hangi saatlerle çalışır?</summary><p>Wear&nbsp;OS&nbsp;3 ve üzerini çalıştıran saatlerle. Saat, eşleştiği Android telefondaki QuickRemote üzerinden çalışır; bilgisayarla ayrıca eşleşmez. Galaxy&nbsp;Watch’ta çerçeve, Pixel&nbsp;Watch’ta kuron slaytları çevirir. Saati bir Galaxy&nbsp;Watch&nbsp;6 ile denedik.</p></details>
         <details><summary>Bilgisayara bir şey kurmam gerekir mi?</summary><p>Wi-Fi modunda <span translate="no">QuickRemote&nbsp;PC</span> gerekir. Bluetooth modunda hiçbir şey kurmazsın; bilgisayar telefonu klavye olarak görür. Saat iki modda da telefonun üzerinden çalışır.</p></details>
-        <details><summary>PDF ile sunum yapabilir miyim?</summary><p>Evet. Wi-Fi modunda Acrobat, SumatraPDF, Okular ve tarayıcılarda tam ekranı açar, sayfaları çevirir. Telefonda “Tam ekran” tuşu çıkar; lazer ve kalem QuickRemote’un katmanıyla çalışır. Linux’ta LibreOffice’te açık bir PDF’i sunuma da çevirebilir.</p></details>
+        <details><summary>PDF ile sunum yapabilir miyim?</summary><p>Evet. Wi-Fi modunda Acrobat, SumatraPDF, Okular (henüz denenmedi) ve tarayıcılarda tam ekranı açar, sayfaları çevirir. Telefonda “Tam ekran” tuşu çıkar; lazer ve kalem QuickRemote’un katmanıyla çalışır. Linux’ta LibreOffice’te açık bir PDF’i sunuma da çevirebilir.</p></details>
         <details><summary>Slaytın resmi telefona nasıl geliyor?</summary><p><span translate="no">QuickRemote&nbsp;PC</span> programdan slaytı resim olarak alır ve yalnızca önizlemeyi açmış telefona gönderir; Ayarlar’dan kapatabilirsin. Resim slaydın kaydedilmiş hâlidir: animasyonun o anki adımı, çizimler ve oynayan video görünmez. Tam ekran gösterilerde ve PDF’lerde ekranın kendisi gönderilir.</p></details>
         <details><summary>Aynı anda birden fazla telefon bağlanabilir mi?</summary><p>Evet. Lazeri ya da kalemi ilk alan telefon, hareketi bitene kadar onu kullanır. İki kişi aynı anda Sonraki’ye basarsa slayt yalnızca bir kez ilerler.</p></details>
         <details><summary>Telefon kilitlenince bağlantı kopar mı?</summary><p>Hayır. Kumanda ekranı açıkken telefonu kilitlesen de bağlantı arka planda sürer.</p></details>
         <details><summary>Pencereyi kapatınca <span translate="no">QuickRemote PC</span> kapanır mı?</summary><p>Varsayılan olarak hayır: tepsiye iner ve bağlı telefonlar kopmaz. Tamamen kapatmak için tepsi menüsündeki Çıkış’ı kullan ya da Ayarlar’da “Kapatınca tepsiye küçült”ü kapat. Tepsisi olmayan masaüstlerinde pencereyi kapatmak uygulamayı kapatır.</p></details>
-        <details><summary>Veri topluyor mu?</summary><p>Hayır. Çökme raporu ya da kullanım istatistiği göndermez. Hata günlüğü cihazında kalır; paylaşmak istersen kendin eklersin. Güncelleme denetimi açıkken <span translate="no">QuickRemote&nbsp;PC</span> GitHub’a yeni sürümü sorar; GitHub bu sırada IP adresini görür, istersen kapatırsın.</p></details>
+        <details><summary>Veri topluyor mu?</summary><p>Hayır. Çökme raporu ya da kullanım istatistiği göndermez. Hata günlüğü cihazında kalır; paylaşmak istersen kendin eklersin. Güncelleme denetimi açıkken <span translate="no">QuickRemote&nbsp;PC</span> GitHub’a yeni sürümü sorar; GitHub bu sırada IP adresini görür, istersen kapatırsın. Ayrıntılar için <a href="gizlilik/">gizlilik politikasına</a> bak.</p></details>
         <details><summary>Bir sorunla karşılaşırsam ne yapmalıyım?</summary><p>Telefonda Ayarlar → Yardım, PC’de Ayarlar → Sorun giderme: hata günlüğünü paylaş ya da “Sorun bildir” ile GitHub’da hazır doldurulmuş bir sayfa aç. Günlüğü sayfaya sen eklersin.</p></details>
         <details><summary>Hangi dilleri destekliyor?</summary><p>Türkçe ve İngilizce. Uygulamalar cihazın dilini izler; istersen ayarlardan değiştirirsin. Android&nbsp;13 ve üzerinde uygulama dili sistem ayarlarından da seçilir.</p></details>
       </div>
@@ -982,7 +992,7 @@
         <li class="get-card" data-os="android">
           <svg class="i" aria-hidden="true"><use href="#i-android"/></svg>
           <h3>Android telefon</h3>
-          <p>Sürüm sayfasından <code>QuickRemote-…-android.apk</code> dosyasını indir ve aç. Android “bilinmeyen kaynaklardan kurulum” izni isteyebilir. Play Store’da henüz yok.</p>
+          <p>Sürüm sayfasından <code>QuickRemote-…-android.apk</code> dosyasını indir ve aç. Android “bilinmeyen kaynaklardan kurulum” izni isteyebilir. Google Play’de henüz yok; yayımlanınca bağlantısı buraya konur.</p>
           <a class="get-link" href="https://github.com/berat-kaan-akcan/QuickRemote/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Sürüm sayfası</a>
         </li>
         <li class="get-card" data-os="watch">
@@ -1000,12 +1010,12 @@
         <li class="get-card" data-os="linux">
           <svg class="i" aria-hidden="true"><use href="#i-terminal"/></svg>
           <h3>Linux</h3>
-          <p>Debian, Ubuntu ve Pardus için .deb; ötekiler için .tar.gz. Paket, klavye ve fare için gereken udev kuralını da ekler.</p>
+          <p>Debian, Ubuntu ve Pardus için .deb; ötekiler için <code>quickremote-pc-…-linux-x64.tar.gz</code>: açıp bir kez <code>sudo quickremote-pc/share/install-uinput-rule.sh</code> çalıştır. Paket, klavye ve fare için gereken udev kuralını kendisi ekler.</p>
           <div class="cmd"><code>sudo apt install ./quickremote-pc_…_amd64.deb</code><button type="button" data-copy aria-label="Komutu kopyala" data-done="Kopyalandı"><svg class="i" aria-hidden="true"><use href="#i-content-copy"/></svg></button></div>
           <p class="get-sub">Arch için <code>quickremote-pc-bin</code> AUR paketi hazırlanıyor.</p>
         </li>
       </ul>
-      <p class="get-src">Kaynak kodu <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da</a>.</p>
+      <p class="get-src">Sürüm sayfasında dosyalar görünmüyorsa ilk sürüm henüz yayımlanmamıştır. Sürüm numaraları dosya adlarındaki “…” yerine gelir. <a href="gizlilik/">Gizlilik politikası</a>. Kaynak kodu <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da</a>.</p>
     </div>
   </section>
 </main>
@@ -1029,10 +1039,11 @@
     <nav aria-label="Bağlantılar">
       <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub</a>
       <a href="https://github.com/berat-kaan-akcan/QuickRemote/issues">Hata bildir</a>
+      <a href="gizlilik/">Gizlilik politikası</a>
       <a href="en/" hreflang="en" lang="en">English</a>
     </nav>
   </div>
-  <p class="wrap foot-base">© 2026 QuickRemote. Kişisel kullanım amaçlıdır.</p>
+  <p class="wrap foot-base">© 2026 QuickRemote. Reklamsız, hesapsız, kişisel bir proje.</p>
 </footer>
 </body>
 </html>

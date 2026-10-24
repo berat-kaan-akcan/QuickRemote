@@ -76,7 +76,7 @@
   "connectionRateLimited": "Çok fazla hatalı deneme. Bir dakika sonra tekrar deneyin.",
   "connectionTimeout": "Bağlantı zaman aşımına uğradı.",
   "connectionAuthTimeout": "Kimlik doğrulama zaman aşımına uğradı.",
-  "connectionServerNotFound": "Sunucuya ulaşılamadı: {detail}",
+  "connectionServerNotFound": "PC'ye ulaşılamadı. QuickRemote PC'nin açık olduğundan ve iki cihazın aynı Wi-Fi ağında olduğundan emin olun.",
   "@connectionServerNotFound": {
     "placeholders": {
       "detail": {
@@ -84,12 +84,12 @@
       }
     }
   },
-  "connectionCertMismatch": "Sertifika değişti! Olası MITM saldırısı veya cihaz formatlanmış olabilir.",
+  "connectionCertMismatch": "Bu PC'nin güvenlik sertifikası değişti. PC uygulaması yeniden kurulunca böyle olur; ama biri PC'nizin yerine geçmeye çalışıyor da olabilir. Yalnızca beklediğiniz bir değişiklikse devam edin.",
   "connectionCertRejected": "PC'nin sertifikası QR kodundakiyle eşleşmiyor. Bağlantı güvenli değil, bağlanılmadı. QR kodunu yeniden tarayın.",
   "connectionUnverified": "Bu PC ile ilk bağlantı: güvenlik kodunu karşılaştırın.",
   "connectionClosedByPc": "PC bu cihazın bağlantısını kesti. Yeniden bağlanmak için QR kodu tekrar okutun.",
   "connectionClosed": "Bağlantı beklenmedik şekilde kapandı.",
-  "connectionUnknown": "Bağlantı hatası: {detail}",
+  "connectionUnknown": "Bağlanılamadı. Yeniden deneyin; sürerse Ayarlar → Yardım'dan hata günlüğünü paylaşın.",
   "@connectionUnknown": {
     "placeholders": {
       "detail": {
@@ -508,6 +508,8 @@
   "reportCopied": "Rapor panoya kopyalandı",
   "noSlideData": "Slayt verisi bulunamadı",
   "backgroundNotification": "Arka planda bağlantı devam ediyor...",
+  "notificationDeniedNote": "Bildirim izni kapalı. Bağlantı yine de çalışır, ancak ekran kapalıyken bağlantıyı tutan bildirim görünmeyebilir ve Android uygulamayı durdurabilir.",
+  "notificationDeniedAction": "Ayarları aç",
   "homeHeroSubtitle": "Bilgisayardaki QuickRemote PC'nin QR kodunu tarayın ya da telefonu Bluetooth ile klavye ve fare olarak bağlayın.",
   "@homeHeroSubtitle": {
     "description": "Home screen: how to connect, under the tagline."
@@ -743,6 +745,23 @@
   "capLevelYes": "Çalışır",
   "capLevelPartial": "Kısmen",
   "capLevelNo": "Çalışmaz",
+  "scanPermissionTitle": "Kamera izni gerekli",
+  "scanPermissionDenied": "QuickRemote kamerayı yalnızca bilgisayarınızdaki QR kodu okumak için kullanır. İzni Ayarlar'dan verin ya da geri dönüp adresi elle girerek bağlanın.",
+  "scanUnavailableTitle": "Kamera kullanılamıyor",
+  "scanUnavailable": "Kamera başlatılamadı. Kamerayı kullanan diğer uygulamaları kapatın ya da geri dönüp adresi elle girerek bağlanın.",
+  "scanOpenSettings": "Ayarları aç",
+  "scanGoBack": "Geri dön",
+  "settingsSectionAbout": "Hakkında",
+  "settingsVersionTitle": "Sürüm",
+  "settingsLicensesTitle": "Açık kaynak lisansları",
+  "settingsLicensesSubtitle": "Flutter, paketler ve Inter ile Space Grotesk yazı tipleri.",
+  "settingsPrivacyTitle": "Gizlilik",
+  "settingsPrivacySubtitle": "Uygulamanın neleri kullandığı ve telefondan neyin çıktığı.",
+  "privacyBody": "QuickRemote yalnızca yerel ağınızda çalışır: hesap, analiz ve reklam yoktur; bizim bir sunucumuza hiçbir şey gönderilmez.\n\nKamera yalnızca eşleştirme QR kodunu okumak için kullanılır. “Yakındaki cihazlar” izni Bluetooth kumandası ve saat için kullanılır. Bildirim, ekran kapalıyken bağlantıyı canlı tutar.\n\nHata günlüğü siz paylaşmadıkça bu telefonda kalır.",
+  "homeGetPcApp": "QuickRemote PC'yi indir",
+  "timerStartLabel": "{time}, zamanlayıcıyı başlat",
+  "timerPauseLabel": "{time}, zamanlayıcıyı duraklat",
+  "timerResetLabel": "Zamanlayıcıyı sıfırla",
   "historyUndo": "Geri al",
   "capUntried": "Denenmedi",
   "capUntriedLegend": "Kodda yazıldı ve testlerden geçti, gerçek bir cihazda henüz denenmedi."

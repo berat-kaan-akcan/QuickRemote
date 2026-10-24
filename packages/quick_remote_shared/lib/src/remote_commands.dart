@@ -88,6 +88,23 @@ abstract class RemoteCommands {
     'SLIDE_THUMB',
   };
 
+  /// The value of a `PREFIX:value` command: a short run of ASCII digits (the
+  /// largest, a BGR color, has 8). Nothing else is ever sent, so a longer or
+  /// stranger value is not a mistake of ours.
+  static final _prefixedValue = RegExp(r'^[0-9]{1,9}$');
+
+  /// Whether [command] is exactly one of [allowedCommands], or one of
+  /// [allowedPrefixes] with a digits-only value. The PC checks this before it
+  /// does anything with a phone's text (log, UI, acks, parsing), so what is
+  /// let through is short and plain; each value's range is checked later.
+  static bool isValid(String command) {
+    if (allowedCommands.contains(command)) return true;
+    final colon = command.indexOf(':');
+    if (colon < 0) return false;
+    return allowedPrefixes.contains(command.substring(0, colon)) &&
+        _prefixedValue.hasMatch(command.substring(colon + 1));
+  }
+
   // Parameterized commands; the PC validates the range of each value.
   static String startAt(int slide) => 'START_AT:$slide';
   static String penColor(int bgr) => 'SET_PEN_COLOR:$bgr';

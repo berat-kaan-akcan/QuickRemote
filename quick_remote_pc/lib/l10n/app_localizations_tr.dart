@@ -519,4 +519,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String issueBody(String version, String platform, String presenters) {
     return '**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote PC $version\nPlatform: $platform\nProgramlar: $presenters\n\nGünlüğü (Ayarlar → Günlüğü dışa aktar) bu sayfaya sürükleyip bırakabilirsin.';
   }
+
+  @override
+  String get startErrorPortsInUse =>
+      '8090-8099 portları kullanımda. Bu portları kullanan uygulamaları kapatıp yeniden deneyin.';
+
+  @override
+  String get settingsAbout => 'Hakkında';
+
+  @override
+  String settingsVersion(String version) {
+    return 'QuickRemote PC $version';
+  }
+
+  @override
+  String get settingsLicenses => 'Açık kaynak lisansları';
 }

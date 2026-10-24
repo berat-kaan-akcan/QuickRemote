@@ -4,6 +4,8 @@ Tarih: 2026-10-20. Telefon uygulaması ve saat uygulaması **tek bir Play kaydı
 
 Play kuralları sık değişir. "**Kontrol et**" yazan maddelerde Play Console'un o günkü metnine bak.
 
+**Güncelleme 2026-10-22:** hazırlanan metinler, formlar ve kontrol listesi `store/` klasöründe: [store/README.md](store/README.md), sıralı liste [store/KONTROL_LISTESI.md](store/KONTROL_LISTESI.md). Bu dosyadaki işaretler aşağıda güncellendi. Bu makinede Android SDK indirilemedi, bu yüzden AAB derlemesi henüz **denenmedi** (`store/derleme-ve-imza.md`).
+
 Etiketler: **[Sen]** yalnızca senin yapabileceğin işler (hesap, ödeme, cihaz, karar). **[Claude]** benim kodda ya da dosyada yapabileceğim işler; "yap" demen yeter.
 
 ---
@@ -24,7 +26,7 @@ Etiketler: **[Sen]** yalnızca senin yapabileceğin işler (hesap, ödeme, cihaz
 
 ### Reddedilme riski olanlar
 
-- [ ] **[Claude] Pil optimizasyonu izni (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`)**:
+- [x] **[Claude] Pil optimizasyonu izni (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`)**: *kaldırıldı (2026-10-22): manifestte `tools:node="remove"`, `BackgroundSession` eklentiye `shouldRequestBatteryOptimizationsOff: false` veriyor. Kilitli telefonla uzun oturum cihazda denenmedi; kopuyorsa geri alma yolu `store/izinler.md` bölüm 4.* Aşağıdaki eski not:
   - Play bu izni yalnızca belirli kullanım türlerine veriyor ve incelemede soruyor. Bugün `flutter_background` bu izni **zorunlu** istiyor (`background_session.dart`): kullanıcı reddederse arka planda bağlantı hiç kurulmuyor.
   - Öneri: izni kaldırmak ve yalnızca `connectedDevice` ön plan hizmetine güvenmek. Bunun için ya kendi küçük hizmetimizi yazarız, ya da eklentinin bu izni istemeyen bir yolunu buluruz.
   - Olmazsa Console'da gerekçe yazılır. **Kontrol et:** izin verilen kullanım türleri listesi.
@@ -33,14 +35,14 @@ Etiketler: **[Sen]** yalnızca senin yapabileceğin işler (hesap, ödeme, cihaz
   - Play'den kurulan saatle de konuşamaz (Data Layer aynı imzayı ister).
   - Öneri: release akışından APK'ları çıkarmak, Play tek kaynak olsun.
   - Alternatif: Play Console'da "kendi uygulama imzalama anahtarını yükle" seçeneği. Daha karmaşık; önermiyorum.
-- [ ] **[Claude] AAB derlemesi**: Play APK değil **AAB** ister. Release akışında telefon için `flutter build appbundle`, saat için `:app:bundleRelease` adımları eklenir. İstersen Play'e otomatik yükleme de olur (servis hesabı gerekir; sonra).
-- [ ] **[Claude] 16 KB bellek sayfası uyumu**: Android 15+ hedefleyen yeni uygulamalarda zorunlu. Flutter 3.47 uyumlu. Eklentilerin native kütüphaneleri de (özellikle `mobile_scanner`'ın ML Kit'i) uyumlu olmalı. AAB derlenince kontrol edilir; Play Console da raporlar.
+- [ ] **[Claude] AAB derlemesi** (akış ve komutlar `store/derleme-ve-imza.md`'de yazıldı; `release.yml` değişikliği önerildi, yapılmadı): Play APK değil **AAB** ister. Release akışında telefon için `flutter build appbundle`, saat için `:app:bundleRelease` adımları eklenir. İstersen Play'e otomatik yükleme de olur (servis hesabı gerekir; sonra).
+- [ ] **[Claude] 16 KB bellek sayfası uyumu** (`libflutter.so` doğrulandı, ML Kit/CameraX ilk derlemede bakılacak, bkz. `store/derleme-ve-imza.md`): Android 15+ hedefleyen yeni uygulamalarda zorunlu. Flutter 3.47 uyumlu. Eklentilerin native kütüphaneleri de (özellikle `mobile_scanner`'ın ML Kit'i) uyumlu olmalı. AAB derlenince kontrol edilir; Play Console da raporlar.
 
 ### Olması iyi olanlar
 
 - [ ] **[Claude] Açık kaynak lisansları ekranı**: Ayarlar'a "Lisanslar" satırı (`showLicensePage`); fontların OFL lisansları zaten pakette.
 - [ ] **[Claude] Gizlilik politikası bağlantısı**: Ayarlar'a bir bağlantı. Politikanın kendisi aşağıda, 3. bölümde.
-- [ ] **[Claude] Hedef API**: telefon Flutter'ı izliyor (36), saat 36. Bugün yeterli; Play her yıl bir üst sürümü zorunlu kılıyor (**kontrol et:** o günkü son tarih).
+- [x] **[Claude] Hedef API** (telefon 36, saat 36 doğrulandı): telefon Flutter'ı izliyor (36), saat 36. Bugün yeterli; Play her yıl bir üst sürümü zorunlu kılıyor (**kontrol et:** o günkü son tarih).
 
 ### Gerçek cihazda denenmeyi bekleyenler
 
@@ -69,7 +71,7 @@ Bu oturumda yazılan ama telefonda hiç çalışmamış özellikler:
 
 ## 3. Gizlilik politikası ve veri güvenliği formu
 
-- [ ] **[Claude] Gizlilik politikası sayfası** (Türkçe ve İngilizce): `landing-page/gizlilik.html` ve `landing-page/en/privacy.html`. Kamera, Bluetooth ve bildirim izinleri olduğu için **zorunlu**.
+- [ ] **[Claude] Gizlilik politikası sayfası** (metin hazır: `store/privacy-policy.tr.md`, `.en.md`; sayfa ayrı bir ajanda; adı ve e-postayı doldur): `landing-page/gizlilik.html` ve `landing-page/en/privacy.html`. Kamera, Bluetooth ve bildirim izinleri olduğu için **zorunlu**.
   - Herkese açık bir adreste olmalı: site yayında değilse GitHub Pages yeter.
   - İçerik:
     - Uygulama hiçbir veriyi geliştiriciye göndermez.
@@ -83,7 +85,7 @@ Bu oturumda yazılan ama telefonda hiç çalışmamış özellikler:
   - **Dikkat, ML Kit:** QR okuyan `mobile_scanner`, Google ML Kit kullanıyor. ML Kit, Google'a performans ve kullanım ölçümleri gönderebiliyor. Google'ın "ML Kit data disclosure" sayfasındaki değerleri forma yaz (genelde "Uygulama bilgisi ve performansı" ve "Cihaz kimlikleri", toplanır, paylaşılmaz). **Kontrol et:** o sayfanın güncel hâli.
   - "Aktarımda şifreli": Evet (TLS).
   - "Kullanıcı verisinin silinmesini isteyebilir": hesap yok; veriler uygulama silinince gider.
-  - **[Claude]** formun her sorusu için önerilen cevap listesini hazırlarım.
+  - **[Hazır]** cevap listesi: `store/veri-guvenligi.md`.
 
 ---
 
@@ -91,7 +93,7 @@ Bu oturumda yazılan ama telefonda hiç çalışmamış özellikler:
 
 - [ ] **[Sen] Ön plan hizmeti beyanı (Foreground service)**: telefon (`connectedDevice`, PC bağlantısı ve Bluetooth klavye) ve saat (`PresentingService`) için ayrı ayrı.
   - Neden gerektiğini yaz ve **kısa bir video** bağlantısı ver (YouTube, liste dışı): telefon kilitliyken kumandanın çalıştığı gösterilir.
-  - **[Claude]** açıklama metnini yazarım; videoyu sen çekersin.
+  - **[Hazır]** açıklama metni: `store/izinler.md` bölüm 3; videoyu sen çekersin.
 - [ ] **[Sen] Uygulama erişimi (App access)**: İnceleyiciler uygulamayı PC olmadan deneyemez; bu en sık red nedenlerinden.
   - Buraya şunları yaz: "Ücretsiz PC uygulaması gerekir: <GitHub release bağlantısı>. Bluetooth modu PC uygulaması olmadan çalışır."
   - Bir demo videosu ekle. Bluetooth modu inceleyicinin kendi bilgisayarıyla denenebilir; bunu öne çıkar.
@@ -106,10 +108,10 @@ Bu oturumda yazılan ama telefonda hiç çalışmamış özellikler:
 
 ## 5. Mağaza sayfası (Türkçe ve İngilizce)
 
-- [ ] **[Claude] Metinler**: kısa açıklama (en fazla 80 karakter) ve uzun açıklama (en fazla 4000 karakter), iki dilde. Landing page'deki metinlerden çıkarırım.
+- [x] **[Hazır] Metinler** (`store/magaza-metinleri.md`): kısa açıklama (en fazla 80 karakter) ve uzun açıklama (en fazla 4000 karakter), iki dilde. Landing page'deki metinlerden çıkarırım.
   - PowerPoint, LibreOffice, WPS adları yalnızca "ile çalışır" anlamında geçer; logoları kullanılmaz (Play'in meta veri ve marka kuralları).
-- [ ] **[Claude] Uygulama simgesi** 512×512 PNG: `brand/tools/export_assets.sh` ile üretilir.
-- [ ] **[Claude] Öne çıkan görsel** (feature graphic) 1024×500: markadan.
+- [x] **[Hazır] Uygulama simgesi** 512×512 PNG (`store/graphics/app-icon-512.png`): `brand/tools/export_assets.sh` ile üretilir.
+- [x] **[Hazır] Öne çıkan görsel** (feature graphic) 1024×500: `store/graphics/feature-graphic-1024x500.png` (sade logo; istersen zenginleştirilir).
 - [ ] **[Sen + Claude] Telefon ekran görüntüleri**: 2–8 adet, gerçek cihazdan. Öneri: bağlanma, ana kumanda, sunucu görünümü, dokunmatik lazer, Bluetooth modu, tema. **[Claude]** başlık yazılı çerçeveleri yaparım.
 - [ ] **[Sen + Claude] Saat ekran görüntüleri**: en az 1 adet, kare (en az 384×384), cihaz çerçevesi yok, yalnızca uygulama arayüzü. `adb exec-out screencap` ile saatten alınır.
 - [ ] **[Sen] Kategori**: "Verimlilik" (Productivity). Etiketleri seç.
