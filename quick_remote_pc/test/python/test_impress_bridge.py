@@ -556,6 +556,7 @@ class RequestParsingTest(unittest.TestCase):
     def test_deep_nesting_does_not_raise(self):
         self.assertIsNone(bridge.parse_request("[" * 200000))
 
+    @unittest.skipIf(bridge.uno is None, "without UNO every command answers NO_UNO")
     def test_command_that_is_not_a_string_is_unknown(self):
         for cmd in ([1], {"a": 1}, None, 5):
             self.assertEqual(bridge.handle(FakeImpress(), {"cmd": cmd}),
