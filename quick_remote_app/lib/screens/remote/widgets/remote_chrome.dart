@@ -88,10 +88,14 @@ class RemoteHeader extends StatelessWidget {
               if (onSubtitleTap == null)
                 line
               else
+                // No 48 dp box here: it centred the 15 px line in 48 px and
+                // pushed the PC's name up, away from it (2026-10-25). The
+                // whole header row is 48 high, so the line keeps its place.
                 Pressable(
                   onTap: onSubtitleTap,
                   semanticLabel: context.l10n.remoteProgramHint,
                   pressedScale: 0.97,
+                  minTarget: 0,
                   borderRadius: AppRadius.all(AppRadius.xs),
                   child: line,
                 ),
