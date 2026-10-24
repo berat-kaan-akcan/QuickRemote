@@ -46,11 +46,13 @@ class StatusPill extends StatelessWidget {
           else
             PulseDot(color: color, size: 7),
           const SizedBox(width: 6),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppType.labelSmall.copyWith(color: color, fontSize: 11.5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppType.labelSmall.copyWith(color: color, fontSize: 11.5),
+            ),
           ),
         ],
       ),

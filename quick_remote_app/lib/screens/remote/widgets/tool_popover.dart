@@ -248,7 +248,6 @@ class LaserStylePicker extends StatelessWidget {
         ),
         const SizedBox(height: AppSpace.xs),
         AppSegmented<LaserStyle>(
-          height: 40,
           selected: style,
           onChanged: (value) {
             HapticFeedback.lightImpact();

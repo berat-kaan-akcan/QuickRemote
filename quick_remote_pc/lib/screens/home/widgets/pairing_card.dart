@@ -200,7 +200,9 @@ class _QrTile extends StatelessWidget {
               ? null
               : [
                   BoxShadow(
-                    color: AppColors.black.withValues(alpha: p.isDark ? 0.6 : 0.35),
+                    color: AppColors.black.withValues(
+                      alpha: p.isDark ? 0.6 : 0.35,
+                    ),
                     blurRadius: 30,
                     spreadRadius: -14,
                     offset: const Offset(0, 14),
@@ -356,11 +358,13 @@ class _HideCode extends StatelessWidget {
               color: p.textSecondary,
             ),
             const SizedBox(width: 5),
-            Text(
-              label,
-              style: AppType.labelSmall.copyWith(
-                color: p.textSecondary,
-                fontSize: 12,
+            Flexible(
+              child: Text(
+                label,
+                style: AppType.labelSmall.copyWith(
+                  color: p.textSecondary,
+                  fontSize: 12,
+                ),
               ),
             ),
           ],
@@ -490,7 +494,9 @@ class _SecurityCode extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final fingerprint = this.fingerprint;
-    final hex = fingerprint == null ? null : PairingPayload.fingerprintToHex(fingerprint);
+    final hex = fingerprint == null
+        ? null
+        : PairingPayload.fingerprintToHex(fingerprint);
     if (hex == null) return const SizedBox.shrink();
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -535,61 +541,67 @@ class _PinBoxes extends StatelessWidget {
     return Semantics(
       label: label,
       child: ExcludeSemantics(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.lock_rounded, color: p.accentText, size: 17),
-            const SizedBox(width: 6),
-            Text(
-              'PIN',
-              style: AppType.overline.copyWith(
-                color: p.accentText,
-                fontSize: 11.5,
-              ),
-            ),
-            const SizedBox(width: AppSpace.xs),
-            for (var i = 0; i < 6; i++) ...[
-              if (i == 3) const SizedBox(width: 6),
-              AnimatedContainer(
-                duration: AppMotion.of(context, AppMotion.base),
-                width: 36 * scale,
-                height: 46 * scale,
-                margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: p.accent.withValues(alpha: p.isDark ? 0.12 : 0.08),
-                  borderRadius: AppRadius.all(10),
-                  border: Border.all(color: p.accent.withValues(alpha: 0.35)),
+        // The boxes are drawn digits with a spoken label above: at large
+        // text sizes the row shrinks instead of running out of the card.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock_rounded, color: p.accentText, size: 17),
+              const SizedBox(width: 6),
+              Text(
+                'PIN',
+                style: AppType.overline.copyWith(
+                  color: p.accentText,
+                  fontSize: 11.5,
                 ),
-                child: AnimatedSwitcher(
+              ),
+              const SizedBox(width: AppSpace.xs),
+              for (var i = 0; i < 6; i++) ...[
+                if (i == 3) const SizedBox(width: 6),
+                AnimatedContainer(
                   duration: AppMotion.of(context, AppMotion.base),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: const Offset(0, 0.3),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
+                  width: 36 * scale,
+                  height: 46 * scale,
+                  margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: p.accent.withValues(alpha: p.isDark ? 0.12 : 0.08),
+                    borderRadius: AppRadius.all(10),
+                    border: Border.all(color: p.accent.withValues(alpha: 0.35)),
                   ),
-                  child: Text(
-                    starting
-                        ? '·'
-                        : hidden
-                        ? '•'
-                        : digits[i],
-                    key: ValueKey('${starting}_${hidden}_${digits[i]}'),
-                    style: AppType.numeric.copyWith(
-                      color: p.textPrimary,
-                      fontSize: 24 * scale,
-                      letterSpacing: 0,
+                  child: AnimatedSwitcher(
+                    duration: AppMotion.of(context, AppMotion.base),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween(
+                          begin: const Offset(0, 0.3),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      starting
+                          ? '·'
+                          : hidden
+                          ? '•'
+                          : digits[i],
+                      key: ValueKey('${starting}_${hidden}_${digits[i]}'),
+                      style: AppType.numeric.copyWith(
+                        color: p.textPrimary,
+                        fontSize: 24 * scale,
+                        letterSpacing: 0,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

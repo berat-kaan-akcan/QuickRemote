@@ -36,7 +36,7 @@ object WearColors {
     val inkBorder = Color(0xFF252B47)
     val paperText = Color(0xFFEEF0FA)
     val paperTextSecondary = Color(0xFFA9AFCB)
-    val paperTextMuted = Color(0xFF7D84A6)
+    val paperTextMuted = Color(0xFF8087A9)
     val danger = Color(0xFFFF5C77)
 
     // Bluetooth, as on the phone's Bluetooth screens.
@@ -51,7 +51,7 @@ object WearColors {
     val paper = Color(0xFFF4F5FA)
     val paperBorder = Color(0xFFC9CEDD)
     val inkText = Color(0xFF0E1224)
-    val inkTextMuted = Color(0xFF6B7194)
+    val inkTextMuted = Color(0xFF686E91)
 
     val white = Color(0xFFFFFFFF)
     val black = Color(0xFF000000)
@@ -123,7 +123,7 @@ enum class WearTheme(val wire: String, val palette: WearPalette) {
             accent = Color(0xFFFFE14D), accentEnd = Color(0xFFFFD000), onAccent = Color(0xFF000000),
             accentText = Color(0xFFFFD000),
             raised = Color(0xFF1C1C1C), sunken = Color(0xFF111111), surface = Color(0xFF161616),
-            border = Color(0xFF333333), text = Color(0xFFFFFFFF),
+            border = Color(0xFF3A3A3A), text = Color(0xFFFFFFFF),
             textSecondary = Color(0xFFD0D0D0), muted = Color(0xFFB5B5B5),
             ring = Color(0xFFFFD000), laser = Color(0xFFFF5A36), danger = Color(0xFFFF4D6A),
         ),
