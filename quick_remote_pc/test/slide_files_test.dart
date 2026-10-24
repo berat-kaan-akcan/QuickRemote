@@ -21,7 +21,7 @@ void main() {
     File('${folder.path}/other.txt').writeAsStringSync('keep');
 
     final path = await SlideFiles.path(1, 640);
-    expect(path, '${folder.path}/slide-1-640.jpg');
+    expect(path, '${folder.path}${Platform.pathSeparator}slide-1-640.jpg');
     expect(File('${folder.path}/slide-3-1280.jpg').existsSync(), isFalse);
     expect(File('${folder.path}/other.txt').existsSync(), isTrue);
     if (!Platform.isWindows) {
