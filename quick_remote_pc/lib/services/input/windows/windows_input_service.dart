@@ -196,7 +196,7 @@ class WindowsInputService implements InputService {
       });
 
   Future<void> _applyMode(int key, {required bool laser, int? color, int? wpsPointer}) async {
-    PptController.pointerTurn++;
+    final turn = ++PptController.pointerTurn;
     final bool switched;
     if (PresenterCom.wpsActive && laser) {
       switched = await PptController.wpsLaser(true);
@@ -212,6 +212,11 @@ class WindowsInputService implements InputService {
     if (switched) {
       PptController.setLaserActive(laser);
       if (color != null) await PptController.setPointerColor(color);
+      // PowerPoint's Ctrl+A keeps the arrow and its toolbar on screen. Not
+      // when another mode came meanwhile (a double tap's pen follows at once).
+      if (key == 0x41 && !PresenterCom.wpsActive && turn == PptController.pointerTurn) {
+        await PptController.hideIdleArrow();
+      }
     }
   }
 

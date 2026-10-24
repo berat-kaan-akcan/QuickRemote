@@ -480,6 +480,19 @@ try {
     return false;
   }
 
+  /// PowerPoint's Ctrl+A leaves the arrow always visible (PointerType 1), and
+  /// with it the show's toolbar in the corner, on the audience's screen and in
+  /// the screen pictures sent to phones, until the show ends (seen on
+  /// PowerPoint 365, 2026-10-24). This sets the automatic arrow (4), which
+  /// hides after a few idle seconds, as at the show's start. Only an arrow is
+  /// changed: a pen or eraser picked meanwhile stays.
+  static Future<void> hideIdleArrow() async {
+    final result = await _onShow('''
+        if (\$view.PointerType -eq $pointerArrow) { \$view.PointerType = $pointerAutoArrow }
+        Write-Output "OK"''');
+    if (result != 'OK') debugPrint('hideIdleArrow: $result');
+  }
+
   /// Sets the ink color of the running show's pen (or of the highlighter,
   /// while it is the active tool).
   static Future<void> setPointerColor(int bgrColor) async {
