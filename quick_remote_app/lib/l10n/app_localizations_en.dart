@@ -292,6 +292,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualTitle => 'Manual Connection';
 
   @override
+  String get pinDialogTitle => 'Enter the PIN';
+
+  @override
   String get manualIp => 'IP Address';
 
   @override
