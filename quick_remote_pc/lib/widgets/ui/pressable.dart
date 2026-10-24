@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../theme/app_palette.dart';
 import '../../theme/app_tokens.dart';
@@ -108,13 +109,7 @@ class _PressableState extends State<Pressable> {
     );
 
     if (widget.minTarget > 0) {
-      result = ConstrainedBox(
-        constraints: BoxConstraints(
-          minWidth: widget.minTarget,
-          minHeight: widget.minTarget,
-        ),
-        child: Align(widthFactor: 1, heightFactor: 1, child: result),
-      );
+      result = _MinTarget(size: widget.minTarget, child: result);
     }
 
     result = GestureDetector(
@@ -160,5 +155,87 @@ class _PressableState extends State<Pressable> {
       result = Tooltip(message: widget.tooltip!, child: result);
     }
     return result;
+  }
+}
+
+/// Grows the touch area to at least [size] square, the child centred in it.
+/// The child is laid out with the parent's constraints as they are: an
+/// Align here loosened them, and keys that a Row or Expanded stretches
+/// (Previous/Next) shrank to their content.
+class _MinTarget extends SingleChildRenderObjectWidget {
+  const _MinTarget({required this.size, required super.child});
+
+  final double size;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderMinTarget(size);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderMinTarget renderObject) {
+    renderObject.minSize = size;
+  }
+}
+
+class _RenderMinTarget extends RenderShiftedBox {
+  _RenderMinTarget(this._minSize) : super(null);
+
+  double _minSize;
+  set minSize(double value) {
+    if (value == _minSize) return;
+    _minSize = value;
+    markNeedsLayout();
+  }
+
+  Size _grow(BoxConstraints constraints, Size child) => constraints.constrain(
+    Size(
+      child.width < _minSize ? _minSize : child.width,
+      child.height < _minSize ? _minSize : child.height,
+    ),
+  );
+
+  @override
+  double computeMinIntrinsicWidth(double height) {
+    final w = child?.getMinIntrinsicWidth(height) ?? 0;
+    return w < _minSize ? _minSize : w;
+  }
+
+  @override
+  double computeMaxIntrinsicWidth(double height) {
+    final w = child?.getMaxIntrinsicWidth(height) ?? 0;
+    return w < _minSize ? _minSize : w;
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) {
+    final h = child?.getMinIntrinsicHeight(width) ?? 0;
+    return h < _minSize ? _minSize : h;
+  }
+
+  @override
+  double computeMaxIntrinsicHeight(double width) {
+    final h = child?.getMaxIntrinsicHeight(width) ?? 0;
+    return h < _minSize ? _minSize : h;
+  }
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) {
+    final c = child;
+    return _grow(constraints, c == null ? Size.zero : c.getDryLayout(constraints));
+  }
+
+  @override
+  void performLayout() {
+    final c = child;
+    if (c == null) {
+      size = _grow(constraints, Size.zero);
+      return;
+    }
+    c.layout(constraints, parentUsesSize: true);
+    size = _grow(constraints, c.size);
+    (c.parentData! as BoxParentData).offset = Offset(
+      (size.width - c.size.width) / 2,
+      (size.height - c.size.height) / 2,
+    );
   }
 }
