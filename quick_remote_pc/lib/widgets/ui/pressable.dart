@@ -21,6 +21,8 @@ class Pressable extends StatefulWidget {
     this.selected,
     this.dimWhenDisabled = true,
     this.behavior = HitTestBehavior.opaque,
+    this.minTarget = 48,
+    this.keepChildSemantics = false,
   });
 
   final Widget child;
@@ -44,6 +46,16 @@ class Pressable extends StatefulWidget {
   /// Disabled widgets fade to 45 % unless they style themselves.
   final bool dimWhenDisabled;
   final HitTestBehavior behavior;
+
+  /// The least width and height of the touch area, drawn or not: a 44 px key
+  /// still gets the 48 px Android asks for. The child keeps its own size. 0
+  /// leaves the size to the child (a key that sits inside another).
+  final double minTarget;
+
+  /// With a [semanticLabel] the child's own text is left out of the
+  /// accessibility tree, or a screen reader says everything twice ("Light,
+  /// Light"). True for a child that holds buttons of its own.
+  final bool keepChildSemantics;
 
   @override
   State<Pressable> createState() => _PressableState();
@@ -69,8 +81,8 @@ class _PressableState extends State<Pressable> {
       scale: _pressed
           ? widget.pressedScale
           : _hovered && _enabled
-              ? widget.hoveredScale
-              : 1,
+          ? widget.hoveredScale
+          : 1,
       duration: fast,
       curve: AppMotion.press,
       child: AnimatedOpacity(
@@ -82,12 +94,28 @@ class _PressableState extends State<Pressable> {
             borderRadius: widget.borderRadius,
             border: _focused
                 ? Border.all(color: palette.primaryText, width: 2)
-                : Border.all(color: palette.primaryText.withValues(alpha: 0), width: 2),
+                : Border.all(
+                    color: palette.primaryText.withValues(alpha: 0),
+                    width: 2,
+                  ),
           ),
-          child: widget.child,
+          // The tap action stays on the button; only the child's text goes.
+          child: widget.semanticLabel != null && !widget.keepChildSemantics
+              ? ExcludeSemantics(child: widget.child)
+              : widget.child,
         ),
       ),
     );
+
+    if (widget.minTarget > 0) {
+      result = ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: widget.minTarget,
+          minHeight: widget.minTarget,
+        ),
+        child: Align(widthFactor: 1, heightFactor: 1, child: result),
+      );
+    }
 
     result = GestureDetector(
       behavior: widget.behavior,

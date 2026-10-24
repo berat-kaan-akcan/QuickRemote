@@ -979,6 +979,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nProgramlar: {presenters}\n\nGünlüğü (Ayarlar → Günlüğü dışa aktar) bu sayfaya sürükleyip bırakabilirsin.'**
   String issueBody(String version, String platform, String presenters);
+
+  /// No description provided for @startErrorPortsInUse.
+  ///
+  /// In tr, this message translates to:
+  /// **'8090-8099 portları kullanımda. Bu portları kullanan uygulamaları kapatıp yeniden deneyin.'**
+  String get startErrorPortsInUse;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hakkında'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsVersion.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote PC {version}'**
+  String settingsVersion(String version);
+
+  /// No description provided for @settingsLicenses.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık kaynak lisansları'**
+  String get settingsLicenses;
 }
 
 class _AppLocalizationsDelegate
