@@ -19,6 +19,7 @@ import 'services/discovery_service.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme.dart';
 import 'widgets/brand/brand_splash.dart';
+import 'widgets/notification_denied_host.dart';
 
 // Background execution starts with a remote screen (services/background_session.dart).
 void main() {
@@ -104,7 +105,7 @@ class QuickRemoteApp extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  child!,
+                  NotificationDeniedHost(child: child!),
                   BrandSplash(tagline: context.l10n.homeTagline),
                 ],
               ),

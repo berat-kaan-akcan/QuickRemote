@@ -24,6 +24,7 @@ class HomeTopBar extends StatelessWidget {
           semanticLabel: label,
           tooltip: label,
           pressedScale: 0.9,
+          minTarget: 48,
           borderRadius: radius,
           child: Container(
             width: 44,

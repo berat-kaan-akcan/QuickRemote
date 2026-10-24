@@ -1374,11 +1374,34 @@ SLOW_COMMANDS = {"start", "startAt"}
 MOVES = {"next", "prev", "start", "startAt", "export"}
 
 
+# Positions kept for a stroke while the worker is busy; the newest win.
+TRAIL_LIMIT = 4000
+
+
+def add_to_trail(trail, position):
+    """Adds position to the trail of waiting pointer updates, which a stalled
+    LibreOffice would let grow without end."""
+    trail.append(position)
+    if len(trail) > TRAIL_LIMIT:
+        del trail[:len(trail) - TRAIL_LIMIT]
+
+
+def parse_request(line):
+    """The request on a stdin line, or None when it is not a JSON object.
+    A deeply nested line raises RecursionError, not ValueError: it must not
+    end the reader."""
+    try:
+        request = json.loads(line)
+    except (ValueError, RecursionError):
+        return None
+    return request if isinstance(request, dict) else None
+
+
 def handle(impress, request):
     if uno is None:
         return {"ok": False, "error": "NO_UNO"}
     cmd = request.get("cmd")
-    if cmd not in COMMANDS:
+    if not isinstance(cmd, str) or cmd not in COMMANDS:
         return {"ok": False, "error": "UNKNOWN_COMMAND"}
     try:
         impress.connect()
@@ -1435,18 +1458,15 @@ def main():
             line = line.strip()
             if not line:
                 continue
-            try:
-                request = json.loads(line)
-            except ValueError:
-                continue
-            if not isinstance(request, dict):
+            request = parse_request(line)
+            if request is None:
                 continue
             if request.get("cmd") == "pointer" and request.get("noreply"):
                 with lock:
                     waiting = newest_pointer[0] is not None
                     # A stroke needs every position the update stands for.
                     request["trail"] = newest_pointer[0]["trail"] if waiting else []
-                    request["trail"].append((request.get("x"), request.get("y")))
+                    add_to_trail(request["trail"], (request.get("x"), request.get("y")))
                     newest_pointer[0] = request
                 if not waiting:
                     work.put(_POINTER)

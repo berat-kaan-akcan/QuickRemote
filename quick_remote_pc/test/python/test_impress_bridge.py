@@ -545,3 +545,29 @@ class ExportTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RequestParsingTest(unittest.TestCase):
+    def test_object_lines_only(self):
+        self.assertEqual(bridge.parse_request('{"cmd": "ping"}'), {"cmd": "ping"})
+        for line in ("[1]", "3", "null", '"x"', "{broken", ""):
+            self.assertIsNone(bridge.parse_request(line), line)
+
+    def test_deep_nesting_does_not_raise(self):
+        self.assertIsNone(bridge.parse_request("[" * 200000))
+
+    @unittest.skipIf(bridge.uno is None, "without UNO every command answers NO_UNO")
+    def test_command_that_is_not_a_string_is_unknown(self):
+        for cmd in ([1], {"a": 1}, None, 5):
+            self.assertEqual(bridge.handle(FakeImpress(), {"cmd": cmd}),
+                             {"ok": False, "error": "UNKNOWN_COMMAND"})
+
+
+class TrailTest(unittest.TestCase):
+    def test_keeps_the_newest_positions(self):
+        trail = []
+        for i in range(bridge.TRAIL_LIMIT + 10):
+            bridge.add_to_trail(trail, (i, i))
+        self.assertEqual(len(trail), bridge.TRAIL_LIMIT)
+        self.assertEqual(trail[-1], (bridge.TRAIL_LIMIT + 9,) * 2)
+        self.assertEqual(trail[0], (10, 10))

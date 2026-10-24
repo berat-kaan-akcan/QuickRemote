@@ -264,6 +264,15 @@ class AppLog {
     '\\b($_secretKeys)(: )(?!<)[^\\n]*?(?=, \\w+: |\\}|\$)',
     caseSensitive: false,
   );
+  // password=value / secret: value / api_token = value (the word may sit in
+  // a longer name, as QR_CERT_PASSWORD; no `\w*` before it, which would make
+  // a long word cost quadratic time), and a Bearer token.
+  static final _secretWord = RegExp(
+    r'''((?:password|passwd|pwd|secret|token|credential)\w*["']?)(\s*[:=]\s*)(?:"(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?|[^\s,;}&]+)''',
+    caseSensitive: false,
+  );
+  static final _bearer =
+      RegExp(r'\bBearer\s+[A-Za-z0-9._~+/=-]+', caseSensitive: false);
   static final _hexFingerprint =
       RegExp(r'(?<![0-9A-Fa-f])[0-9A-Fa-f]{40,}(?![0-9A-Fa-f])');
   static final _colonFingerprint = RegExp(
@@ -294,6 +303,8 @@ class AppLog {
     out = out.replaceAllMapped(
         _quotedValue, (m) => '${m[1]}${m[2]}${m[1]}${m[3]}<redacted>');
     out = out.replaceAllMapped(_bareValue, (m) => '${m[1]}${m[2]}<redacted>');
+    out = out.replaceAllMapped(_secretWord, (m) => '${m[1]}${m[2]}<redacted>');
+    out = out.replaceAll(_bearer, 'Bearer <redacted>');
     out = out.replaceAll(_colonFingerprint, '<fingerprint>');
     out = out.replaceAll(_hexFingerprint, '<fingerprint>');
     out = out.replaceAll(_base64Fingerprint, '<fingerprint>');

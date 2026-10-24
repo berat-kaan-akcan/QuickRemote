@@ -197,7 +197,7 @@ class _Frame extends StatelessWidget {
               ],
             ),
           ),
-          if (action != null) ...[const SizedBox(width: AppSpace.xs), action!],
+          if (action != null) ...[const SizedBox(width: AppSpace.xs), Flexible(child: action!)],
         ],
       ),
     );

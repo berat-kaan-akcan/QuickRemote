@@ -242,6 +242,7 @@ class ScreenKey extends StatelessWidget {
       tooltip: label,
       selected: active,
       pressedScale: 0.9,
+      minTarget: 48,
       borderRadius: radius,
       child: AnimatedContainer(
         duration: AppMotion.of(context, AppMotion.base),

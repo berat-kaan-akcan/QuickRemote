@@ -79,6 +79,19 @@ void main() {
     expect(state.caps, isNull);
   });
 
+  test('the "no show" status names the program in front; a lost link forgets it', () {
+    final state = PresentationState()
+      ..updateFromStatus({'state': 'POWERPOINT_NOT_RUNNING', 'presenter': 'wps'});
+    expect(state.frontPresenter, 'wps');
+    // The empty SLIDE_STATE after it (without one) keeps it.
+    state.updateCaps({'data': null}, keep: true);
+    expect(state.frontPresenter, 'wps');
+    state.updateCaps({'data': null, 'presenter': 'impress'}, keep: true);
+    expect(state.frontPresenter, 'impress');
+    state.reset();
+    expect(state.frontPresenter, isNull);
+  });
+
   test('the "no show" status may carry them; a lost link drops them', () {
     final state = PresentationState()
       ..updateFromStatus({

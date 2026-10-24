@@ -10,7 +10,7 @@
         <li class="get-card" data-os="android">
           <svg class="i" aria-hidden="true"><use href="#i-android"/></svg>
           <h3>{{Android telefon||Android phone}}</h3>
-          <p>{{Sürüm sayfasından <code>QuickRemote-…-android.apk</code> dosyasını indir ve aç. Android “bilinmeyen kaynaklardan kurulum” izni isteyebilir. Play Store’da henüz yok.||Download <code>QuickRemote-…-android.apk</code> from the releases page and open it. Android may ask you to allow installing from unknown sources. It is not on the Play Store yet.}}</p>
+          <p>{{Sürüm sayfasından <code>QuickRemote-…-android.apk</code> dosyasını indir ve aç. Android “bilinmeyen kaynaklardan kurulum” izni isteyebilir. Google Play’de henüz yok; yayımlanınca bağlantısı buraya konur.||Download <code>QuickRemote-…-android.apk</code> from the releases page and open it. Android may ask you to allow installing from unknown sources. It is not on Google Play yet; the link will be put here once it is.}}</p>
           <a class="get-link" href="https://github.com/berat-kaan-akcan/QuickRemote/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>{{Sürüm sayfası||Releases page}}</a>
         </li>
         <li class="get-card" data-os="watch">
@@ -28,11 +28,11 @@
         <li class="get-card" data-os="linux">
           <svg class="i" aria-hidden="true"><use href="#i-terminal"/></svg>
           <h3>Linux</h3>
-          <p>{{Debian, Ubuntu ve Pardus için .deb; ötekiler için .tar.gz. Paket, klavye ve fare için gereken udev kuralını da ekler.||A .deb for Debian, Ubuntu and Pardus, a .tar.gz for the rest. The package also adds the udev rule the virtual keyboard and mouse need.}}</p>
+          <p>{{Debian, Ubuntu ve Pardus için .deb; ötekiler için <code>quickremote-pc-…-linux-x64.tar.gz</code>: açıp bir kez <code>sudo quickremote-pc/share/install-uinput-rule.sh</code> çalıştır. Paket, klavye ve fare için gereken udev kuralını kendisi ekler.||A .deb for Debian, Ubuntu and Pardus; for the rest, <code>quickremote-pc-…-linux-x64.tar.gz</code>: unpack it and run <code>sudo quickremote-pc/share/install-uinput-rule.sh</code> once. The package adds the udev rule the virtual keyboard and mouse need by itself.}}</p>
           <div class="cmd"><code>sudo apt install ./quickremote-pc_…_amd64.deb</code><button type="button" data-copy aria-label="{{Komutu kopyala||Copy the command}}" data-done="{{Kopyalandı||Copied}}"><svg class="i" aria-hidden="true"><use href="#i-content-copy"/></svg></button></div>
           <p class="get-sub">{{Arch için <code>quickremote-pc-bin</code> AUR paketi hazırlanıyor.||An AUR package, <code>quickremote-pc-bin</code>, is on its way for Arch.}}</p>
         </li>
       </ul>
-      <p class="get-src">{{Kaynak kodu <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da</a>.||The source code is <a href="https://github.com/berat-kaan-akcan/QuickRemote">on GitHub</a>.}}</p>
+      <p class="get-src">{{Sürüm sayfasında dosyalar görünmüyorsa ilk sürüm henüz yayımlanmamıştır. Sürüm numaraları dosya adlarındaki “…” yerine gelir. <a href="@PRIVACY@">Gizlilik politikası</a>. Kaynak kodu <a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da</a>.||If no files show on the releases page, the first release has not been published yet. The version number takes the place of “…” in the file names. <a href="@PRIVACY@">Privacy policy</a>. The source code is <a href="https://github.com/berat-kaan-akcan/QuickRemote">on GitHub</a>.}}</p>
     </div>
   </section>

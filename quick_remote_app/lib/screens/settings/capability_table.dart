@@ -115,7 +115,9 @@ class CapabilityTable {
   }
 
   static Map<CapFeature, CapCell> _wifi(CapOs os, CapProgram program) {
-    final spotlight = os == CapOs.windows ? _yes : _p(CapNote.noMagnifier);
+    final spotlight = os == CapOs.windows
+        ? _yes
+        : _p(CapNote.noMagnifier);
     return switch (program) {
       CapProgram.powerpoint || CapProgram.wps when os == CapOs.windows => {
         CapFeature.nextPrev: _yes,

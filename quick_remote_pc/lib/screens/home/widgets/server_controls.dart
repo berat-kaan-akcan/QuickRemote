@@ -103,7 +103,8 @@ class StoppedPanel extends StatelessWidget {
           color: p.surface.withValues(alpha: p.isDark ? 0.6 : 0.8),
           borderRadius: AppRadius.all(HomeCard.radius),
         ),
-        child: Center(child: content),
+        // Scrolls at large text sizes; Center keeps it in the middle otherwise.
+        child: Center(child: SingleChildScrollView(child: content)),
       ),
     );
   }

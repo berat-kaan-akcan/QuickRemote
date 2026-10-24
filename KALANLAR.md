@@ -50,7 +50,7 @@ Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce
 - [x] Gerçek bir WPS gösterisinde (XWayland) resim geliyor mu? (2026-10-21: evet, kullanıcının açtığı WPS'te resim slaytla birlikte değişiyor.)
 - [x] Impress: OpenGL/Skia ile çizen gösteride resim boş mu dönüyor? LibreOffice'in penceresi X11 mi, native Wayland mı? Native Wayland'de resim olmaz. (2026-10-21: LibreOffice burada yerel Wayland'de (KDE/Qt6 eklentisi), X penceresi yok; ekran resmi alınmıyor, telefon dışa aktarılan slaytı gösteriyor.)
 - [ ] Oynayan video resimde görünüyor mu? 2 saniyelik yoklama yalnızca resim değişince mi gönderiyor? (2026-10-21: denenemedi. LibreOffice burada yerel Wayland'de, ekran resmi yok. WPS 11.1'de video hiç oynamıyor: köprünün `Player.Play()` çağrısı bir şey yapmıyor, `State` hep "oynuyor" diyor. Bu yüzden köprünün WPS gösterisinde telefonun slayt medyası düğmeleri artık soluk, oynatma durumu "bilinmiyor".)
-- [ ] Küçük bulgu: Devral'dan sonra gösteri yokken telefon "Sunum Açık Değil, LibreOffice Impress'i başlatın" diyor, öndeki WPS düzenleyicisi olduğu hâlde (program adı ilk programdan geliyor).
+- [x] (2026-10-23, kodla ve testle; gerçek WPS ile denenmedi) Küçük bulgu: Devral'dan sonra gösteri yokken telefon "Sunum Açık Değil, LibreOffice Impress'i başlatın" diyor, öndeki WPS düzenleyicisi olduğu hâlde (program adı ilk programdan geliyor).
 - [x] Firefox/Chrome'da tam ekran PDF'te resim geliyor mu? Pencereli tarayıcıda hiçbir şey gitmiyor mu? (2026-10-21: XWayland Firefox'ta tam ekranda geliyor, pencereliyken gelmiyor. Yerel Wayland Chrome'da hiç gelmiyor.)
 - [x] Kaplamanın mürekkebi resimde doğru yere mi çiziliyor? (2026-10-21: evet.)
 
@@ -109,6 +109,10 @@ Kullanıcının kendi açtığı WPS'e köprü bağlanamıyor. PC'deki WPS satı
 - [x] **Hata günlüğü** (ALTYAPI 6): "Hata günlüğünü paylaş" Android paylaşım menüsünü açıyor mu? "Sorun bildir" tarayıcıyı açıyor mu? (2026-10-21: paylaşım menüsü günlük dosyasıyla açılıyor, "Sorun bildir" GitHub'da dolu bir issue sayfası açıyor.)
 - [x] **Kaplama** (OVERLAY 8): gösterisiz dokunmatik lazer, lazer türü seçimi, Temizle'yi basılı tutunca geri alma. (2026-10-21: üçü de çalışıyor.)
 
+- [ ] **Pil izni kaldırıldı, denenmedi** (store/izinler.md): `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` manifestten çıkarıldı, `BackgroundSession` `shouldRequestBatteryOptimizationsOff: false` veriyor. Kilitli telefonla, ekran kapalı, yarım saatten uzun oturumda Doze bağlantıyı koparıyor mu? Koparırsa geri alma `store/izinler.md` bölüm 4'te.
+- [ ] **Bildirim izni reddi** (2026-10-22): Android 13+'ta reddedince kumanda ekranında bir kez "Bildirim izni kapalı" notu ve "Ayarları aç" tuşu çıkıyor mu (`NotificationDeniedHost`)? Yalnız widget testinden geçti; ikinci kez gösterilmemeli.
+- [ ] **48 dp hedefler** (`Pressable.minTarget`) ve yeni kontrast renkleri cihazda göz ile bakılacak (küçük tuşlar bitişik mi, soluk metinler okunuyor mu).
+
 ## 3. Saat (Galaxy Watch 6)
 
 APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kurulup telefon uygulamasının yerine geçmişti.
@@ -119,6 +123,8 @@ APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kur
   - Anahtar kapalıyken saat kendi temasında mı kalıyor?
 - [x] **Gösterisiz lazer** (OVERLAY 9): kaplama açıkken lazer düğmesi açık mı, lazer çalışıyor mu? (2026-10-21: düğme açık, nokta PC'de görünüyor.)
 - [ ] Saat bölümü PowerPoint ile Windows'ta da denenecek (WIN-UI 15).
+- [ ] Saat renkleri phone'daki yeni soluk metin değerlerine eşitlendi (`Theme.kt`: `paperTextMuted` 8087A9, `inkTextMuted` 686E91, yüksek karşıtlık kenarlığı 3A3A3A); bu makinede Android SDK olmadığı için saat derlenmedi, derleyip `WearProtocolTest`'i çalıştır.
+- [ ] Saat kod incelemesi (2026-10-22, düzeltilmedi): `DirectLink.run` içinde `connection.inputStream`/`outputStream` ve `createRfcommSocket`/`connect` `SecurityException` atabilir (izin çalışırken geri alınırsa), yalnız `IOException` yakalanıyor, okuma iş parçacığı çöker. `close()` ile `socket = connection` atamasının arasında yarış var: kapatılmış oturumun soketi `out`'a yazılabilir ve okuma iş parçacığı sızar (atamadan sonra `mine != session` yeniden bakılmalı). `writer` `HandlerThread` hiç `quit` edilmiyor. `PresentingService.start` `LaunchedEffect` içinde korumasız; `startForeground` fırlatırsa `running` true kalır. Bildirim izni reddedilirse Ongoing Activity görünmez ve saat yüzüne dönülür (hata değil, ama saat bunu söylemiyor).
 
 ---
 

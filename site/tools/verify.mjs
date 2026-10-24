@@ -165,11 +165,70 @@ async function interact(lang) {
   await page.click('[data-tray-server]'); t('tray off', await page.$eval('[data-tray]', (e) => e.dataset.state === 'off'));
   await page.click('[data-look="dark"]'); t('site dark', await page.$eval('html', (e) => e.dataset.theme === 'dark'));
   await page.click('[data-theme-btn]'); t('header button cycles', await page.$eval('html', (e) => e.dataset.theme === undefined));
-  await page.click('[data-copy]'); t('copy command', await page.$eval('[data-copy]', (e) => e.classList.contains('is-done')));
+  await page.click('[data-copy]'); await page.waitForFunction(() => document.querySelector('[data-copy]').classList.contains('is-done'), null, { timeout: 3000 }).catch(() => {}); t('copy command', await page.$eval('[data-copy]', (e) => e.classList.contains('is-done')));
   if (errors.length) note(`${lang}: demo errors ${errors}`);
   await ctx.close();
 }
 for (const lang of ['tr', 'en']) await interact(lang);
+
+// Every page: structure, metadata, links, images. Plus the extra pages (privacy, 404).
+const pagesToAudit = ['', 'en/', 'gizlilik/', 'en/privacy/', '404.html'];
+const abs = (u) => u.startsWith('http');
+async function audit(rel) {
+  const ctxs = [];
+  for (const [w, h, scheme] of [[1440, 900, 'light'], [390, 844, 'dark'], [390, 844, 'light'], [1440, 900, 'dark']]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: scheme });
+    ctxs.push(ctx);
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) errors.push(m.text()); });
+    page.on('pageerror', (e) => errors.push(e.message));
+    page.on('response', (r) => { if (r.status() >= 400 && !r.url().endsWith('/favicon.ico')) errors.push(`http ${r.status()} ${r.url()}`); });
+    await page.goto(`${base}/${rel}`, { waitUntil: 'networkidle' });
+    const tag = `audit ${rel || '/'} ${w} ${scheme}`;
+    errors.forEach((e) => note(`${tag}: ${e}`));
+    const r = await page.evaluate(() => {
+      const out = { overflow: document.documentElement.scrollWidth - window.innerWidth };
+      out.h1 = document.querySelectorAll('h1').length;
+      const hs = [...document.querySelectorAll('h1,h2,h3,h4')].map((h) => +h.tagName[1]);
+      out.skips = hs.filter((l, i) => i > 0 && l > hs[i - 1] + 1).length;
+      out.noAlt = [...document.querySelectorAll('img:not([alt])')].length;
+      out.lang = document.documentElement.lang;
+      out.title = document.title;
+      out.desc = !!document.querySelector('meta[name=description]');
+      out.dupIds = (() => { const ids = [...document.querySelectorAll('[id]')].map((e) => e.id); return ids.filter((x, i) => ids.indexOf(x) !== i); })();
+      out.unnamed = [...document.querySelectorAll('a,button')].filter((e) => !(e.textContent.trim() || e.getAttribute('aria-label') || e.querySelector('.sr'))).length;
+      out.hrefs = [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
+      out.meta = ['og:title', 'og:description', 'og:image', 'twitter:card'].filter((k) => !document.querySelector(`meta[property="${k}"],meta[name="${k}"]`));
+      out.hasLangSwitch = !!document.querySelector('a[hreflang]');
+      return out;
+    });
+    if (r.overflow > 0) note(`${tag}: sideways scroll ${r.overflow}px`);
+    if (rel !== '404.html' && r.h1 !== 1) note(`${tag}: ${r.h1} h1`);
+    if (r.skips) note(`${tag}: heading levels skip ${r.skips}x`);
+    if (r.noAlt) note(`${tag}: ${r.noAlt} img without alt`);
+    if (!/^(tr|en)$/.test(r.lang)) note(`${tag}: lang=${r.lang}`);
+    if (r.dupIds.length) note(`${tag}: duplicate ids ${r.dupIds}`);
+    if (r.unnamed) note(`${tag}: ${r.unnamed} links/buttons without a name`);
+    if (rel !== '404.html' && r.meta.length) note(`${tag}: missing meta ${r.meta}`);
+    if (w === 1440 && scheme === 'light') {
+      for (const h of new Set(r.hrefs)) {
+        if (abs(h) || h.startsWith('mailto:') || h.startsWith('#')) continue;
+        const target = new URL(h, `${base}/${rel}`);
+        const res = await page.request.get(target.href.split('#')[0]);
+        if (res.status() >= 400) note(`${tag}: broken link ${h} (${res.status()})`);
+        else if (target.hash) {
+          const body = await res.text();
+          if (!body.includes(`id="${target.hash.slice(1)}"`)) note(`${tag}: broken anchor ${h}`);
+        }
+      }
+      if (rel !== '404.html' && !r.hasLangSwitch) note(`${tag}: no language switch`);
+    }
+    await page.close();
+  }
+  for (const c of ctxs) await c.close();
+}
+for (const rel of pagesToAudit) await audit(rel);
 
 const tr = idsByLang.tr, en = idsByLang.en;
 if (tr && en) {

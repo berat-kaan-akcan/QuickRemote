@@ -269,6 +269,15 @@ void main() {
     test('without any show', () async {
       expect(await service().getSlideState(), {'error': 'POWERPOINT_NOT_RUNNING'});
     });
+
+    test('without a show, the program in front is named (WPS editor after a take-over)', () async {
+      active = bridgeWps;
+      expect(await service().getSlideState(), {'error': 'POWERPOINT_NOT_RUNNING', 'presenter': 'wps'});
+      active = const X11Window(9, ['libreoffice-impress', 'libreoffice-impress']);
+      expect(await service().getSlideState(), {'error': 'POWERPOINT_NOT_RUNNING', 'presenter': 'impress'});
+      active = const X11Window(10, ['firefox', 'Firefox']);
+      expect(await service().getSlideState(), {'error': 'POWERPOINT_NOT_RUNNING'});
+    });
   });
 
   group('errors', () {
