@@ -371,6 +371,15 @@ class WearBridge {
     // A length picked on the watch is the phone timer's too.
     final length = _talkDuration();
     if (!timer.isDurationSelected && length > 0) timer.setDuration(length);
+    // The remote screen opened while the show ran: it takes over the clock
+    // the watch was showing, rather than starting at 0:00.
+    final own = _ownClock.startTime;
+    if (own != null && !timer.isRunning) {
+      timer.setDuration(_ownClock.targetSeconds);
+      timer.startFrom(own);
+      _timerStartedByShow = true;
+      _ownClock.reset();
+    }
     _timerTarget = timer.isDurationSelected ? timer.targetSeconds : null;
     timer.addListener(_onTimer);
     _pushState();
@@ -383,6 +392,14 @@ class WearBridge {
     timer.onAlert = _timerOwnAlert;
     _timer = null;
     _timerOwnAlert = null;
+    // The remote screen closed during the talk: the watch's clock goes on
+    // from where the phone's was.
+    final started = timer.startTime;
+    if (started != null) {
+      _ownClock.setDuration(timer.targetSeconds);
+      _ownClock.startFrom(started);
+    }
+    _timerStartedByShow = false;
     _pushState();
   }
 
@@ -414,13 +431,36 @@ class WearBridge {
     return timer != null && timer.isDurationSelected && (timer.isRunning || timer.elapsedSeconds > 0);
   }
 
+  /// The remote screen's timer was started by the show, not by the user:
+  /// the show's end resets it again.
+  bool _timerStartedByShow = false;
+
   void _startOwnClock() {
+    // The remote screen is open: its timer is the talk's clock, so the phone
+    // and the watch always show the same one (the phone's stayed at 0:00
+    // while the watch counted, 2026-10-25). A paused one goes on; one the
+    // user already runs is left running.
+    final timer = _timer;
+    if (timer != null) {
+      if (!timer.isRunning) {
+        _timerStartedByShow = true;
+        if (timer.isDurationSelected && timer.elapsedSeconds > 0) {
+          timer.start();
+        } else {
+          timer.setDuration(timer.isDurationSelected ? timer.targetSeconds : _talkDuration(), start: true);
+        }
+      }
+      return;
+    }
     if (_ownClock.isRunning) return;
     _ownClock.setDuration(_talkDuration(), start: true);
     _pushState();
   }
 
   void _stopOwnClock() {
+    final timer = _timer;
+    if (_timerStartedByShow && timer != null) timer.reset();
+    _timerStartedByShow = false;
     _ownClock.reset();
     _pushState();
   }
