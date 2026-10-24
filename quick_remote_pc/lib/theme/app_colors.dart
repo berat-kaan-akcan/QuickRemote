@@ -29,7 +29,7 @@ abstract final class AppColors {
   static const paperBorderStrong = Color(0xFFC9CEDD);
   static const inkText = Color(0xFF0E1224);
   static const inkTextSecondary = Color(0xFF4A5172);
-  static const inkTextMuted = Color(0xFF686E91);
+  static const inkTextMuted = Color(0xFF6B7194);
   static const paperGlass = Color(0xB8FFFFFF);
   static const paperGlassBorder = Color(0x14000000);
   static const paperShadow = Color(0x1A1B2350);
@@ -44,7 +44,7 @@ abstract final class AppColors {
   static const inkBorderStrong = Color(0xFF343B5C);
   static const paperText = Color(0xFFEEF0FA);
   static const paperTextSecondary = Color(0xFFA9AFCB);
-  static const paperTextMuted = Color(0xFF8087A9);
+  static const paperTextMuted = Color(0xFF7D84A6);
   static const inkGlass = Color(0xB3141A30);
   static const inkGlassBorder = Color(0x1FFFFFFF);
   static const inkShadow = Color(0x66000000);

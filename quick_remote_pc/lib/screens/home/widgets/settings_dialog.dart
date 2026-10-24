@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../app_version.dart';
 import '../../../l10n/app_language.dart';
 import '../../../providers/appearance_provider.dart';
 import '../../../providers/desktop_provider.dart';
@@ -178,51 +177,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
     ];
   }
 
-  /// The version and the licenses of the code and fonts that ship with it.
-  List<Widget> _aboutSection(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    return [
-      Divider(color: p.border, height: AppSpace.lg),
-      Row(
-        children: [
-          Icon(Icons.info_outline_rounded, size: 20, color: p.textSecondary),
-          const SizedBox(width: AppSpace.sm),
-          Expanded(
-            child: Text(
-              l10n.settingsAbout,
-              style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: AppSpace.sm),
-      Wrap(
-        spacing: AppSpace.sm,
-        runSpacing: AppSpace.xs,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SelectableText(
-            l10n.settingsVersion(appVersion),
-            style: AppType.bodySmall.copyWith(color: p.textSecondary, fontSize: 12),
-          ),
-          AppButton(
-            label: l10n.settingsLicenses,
-            icon: Icons.description_outlined,
-            variant: AppButtonVariant.tonal,
-            expand: false,
-            height: 40,
-            onPressed: () => showLicensePage(
-              context: context,
-              applicationName: 'QuickRemote PC',
-              applicationVersion: appVersion,
-            ),
-          ),
-        ],
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -236,11 +190,9 @@ class _SettingsDialogState extends State<SettingsDialog> {
         children: [
           IconBadge(icon: Icons.settings_rounded, color: p.primaryText, size: 40),
           const SizedBox(width: AppSpace.sm),
-          Flexible(
-            child: Text(
-              l10n.settingsTitle,
-              style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20),
-            ),
+          Text(
+            l10n.settingsTitle,
+            style: AppType.title.copyWith(color: p.textPrimary, fontSize: 20),
           ),
         ],
       ),
@@ -268,17 +220,12 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 Icon(Icons.language_rounded, size: 20, color: p.textSecondary),
                 const SizedBox(width: AppSpace.sm),
                 Expanded(
-                  flex: 3,
                   child: Text(
                     l10n.settingsLanguageTitle,
                     style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
                   ),
                 ),
-                // The names are cut with an ellipsis before the row overflows
-                // (a narrow window, large text).
-                Flexible(
-                  flex: 2,
-                  child: Container(
+                Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
                   decoration: BoxDecoration(
                     color: p.surfaceSunken,
@@ -286,7 +233,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     border: Border.all(color: p.border),
                   ),
                   child: DropdownButton<AppLanguage>(
-                    isExpanded: true,
                     value: languages.language,
                     dropdownColor: p.surfaceRaised,
                     borderRadius: AppRadius.all(AppRadius.md),
@@ -297,18 +243,13 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       for (final language in AppLanguage.values)
                         DropdownMenuItem(
                           value: language,
-                          child: Text(
-                            language == AppLanguage.system ? l10n.languageSystem : language.nativeName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(language == AppLanguage.system ? l10n.languageSystem : language.nativeName),
                         ),
                     ],
                     onChanged: (language) {
                       if (language != null) languages.setLanguage(language);
                     },
                   ),
-                ),
                 ),
               ],
             ),
@@ -350,7 +291,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
             ],
             ..._desktopSection(context),
             ..._troubleshootingSection(context),
-            ..._aboutSection(context),
           ],
         ),
       ),

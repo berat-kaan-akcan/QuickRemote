@@ -1,6 +1,6 @@
 # Site araçları
 
-`site/index.html`, `site/en/index.html`, gizlilik sayfaları (`site/gizlilik/`, `site/en/privacy/`), `404.html`, `robots.txt` ve `sitemap.xml` elle yazılmaz; hepsi
+`site/index.html` (Türkçe) ve `site/en/index.html` (İngilizce) elle yazılmaz; ikisi de
 `parts/` klasöründeki parçalardan üretilir. Böylece iki dil aynı yapıda kalır.
 
 ```bash
@@ -36,7 +36,3 @@ bölüm ekran görüntüleri alır.
 Sitenin `style.css` dosyasını kullanır; telefon sitedekiyle aynı çizilir. `social.mjs` hepsini yeniden
 üretir: `og-<lang>.png` (1200×630), `social-<lang>.png` (1080×1080), `loop-poster-<lang>.png`,
 `loop-<lang>.mp4` ve `.webm`. Döngü 6 saniyedir; `window.renderAt(saniye)` tek kareyi çizer.
-
-## Alan adı
-
-Site yayın adresi belli olunca `tools/site.url` dosyasına (ör. `https://ornek.com`, sonda `/` yok) yaz ve `build_pages.py`'yi çalıştır: canonical, hreflang, og:url, mutlak og:image, `sitemap.xml` ve robots.txt'teki `Sitemap:` satırı eklenir. Dosya boşken bunlar yazılmaz (hiçbir adres uydurulmaz). `404.html` kök adresleri (`/`) kullanır; site bir alt dizinde yayınlanacaksa düzelt.

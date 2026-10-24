@@ -169,7 +169,6 @@ class PresentationState {
   bool systemMuted = false;
 
   void reset() {
-    frontPresenter = null;
     currentSlide = 0;
     totalSlides = 0;
     slideNotes = '';
@@ -204,24 +203,13 @@ class PresentationState {
   /// empty SLIDE_STATE that say no show runs). With [keep], a message
   /// without `caps` keeps the ones there are: the empty SLIDE_STATE right
   /// after the STATUS that may have carried them.
-  /// The program in front while no show runs (a PC from the day it tells:
-  /// `presenter` on the "not running" STATUS and the empty SLIDE_STATE), so
-  /// the remote names the WPS editor in front, not the PC's first program.
-  String? frontPresenter;
-
   void updateCaps(Map<String, dynamic> message, {bool keep = false}) {
     final next = PresenterCaps.fromJson(message);
     if (next != null || !keep) caps = next;
-    final front = message['presenter'];
-    if (front is String) {
-      frontPresenter = front;
-    } else if (!keep) {
-      frontPresenter = null;
-    }
     // Another kind of window in front: the screen picture is of something
     // else (the PC sends a new one when a viewer comes back).
-    final frontKind = caps?.front;
-    if (!FrontWindow.isViewer(frontKind) && frontKind != FrontWindow.show) rawScreenImage = null;
+    final front = caps?.front;
+    if (!FrontWindow.isViewer(front) && front != FrontWindow.show) rawScreenImage = null;
   }
 
   void updateFromSlideState(Map<String, dynamic> message) {

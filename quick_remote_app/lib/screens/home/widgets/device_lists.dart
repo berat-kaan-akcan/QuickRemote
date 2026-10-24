@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:quick_remote_shared/quick_remote_shared.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../services/discovery_service.dart';
 import '../../../l10n/app_language.dart';
@@ -55,7 +53,6 @@ class DeviceLists extends StatelessWidget {
                         ? null
                         : () => discovery.startScanning(),
                     dimWhenDisabled: false,
-                    minTarget: 48,
                     pressedScale: 0.9,
                     tooltip: context.l10n.homeRescan,
                     semanticLabel: context.l10n.homeRescan,
@@ -264,16 +261,6 @@ class _SavedMark extends StatelessWidget {
   }
 }
 
-/// The page with the PC app's installers; a phone with no browser does
-/// nothing, there is no better answer.
-Future<void> _openPcDownload() async {
-  try {
-    await launchUrl(Uri.parse('${AppLog.repository}/releases/latest'), mode: LaunchMode.externalApplication);
-  } catch (e) {
-    debugPrint('Could not open the download page: $e');
-  }
-}
-
 /// No PC (yet): a dashed box filling the list's space, saying that the
 /// search runs or that it found nothing, with a rescan key then.
 class _EmptyBox extends StatelessWidget {
@@ -287,10 +274,8 @@ class _EmptyBox extends StatelessWidget {
     final p = context.palette;
     return CustomPaint(
       painter: _DashedBorder(color: p.border, radius: AppRadius.lg),
-      // Scrolls when the box is short (landscape, large text); Center keeps it
-      // in the middle otherwise.
       child: Center(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(AppSpace.md),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -335,16 +320,8 @@ class _EmptyBox extends StatelessWidget {
                   icon: Icons.refresh_rounded,
                   variant: AppButtonVariant.tonal,
                   expand: false,
-                  height: 48,
+                  height: 42,
                   onPressed: onRescan,
-                ),
-                AppButton(
-                  label: context.l10n.homeGetPcApp,
-                  icon: Icons.download_rounded,
-                  variant: AppButtonVariant.ghost,
-                  expand: false,
-                  height: 48,
-                  onPressed: _openPcDownload,
                 ),
               ],
             ],

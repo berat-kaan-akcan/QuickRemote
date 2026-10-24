@@ -1,6 +1,5 @@
 # The page, top to bottom. Edit a part, then run python3 site/tools/build_pages.py
 head
-sprite
 top
 hero
 watch

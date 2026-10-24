@@ -181,7 +181,6 @@ class _VolumePanelState extends State<VolumePanel> {
                           : null,
                       semanticLabel: muteLabel,
                       selected: widget.levelKnown && isMuted,
-                      minTarget: 48,
                       borderRadius: AppRadius.all(AppRadius.md),
                       child: AnimatedContainer(
                         duration: AppMotion.of(context, AppMotion.base),
@@ -196,13 +195,9 @@ class _VolumePanelState extends State<VolumePanel> {
                             children: [
                               Icon(isMuted || !widget.levelKnown ? Icons.volume_off_rounded : Icons.volume_up_rounded, color: muteColor, size: 19),
                               const SizedBox(width: AppSpace.xs),
-                              Flexible(
-                                child: Text(
-                                  muteLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppType.label.copyWith(color: muteColor, fontSize: 13.5),
-                                ),
+                              Text(
+                                muteLabel,
+                                style: AppType.label.copyWith(color: muteColor, fontSize: 13.5),
                               ),
                             ],
                           ),
@@ -247,7 +242,6 @@ class _StepButton extends StatelessWidget {
       semanticLabel: label,
       tooltip: label,
       pressedScale: 0.88,
-      minTarget: 48,
       borderRadius: AppRadius.all(AppRadius.sm),
       child: Container(
         width: 44,

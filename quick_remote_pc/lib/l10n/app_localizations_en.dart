@@ -524,19 +524,4 @@ class AppLocalizationsEn extends AppLocalizations {
   String issueBody(String version, String platform, String presenters) {
     return '**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote PC $version\nPlatform: $platform\nPrograms: $presenters\n\nYou can drag the log (Settings → Export log) onto this page.';
   }
-
-  @override
-  String get startErrorPortsInUse =>
-      'ports 8090-8099 are in use. Close the apps using them and try again.';
-
-  @override
-  String get settingsAbout => 'About';
-
-  @override
-  String settingsVersion(String version) {
-    return 'QuickRemote PC $version';
-  }
-
-  @override
-  String get settingsLicenses => 'Open-source licenses';
 }

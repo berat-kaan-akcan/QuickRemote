@@ -413,13 +413,13 @@ abstract class AppLocalizations {
   /// No description provided for @connectionServerNotFound.
   ///
   /// In tr, this message translates to:
-  /// **'PC\'ye ulaşılamadı. QuickRemote PC\'nin açık olduğundan ve iki cihazın aynı Wi-Fi ağında olduğundan emin olun.'**
+  /// **'Sunucuya ulaşılamadı: {detail}'**
   String connectionServerNotFound(String detail);
 
   /// No description provided for @connectionCertMismatch.
   ///
   /// In tr, this message translates to:
-  /// **'Bu PC\'nin güvenlik sertifikası değişti. PC uygulaması yeniden kurulunca böyle olur; ama biri PC\'nizin yerine geçmeye çalışıyor da olabilir. Yalnızca beklediğiniz bir değişiklikse devam edin.'**
+  /// **'Sertifika değişti! Olası MITM saldırısı veya cihaz formatlanmış olabilir.'**
   String get connectionCertMismatch;
 
   /// No description provided for @connectionCertRejected.
@@ -449,7 +449,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionUnknown.
   ///
   /// In tr, this message translates to:
-  /// **'Bağlanılamadı. Yeniden deneyin; sürerse Ayarlar → Yardım\'dan hata günlüğünü paylaşın.'**
+  /// **'Bağlantı hatası: {detail}'**
   String connectionUnknown(String detail);
 
   /// No description provided for @cancel.
@@ -1838,18 +1838,6 @@ abstract class AppLocalizations {
   /// **'Arka planda bağlantı devam ediyor...'**
   String get backgroundNotification;
 
-  /// No description provided for @notificationDeniedNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bildirim izni kapalı. Bağlantı yine de çalışır, ancak ekran kapalıyken bağlantıyı tutan bildirim görünmeyebilir ve Android uygulamayı durdurabilir.'**
-  String get notificationDeniedNote;
-
-  /// No description provided for @notificationDeniedAction.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ayarları aç'**
-  String get notificationDeniedAction;
-
   /// Home screen: how to connect, under the tagline.
   ///
   /// In tr, this message translates to:
@@ -2646,108 +2634,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Çalışmaz'**
   String get capLevelNo;
-
-  /// No description provided for @scanPermissionTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kamera izni gerekli'**
-  String get scanPermissionTitle;
-
-  /// No description provided for @scanPermissionDenied.
-  ///
-  /// In tr, this message translates to:
-  /// **'QuickRemote kamerayı yalnızca bilgisayarınızdaki QR kodu okumak için kullanır. İzni Ayarlar\'dan verin ya da geri dönüp adresi elle girerek bağlanın.'**
-  String get scanPermissionDenied;
-
-  /// No description provided for @scanUnavailableTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kamera kullanılamıyor'**
-  String get scanUnavailableTitle;
-
-  /// No description provided for @scanUnavailable.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kamera başlatılamadı. Kamerayı kullanan diğer uygulamaları kapatın ya da geri dönüp adresi elle girerek bağlanın.'**
-  String get scanUnavailable;
-
-  /// No description provided for @scanOpenSettings.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ayarları aç'**
-  String get scanOpenSettings;
-
-  /// No description provided for @scanGoBack.
-  ///
-  /// In tr, this message translates to:
-  /// **'Geri dön'**
-  String get scanGoBack;
-
-  /// No description provided for @settingsSectionAbout.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hakkında'**
-  String get settingsSectionAbout;
-
-  /// No description provided for @settingsVersionTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sürüm'**
-  String get settingsVersionTitle;
-
-  /// No description provided for @settingsLicensesTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Açık kaynak lisansları'**
-  String get settingsLicensesTitle;
-
-  /// No description provided for @settingsLicensesSubtitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Flutter, paketler ve Inter ile Space Grotesk yazı tipleri.'**
-  String get settingsLicensesSubtitle;
-
-  /// No description provided for @settingsPrivacyTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gizlilik'**
-  String get settingsPrivacyTitle;
-
-  /// No description provided for @settingsPrivacySubtitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Uygulamanın neleri kullandığı ve telefondan neyin çıktığı.'**
-  String get settingsPrivacySubtitle;
-
-  /// No description provided for @privacyBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'QuickRemote yalnızca yerel ağınızda çalışır: hesap, analiz ve reklam yoktur; bizim bir sunucumuza hiçbir şey gönderilmez.\n\nKamera yalnızca eşleştirme QR kodunu okumak için kullanılır. “Yakındaki cihazlar” izni Bluetooth kumandası ve saat için kullanılır. Bildirim, ekran kapalıyken bağlantıyı canlı tutar.\n\nHata günlüğü siz paylaşmadıkça bu telefonda kalır.'**
-  String get privacyBody;
-
-  /// No description provided for @homeGetPcApp.
-  ///
-  /// In tr, this message translates to:
-  /// **'QuickRemote PC\'yi indir'**
-  String get homeGetPcApp;
-
-  /// No description provided for @timerStartLabel.
-  ///
-  /// In tr, this message translates to:
-  /// **'{time}, zamanlayıcıyı başlat'**
-  String timerStartLabel(Object time);
-
-  /// No description provided for @timerPauseLabel.
-  ///
-  /// In tr, this message translates to:
-  /// **'{time}, zamanlayıcıyı duraklat'**
-  String timerPauseLabel(Object time);
-
-  /// No description provided for @timerResetLabel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Zamanlayıcıyı sıfırla'**
-  String get timerResetLabel;
 
   /// No description provided for @historyUndo.
   ///
