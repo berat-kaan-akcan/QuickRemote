@@ -189,13 +189,12 @@ class UpdateChecker {
 Future<void> openInBrowser(Uri url) async {
   if (!url.isScheme('https')) return;
   try {
-    if (Platform.isWindows) {
-      // explorer.exe hands a URL to the default browser.
-      await Process.run('explorer', [url.toString()]);
-    } else if (Platform.isLinux) {
-      // gtk_show_uri_on_window, which hands the browser an activation
-      // token: KWin and Mutter keep a browser started by a bare xdg-open
-      // behind the window that asked for it.
+    if (Platform.isWindows || Platform.isLinux) {
+      // Windows: ShellExecute. `explorer <url>` opened the Documents folder
+      // instead of the browser for the issue page's long URL (measured,
+      // Windows 11). Linux: gtk_show_uri_on_window, which hands the browser
+      // an activation token: KWin and Mutter keep a browser started by a
+      // bare xdg-open behind the window that asked for it.
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   } catch (e) {

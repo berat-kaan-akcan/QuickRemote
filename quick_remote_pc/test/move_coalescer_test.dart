@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/server/move_coalescer.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 void main() {
   late List<(int, double, double)> moves;
@@ -28,6 +29,14 @@ void main() {
 
     await Future.delayed(const Duration(milliseconds: 60));
     expect(moves, [(0, 1.0, 1.0), (0, 5.0, 4.0)]);
+  });
+
+  test('keeps only the newest laser position of a burst', () async {
+    coalescer.add(MoveFrame.laserAbs, 0.1, 0.2);
+    coalescer.add(MoveFrame.laserAbs, 0.3, 0.4);
+    coalescer.add(MoveFrame.laserAbs, 0.5, 0.6);
+    await Future.delayed(const Duration(milliseconds: 60));
+    expect(moves, [(2, 0.1, 0.2), (2, 0.5, 0.6)]);
   });
 
   test('never merges touch and laser motion', () {

@@ -695,25 +695,85 @@ abstract class AppLocalizations {
   /// No description provided for @laserOverlayAuto.
   ///
   /// In tr, this message translates to:
-  /// **'Otomatik'**
+  /// **'Otomatik (önerilen)'**
   String get laserOverlayAuto;
 
   /// No description provided for @laserOverlayAlways.
   ///
   /// In tr, this message translates to:
-  /// **'QuickRemote'**
+  /// **'Her zaman QuickRemote lazeri'**
   String get laserOverlayAlways;
 
   /// No description provided for @laserOverlayNever.
   ///
   /// In tr, this message translates to:
-  /// **'Program'**
+  /// **'Sunum programının kendi lazeri'**
   String get laserOverlayNever;
+
+  /// No description provided for @laserOverlayAutoDetail.
+  ///
+  /// In tr, this message translates to:
+  /// **'PowerPoint ve WPS kendi lazerini kullanır, diğer her yerde QuickRemote\'un lazeri çizer.'**
+  String get laserOverlayAutoDetail;
+
+  /// No description provided for @laserOverlayAlwaysDetail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her pencerenin üstünde çalışır: PDF, tarayıcı, videonun üstü.'**
+  String get laserOverlayAlwaysDetail;
+
+  /// No description provided for @laserOverlayNeverDetail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnızca slayt gösterisi açıkken çalışır.'**
+  String get laserOverlayNeverDetail;
+
+  /// No description provided for @laserTableWhere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nerede'**
+  String get laserTableWhere;
+
+  /// No description provided for @laserTableAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get laserTableAuto;
+
+  /// No description provided for @laserTableAlways.
+  ///
+  /// In tr, this message translates to:
+  /// **'QuickRemote'**
+  String get laserTableAlways;
+
+  /// No description provided for @laserTableNever.
+  ///
+  /// In tr, this message translates to:
+  /// **'Program'**
+  String get laserTableNever;
+
+  /// No description provided for @laserTableProgram.
+  ///
+  /// In tr, this message translates to:
+  /// **'Program'**
+  String get laserTableProgram;
+
+  /// No description provided for @laserTablePdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF, tarayıcı'**
+  String get laserTablePdf;
+
+  /// No description provided for @laserTableOutsideShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösteri dışında'**
+  String get laserTableOutsideShow;
 
   /// No description provided for @laserOverlayNote.
   ///
   /// In tr, this message translates to:
-  /// **'QuickRemote lazeri her pencerenin üstünde çizer: Impress\'te videonun üstünde, PDF\'te, tarayıcıda ve gösteri dışında da. Otomatik\'te PowerPoint ve WPS kendi lazerini kullanır. Gösteri dışındaki lazer, telefon yeniden bağlanınca açılır.'**
+  /// **'Gösteri dışındaki lazer, telefon yeniden bağlanınca açılır.'**
   String get laserOverlayNote;
 
   /// No description provided for @phonesConnected.

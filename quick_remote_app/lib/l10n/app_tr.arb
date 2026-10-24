@@ -13,6 +13,7 @@
   "presenterViewOpenHint": "Sunucu görünümünü aç",
   "presenterNextUp": "Sıradaki",
   "presenterLastSlide": "Son slayt",
+  "presenterLaserHint": "Lazeri perdede göstermek için slayta dokun",
   "slidePreviewLabel": "Slayt {slide} önizlemesi",
   "@slidePreviewLabel": {
     "placeholders": {
@@ -741,7 +742,6 @@
   "capNoteNoAnswer": "Bluetooth'ta bilgisayar telefona bilgi göndermez.",
   "capNoteKeysOnly": "Yalnızca tuşlar; ses seviyesi ve şarkı adı görünmez.",
   "capNoteWpsNoMedia": "WPS'teki video uzaktan oynatılamıyor.",
-  "capNoteUnverifiedWindows": "† Yazıldı, ancak gerçek bir Windows bilgisayarda henüz denenmedi.",
   "capLevelYes": "Çalışır",
   "capLevelPartial": "Kısmen",
   "capLevelNo": "Çalışmaz",
@@ -761,5 +761,8 @@
   "homeGetPcApp": "QuickRemote PC'yi indir",
   "timerStartLabel": "{time}, zamanlayıcıyı başlat",
   "timerPauseLabel": "{time}, zamanlayıcıyı duraklat",
-  "timerResetLabel": "Zamanlayıcıyı sıfırla"
+  "timerResetLabel": "Zamanlayıcıyı sıfırla",
+  "historyUndo": "Geri al",
+  "capUntried": "Denenmedi",
+  "capUntriedLegend": "Kodda yazıldı ve testlerden geçti, gerçek bir cihazda henüz denenmedi."
 }

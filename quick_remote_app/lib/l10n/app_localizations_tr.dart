@@ -52,6 +52,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get presenterLastSlide => 'Son slayt';
 
   @override
+  String get presenterLaserHint => 'Lazeri perdede göstermek için slayta dokun';
+
+  @override
   String slidePreviewLabel(int slide) {
     return 'Slayt $slide önizlemesi';
   }
@@ -1470,10 +1473,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get capNoteWpsNoMedia => 'WPS\'teki video uzaktan oynatılamıyor.';
 
   @override
-  String get capNoteUnverifiedWindows =>
-      '† Yazıldı, ancak gerçek bir Windows bilgisayarda henüz denenmedi.';
-
-  @override
   String get capLevelYes => 'Çalışır';
 
   @override
@@ -1541,4 +1540,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get timerResetLabel => 'Zamanlayıcıyı sıfırla';
+
+  @override
+  String get historyUndo => 'Geri al';
+
+  @override
+  String get capUntried => 'Denenmedi';
+
+  @override
+  String get capUntriedLegend =>
+      'Kodda yazıldı ve testlerden geçti, gerçek bir cihazda henüz denenmedi.';
 }

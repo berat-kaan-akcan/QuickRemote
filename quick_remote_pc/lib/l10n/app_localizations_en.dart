@@ -349,17 +349,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLaser => 'Laser';
 
   @override
-  String get laserOverlayAuto => 'Automatic';
+  String get laserOverlayAuto => 'Automatic (recommended)';
 
   @override
-  String get laserOverlayAlways => 'QuickRemote';
+  String get laserOverlayAlways => 'Always QuickRemote’s laser';
 
   @override
-  String get laserOverlayNever => 'Program';
+  String get laserOverlayNever => 'The presentation program’s own laser';
+
+  @override
+  String get laserOverlayAutoDetail =>
+      'PowerPoint and WPS use their own laser; everywhere else QuickRemote’s laser draws.';
+
+  @override
+  String get laserOverlayAlwaysDetail =>
+      'Works above every window: PDFs, browsers, over a video.';
+
+  @override
+  String get laserOverlayNeverDetail => 'Works only while a slideshow runs.';
+
+  @override
+  String get laserTableWhere => 'Where';
+
+  @override
+  String get laserTableAuto => 'Automatic';
+
+  @override
+  String get laserTableAlways => 'QuickRemote';
+
+  @override
+  String get laserTableNever => 'Program';
+
+  @override
+  String get laserTableProgram => 'Program';
+
+  @override
+  String get laserTablePdf => 'PDF, browser';
+
+  @override
+  String get laserTableOutsideShow => 'Outside a show';
 
   @override
   String get laserOverlayNote =>
-      'QuickRemote draws the laser above every window: over Impress videos, in PDFs, in browsers and outside a slideshow too. Automatic leaves PowerPoint and WPS their own laser. The laser outside a slideshow turns on when the phone reconnects.';
+      'The laser outside a slideshow turns on when the phone reconnects.';
 
   @override
   String phonesConnected(int count) {

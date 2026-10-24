@@ -661,6 +661,9 @@ class WebSocketServer {
       'overlay': _announcedOverlay = InputSimulator.toolsAnywhere,
       // A magnifier (MODE_ZOOM) besides: the Windows overlay's.
       'zoom': InputSimulator.zoomAvailable,
+      // LASER_ABS move frames: the laser where the finger is on the slide
+      // picture.
+      'absLaser': true,
     });
 
     debugPrint('Client authenticated. Authenticated count: ${_authenticatedClients.length}');
@@ -702,22 +705,20 @@ class WebSocketServer {
   }
 
   void _handleMoveFrame(WebSocket ws, List<int> data) {
-    if (data.length != 9) return;
-    final bytes = ByteData.sublistView(data is Uint8List ? data : Uint8List.fromList(data));
-    final typeId = bytes.getUint8(0); // 0 = TOUCH, 1 = LASER
-    final dx = bytes.getFloat32(1, Endian.little);
-    final dy = bytes.getFloat32(5, Endian.little);
-    if (typeId > 1 || !dx.isFinite || !dy.isFinite || dx.abs() > 500 || dy.abs() > 500) {
-      return;
-    }
+    final frame = MoveFrame.decode(data);
+    if (frame == null) return;
     if (!_allowsMotion(ws)) return;
     _moves
         .putIfAbsent(ws, () => MoveCoalescer(minInterval: _moveInterval, onMove: _applyMove))
-        .add(typeId, dx, dy);
+        .add(frame.type, frame.x, frame.y);
   }
 
   void _applyMove(int typeId, double dx, double dy) {
-    if (typeId == 1) {
+    if (typeId == MoveFrame.laserAbs) {
+      _applyLaserAt(dx, dy);
+      return;
+    }
+    if (typeId == MoveFrame.laser) {
       if (InputSimulator.handlesLaserPointer) {
         // QuickRemote's overlay or the presenter (Impress) draws the laser:
         // keep the OS cursor still. The overlay draws it outside a show too.
@@ -736,6 +737,23 @@ class WebSocketServer {
       return;
     }
     mouseController.moveDelta(dx, dy);
+  }
+
+  /// The phone's finger on its slide picture ([MoveFrame.laserAbs]): the
+  /// laser goes to that point of the show. The overlay and Impress take
+  /// fractions as they are (of the overlay's monitor, of the slide); the
+  /// programs' own lasers follow the OS cursor, put there in the show's
+  /// window. Gated like LASER frames.
+  void _applyLaserAt(double x, double y) {
+    if (InputSimulator.handlesLaserPointer) {
+      InputSimulator.laserPointerMoved(x, y);
+      return;
+    }
+    if (!_isSlideshowRunning) {
+      _checkSlideshow();
+      return;
+    }
+    InputSimulator.moveCursorInShow(x, y);
   }
 
   double get _relX => mouseController.currentX / mouseController.screenWidth;

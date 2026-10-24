@@ -57,6 +57,7 @@ class InputSimulator {
 
   static bool get handlesLaserPointer => _instance.handlesLaserPointer;
   static void laserPointerMoved(double relX, double relY) => _instance.laserPointerMoved(relX, relY);
+  static void moveCursorInShow(double relX, double relY) => _instance.moveCursorInShow(relX, relY);
   static void phonesGone() => _instance.phonesGone();
   static Future<RemoteError?> takeOverWps() => _instance.takeOverWps();
   static bool get handlesDrawPointer => _instance.handlesDrawPointer;

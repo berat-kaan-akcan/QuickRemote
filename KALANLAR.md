@@ -130,50 +130,55 @@ APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kur
 
 ## 4. Windows (senin makinen)
 
-Windows için yazılan kodların çoğu **hiç derlenmedi ya da hiç çalıştırılmadı**. En verimlisi, aşağıdakileri tek bir oturumda sırayla yapmak.
+**2026-10-22 oturumu (telefonsuz):** Windows 11 Home 26300, %125 ölçek, tek monitör, PowerPoint 365 16.0.20430, WPS 12.1.0.29162 (12.2 değil), Chrome 155, Edge 155. Telefonun yerine sunucuya bağlanan bir deneme istemcisi kullanıldı (TLS + PIN, komutlar, lazer kareleri, slayt resimleri); ekran görüntüleriyle bakıldı. Bu oturumda bulunan ve düzeltilen hatalar (`9b7a381`):
+- **PowerPoint gösterisi önizleme açıkken tuşlara tepki vermiyordu.** COM `Slide.Export` gösteri sırasında PowerPoint'in klavye odağını sıfırlıyor; pencere önde ama Sonraki/Önceki/B/W/kalem hiçbir şey yapmıyordu (telefonda slayt resmi açıkken kumanda çalışmazdı). `PptController.restoreShowFocus` odağı, ön planı değiştirmeden geri veriyor; dışa aktarmadan sonra ve her tuştan önce.
+- **IP bulma her seferinde zaman aşımına düşüyordu.** `Get-NetIPConfiguration` sıcakken bile ~6 sn sürüyor (sınır 5 sn); Polling kuyruğunu tıkıyor, START'tan sonraki durum 3-6 sn gecikiyordu, sunucu açılışta 9-12 sn bekliyordu. Varsayılan rotadan okunuyor (~50 ms); yeni PowerShell sürecinin ilk işine 15 sn veriliyor. Sunucu artık ~4-5 sn'de açılıyor.
+- **Gösterinin siyah/beyaz ekranı Windows'ta bildirilmiyordu**, telefona simsiyah slayt resmi gidiyordu. COM `View.State` (3, 4) okunuyor; B/W'den sonraki 1,5 sn resim alınmıyor.
+- **WPS'te Export Windows'ta da çalışıyor** (gösteri içinde ve dışında); yalnızca-PowerPoint koşulu kaldırıldı, WPS gösterisinde de slayt resimleri ve küçük resimler geliyor.
+- **Hiç sunum açık değilken START, WPS'in ana sayfasına F5 basıyordu** (WPS 12 ana sayfa ve belgeleri sunumla aynı pencere sınıfında). Artık `START_FAILED` dönüyor.
+- **"Sorun bildir" Windows'ta tarayıcı yerine Belgeler klasörünü açıyordu** (`explorer <uzun URL>`). `url_launcher`'a geçildi; düzeltmeden sonra tarayıcıda açıldığı **henüz görülmedi**.
+- Testler: `wps_take_over_test.dart` (7 test) ve 3 Python köprü testi Windows'ta düşüyordu (Linux'a özgü `/proc`, `waitpid`, Unix yolları); Windows'ta atlanıyor.
 
 ### Önce derleme
-- [ ] `flutter build windows` derleniyor mu? Yeni C++ dosyaları (`laser_overlay.cpp`, mutex'li `main.cpp`), `gdiplus.lib`, `magnification.lib`.
+- [x] `flutter build windows` derleniyor mu? (2026-10-22: evet, `laser_overlay.cpp`, mutex'li `main.cpp`, gdiplus, magnification ilk derlemede geçti.)
 
 ### Yeni arayüzün tam denemesi (WIN-UI, 16 bölüm)
-- [ ] Sırasıyla:
-  - PC penceresi (dar, geniş) ve sunucuyu başlatma.
+- [ ] Sırasıyla: (2026-10-22: telefon olmadan yapılabilenler aşağıda işaretlendi; telefon ekranıyla yapılacak tam deneme bekliyor. WIN-UI dosyası bu makinede yok.)
+  - PC penceresi (dar, geniş) ve sunucuyu başlatma. (Dar pencere, güç tuşu, sunucu açık kartı, QR ve PIN düzgün; geniş düzen denenmedi.)
   - Ortak ağ uyarısı, Görünüm ve Dil ayarları.
   - Güvenlik kodu penceresi.
-  - PowerPoint kontrolleri: Başlat, Sonraki/Önceki, not, siyah/beyaz ekran, Slayta git, odak koruması.
-  - Touchpad: lazer, kalem, renkler, silgi, Temizle.
+  - PowerPoint kontrolleri: Başlat, Sonraki/Önceki, not, siyah/beyaz ekran, Slayta git, odak koruması. (İstemciyle hepsi çalıştı; not durumda geliyor.)
+  - Touchpad: lazer, kalem, renkler, silgi, Temizle. (Kalem, fosforlu kalem, Hepsini sil çalıştı; renk ve silgi denenmedi.)
   - Medya ve şu an çalan.
   - QR ile bağlanma ve telefonu çıkarma.
-  - WPS, Bitir ("mürekkep saklansın mı?" sorusunun geçilmesi) ve saat.
-
-  Adımlar ve beklenen görüntüler dosyada.
-- [ ] Not: WIN-UI'nin 13. bölümü WPS'te lazer yerine "Ok" bekliyor, ama kod artık WPS'in kendi lazerini (Ctrl+A ardından Ctrl+R) kullanıyor. Denemede WPS'te gerçek lazer görülmeli; dosyadaki o adım eskidi.
+  - WPS, Bitir ("mürekkep saklansın mı?" sorusunun geçilmesi) ve saat. (WPS ve PowerPoint'te mürekkep varken Bitir: soru "Kaydetme" ile geçildi, slaytta mürekkep kalmadı.)
+- [x] Not: WIN-UI'nin 13. bölümü WPS'te lazer yerine "Ok" bekliyor. (2026-10-22: WPS 12.1 gösterisinde Ctrl+A, Ctrl+R ile WPS'in kendi lazeri göründü.)
 
 ### Eski denetimden kalan Windows değişiklikleri (ESKI)
-- [ ] Odak koruması, COM ile Slayta git (START_AT), SMTC önbelleği, IP yoklaması, `nsd` 5.x, sertifika ortam değişkenleri. Hepsi Linux'ta yazıldı. WIN-UI denemesi bunların çoğunu kapsar.
-- [ ] PowerPoint'in Korumalı Görünüm'de açtığı bir sunumda Başlat.
-- [ ] WPS'in COM yolları (`PresenterCom`): Windows WPS'te bütün komutlar.
+- [ ] Odak koruması, COM ile Slayta git (START_AT), SMTC önbelleği, IP yoklaması, `nsd` 5.x, sertifika ortam değişkenleri. (2026-10-22: odak koruması, START_AT, IP yoklaması (düzeltildi), mDNS kaydı ve sertifika yükleme çalışıyor; SMTC denenmedi.)
+- [x] PowerPoint'in Korumalı Görünüm'de açtığı bir sunumda Başlat. (2026-10-22: düzenlemeye geçip gösteriyi açtı, ~4 sn.)
+- [x] WPS'in COM yolları (`PresenterCom`): Windows WPS'te bütün komutlar. (2026-10-22, WPS 12.1: Başlat, Sonraki/Önceki, Slayta git, siyah ekran, kalem, NEXT/PREV'de mürekkep silme, lazer, Bitir. Yan bulgu: WPS gösterisi biterken telefon bir an "0 / 0" durumunu alıyor.)
 
 ### Slayt önizlemesi (ONIZLEME 1, 3)
-- [ ] PowerPoint gösterisinde kart, Sunucu görünümü ve "Slayta git" ızgarası.
-- [ ] WPS 12.2'de `Slides(n).Export`. Çalışıyorsa `slide_exporter.dart`'taki yalnızca-PowerPoint koşulu kaldırılacak.
+- [ ] PowerPoint gösterisinde kart, Sunucu görünümü ve "Slayta git" ızgarası. (2026-10-22: PC tarafı çalışıyor: o anki 1280 px, sonraki 640 px, küçük resimler 320 px, ekran resmi dışa aktarmanın yerine geçiyor. Telefon ekranında bakılmadı.)
+- [x] WPS 12.2'de `Slides(n).Export`. (2026-10-22: WPS 12.1'de çalışıyor, koşul kaldırıldı. 12.2'de denenmedi.)
 
 ### Kaplama (OVERLAY 10–13)
-- [ ] Tarayıcıdaki PDF'te ve gösteri dışında lazer. Ayarlar'da QuickRemote seçiliyken PowerPoint'te lazer.
-- [ ] Mürekkep, spot ışığı, büyüteç:
+- [x] Tarayıcıdaki PDF'te ve gösteri dışında lazer. Ayarlar'da QuickRemote seçiliyken PowerPoint'te lazer. (2026-10-22: masaüstünde, tam ekran Chrome PDF'te ve "QuickRemote" modunda PowerPoint gösterisinde lazer, kalem, büyüteç.)
+- [x] Mürekkep, spot ışığı, büyüteç: (2026-10-22: üçü de çiziliyor; büyüteç yuvarlak, 2×. Kaplama hiç odak almadı, NEXT gösteriye gitti. Mürekkebin üstüne gerçek fare tıklaması alttaki pencereye geçti.)
   - Pencereler odak almıyor mu, yani tuşlar gösteriye gitmeye devam ediyor mu?
   - Tıklamalar katmandan geçiyor mu?
-- [ ] DPI %125/150 ve iki monitör.
-- [ ] **"Neler yapılabilir?" tablosundaki † işaretleri** (2026-10-22): Windows'ta spot ışığı/büyüteç (kaplama) ve PowerPoint slayt resimleri tabloda "Windows'ta denenmedi †" notuyla duruyor (`CapNote.unverifiedWindows`). Windows'ta denenince notu `capability_table.dart`'tan kaldır.
+- [ ] DPI %125/150 ve iki monitör. (2026-10-22: %125'te doğru yerde. %150 ve iki monitör denenmedi.)
 
 ### 2026-10-20 işleri (ACIK, ALTYAPI)
-- [ ] `caps`/`front`: PowerPoint ve WPS'te öndeki pencere ve araçlar doğru mu? NEXT/PREV'de mürekkep telefon başına mı siliniyor?
-- [ ] Ekran görüntüsü: PowerPoint ve WPS gösterisinde, Edge/Chrome'da tam ekran PDF'te. `PrintWindow` siyah mı dönüyor?
-- [ ] Tepsi (sol tık pencere, sağ tık menü), tek örnek (ikinci kopyanın ilkini öne getirmesi), `--minimized`, kayıt defterine (HKCU Run) yazma.
-- [ ] Günlüğü dışa aktarma ve "Sorun bildir".
+- [x] `caps`/`front`: PowerPoint ve WPS'te öndeki pencere ve araçlar doğru mu? NEXT/PREV'de mürekkep telefon başına mı siliniyor? (2026-10-22: `front` show/editor/browser/other doğru; WPS'te artık `previews` da var. Küçük kusur: WPS'in ana sayfası da "editor" sayılıyor.)
+- [x] Ekran görüntüsü: PowerPoint ve WPS gösterisinde, Edge/Chrome'da tam ekran PDF'te. `PrintWindow` siyah mı dönüyor? (2026-10-22: siyah değil; Chrome tam ekranda kaplama mürekkebi de resimde. Edge, kullanıcı profilinde PDF yerine eklenti sayfaları açtığı için Edge'de PDF denenmedi.)
+- [ ] Tepsi (sol tık pencere, sağ tık menü), tek örnek (ikinci kopyanın ilkini öne getirmesi), `--minimized`, kayıt defterine (HKCU Run) yazma. (2026-10-22: tek örnek, gizli pencereyi öne getirme, `--minimized` ve "Oturum açılınca başlat"ın HKCU Run'a yazıp silmesi çalışıyor. Tepsi simgesine tıklama denenmedi.)
+- [ ] Günlüğü dışa aktarma ve "Sorun bildir". (2026-10-22: dışa aktarma kaydetme penceresini açıyor, dosyada PIN, kullanıcı adı, dosya adı yok. "Sorun bildir" düzeltildi, tarayıcıda açıldığı görülmedi.)
+- [ ] Küçük arayüz bulguları (2026-10-22, 440 px pencere): Ayarlar'da Lazer seçeneği "QuickRem…" diye kesiliyor; Ayarlar'ın "Kapat" düğmesi en altta durduğunda "Kapatınca tepsiye küçült" anahtarının üstüne biniyor.
 
 ### Bluetooth denemesi (WIN-BT, ACIK 2)
-- [ ] `quick_remote_pc/tool/windows_bt_hid_trial.ps1`, adım adım WINDOWS-DENEME.md'de.
+- [ ] `quick_remote_pc/tool/windows_bt_hid_trial.ps1`, adım adım WINDOWS-DENEME.md'de. (2026-10-22: betik `-ListOnly` ile hatasız derlendi ve eşleşmiş Galaxy S23 FE, Watch6 ve kulaklığı listeledi; asıl deneme telefon gerektiriyor.)
   - Betik hiç çalıştırılmadı; ilk çalıştırmada küçük düzeltmeler gerekebilir.
   - Sonuca göre ya asıl BtHidRepair kodu ya da "Telefonu yeniden eşleştir" tuşu yazılacak.
 
@@ -208,11 +213,11 @@ Site 2026-10-20'de yenilendi (`docs/raporlar/SITE_YENILEME.md`). Kalanlar:
 - [ ] **Lisans**: repoda LICENSE yok. Site "Açık kaynak", README "kişisel kullanım" diyor; AUR paketi yer tutucu lisans kullanıyor.
 - [ ] **Paket adı (`applicationId`)**: Play'e ilk yüklemeden önce son hâli verilmeli (PLAY, 0. bölüm).
 - [ ] **Uygulamanın adı**: şimdilik QuickRemote (boşta olan aday SlideMando'ydu). Play'deki benzer adlara bakılmalı.
-- [ ] **2026-10-21 listesinden cevap bekleyen sorular:**
-  - **Chrome/Firefox PDF'te Başlat F5'e basıyor:** Linux'ta mı, Windows'ta mı? Linux'taysa sebep büyük ihtimalle 1. bölümdeki "yerel Wayland pencereleri" bulgusu.
-  - **WPS PDF'te kaydırma:** telefonun İleri/Geri tuşlarıyla mı, touchpad kaydırmasıyla mı? Sayfa yarım mı kayıyor, iki sayfa arasında mı duruyor? Linux mu, Windows mu?
-  - **Sunucu görünümünde lazer:** parmak slayt resminde nereye dokunursa lazer perdede oraya mı gitsin (mutlak konum, protokole yeni kare gerekir), yoksa resim basit touchpad'e mi dönsün?
-  - **"Neler yapılabilir" ekranı:** gerçek cihazda denenmemiş özellikler sitedeki gibi "denenmedi" diye işaretlensin mi?
+- [x] **2026-10-21 listesinin soruları (2026-10-22, kullanıcı karar bırakınca kendimiz verdik):**
+  - **Chrome/Firefox PDF'te F5:** Windows yolunda hata bulunmadı; Linux'ta sebep KDE Wayland'daki yerel tarayıcı penceresiydi. KWin betiğiyle öndeki pencere okunuyor (`kwin_active_window.dart`), eksik program adları eklendi. **Canlı deneme:** Plasma 6 Wayland'da Chrome → F11, Firefox → Ctrl+Alt+P.
+  - **WPS PDF kaydırma:** Windows'ta WPS 12'nin PDF sekmesi düzenleyici sanılıyordu; başlığında `.pdf` olan `wps.exe` penceresi artık PDF sayılıyor ve ok tuşlarını alıyor. **Canlı deneme:** sekme başlığında dosya adı görünüyor mu.
+  - **Sunucu görünümünde lazer:** mutlak konum seçildi (`LASER_ABS`, ikili kare türü 2, `auth`'ta `absLaser`). **Canlı deneme:** PowerPoint/WPS'te imleç, kaplama ve Impress, 16:9 olmayan ekranda kayma.
+  - **"Neler yapılabilir" ekranında "Denenmedi":** konuldu.
 
 ## 9. Bilerek sonraya bırakılanlar
 

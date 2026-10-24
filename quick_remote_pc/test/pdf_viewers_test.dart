@@ -16,6 +16,43 @@ void main() {
     expect(PdfViewers.forProgram('foxitpdfreader.exe'), isNull);
   });
 
+  test('knows browsers and viewers by their Wayland app_ids and other builds', () {
+    for (final program in ['org.mozilla.firefox', 'firefox-esr', 'librewolf', 'zen.exe', 'firefox_firefox']) {
+      expect(PdfViewers.forProgram(program), PdfViewers.firefox, reason: program);
+    }
+    for (final program in [
+      'chromium',
+      'Chromium-browser',
+      'org.chromium.Chromium',
+      'com.google.Chrome',
+      'microsoft-edge',
+      'com.microsoft.Edge',
+      'com.brave.Browser',
+      'vivaldi-stable',
+      'opera.exe',
+    ]) {
+      expect(PdfViewers.forProgram(program), PdfViewers.fullScreen, reason: program);
+      expect(PdfViewers.kindOf(program), 'browser', reason: program);
+    }
+    expect(PdfViewers.forProgram('org.kde.okular'), PdfViewers.okular);
+    for (final viewer in ['org.gnome.Evince', 'org.gnome.Papers', 'org.pwmt.zathura']) {
+      expect(PdfViewers.kindOf(viewer), 'pdf', reason: viewer);
+      expect(PdfViewers.forProgram(viewer), isNull, reason: viewer);
+    }
+    // Not a browser for containing one's letters.
+    for (final other in ['msedgewebview2.exe', 'searchhost.exe', 'org.kde.konsole', 'code']) {
+      expect(PdfViewers.kindOf(other), isNull, reason: other);
+    }
+  });
+
+  test('a WPS window on Windows whose title names a PDF is WPS PDF', () {
+    expect(PdfViewers.windowsProgram('wps.exe', 'rapor.PDF - WPS Office'), 'wpspdf');
+    expect(PdfViewers.forProgram(PdfViewers.windowsProgram('wps.exe', 'rapor.pdf - WPS Office')), PdfViewers.wpsPdf);
+    expect(PdfViewers.windowsProgram('wps.exe', 'sunum.pptx - WPS Office'), 'wps.exe');
+    expect(PdfViewers.windowsProgram('wps.exe', 'pdfler.pptx'), 'wps.exe');
+    expect(PdfViewers.windowsProgram('Chrome.exe', 'a.pdf'), 'chrome.exe');
+  });
+
   test('leaves programs whose F5 starts a show alone', () {
     for (final program in ['powerpnt.exe', 'wpp', 'soffice.bin', 'SumatraPDF.exe', 'evince']) {
       expect(PdfViewers.forProgram(program), isNull, reason: program);

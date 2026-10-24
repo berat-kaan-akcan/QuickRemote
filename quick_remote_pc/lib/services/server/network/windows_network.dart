@@ -63,8 +63,11 @@ class WindowsNetwork implements PlatformNetwork {
 
   Future<String?> _defaultRouteIP() async {
     try {
+      // The interface of the default route Windows uses (lowest route plus
+      // interface metric). Get-NetIPConfiguration took ~6 s even warm
+      // (measured, Windows 11), past the runner's 5 s; this takes ~50 ms.
       final output = (await PowerShellRunner.execute(
-        r'(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway -ne $null} | Select-Object -First 1).IPv4Address.IPAddress',
+        r'(Get-NetRoute -DestinationPrefix 0.0.0.0/0 -ErrorAction SilentlyContinue | Sort-Object { $_.RouteMetric + $_.InterfaceMetric } | ForEach-Object { Get-NetIPAddress -InterfaceIndex $_.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue } | Select-Object -First 1).IPAddress',
         isPolling: true,
       ))
           .trim();

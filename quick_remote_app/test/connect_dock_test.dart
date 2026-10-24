@@ -60,4 +60,29 @@ void main() {
     await tester.tap(find.text('Manual connection'));
     expect(taps, isEmpty);
   });
+
+  testWidgets('the keys are large on a tall screen, smaller on a short one', (
+    tester,
+  ) async {
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1;
+
+    tester.view.physicalSize = const Size(400, 800);
+    await pumpDock(tester);
+    final tall = tester.getSize(find.byType(ConnectDock)).height;
+    expect(
+      tester.getSize(find.byIcon(Icons.qr_code_scanner_rounded)).height,
+      34,
+    );
+
+    tester.view.physicalSize = const Size(400, 640);
+    await pumpDock(tester);
+    final short = tester.getSize(find.byType(ConnectDock)).height;
+    expect(
+      tester.getSize(find.byIcon(Icons.qr_code_scanner_rounded)).height,
+      28,
+    );
+    expect(tall, greaterThan(short));
+    expect(tester.takeException(), isNull);
+  });
 }

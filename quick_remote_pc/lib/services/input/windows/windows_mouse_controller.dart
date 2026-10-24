@@ -86,11 +86,32 @@ class WindowsMouseController implements MouseController {
     _currentY += dy;
     _clamp();
 
+    _send(_currentX, _currentY, _left, _top, _width, _height);
+  }
+
+  /// Moves the cursor to ([x], [y]), pixels of the virtual desktop (a point
+  /// of a window's GetWindowRect), with the layout read now.
+  static void moveTo(double x, double y) {
+    final left = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    final top = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    final width = GetSystemMetrics(SM_CXVIRTUALSCREEN).clamp(1, 1 << 20);
+    final height = GetSystemMetrics(SM_CYVIRTUALSCREEN).clamp(1, 1 << 20);
+    _send(
+      x.clamp(left.toDouble(), (left + width - 1).toDouble()),
+      y.clamp(top.toDouble(), (top + height - 1).toDouble()),
+      left,
+      top,
+      width,
+      height,
+    );
+  }
+
+  static void _send(double x, double y, int left, int top, int width, int height) {
     // Absolute coordinates on the virtual desktop are normalized to 0..65535.
     // SetCursorPos only moves the cursor without generating input messages,
     // which causes PowerPoint pen/eraser to not receive movement data.
-    final normalX = ((_currentX - _left) * 65535 / (_width > 1 ? _width - 1 : 1)).round();
-    final normalY = ((_currentY - _top) * 65535 / (_height > 1 ? _height - 1 : 1)).round();
+    final normalX = ((x - left) * 65535 / (width > 1 ? width - 1 : 1)).round();
+    final normalY = ((y - top) * 65535 / (height > 1 ? height - 1 : 1)).round();
 
     final inputs = calloc<INPUT>(1);
     inputs[0].type = const INPUT_TYPE(0); // INPUT_MOUSE

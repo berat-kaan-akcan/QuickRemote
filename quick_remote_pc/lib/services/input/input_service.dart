@@ -135,6 +135,12 @@ abstract class InputService {
   /// Laser position relative to the screen (0..1 on both axes).
   void laserPointerMoved(double relX, double relY);
 
+  /// Puts the OS cursor at ([relX], [relY]), fractions of the running
+  /// show's window, so that the program's own laser is there (LASER_ABS,
+  /// the phone's finger on the slide picture). Nothing while that window is
+  /// unknown.
+  void moveCursorInShow(double relX, double relY);
+
   /// Where the laser overlay should go: the running show's window, else the
   /// focused window (a PDF viewer); its monitor is the one used. Null when
   /// unknown: the primary monitor.

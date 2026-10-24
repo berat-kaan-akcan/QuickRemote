@@ -121,4 +121,32 @@ void main() {
     expect(find.text('PDF'), findsOneWidget);
     expect(find.text('Sonraki / önceki slayt'), findsOneWidget);
   });
+
+  test('only cells that work at least partly are marked untried', () {
+    for (final link in CapLink.values) {
+      for (final os in CapOs.values) {
+        for (final program in CapabilityTable.programs(link, os)) {
+          for (final feature in CapFeature.values) {
+            if (!CapabilityTable.untried(link, os, program, feature)) continue;
+            expect(
+              CapabilityTable.cell(link, os, program, feature).level,
+              isNot(CapLevel.no),
+              reason: '$link $os $program $feature',
+            );
+          }
+        }
+      }
+    }
+  });
+
+  testWidgets('features not tried on a device carry a tag', (tester) async {
+    await pumpScreen(tester, platform: 'windows');
+    expect(find.text('PowerPoint'), findsOneWidget);
+    // The eraser, the slide picture, slide media and volume of PowerPoint.
+    expect(find.text('Denenmedi'), findsNWidgets(4 + 1));
+    expect(
+      find.textContaining('gerçek bir cihazda henüz denenmedi'),
+      findsOneWidget,
+    );
+  });
 }
