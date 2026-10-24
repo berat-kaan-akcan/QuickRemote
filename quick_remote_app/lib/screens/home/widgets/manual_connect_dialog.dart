@@ -70,6 +70,9 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    // A PC found on the network, a saved one or a PIN the PC changed: only
+    // the PIN is asked, so the dialog is not "Manual connection".
+    final forKnownPc = widget.defaultIp?.isNotEmpty ?? false;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xl),
       child: ConstrainedBox(
@@ -82,11 +85,15 @@ class _ManualConnectDialogState extends State<ManualConnectDialog> {
             children: [
               Row(
                 children: [
-                  IconBadge(icon: Icons.lan_rounded, color: p.primaryText, size: 38),
+                  IconBadge(
+                    icon: forKnownPc ? Icons.lock_rounded : Icons.lan_rounded,
+                    color: p.primaryText,
+                    size: 38,
+                  ),
                   const SizedBox(width: AppSpace.sm),
                   Expanded(
                     child: Text(
-                      context.l10n.manualTitle,
+                      forKnownPc ? context.l10n.pinDialogTitle : context.l10n.manualTitle,
                       style: AppType.title.copyWith(color: p.textPrimary, fontSize: 19, fontWeight: FontWeight.w700),
                     ),
                   ),

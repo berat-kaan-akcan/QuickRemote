@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -40,13 +41,22 @@ class PresentingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (running) return START_NOT_STICKY
+        try {
+            ServiceCompat.startForeground(
+                this,
+                NOTIFICATION_ID,
+                notification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
+            )
+        } catch (e: RuntimeException) {
+            // Refused (the app is in the background, or a permission the
+            // connectedDevice type needs is missing): no Ongoing Activity
+            // this time, and the next start tries again.
+            Log.w(TAG, "Ongoing activity not started: ${e.message}")
+            stopSelf()
+            return START_NOT_STICKY
+        }
         running = true
-        ServiceCompat.startForeground(
-            this,
-            NOTIFICATION_ID,
-            notification(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
-        )
         app.phone.start()
         scope.launch {
             app.phone.state.collect { state ->
@@ -101,6 +111,7 @@ class PresentingService : Service() {
     }
 
     companion object {
+        private const val TAG = "QuickRemotePresenting"
         private const val CHANNEL = "presenting"
         private const val NOTIFICATION_ID = 1
 
@@ -111,7 +122,13 @@ class PresentingService : Service() {
         fun active(state: PhoneState): Boolean = state is PhoneState.Connected
 
         fun start(context: Context) {
-            ContextCompat.startForegroundService(context, Intent(context, PresentingService::class.java))
+            try {
+                ContextCompat.startForegroundService(context, Intent(context, PresentingService::class.java))
+            } catch (e: RuntimeException) {
+                // ForegroundServiceStartNotAllowedException when the app is no
+                // longer in front; the remote still works without it.
+                Log.w(TAG, "Presenting service not started: ${e.message}")
+            }
         }
     }
 }

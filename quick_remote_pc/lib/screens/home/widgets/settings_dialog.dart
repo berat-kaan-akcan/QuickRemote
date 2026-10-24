@@ -267,8 +267,9 @@ class _SettingsDialogState extends State<SettingsDialog> {
               children: [
                 Icon(Icons.language_rounded, size: 20, color: p.textSecondary),
                 const SizedBox(width: AppSpace.sm),
+                // Half the row each: at 2/5 the box cut "Sistem" in the
+                // 440 px window (2026-10-24).
                 Expanded(
-                  flex: 3,
                   child: Text(
                     l10n.settingsLanguageTitle,
                     style: AppType.titleSmall.copyWith(color: p.textPrimary, fontSize: 14.5),
@@ -277,7 +278,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 // The names are cut with an ellipsis before the row overflows
                 // (a narrow window, large text).
                 Flexible(
-                  flex: 2,
                   child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
                   decoration: BoxDecoration(

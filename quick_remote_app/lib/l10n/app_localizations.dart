@@ -590,6 +590,12 @@ abstract class AppLocalizations {
   /// **'Manuel Bağlantı'**
   String get manualTitle;
 
+  /// No description provided for @pinDialogTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'i girin'**
+  String get pinDialogTitle;
+
   /// No description provided for @manualIp.
   ///
   /// In tr, this message translates to:
