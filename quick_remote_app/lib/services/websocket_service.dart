@@ -372,7 +372,9 @@ class WebSocketService extends ChangeNotifier {
     if (command == RemoteCommands.mediaPlayPause) {
       _state.pptIsMediaPlaying = !_state.pptIsMediaPlaying;
       stateChanged = true;
-    } else if (command == RemoteCommands.sysMediaPlayPause) {
+    } else if (command == RemoteCommands.sysMediaPlayPause && _state.hasMedia) {
+      // Only over a player the PC reported: with none, nothing starts, no
+      // new state comes, and the key stayed on pause (2026-10-25).
       _state.isPlaying = !_state.isPlaying;
       stateChanged = true;
     } else if (command == RemoteCommands.mediaRewind) {

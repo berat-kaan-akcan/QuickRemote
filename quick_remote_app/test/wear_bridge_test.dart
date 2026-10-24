@@ -606,8 +606,78 @@ void main() {
       timer.tick();
       expect(alertsSent().last, {'kind': 'timeUp', 'seconds': 0, 'pattern': 'triple'});
 
+      // The remote screen closed: the watch keeps counting the same talk.
+      final started = timer.startTime!.millisecondsSinceEpoch;
       bridge.detachTimer();
+      expect(states().last, containsPair('timerRunning', true));
+      expect(states().last, containsPair('timerStart', started));
+    });
+
+    test('with the remote screen open the show starts its timer, and its end resets it', () async {
+      await fromWatch('hello');
+      final timer = PresentationTimerController(clock: () => clock);
+      addTearDown(timer.dispose);
+      bridge.attachTimer(timer);
+      await fromWatch('duration', 60);
+
+      ws
+        ..connect192()
+        ..running = true
+        ..change();
+      // The phone shows the clock the watch shows.
+      expect(timer.isRunning, isTrue);
+      expect(timer.targetSeconds, 60);
+      expect(states().last, containsPair('timerTarget', 60));
+      expect(states().last, containsPair('timerStart', clock.millisecondsSinceEpoch));
+
+      ws
+        ..running = false
+        ..change();
+      expect(timer.isRunning, isFalse);
+      expect(timer.elapsedSeconds, 0);
       expect(states().last, containsPair('timerRunning', false));
+    });
+
+    test('a timer the user paused goes on when the show starts', () async {
+      await fromWatch('hello');
+      final timer = PresentationTimerController(clock: () => clock);
+      addTearDown(timer.dispose);
+      bridge.attachTimer(timer);
+      timer.setDuration(600, start: true);
+      clock = clock.add(const Duration(seconds: 30));
+      timer.pause();
+
+      ws
+        ..connect192()
+        ..running = true
+        ..change();
+      expect(timer.isRunning, isTrue);
+      expect(timer.elapsedSeconds, 30);
+      expect(states().last, containsPair('timerRunning', true));
+    });
+
+    test('the remote screen opened during the show takes over the watch\'s clock', () async {
+      await fromWatch('hello');
+      await fromWatch('duration', 600);
+      ws
+        ..connect192()
+        ..running = true
+        ..change();
+      final started = clock;
+      clock = clock.add(const Duration(seconds: 90));
+
+      final timer = PresentationTimerController(clock: () => clock);
+      addTearDown(timer.dispose);
+      bridge.attachTimer(timer);
+      expect(timer.isRunning, isTrue);
+      expect(timer.targetSeconds, 600);
+      expect(timer.elapsedSeconds, 90);
+      expect(states().last, containsPair('timerStart', started.millisecondsSinceEpoch));
+
+      // Closed again: the watch's clock goes on from the same start.
+      bridge.detachTimer();
+      expect(states().last, containsPair('timerRunning', true));
+      expect(states().last, containsPair('timerStart', started.millisecondsSinceEpoch));
     });
 
     test('a time-up without vibration is still told', () async {

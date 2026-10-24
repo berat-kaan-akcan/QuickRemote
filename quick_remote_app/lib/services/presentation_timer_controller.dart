@@ -70,6 +70,14 @@ class PresentationTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Runs as if started at [startedAt]: takes over a clock that was already
+  /// counting elsewhere (the watch's, while the remote screen was closed).
+  void startFrom(DateTime startedAt) {
+    if (_isRunning) return;
+    _elapsedSeconds = math.max(0, _clock().difference(startedAt).inSeconds);
+    start();
+  }
+
   void pause() {
     if (!_isRunning) return;
     tick();
