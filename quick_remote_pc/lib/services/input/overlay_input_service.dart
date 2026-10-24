@@ -62,6 +62,11 @@ class OverlayInputService implements InputService {
   /// the overlay's ink, which would show on top of it, is put away.
   bool _showBlank = false;
 
+  /// When B or W last went to the show. Until the slide state says whether
+  /// its black or white screen is on, no screen picture is taken: one taken
+  /// 0.8 s after B went to the phones black (measured, PowerPoint 365).
+  final _showBlankAsked = Stopwatch();
+
   /// The tool drawing on the overlay; null while the program's or none is.
   _InkTool? _inkTool;
   bool _stroking = false;
@@ -169,6 +174,7 @@ class OverlayInputService implements InputService {
   @override
   Future<ScreenCapture?> captureScreen() async {
     if (_blank != null || _showBlank) return null;
+    if (_showBlankAsked.isRunning && _showBlankAsked.elapsed < const Duration(milliseconds: 1500)) return null;
     final capture = await _inner.captureScreen();
     if (capture == null || _strokes.isEmpty || _blank != null || _showBlank) {
       return _blank != null || _showBlank ? null : capture;
@@ -303,6 +309,9 @@ class OverlayInputService implements InputService {
 
   @override
   Future<ScreenArea?> laserArea() => _inner.laserArea();
+
+  @override
+  void moveCursorInShow(double relX, double relY) => _inner.moveCursorInShow(relX, relY);
 
   @override
   bool get handlesLaserPointer => _overlayPointer || _inner.handlesLaserPointer;
@@ -541,6 +550,9 @@ class OverlayInputService implements InputService {
   Future<void> _blankOr(int rgb, void Function() programs) async {
     if (_showRunning || !_overlayAvailable) {
       programs();
+      _showBlankAsked
+        ..reset()
+        ..start();
       return;
     }
     final blank = _blank = _blank == rgb ? null : rgb;

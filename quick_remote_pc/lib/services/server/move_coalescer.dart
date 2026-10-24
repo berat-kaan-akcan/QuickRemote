@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:quick_remote_shared/quick_remote_shared.dart';
+
 /// Rate-limits relative mouse motion without losing any of it.
 ///
 /// The phone sends deltas, not positions, so a dropped packet is lost cursor
 /// movement. Phones' Wi-Fi often delivers packets in bursts; deltas arriving
 /// faster than [minInterval] are summed and applied in the next slot instead.
+/// Positions ([MoveFrame.laserAbs]) are not summed: the newest one wins.
 class MoveCoalescer {
   MoveCoalescer({required this.minInterval, required this.onMove});
 
@@ -23,8 +26,13 @@ class MoveCoalescer {
     // TOUCH and LASER move differently on the PC; never sum them together.
     if (_hasPending && type != _type) flush();
     _type = type;
-    _dx += dx;
-    _dy += dy;
+    if (type == MoveFrame.laserAbs) {
+      _dx = dx;
+      _dy = dy;
+    } else {
+      _dx += dx;
+      _dy += dy;
+    }
     _hasPending = true;
 
     final last = _lastApplied;

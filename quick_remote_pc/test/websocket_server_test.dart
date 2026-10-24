@@ -334,7 +334,8 @@ void main() {
       final client = await authed();
       client.ws.add(moveFrame(0, 501, 0)); // over the per-frame limit
       client.ws.add(moveFrame(0, double.nan, 0));
-      client.ws.add(moveFrame(2, 1, 1)); // unknown type
+      client.ws.add(moveFrame(3, 1, 1)); // unknown type
+      client.ws.add(moveFrame(2, 1.5, 0.5)); // a position off the slide
       client.ws.add(Uint8List(8)); // wrong length
       await settle();
       expect(mouse.moves, isEmpty);
@@ -345,6 +346,31 @@ void main() {
       client.ws.add(moveFrame(1, 5, 5));
       await settle();
       expect(mouse.moves, isEmpty);
+    });
+
+    test('the auth reply offers the laser at a point of the slide', () async {
+      final client = await connect();
+      client.send({'auth': server.pin.value});
+      expect(await client.next('auth'), containsPair('absLaser', true));
+    });
+
+    test('a LASER_ABS frame puts the cursor at that point of the show', () async {
+      input.slideState = {'current': 1, 'total': 3, 'notes': ''};
+      final client = await authed();
+      await client.next('SLIDE_STATE');
+      client.command('MODE_LASER');
+      await client.next('ack');
+      client.ws.add(moveFrame(2, 0.25, 0.75));
+      await eventually(() => input.calls.any((c) => c.startsWith('moveCursorInShow')));
+      expect(input.calls, contains('moveCursorInShow:0.25,0.75'));
+      expect(mouse.moves, isEmpty);
+    });
+
+    test('ignores LASER_ABS frames without a slideshow', () async {
+      final client = await authed();
+      client.ws.add(moveFrame(2, 0.5, 0.5));
+      await settle();
+      expect(input.calls.where((c) => c.startsWith('moveCursorInShow')), isEmpty);
     });
   });
 
@@ -423,6 +449,18 @@ void main() {
       expect(input.calls, isNot(contains('blackScreen')));
     });
 
+    test("a LASER_ABS frame puts the overlay's dot at that point", () async {
+      final client = await authed();
+      await client.next('STATUS');
+      client.command('MODE_LASER');
+      await client.next('ack');
+      client.ws.add(moveFrame(2, 0.25, 0.75));
+      await eventually(() => overlay.positions.isNotEmpty);
+      expect(overlay.positions.last, (0.25, 0.75));
+      expect(mouse.moves, isEmpty);
+      expect(input.calls.where((c) => c.startsWith('moveCursorInShow')), isEmpty);
+    });
+
     test('a phone that leaves mid-laser puts it away', () async {
       final client = await authed();
       await client.next('STATUS');
@@ -479,6 +517,11 @@ void main() {
       expect(input.calls, isNot(contains('modePen')));
       expect(input.calls, isNot(contains('modeArrow')));
       expect(mouse.moves, isEmpty);
+
+      // Nor does B's finger on its slide picture move the laser.
+      b.ws.add(moveFrame(2, 0.5, 0.5));
+      await settle();
+      expect(input.calls.where((c) => c.startsWith('moveCursorInShow')), isEmpty);
 
       // A's gesture goes on and ends; then B may draw.
       a.ws.add(moveFrame(0, 3, 0));

@@ -47,12 +47,18 @@ void main() {
     expect(prefs.getStringList('recent_devices'), hasLength(1));
   });
 
-  for (final textScale in [1.0, 1.3]) {
-    testWidgets('the home screen fits a small phone at text scale $textScale', (
+  for (final (size, textScale) in [
+    (const Size(360, 640), 1.0),
+    (const Size(360, 640), 1.3),
+    // Just over ConnectDock.compactBelow: the large keys.
+    (const Size(360, 720), 1.0),
+    (const Size(360, 720), 1.3),
+  ]) {
+    testWidgets('the home screen fits a ${size.width.toInt()}x${size.height.toInt()} phone at text scale $textScale', (
       WidgetTester tester,
     ) async {
       SharedPreferences.setMockInitialValues({'language': 'tr'});
-      tester.view.physicalSize = const Size(360, 640);
+      tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
       tester.platformDispatcher.textScaleFactorTestValue = textScale;
       addTearDown(tester.view.reset);

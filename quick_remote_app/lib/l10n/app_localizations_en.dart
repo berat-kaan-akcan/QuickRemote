@@ -52,6 +52,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presenterLastSlide => 'Last slide';
 
   @override
+  String get presenterLaserHint => 'Touch the slide to point the laser there';
+
+  @override
   String slidePreviewLabel(int slide) {
     return 'Preview of slide $slide';
   }
@@ -1469,10 +1472,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get capNoteWpsNoMedia => 'Videos in WPS cannot be played remotely.';
 
   @override
-  String get capNoteUnverifiedWindows =>
-      '† Written, but not yet tried on a real Windows PC.';
-
-  @override
   String get capLevelYes => 'Works';
 
   @override
@@ -1540,4 +1539,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timerResetLabel => 'Reset timer';
+
+  @override
+  String get historyUndo => 'Undo';
+
+  @override
+  String get capUntried => 'Not tried';
+
+  @override
+  String get capUntriedLegend =>
+      'Written and tested in code, not yet tried on a real device.';
 }

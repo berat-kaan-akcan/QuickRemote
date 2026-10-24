@@ -22,17 +22,56 @@ class PptController {
   static const pointerEraser = 5;
 
   static Future<void> slideNext({bool keepInk = false}) async {
+    restoreShowFocus();
     if (!keepInk) await _clearInkBeforeMove();
     KeyboardSimulator.pressKeyCombo(_viewerInFront()?.next ?? [VK_NEXT]);
   }
 
   static Future<void> slidePrev({bool keepInk = false}) async {
+    restoreShowFocus();
     if (!keepInk) await _clearInkBeforeMove();
     KeyboardSimulator.pressKeyCombo(_viewerInFront()?.prev ?? [VK_PRIOR]);
   }
 
-  static ViewerKeys? _viewerInFront() =>
-      PdfViewers.forProgram(_windowExecutable(GetForegroundWindow()).split(r'\').last);
+  /// COM `Slide.Export` during a show leaves PowerPoint's thread without a
+  /// keyboard focus (measured, PowerPoint 365 16.0.20430): the show stays in
+  /// front but takes no key, also seconds later, until it gets the focus
+  /// again. Gives it back without changing the foreground window, and only
+  /// to a show in front: SetFocus would activate one behind another window.
+  static void restoreShowFocus() {
+    final front = GetForegroundWindow();
+    if (front.isNull || _showWindowKind(front) == null) return;
+    final thread = GetWindowThreadProcessId(front, nullptr);
+    final info = calloc<GUITHREADINFO>()..ref.cbSize = sizeOf<GUITHREADINFO>();
+    try {
+      if (!GetGUIThreadInfo(thread, info).value || !info.ref.hwndFocus.isNull) return;
+    } finally {
+      calloc.free(info);
+    }
+    final current = GetCurrentThreadId();
+    final attached = AttachThreadInput(current, thread, true);
+    SetFocus(front);
+    if (attached) AttachThreadInput(current, thread, false);
+  }
+
+  static ViewerKeys? _viewerInFront() => PdfViewers.forProgram(_programOf(GetForegroundWindow()));
+
+  /// [hwnd]'s program as [PdfViewers] names it: its executable's file name,
+  /// or "wpspdf" for a WPS window showing a PDF.
+  static String _programOf(HWND hwnd) =>
+      PdfViewers.windowsProgram(_windowExecutable(hwnd).split(r'\').last, _windowTitle(hwnd));
+
+  static String _windowTitle(HWND hwnd) {
+    final length = GetWindowTextLength(hwnd).value;
+    if (length <= 0) return '';
+    final title = wsalloc(length + 1);
+    try {
+      GetWindowText(hwnd, title, length + 1);
+      return title.toDartString();
+    } finally {
+      free(title);
+    }
+  }
 
   /// PowerPoint and WPS keep a slide's ink and show it again when the show
   /// comes back. Unless the phone keeps it (SET_KEEP_INK), the ink is erased
@@ -66,8 +105,11 @@ class PptController {
     final hwnd = GetForegroundWindow();
     if (hwnd.isNull) return FrontWindow.other;
     if (_showWindowKind(hwnd) != null) return FrontWindow.show;
+    // Before the editor: WPS 12 opens PDFs in tabs of its editor's window.
+    final viewer = PdfViewers.kindOf(_programOf(hwnd));
+    if (viewer != null) return viewer;
     if (_editorWindowKind(hwnd) != null) return FrontWindow.editor;
-    return PdfViewers.kindOf(_windowExecutable(hwnd).split(r'\').last) ?? FrontWindow.other;
+    return FrontWindow.other;
   }
 
   static String _className(HWND hwnd) {
@@ -168,7 +210,7 @@ try {
   /// of F5 (which reloads a browser page). Returns whether it did.
   static bool _startViewer() {
     final hwnd = GetForegroundWindow();
-    final viewer = PdfViewers.forProgram(_windowExecutable(hwnd).split(r'\').last);
+    final viewer = PdfViewers.forProgram(_programOf(hwnd));
     if (viewer == null) return false;
     KeyboardSimulator.pressKeyCombo(viewer.start);
     final end = viewer.end;
@@ -194,9 +236,29 @@ try {
 } catch {
     Write-Error $_.Exception.Message
 }
+# The program with a presentation open: PowerPoint's empty start window
+# took the F5 while WPS had the deck. Neither has one: F5 would go to WPS's
+# home page.
+$qrDecks = $null
+foreach ($qrId in @('PowerPoint.Application', 'KWPP.Application')) {
+    try {
+        $qrApp = [System.Runtime.InteropServices.Marshal]::GetActiveObject($qrId)
+        if ($qrDecks -eq $null -and $qrApp.Presentations.Count -gt 0) {
+            if ($qrId -eq 'KWPP.Application' -or "$($qrApp.Path)" -match 'Kingsoft|WPS Office') { $qrDecks = 'wps' } else { $qrDecks = 'powerpoint' }
+        }
+    } catch {}
+}
+$qrOwn = $false
+try { $qrOwn = $ppt.Presentations.Count -gt 0 } catch {}
+if ($qrDecks -eq $null) { $qrPresenter = 'none' } elseif (-not $qrOwn) { $qrPresenter = $qrDecks }
 Write-Output $qrPresenter
 ''';
       final output = (await PowerShellRunner.execute(script)).trim();
+      if (output == 'none') {
+        debugPrint('START skipped: no presentation is open');
+        InputSimulator.onCommandError?.call(RemoteError.slideshowStartFailed);
+        return;
+      }
       if (output == 'powerpoint' || output == 'wps') presenter = output;
     } catch (e) {
       debugPrint('Exception in slideStart: $e');
@@ -218,7 +280,13 @@ Write-Output $qrPresenter
   /// has it.
   static Future<bool> _focusPresenter(String? kind) async {
     final front = GetForegroundWindow();
-    if (_showWindowKind(front) != null || _editorWindowKind(front) != null) return true;
+    if (_showWindowKind(front) != null) return true;
+    // WPS 12 shows its home page and its documents in the same window class
+    // as its presentations (measured, 12.1): its window counts only when
+    // COM found WPS's presentation. Nor does PowerPoint's window count while
+    // the presentation is WPS's.
+    final editor = _editorWindowKind(front);
+    if (editor != null && (kind == null ? editor != 'wps' : editor == kind)) return true;
     final window = _findWindow(_editorWindowKind, kind) ?? _findWindow(_showWindowKind, kind);
     return window != null && await _focusWindow(window);
   }
@@ -346,6 +414,7 @@ try {
   }
 
   static Future<void> toggleLaserCursor() async {
+    pointerTurn++;
     final laser = !_isLaserActive;
     if (PresenterCom.wpsActive) {
       if (await wpsLaser(laser)) _isLaserActive = laser;
@@ -363,6 +432,7 @@ try {
       debugPrint('Slideshow shortcut skipped: no slideshow window could get the focus');
       return false;
     }
+    restoreShowFocus();
     KeyboardSimulator.pressKeyCombo(keys);
     return true;
   }
@@ -378,15 +448,24 @@ try {
   /// reaches only a focused show, and only Ctrl+A puts it away. Ctrl+A first,
   /// so the laser comes on whatever tool was on. Returns whether the keys went.
   static Future<bool> wpsLaser(bool on) async {
+    final turn = pointerTurn;
     if (!await pressInSlideShow([VK_CONTROL, 0x41])) return false; // Ctrl + A
     if (on) {
       // Right after Ctrl+A, WPS drops the Ctrl+R (measured: both in one
       // SendInput gave no laser).
       await Future.delayed(const Duration(milliseconds: 150));
+      if (turn != pointerTurn) return false;
       KeyboardSimulator.pressKeyCombo([VK_CONTROL, 0x52]); // Ctrl + R
     }
     return true;
   }
+
+  /// Counts the pointer mode changes. A phone's double tap sends MODE_LASER,
+  /// LASER_OFF, MODE_ARROW and MODE_PEN within 60 ms, none waiting for the
+  /// one before: the laser's Ctrl+R, pressed 150 ms after its Ctrl+A, came
+  /// after the pen and turned it into the laser (measured, WPS 12.1). It is
+  /// not pressed when another mode came meanwhile.
+  static int pointerTurn = 0;
 
   /// Sets the show's pointer (PpSlideShowPointerType) through COM, which
   /// needs no focus. Returns whether it did.

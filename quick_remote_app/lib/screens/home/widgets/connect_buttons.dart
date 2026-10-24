@@ -6,6 +6,9 @@ import '../../../widgets/ui/ui.dart';
 
 /// The fixed area at the bottom of the home screen: the wide QR key and,
 /// under it, two square tiles for Bluetooth (Android only) and manual entry.
+///
+/// The keys are large; on a short screen (under [compactBelow] logical
+/// pixels tall) they shrink back so the found PCs above keep some room.
 class ConnectDock extends StatelessWidget {
   const ConnectDock({
     super.key,
@@ -20,15 +23,19 @@ class ConnectDock extends StatelessWidget {
   final VoidCallback onBluetooth;
   final VoidCallback onManual;
 
+  /// Screen height below which the keys take their smaller size.
+  static const compactBelow = 700.0;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     final l10n = context.l10n;
+    final compact = MediaQuery.sizeOf(context).height < compactBelow;
     const top = Radius.circular(26);
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppSpace.page,
-        14,
+        compact ? 14 : AppSpace.md,
         AppSpace.page,
         MediaQuery.paddingOf(context).bottom + AppSpace.sm,
       ),
@@ -48,9 +55,10 @@ class ConnectDock extends StatelessWidget {
           _QrKey(
             label: connecting ? l10n.homeConnecting : l10n.homeConnectQr,
             busy: connecting,
+            compact: compact,
             onTap: connecting ? null : onScan,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: compact ? 10 : AppSpace.sm),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -61,16 +69,18 @@ class ConnectDock extends StatelessWidget {
                       icon: Icons.bluetooth_rounded,
                       iconColor: p.info,
                       label: l10n.homeConnectBluetooth,
+                      compact: compact,
                       onTap: connecting ? null : onBluetooth,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: compact ? 10 : AppSpace.sm),
                 ],
                 Expanded(
                   child: _SquareTile(
                     icon: Icons.keyboard_alt_outlined,
                     iconColor: p.primaryText,
                     label: l10n.homeManualConnection,
+                    compact: compact,
                     onTap: connecting ? null : onManual,
                   ),
                 ),
@@ -85,10 +95,16 @@ class ConnectDock extends StatelessWidget {
 
 /// The main way in: full width, the brand gradient, QR icon and an arrow.
 class _QrKey extends StatelessWidget {
-  const _QrKey({required this.label, required this.busy, this.onTap});
+  const _QrKey({
+    required this.label,
+    required this.busy,
+    required this.compact,
+    this.onTap,
+  });
 
   final String label;
   final bool busy;
+  final bool compact;
   final VoidCallback? onTap;
 
   @override
@@ -103,8 +119,11 @@ class _QrKey extends StatelessWidget {
       pressedScale: 0.98,
       borderRadius: radius,
       child: Container(
-        constraints: const BoxConstraints(minHeight: 64),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        constraints: BoxConstraints(minHeight: compact ? 64 : 80),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 18 : AppSpace.lg,
+          vertical: 10,
+        ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: const Alignment(-0.8, -1),
@@ -120,25 +139,36 @@ class _QrKey extends StatelessWidget {
             children: [
               busy
                   ? SizedBox.square(
-                      dimension: 26,
+                      dimension: compact ? 26 : 32,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
                         color: fg,
                       ),
                     )
-                  : Icon(Icons.qr_code_scanner_rounded, color: fg, size: 28),
-              const SizedBox(width: 14),
+                  : Icon(
+                      Icons.qr_code_scanner_rounded,
+                      color: fg,
+                      size: compact ? 28 : 34,
+                    ),
+              SizedBox(width: compact ? 14 : AppSpace.md),
               Expanded(
                 child: Text(
                   label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppType.label.copyWith(color: fg, fontSize: 16.5),
+                  style: AppType.label.copyWith(
+                    color: fg,
+                    fontSize: compact ? 16.5 : 18,
+                  ),
                 ),
               ),
               if (!busy) ...[
                 const SizedBox(width: AppSpace.xs),
-                Icon(Icons.arrow_forward_rounded, color: fg, size: 22),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  color: fg,
+                  size: compact ? 22 : 26,
+                ),
               ],
             ],
           ),
@@ -154,12 +184,14 @@ class _SquareTile extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.label,
+    required this.compact,
     this.onTap,
   });
 
   final IconData icon;
   final Color iconColor;
   final String label;
+  final bool compact;
   final VoidCallback? onTap;
 
   @override
@@ -172,10 +204,10 @@ class _SquareTile extends StatelessWidget {
       pressedScale: 0.97,
       borderRadius: radius,
       child: Container(
-        constraints: const BoxConstraints(minHeight: 84),
-        padding: const EdgeInsets.symmetric(
+        constraints: BoxConstraints(minHeight: compact ? 84 : 112),
+        padding: EdgeInsets.symmetric(
           horizontal: AppSpace.xs,
-          vertical: 10,
+          vertical: compact ? 10 : AppSpace.sm,
         ),
         decoration: BoxDecoration(
           color: p.surfaceRaised,
@@ -186,8 +218,8 @@ class _SquareTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: iconColor, size: 26),
-              const SizedBox(height: 6),
+              Icon(icon, color: iconColor, size: compact ? 26 : 34),
+              SizedBox(height: compact ? 6 : AppSpace.xs),
               Text(
                 label,
                 maxLines: 2,
@@ -195,7 +227,7 @@ class _SquareTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: AppType.label.copyWith(
                   color: p.textPrimary,
-                  fontSize: 12.5,
+                  fontSize: compact ? 12.5 : 14.5,
                 ),
               ),
             ],

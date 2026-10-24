@@ -160,6 +160,9 @@ class X11Windows {
     }
   }
 
+  /// The whole desktop (the root window), in root pixels; null without X11.
+  ScreenArea? rootArea() => _open() ? area(_root) : null;
+
   /// Where [window] is on the desktop, in root pixels; null when it is gone.
   ScreenArea? area(int window) {
     try {

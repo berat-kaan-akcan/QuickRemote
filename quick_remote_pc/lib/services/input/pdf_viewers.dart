@@ -48,46 +48,76 @@ class PdfViewers {
   /// PageDown scrolls by a screen, the arrows jump to the next page's top,
   /// also in full screen. Verified on WPS 11.1 (Linux), whose window class
   /// is "pdf". WPS 12 on Windows opens PDFs in a tab of its wps.exe window,
-  /// so it is not told apart from WPS's other documents there.
+  /// told apart by the window's title ([windowsProgram]; not tried there).
   static const wpsPdf = ViewerKeys([_f11], next: [_right], prev: [_left]);
 
-  static const _chromium = ['chrome', 'msedge', 'brave', 'vivaldi', 'opera'];
+  /// Firefox and its forks (pdf.js, the same keys). Matched as a word of
+  /// the program's name, so "org.mozilla.firefox" (Flatpak's Wayland app_id)
+  /// and "firefox-esr" count.
+  static const _firefoxes = ['firefox', 'librewolf', 'waterfox', 'floorp', 'zen'];
+
+  /// Chromium browsers: Windows executables ("msedge.exe"), X11 WM_CLASS
+  /// ("google-chrome", "microsoft-edge", "brave-browser") and Wayland
+  /// app_ids ("com.google.Chrome", "org.chromium.Chromium").
+  static const _chromium = ['chrome', 'chromium', 'msedge', 'edge', 'brave', 'vivaldi', 'opera', 'thorium', 'arc'];
 
   /// PDF viewers whose F5 starts their presentation (SumatraPDF) or that
   /// have no keys of their own here, so [forProgram] does not know them.
   static const _otherPdfViewers = [
     'sumatrapdf',
-    'foxit',
     'evince',
-    'org.gnome.evince',
     'papers',
-    'org.gnome.papers',
     'atril',
     'xreader',
     'zathura',
     'qpdfview',
   ];
 
+  /// The words of a program name: lower case, split at dots, dashes,
+  /// underscores and spaces ("org.kde.okular" → org, kde, okular).
+  static List<String> _words(String program) =>
+      program.toLowerCase().split(RegExp(r'[.\-_ ]')).where((w) => w.isNotEmpty).toList();
+
+  static bool _isFirefox(String name, List<String> words) =>
+      name == 'navigator' || words.any((w) => w.startsWith('firefox') || _firefoxes.contains(w));
+
+  static bool _isChromium(List<String> words) => words.any(_chromium.contains);
+
+  /// The name [forProgram] and [kindOf] get for a Windows window of
+  /// [executable] ("wps.exe") titled [title]. WPS 12 opens PDFs in a tab of
+  /// its wps.exe window, beside its presentations and documents, so a WPS
+  /// window whose title names a PDF counts as WPS PDF ("wpspdf"), whose
+  /// PageDown scrolls by a screen and whose F5 does not start anything.
+  /// Not tried on WPS 12: its title format is assumed to carry the file name.
+  static String windowsProgram(String executable, String title) {
+    final exe = executable.toLowerCase();
+    if (exe == 'wps.exe' && RegExp(r'\.pdf\b', caseSensitive: false).hasMatch(title)) return 'wpspdf';
+    return exe;
+  }
+
   /// SLIDE_STATE's `front` for [program] (named as for [forProgram]):
   /// [FrontWindow.browser], [FrontWindow.pdf], or null for anything else.
   static String? kindOf(String program) {
     final name = program.toLowerCase();
-    if (name.startsWith('firefox') || name == 'navigator' || _chromium.any(name.contains)) {
-      return FrontWindow.browser;
+    final words = _words(name);
+    if (_isFirefox(name, words) || _isChromium(words)) return FrontWindow.browser;
+    if (forProgram(name) != null || name.startsWith('foxit') || words.any(_otherPdfViewers.contains)) {
+      return FrontWindow.pdf;
     }
-    if (forProgram(name) != null || _otherPdfViewers.any(name.startsWith)) return FrontWindow.pdf;
     return null;
   }
 
-  /// The keys for [program]: an executable file name (Windows, "firefox.exe")
-  /// or a WM_CLASS name (Linux, "firefox", "google-chrome"). Null when F5
-  /// does the job or the program is unknown.
+  /// The keys for [program]: an executable file name (Windows, "firefox.exe"),
+  /// a WM_CLASS name (Linux X11, "firefox", "google-chrome") or a Wayland
+  /// app_id as KWin reports it ("org.mozilla.firefox", "org.kde.okular").
+  /// Null when F5 does the job or the program is unknown.
   static ViewerKeys? forProgram(String program) {
     final name = program.toLowerCase();
-    if (name.startsWith('firefox') || name == 'navigator') return firefox;
-    if (_chromium.any(name.contains)) return fullScreen;
+    final words = _words(name);
+    if (_isFirefox(name, words)) return firefox;
+    if (_isChromium(words)) return fullScreen;
     if (name.startsWith('acrobat') || name.startsWith('acrord')) return acrobat;
-    if (name.startsWith('okular')) return okular;
+    if (words.contains('okular')) return okular;
     if (name == 'pdf' || name.startsWith('wpspdf')) return wpsPdf;
     return null;
   }
