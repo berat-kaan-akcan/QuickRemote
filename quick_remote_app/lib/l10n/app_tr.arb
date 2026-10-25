@@ -23,6 +23,10 @@
     }
   },
   "screenPreviewLabel": "Bilgisayarın ekranı",
+  "screenPreviewShort": "PC ekranı",
+  "@screenPreviewShort": {
+    "description": "Title of the presenter view's top bar while it shows the PC's screen picture; short, it shares the bar with the laser key and the timer."
+  },
   "settingsLanguageTitle": "Dil",
   "languageSystem": "Sistem dili",
   "@languageSystem": {
@@ -203,6 +207,15 @@
       }
     }
   },
+  "viewerName": "{front, select, browser{Tarayıcı} other{PDF}}",
+  "@viewerName": {
+    "description": "The remote's header line under the PC's name while a PDF viewer (front = pdf) or a browser (front = browser) is in front and no show runs, in place of the program's name.",
+    "placeholders": {
+      "front": {
+        "type": "String"
+      }
+    }
+  },
   "blackScreen": "Siyah Ekran",
   "whiteScreen": "Beyaz Ekran",
   "actionPrev": "Önceki",
@@ -256,7 +269,7 @@
   "volumeMuted": "Sessiz",
   "volumeOn": "Sesli",
   "volumeMuteToggle": "Sesi kapat / aç",
-  "btUnsupportedLong": "Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.",
+  "btUnsupportedLong": "Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWi-Fi modunu kullanın.",
   "btPermissionTitle": "İzin gerekiyor",
   "btPermissionDenied": "Telefonun klavye ve fare olarak bağlanabilmesi için “Yakındaki cihazlar” izni gerekiyor.",
   "btConnectingTo": "{device} ile bağlantı kuruluyor...",
@@ -324,7 +337,7 @@
   "btOpeningRemote": "Uzaktan kontrol açılıyor...",
   "btUnsupported": "Desteklenmiyor",
   "btUnsupportedShort": "Bu cihaz Bluetooth HID'i desteklemiyor.",
-  "btUseWifi": "WiFi Modunu Kullan",
+  "btUseWifi": "Wi-Fi modunu kullan",
   "errorTitle": "Hata",
   "btErrorOccurred": "Bluetooth hatası oluştu.",
   "tryAgain": "Tekrar Dene",
@@ -340,7 +353,7 @@
   "btDisconnectContent": "Bluetooth bağlantısı kesilecek ve ana ekrana dönülecek.",
   "btModeTitle": "Bluetooth HID Modu",
   "systemMedia": "Sistem Medyası",
-  "btMediaLimits": "Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için WiFi modunu kullanın.",
+  "btMediaLimits": "Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için Wi-Fi modunu kullanın.",
   "btNoMediaInfo": "BT modunda medya bilgisi alınamaz",
   "mediaPlayPause": "Oynat / Duraklat",
   "toolCursor": "İmleç",

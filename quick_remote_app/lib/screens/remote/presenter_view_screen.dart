@@ -285,10 +285,17 @@ class _TopBar extends StatelessWidget {
             Expanded(
               child: Semantics(
                 header: true,
-                child: Text(
-                  context.l10n.screenPreviewLabel,
-                  style: AppType.title.copyWith(color: p.textPrimary, fontSize: 18),
-                  overflow: TextOverflow.ellipsis,
+                // A short title, shrunk to the room the laser key and the
+                // timer leave (about 70 dp on a phone): "Bilgisayarın
+                // ekranı" showed "Bilgisa…", and even "PC ekranı" was cut.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    context.l10n.screenPreviewShort,
+                    style: AppType.title.copyWith(color: p.textPrimary, fontSize: 18),
+                    maxLines: 1,
+                  ),
                 ),
               ),
             ),
