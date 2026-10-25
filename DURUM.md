@@ -285,7 +285,7 @@ APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kur
 - [x] İlk push'ta CI koşusu. (2026-10-21: Windows testleri geçti; telefon ve saat işleri Android SDK paket adı yüzünden düşüyordu, düzeltildi `a030f31`. Şimdi bütün işler yeşil.)
 - [x] Release akışını ilk etiketten önce bir kez elle çalıştır. (2026-10-21, `0.0.1-test`: iki düzeltmeden sonra yeşil. .deb kontrolü yanlış alarm veriyordu `c13ff49`; .deb EGL/GLES bağımlılığı olmadan temiz Debian/Ubuntu'da açılışta çöküyordu `60555de`, düzeltildi.)
 - [x] Gerçek Flutter derlemeleri, Inno Setup kurulumu, gerçek `dpkg-deb` ile .deb paketi. (CI'da derleniyor; .deb, Debian 12 ve Ubuntu 22.04'te kurulup açılıyor. AUR PKGBUILD'i bu makinede `makepkg` ile paket oluşturdu, kurulmadı.)
-- [ ] Windows kurulum dosyasını (Inno Setup) gerçek Windows'ta kur ve aç.
+- [x] Windows kurulum dosyasını (Inno Setup) gerçek Windows'ta kur ve aç. (2026-10-25, Windows 11 26300, Inno Setup 6.7.3, VC++ 14.50 DLL'leri: sessiz kurulum kullanıcı klasörüne, Başlat menüsü kısayolu ve kaldırma kaydı doğru, uygulama açılıp sunucuyu başlattı, eski sertifika ve ayarlarla; telefon 8090'a ulaştı. Açılışta başlatma seçeneği `--minimized` kaydını yazıyor, kaldırıcı onu ve uygulama klasörünü siliyor; ayarlar ve sertifika AppData\Roaming'de kalıyor.)
 - [ ] Pardus'ta bir sanal makinede .deb kurulumu (ilk release'ten önce bir kez).
 - [ ] AUR: hesap aç, `quickremote-pc-bin` paketini ilk kez yükle.
 - [ ] Play kararına bağlı: release akışındaki telefon ve saat APK'ları (PLAY, 1. bölüm).
