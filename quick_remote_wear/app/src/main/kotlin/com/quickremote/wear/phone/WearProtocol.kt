@@ -18,6 +18,9 @@ object WearProtocol {
 
     /** The computer's overlay draws the laser, so it works without a slideshow too. */
     const val KEY_LASER_ANYWHERE = "laserAnywhere"
+
+    /** A PDF viewer or browser is in front and no show runs: Start puts it in full screen. */
+    const val KEY_VIEWER = "viewer"
     const val KEY_CURRENT = "current"
     const val KEY_TOTAL = "total"
 

@@ -21,12 +21,14 @@
     <string name="show_slide" translatable="false">%1$d / %2$d</string>
     <string name="show_running">Slideshow on</string>
     <string name="show_stopped">No slideshow</string>
+    <string name="show_viewer">PDF in front</string>
     <!-- In place of the slide number while the phone is the computer's Bluetooth keyboard. -->
     <string name="show_bluetooth" translatable="false">Bluetooth</string>
 
     <string name="action_next">Next slide</string>
     <string name="action_prev">Previous slide</string>
     <string name="action_start">Start slideshow</string>
+    <string name="action_full_screen">Full screen</string>
     <string name="action_black_screen">Black screen</string>
     <string name="action_white_screen">White screen</string>
     <string name="action_end">End slideshow</string>

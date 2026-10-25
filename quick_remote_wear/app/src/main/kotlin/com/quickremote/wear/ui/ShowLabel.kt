@@ -30,7 +30,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun showText(show: Show?): String = when {
     show == null -> stringResource(R.string.show_bluetooth)
-    !show.running -> stringResource(R.string.show_stopped)
+    show.viewer -> stringResource(R.string.show_viewer)
+    !show.running ->stringResource(R.string.show_stopped)
     // A program driven with keys only (a WPS the user started) tells no slide.
     show.current > 0 && show.total > 0 -> stringResource(R.string.show_slide, show.current, show.total)
     else -> stringResource(R.string.show_running)
