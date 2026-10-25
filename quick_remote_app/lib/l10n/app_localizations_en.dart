@@ -63,6 +63,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get screenPreviewLabel => 'The PC\'s screen';
 
   @override
+  String get screenPreviewShort => 'PC screen';
+
+  @override
   String get settingsLanguageTitle => 'Language';
 
   @override
@@ -428,6 +431,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.selectLogic(front, {
       'browser': 'Browser in front · page turns and full screen only',
       'other': 'PDF open · page turns and full screen only',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String viewerName(String front) {
+    String _temp0 = intl.Intl.selectLogic(front, {
+      'browser': 'Browser',
+      'other': 'PDF',
     });
     return '$_temp0';
   }

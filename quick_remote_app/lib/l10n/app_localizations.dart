@@ -194,6 +194,12 @@ abstract class AppLocalizations {
   /// **'Bilgisayarın ekranı'**
   String get screenPreviewLabel;
 
+  /// Title of the presenter view's top bar while it shows the PC's screen picture; short, it shares the bar with the laser key and the timer.
+  ///
+  /// In tr, this message translates to:
+  /// **'PC ekranı'**
+  String get screenPreviewShort;
+
   /// No description provided for @settingsLanguageTitle.
   ///
   /// In tr, this message translates to:
@@ -836,6 +842,12 @@ abstract class AppLocalizations {
   /// **'{front, select, browser{Tarayıcı önde · yalnız sayfa geçişi ve tam ekran} other{PDF açık · yalnız sayfa geçişi ve tam ekran}}'**
   String viewerInFront(String front);
 
+  /// The remote's header line under the PC's name while a PDF viewer (front = pdf) or a browser (front = browser) is in front and no show runs, in place of the program's name.
+  ///
+  /// In tr, this message translates to:
+  /// **'{front, select, browser{Tarayıcı} other{PDF}}'**
+  String viewerName(String front);
+
   /// No description provided for @blackScreen.
   ///
   /// In tr, this message translates to:
@@ -1073,7 +1085,7 @@ abstract class AppLocalizations {
   /// No description provided for @btUnsupportedLong.
   ///
   /// In tr, this message translates to:
-  /// **'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.'**
+  /// **'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWi-Fi modunu kullanın.'**
   String get btUnsupportedLong;
 
   /// No description provided for @btPermissionTitle.
@@ -1355,7 +1367,7 @@ abstract class AppLocalizations {
   /// No description provided for @btUseWifi.
   ///
   /// In tr, this message translates to:
-  /// **'WiFi Modunu Kullan'**
+  /// **'Wi-Fi modunu kullan'**
   String get btUseWifi;
 
   /// No description provided for @errorTitle.
@@ -1409,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @btMediaLimits.
   ///
   /// In tr, this message translates to:
-  /// **'Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için WiFi modunu kullanın.'**
+  /// **'Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için Wi-Fi modunu kullanın.'**
   String get btMediaLimits;
 
   /// No description provided for @btNoMediaInfo.

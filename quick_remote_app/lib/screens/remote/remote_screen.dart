@@ -263,13 +263,17 @@ class _RemoteScreenState extends State<RemoteScreen> {
   PreferredSizeWidget _buildAppBar(WebSocketService ws, String program) {
     final connecting = ws.connectionState == AppConnectionState.reconnecting ||
         ws.connectionState == AppConnectionState.connecting;
+    final show = ShowInfo.of(ws);
     return AppBar(
       automaticallyImplyLeading: false,
       toolbarHeight: 64,
       titleSpacing: AppSpace.md,
       title: RemoteHeader(
         title: ws.pcLabel,
-        subtitle: Text(PresentationState.shortNameOf(program)),
+        // A PDF viewer or a browser in front: that, not the PC's program.
+        subtitle: Text(
+          show.viewer ? context.l10n.viewerName(show.front!) : PresentationState.shortNameOf(program),
+        ),
         onSubtitleTap: () => ProgramSheet.show(context),
         isConnected: ws.isConnected,
         isConnecting: connecting,
