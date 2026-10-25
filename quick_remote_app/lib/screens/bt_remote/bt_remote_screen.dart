@@ -7,7 +7,10 @@ import 'package:quick_remote_shared/quick_remote_shared.dart';
 import '../../services/background_session.dart';
 import '../../services/bluetooth/bt_hid_service.dart';
 import '../../services/bluetooth/bt_key_mapping.dart';
+import '../../services/presentation_timer_controller.dart';
+import '../../services/wear/wear_bridge.dart';
 import '../../providers/settings_provider.dart';
+import '../../widgets/presentation_timer.dart';
 import '../../utils/ui/app_dialog.dart';
 import '../../utils/ui/app_snackbar.dart';
 import '../remote/widgets/remote_chrome.dart';
@@ -48,14 +51,23 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
   /// The computer's name, kept while the link is down.
   String? _pcName;
 
+  /// The talk's clock, shared by the tabs that show it. Start and End run it
+  /// (a keyboard is told nothing), and the watch shows the same one.
+  final PresentationTimerController _timer = PresentationTimerController();
+  WearBridge? _wear;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
     BackgroundSession.acquire();
+    bindTimerToSettings(context, _timer);
     _sub = _bt.stateStream.listen(_onBtState);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _askProgram());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _wear = context.read<WearBridge>()..attachTimer(_timer);
+      _askProgram();
+    });
   }
 
   /// Asks which program the computer runs once the screen has slid in: the
@@ -79,6 +91,8 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
+    _wear?.detachTimer();
+    _timer.dispose();
     WakelockPlus.disable();
     BackgroundSession.release();
     super.dispose();
@@ -145,6 +159,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
 
     final target = context.read<SettingsProvider>().btTarget;
     final action = BtKeyMapping.forCommand(command, target: target);
+    _wear?.bluetoothKey(command);
     if (action != null) {
       await action.execute(_bt);
     }
@@ -165,6 +180,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
         send: _send,
         isConnected: isConnected,
         target: target,
+        timer: _timer,
       );
     } else if (_currentTab == 2) {
       body = BtMediaView(send: _send, isConnected: isConnected);
@@ -174,6 +190,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
         isConnected: isConnected,
         activeScreen: _activeScreen,
         pcName: pc,
+        timer: _timer,
       );
     }
 

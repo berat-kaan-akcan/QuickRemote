@@ -229,6 +229,14 @@ class WearBridge {
     _send(command);
   }
 
+  /// A key of the Bluetooth remote itself. A keyboard is told nothing, so its
+  /// START and END run the talk's clock, as the watch's do.
+  void bluetoothKey(String command) {
+    if (!_overBluetooth) return;
+    if (command == RemoteCommands.start) _startOwnClock();
+    if (command == RemoteCommands.end) _stopOwnClock();
+  }
+
   /// Over Wi-Fi the command itself; over Bluetooth the picked program's
   /// shortcut for it, as the Bluetooth remote's own buttons send it.
   void _send(String command) {

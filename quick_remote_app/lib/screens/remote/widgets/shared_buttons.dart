@@ -271,11 +271,15 @@ class ScreenKey extends StatelessWidget {
 /// Start and End side by side, for the Bluetooth remote: a keyboard gets no
 /// answer, so it cannot tell whether a show runs.
 class StartEndPair extends StatelessWidget {
-  const StartEndPair({super.key, this.onStart, this.onEnd, this.height = 52});
+  const StartEndPair({super.key, this.onStart, this.onEnd, this.height = 52, this.iconsOnly = false});
 
   final VoidCallback? onStart;
   final VoidCallback? onEnd;
   final double height;
+
+  /// Only the play and stop icons (the names stay for screen readers): beside
+  /// the timer there is no room for "Başlat" (it showed "Başl…").
+  final bool iconsOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -286,6 +290,7 @@ class StartEndPair extends StatelessWidget {
         child: Pressable(
           onTap: onTap,
           semanticLabel: label,
+          tooltip: iconsOnly ? label : null,
           pressedScale: 0.97,
           borderRadius: radius,
           child: Container(
@@ -299,16 +304,18 @@ class StartEndPair extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: color, size: 24),
-                  const SizedBox(width: AppSpace.xs),
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppType.title.copyWith(color: color, fontSize: 15, fontWeight: FontWeight.w700),
+                  Icon(icon, color: color, size: iconsOnly ? 28 : 24),
+                  if (!iconsOnly) ...[
+                    const SizedBox(width: AppSpace.xs),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppType.title.copyWith(color: color, fontSize: 15, fontWeight: FontWeight.w700),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

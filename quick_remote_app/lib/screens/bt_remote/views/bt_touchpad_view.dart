@@ -5,6 +5,8 @@ import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 import '../../../services/bluetooth/bt_hid_service.dart';
 import '../../../services/bluetooth/bt_key_mapping.dart';
+import '../../../services/presentation_timer_controller.dart';
+import '../../../widgets/presentation_timer.dart';
 import '../../remote/widgets/shared_buttons.dart';
 import '../../remote/widgets/draw_tool_bar.dart';
 import '../../remote/widgets/touchpad_surface.dart';
@@ -26,6 +28,7 @@ class BtTouchpadView extends StatefulWidget {
   final Future<void> Function(String) send;
   final bool isConnected;
   final BtTarget target;
+  final PresentationTimerController timer;
 
   const BtTouchpadView({
     super.key,
@@ -33,6 +36,7 @@ class BtTouchpadView extends StatefulWidget {
     required this.send,
     required this.isConnected,
     required this.target,
+    required this.timer,
   });
 
   @override
@@ -103,10 +107,19 @@ class _BtTouchpadViewState extends State<BtTouchpadView> with SingleTickerProvid
         padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.xxs, AppSpace.page, AppSpace.sm),
         child: Column(
           children: [
-            StartEndPair(
-              height: 46,
-              onStart: !connected ? null : () => widget.send(RemoteCommands.start),
-              onEnd: !connected ? null : () => widget.send(RemoteCommands.end),
+            Row(
+              children: [
+                Expanded(
+                  child: StartEndPair(
+                    height: 46,
+                    iconsOnly: true,
+                    onStart: !connected ? null : () => widget.send(RemoteCommands.start),
+                    onEnd: !connected ? null : () => widget.send(RemoteCommands.end),
+                  ),
+                ),
+                const SizedBox(width: AppSpace.sm),
+                PresentationTimer(controller: widget.timer, tall: true),
+              ],
             ),
             const SizedBox(height: AppSpace.sm),
             Expanded(
