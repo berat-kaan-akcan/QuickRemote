@@ -38,6 +38,9 @@ object WearRelay {
 
     /** The PC's overlay draws the laser, so it works without a slideshow too. */
     const val KEY_LASER_ANYWHERE = "laserAnywhere"
+
+    /** A PDF viewer or browser is in front and no show runs: Start puts it in full screen. */
+    const val KEY_VIEWER = "viewer"
     const val KEY_CURRENT = "current"
     const val KEY_TOTAL = "total"
 
@@ -99,6 +102,7 @@ object WearRelay {
                         pc = call.argument<String>(KEY_PC) ?: "",
                         running = call.argument<Boolean>(KEY_RUNNING) ?: false,
                         laserAnywhere = call.argument<Boolean>(KEY_LASER_ANYWHERE) ?: false,
+                        viewer = call.argument<Boolean>(KEY_VIEWER) ?: false,
                         current = call.argument<Int>(KEY_CURRENT) ?: 0,
                         total = call.argument<Int>(KEY_TOTAL) ?: 0,
                         pointer = call.argument<String>(KEY_POINTER) ?: POINTER_LASER,
@@ -196,7 +200,7 @@ object WearRelay {
         main.post { channel?.invokeMethod("move", listOf(dx, dy)) }
     }
 
-    private fun putClosed(context: Context) = putState(context, LINK_CLOSED, MODE_WIFI, "", false, false, 0, 0, POINTER_LASER, null, Clock())
+    private fun putClosed(context: Context) = putState(context, LINK_CLOSED, MODE_WIFI, "", false, false, false, 0, 0, POINTER_LASER, null, Clock())
 
     private fun putState(
         context: Context,
@@ -205,6 +209,7 @@ object WearRelay {
         pc: String,
         running: Boolean,
         laserAnywhere: Boolean,
+        viewer: Boolean,
         current: Int,
         total: Int,
         pointer: String,
@@ -217,6 +222,7 @@ object WearRelay {
             dataMap.putString(KEY_PC, pc)
             dataMap.putBoolean(KEY_RUNNING, running)
             dataMap.putBoolean(KEY_LASER_ANYWHERE, laserAnywhere)
+            dataMap.putBoolean(KEY_VIEWER, viewer)
             dataMap.putInt(KEY_CURRENT, current)
             dataMap.putInt(KEY_TOTAL, total)
             dataMap.putString(KEY_POINTER, pointer)

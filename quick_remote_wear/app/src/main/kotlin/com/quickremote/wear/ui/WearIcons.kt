@@ -56,6 +56,12 @@ object WearIcons {
             "l0.75,-5.27c0.01,-0.07 0.02,-0.14 0.02,-0.2 0,-0.62 -0.38,-1.16 -0.91,-1.38z",
     )
 
+    /** Material's "fullscreen": Start while a PDF viewer or browser is in front. */
+    val Fullscreen: ImageVector = icon(
+        "Fullscreen",
+        "M7,14H5v5h5v-2H7v-3zM5,10h2V7h3V5H5v5zM17,17h-3v2h5v-5h-2v3zM14,5v2h3v3h2V5h-5z",
+    )
+
     /** A bold, rounded chevron: the slide buttons' arrows. */
     val ChevronLeft: ImageVector = chevron("ChevronLeft", 15f, 8f)
     val ChevronRight: ImageVector = chevron("ChevronRight", 9f, 16f)

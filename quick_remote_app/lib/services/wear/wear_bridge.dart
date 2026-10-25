@@ -346,6 +346,8 @@ class WearBridge {
       'running': wifi && _ws.isPptRunning,
       // The PC's overlay draws the laser outside a show too.
       'laserAnywhere': wifi && _ws.toolsAnywhere,
+      // A PDF viewer or browser in front with no show: Start is full screen.
+      'viewer': wifi && !_ws.isPptRunning && FrontWindow.isViewer(_ws.frontWindow),
       'current': wifi ? _ws.currentSlide : 0,
       'total': wifi ? _ws.totalSlides : 0,
       'pointer': _pointer(wifi: wifi),

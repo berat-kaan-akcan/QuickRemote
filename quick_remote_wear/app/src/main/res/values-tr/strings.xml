@@ -16,10 +16,12 @@
 
     <string name="show_running">Gösteri açık</string>
     <string name="show_stopped">Gösteri kapalı</string>
+    <string name="show_viewer">PDF önde</string>
 
     <string name="action_next">Sonraki slayt</string>
     <string name="action_prev">Önceki slayt</string>
     <string name="action_start">Gösteriyi başlat</string>
+    <string name="action_full_screen">Tam ekran</string>
     <string name="action_black_screen">Siyah ekran</string>
     <string name="action_white_screen">Beyaz ekran</string>
     <string name="action_end">Gösteriyi bitir</string>
