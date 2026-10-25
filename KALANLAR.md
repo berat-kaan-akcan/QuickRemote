@@ -173,7 +173,7 @@ APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kur
 
 ### Bluetooth denemesi (WIN-BT, ACIK 2)
 - [ ] `quick_remote_pc/tool/windows_bt_hid_trial.ps1`, adım adım WINDOWS-DENEME.md'de. (2026-10-22: betik `-ListOnly` ile hatasız derlendi ve eşleşmiş Galaxy S23 FE, Watch6 ve kulaklığı listeledi; asıl deneme telefon gerektiriyor.)
-  - 2026-10-25, Windows 11 26300: betik hatasız çalıştı (yönetici gerekmedi), ama hizmeti açmak telefonu klavye yapmadı: Windows bağlantıyı reddetmeye devam etti, HID aygıtı hayalet kaldı. Sonuçlar WINDOWS-DENEME.md tablosunda. Kaldı: kaldırıp yeniden eşleştirme denemesi (kullanıcının iki cihazda kod onaylaması gerekir); olumluysa "yeniden eşleştir" yolu kalır.
+  - 2026-10-25, Windows 11 26300: betik hatasız çalıştı (yönetici gerekmedi), ama hizmeti açmak telefonu klavye yapmadı: Windows bağlantıyı reddetmeye devam etti, HID aygıtı hayalet kaldı. Sonuçlar WINDOWS-DENEME.md tablosunda. Kaldırıp yeniden eşleştirme ise çalıştı (telefon klavye olarak bağlandı): uygulamanın Windows talimatı doğru. Kalıcı çözüm için seçenekler: PC uygulamasında tek tuşla onarım, hayalet HID aygıtını silmek, BLE klavye (HID over GATT).
   - Sonuca göre ya asıl BtHidRepair kodu ya da "Telefonu yeniden eşleştir" tuşu yazılacak.
 
 ---
