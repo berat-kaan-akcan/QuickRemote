@@ -88,18 +88,18 @@ Başka seçenekler:
 
 | Soru | Sonuç |
 |---|---|
-| Windows sürümü ve derlemesi (betik yazar) | |
-| Bluetooth adaptörü (betik yazar) | |
-| ÖNCE: HID hizmeti kurulu mu? | |
-| ÖNCE: önbellekteki HID kaydı / telefondan taze okunan | |
-| DISABLE sonucu, normal PowerShell | |
-| ENABLE sonucu, normal PowerShell | |
-| DISABLE / ENABLE sonucu, yönetici PowerShell (gerekirse) | |
-| SONRA: HID hizmeti kurulu mu? Aygıt Yöneticisi'nde HID kaydı çıktı mı? | |
-| SONRA: önbellekteki HID kaydı | |
-| **Telefon klavye olarak çalıştı mı?** | |
+| Windows sürümü ve derlemesi (betik yazar) | Windows 11 Home 10.0.26300 (2026-10-25) |
+| Bluetooth adaptörü (betik yazar) | Intel(R) Wireless Bluetooth(R) |
+| ÖNCE: HID hizmeti kurulu mu? | Hayır; Aygıt Yöneticisi'nde "Bluetooth HID Aygıtı" var ama durumu Unknown (`CM_PROB_PHANTOM`) |
+| ÖNCE: önbellekteki HID kaydı / telefondan taze okunan | 1 (QuickRemote) / 1 (telefonda Bluetooth ekranı açıkken) |
+| DISABLE sonucu, normal PowerShell | `ERROR_NOT_FOUND` (hizmet kurulu olmadığı için) |
+| ENABLE sonucu, normal PowerShell | tamam (erişim hatası yok) |
+| DISABLE / ENABLE sonucu, yönetici PowerShell (gerekirse) | Gerekmedi (erişim reddi yok) |
+| SONRA: HID hizmeti kurulu mu? Aygıt Yöneticisi'nde HID kaydı çıktı mı? | Betik hemen sonra "kurulu" okudu, ama ikinci çalıştırmada "önce: kurulu değil" çıktı: kalıcı olmadı. HID aygıtı hayalet kaldı |
+| SONRA: önbellekteki HID kaydı | 1 |
+| **Telefon klavye olarak çalıştı mı?** | **Hayır.** İki denemede de telefonun günlüğünde "DESKTOP-BRP8AUC refused the HID link" (bağlantı ~1 s sonra düşüyor); uygulama "Bilgisayar telefonu klavye olarak kabul etmiyor" ekranını gösteriyor |
 | Aynı deneme Windows 10'da (yapılabildiyse) | |
-| Notlar | |
+| Notlar | Galaxy S23 FE, QuickRemote 1000012. Önbellekte QuickRemote kaydı zaten olduğu hâlde Windows reddediyor; sorun eksik kayıt değil, kurulmayan HID sürücüsü. Çıktılar masaüstünde `quickremote-bt-deneme-20261025-143456.txt` ve `-143616.txt`. Sıradaki adım: telefonu kaldırıp yeniden eşleştirince çalışıyor mu (kullanıcı onayı ve iki cihazda kod gerekir) |
 
 Değerlendirme:
 
