@@ -99,7 +99,7 @@ Başka seçenekler:
 | SONRA: önbellekteki HID kaydı | 1 |
 | **Telefon klavye olarak çalıştı mı?** | **Hayır.** İki denemede de telefonun günlüğünde "DESKTOP-BRP8AUC refused the HID link" (bağlantı ~1 s sonra düşüyor); uygulama "Bilgisayar telefonu klavye olarak kabul etmiyor" ekranını gösteriyor |
 | Aynı deneme Windows 10'da (yapılabildiyse) | |
-| Notlar | Galaxy S23 FE, QuickRemote 1000012. Önbellekte QuickRemote kaydı zaten olduğu hâlde Windows reddediyor; sorun eksik kayıt değil, kurulmayan HID sürücüsü. Çıktılar masaüstünde `quickremote-bt-deneme-20261025-143456.txt` ve `-143616.txt`. Sıradaki adım: telefonu kaldırıp yeniden eşleştirince çalışıyor mu (kullanıcı onayı ve iki cihazda kod gerekir) |
+| Notlar | Galaxy S23 FE, QuickRemote 1000012. Önbellekte QuickRemote kaydı zaten olduğu hâlde Windows reddediyor; sorun eksik kayıt değil, kurulmayan HID sürücüsü. Çıktılar masaüstünde `quickremote-bt-deneme-20261025-143456.txt` ve `-143616.txt`. Kaldırıp yeniden eşleştirme (aynı gün): telefonu Windows'tan kaldırıp QuickRemote'un Bluetooth ekranı açıkken Ayarlar → Cihaz ekle ile eşleştirince HID aygıtı "OK" oldu ve telefon klavye olarak bağlandı ("HID connected to DESKTOP-BRP8AUC"). Programla eşleştirme (`BluetoothAuthenticateDeviceEx`) 1244 verdi ve iki cihazın onayı aynı süreye denk gelmedi; elle eşleştirme tek seferde çalıştı |
 
 Değerlendirme:
 
