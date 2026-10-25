@@ -36,6 +36,17 @@ void main() {
     expect(await keyReport('MODE_ERASER', BtTarget.powerpoint), (ctrl, BtKeyMapping.keyE));
   });
 
+  test('PowerPoint\'s arrow hides by itself: Ctrl+A, then Ctrl+U once', () async {
+    await BtKeyMapping.forCommand('MODE_ARROW', target: BtTarget.powerpoint)!.execute(BtHidService.instance);
+    expect(
+      [for (final call in calls) ((call.arguments as Map)['modifier'], ((call.arguments as Map)['keyCodes'] as List).single)],
+      [(ctrl, BtKeyMapping.keyA), (ctrl, BtKeyMapping.keyU)],
+    );
+    // LASER_OFF comes with a MODE_ARROW: a second Ctrl+U would hide the arrow.
+    calls.clear();
+    expect(await keyReport('LASER_OFF', BtTarget.powerpoint), (ctrl, BtKeyMapping.keyA));
+  });
+
   test('Impress uses the shortcuts it supports', () async {
     expect(await keyReport('MODE_PEN', BtTarget.impress), (ctrl, BtKeyMapping.keyP));
     calls.clear();

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
+import '../../../services/presentation_timer_controller.dart';
+import '../../../widgets/presentation_timer.dart';
 import '../../remote/widgets/shared_buttons.dart';
 import '../../../l10n/app_language.dart';
 import '../../../widgets/ui/ui.dart';
 
 /// The Bluetooth remote's controls: the Wi-Fi layout without what a keyboard
-/// cannot know (slide number, timer, go to slide), and Start and End apart.
+/// cannot know (slide number, go to slide), and Start and End apart. The
+/// talk's clock runs from Start to End, as on the watch.
 class BtMainControlsView extends StatelessWidget {
   final Future<void> Function(String) send;
   final bool isConnected;
@@ -14,6 +17,7 @@ class BtMainControlsView extends StatelessWidget {
 
   /// The computer the phone is the keyboard of.
   final String pcName;
+  final PresentationTimerController timer;
 
   const BtMainControlsView({
     super.key,
@@ -21,6 +25,7 @@ class BtMainControlsView extends StatelessWidget {
     required this.isConnected,
     required this.activeScreen,
     required this.pcName,
+    required this.timer,
   });
 
   @override
@@ -45,6 +50,7 @@ class BtMainControlsView extends StatelessWidget {
                       pcName: pcName,
                       activeScreen: activeScreen,
                       send: send,
+                      timer: timer,
                     ),
                   ),
                   const SizedBox(height: AppSpace.sm),
@@ -103,20 +109,23 @@ class BtMainControlsView extends StatelessWidget {
   }
 }
 
-/// "Bluetooth HID mode": whose keyboard the phone is, and the black and
-/// white screen keys. Amber, without the keys, while the link is down.
+/// "Bluetooth HID mode": whose keyboard the phone is, the black and white
+/// screen keys and the talk's clock. Amber, without the keys, while the link
+/// is down.
 class _ModeCard extends StatelessWidget {
   const _ModeCard({
     required this.isConnected,
     required this.pcName,
     required this.activeScreen,
     required this.send,
+    required this.timer,
   });
 
   final bool isConnected;
   final String pcName;
   final String? activeScreen;
   final Future<void> Function(String) send;
+  final PresentationTimerController timer;
 
   @override
   Widget build(BuildContext context) {
@@ -188,16 +197,10 @@ class _ModeCard extends StatelessWidget {
                   active: activeScreen == 'WHITE',
                   onTap: () => send(RemoteCommands.whiteScreen),
                 ),
-                const SizedBox(width: AppSpace.xs),
-                Flexible(
-                  child: Text(
-                    context.l10n.btScreenKeys,
-                    style: AppType.bodySmall.copyWith(
-                      color: p.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+                // The keys carry their names for screen readers, as on the
+                // Wi-Fi remote's slide card; the timer took their caption's place.
+                const Spacer(),
+                PresentationTimer(controller: timer),
               ],
             ),
           ],

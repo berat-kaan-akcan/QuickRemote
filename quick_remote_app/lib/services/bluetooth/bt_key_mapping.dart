@@ -29,6 +29,7 @@ abstract class BtKeyMapping {
   static const int keyL          = 0x0F;
   static const int keyP          = 0x13;
   static const int keyR          = 0x15;
+  static const int keyU          = 0x18;
   static const int keyW          = 0x1A;
   static const int keyF5         = 0x3E;
   static const int keyEscape     = 0x29;
@@ -59,12 +60,27 @@ abstract class BtKeyMapping {
   /// if the command is not supported in BT HID mode.
   static BtAction? forCommand(String command, {BtTarget target = BtTarget.powerpoint}) {
     final overrides = switch (target) {
-      BtTarget.powerpoint => const <String, BtAction>{},
+      BtTarget.powerpoint => _powerpointOverrides,
       BtTarget.impress => _impressOverrides,
       BtTarget.wps => _wpsOverrides,
     };
     return overrides[command] ?? _map[command];
   }
+
+  /// PowerPoint's Ctrl+A leaves the arrow always shown, and with it the
+  /// show's toolbar in the corner after the laser or the pen. Ctrl+U right
+  /// after makes it the arrow that hides by itself (PointerType 4, what the
+  /// Wi-Fi PC sets through COM). Ctrl+U alone toggles between that and a
+  /// hidden arrow, so it always follows Ctrl+A, and only MODE_ARROW sends it:
+  /// LASER_OFF comes with a MODE_ARROW (the touchpad, the watch), and a second
+  /// Ctrl+U would hide the arrow again. Verified on PowerPoint 365,
+  /// Windows 11 (2026-10-25).
+  static final Map<String, BtAction> _powerpointOverrides = {
+    RemoteCommands.modeArrow: _SequenceAction([
+      _KeyAction(modLCtrl, [keyA]),
+      _KeyAction(modLCtrl, [keyU]),
+    ]),
+  };
 
   /// LibreOffice Impress slideshow shortcuts, verified against Impress 26.8:
   /// Ctrl+P toggles the pen, Ctrl+A turns it off, E erases all ink, and

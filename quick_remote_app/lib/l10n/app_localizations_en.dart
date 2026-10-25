@@ -1147,9 +1147,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get btScreenKeys => 'Black · White screen';
-
-  @override
   String get btPreparingBody =>
       'The phone is registering as a keyboard and mouse.';
 

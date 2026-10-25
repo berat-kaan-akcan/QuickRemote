@@ -326,7 +326,6 @@
   "volumeUp": "Volume up",
   "mediaStop": "Stop",
   "btModeSubtitle": "The phone is {device}'s keyboard and mouse",
-  "btScreenKeys": "Black · White screen",
   "btPreparingBody": "The phone is registering as a keyboard and mouse.",
   "btConnectingBody": "The remote opens by itself once connected.",
   "btRetryingBody": "If {device} is on with Bluetooth on, it connects within a few seconds.",
