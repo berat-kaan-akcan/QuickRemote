@@ -169,7 +169,7 @@ APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur. Bir kez telefona kur
 - [x] Ekran görüntüsü: PowerPoint ve WPS gösterisinde, Edge/Chrome'da tam ekran PDF'te. `PrintWindow` siyah mı dönüyor? (2026-10-22: siyah değil; Chrome tam ekranda kaplama mürekkebi de resimde. Edge, kullanıcı profilinde PDF yerine eklenti sayfaları açtığı için Edge'de PDF denenmedi.)
 - [ ] Tepsi (sol tık pencere, sağ tık menü), tek örnek (ikinci kopyanın ilkini öne getirmesi), `--minimized`, kayıt defterine (HKCU Run) yazma. (2026-10-22: tek örnek, gizli pencereyi öne getirme, `--minimized` ve "Oturum açılınca başlat"ın HKCU Run'a yazıp silmesi çalışıyor. Tepsi simgesine tıklama denenmedi.)
 - [ ] Günlüğü dışa aktarma ve "Sorun bildir". (2026-10-22: dışa aktarma kaydetme penceresini açıyor, dosyada PIN, kullanıcı adı, dosya adı yok. "Sorun bildir" düzeltildi, tarayıcıda açıldığı görülmedi.)
-- [ ] Küçük arayüz bulguları (2026-10-22, 440 px pencere): Ayarlar'da Lazer seçeneği "QuickRem…" diye kesiliyor; Ayarlar'ın "Kapat" düğmesi en altta durduğunda "Kapatınca tepsiye küçült" anahtarının üstüne biniyor.
+- [x] Küçük arayüz bulguları (2026-10-22, 440 px pencere): Ayarlar'da Lazer seçeneği "QuickRem…" diye kesiliyor; Ayarlar'ın "Kapat" düğmesi en altta durduğunda "Kapatınca tepsiye küçült" anahtarının üstüne biniyor. (2026-10-25: ikisi de artık yok; 440×760'ta gerçek fontlarla en üstte ve en altta çizilip bakıldı. Lazer bölümü 23 Ekim'de yeniden yazılmıştı, Kapat ayrı satırda.)
 
 ### Bluetooth denemesi (WIN-BT, ACIK 2)
 - [ ] `quick_remote_pc/tool/windows_bt_hid_trial.ps1`, adım adım WINDOWS-DENEME.md'de. (2026-10-22: betik `-ListOnly` ile hatasız derlendi ve eşleşmiş Galaxy S23 FE, Watch6 ve kulaklığı listeledi; asıl deneme telefon gerektiriyor.)
