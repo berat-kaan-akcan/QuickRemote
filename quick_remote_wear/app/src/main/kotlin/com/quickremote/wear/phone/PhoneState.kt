@@ -3,9 +3,16 @@ package com.quickremote.wear.phone
 /**
  * The slideshow on the computer. [current] is 0 while the program does not
  * tell the slide. [laserAnywhere]: the computer draws the laser itself, so
- * it works without a show too.
+ * it works without a show too. [viewer]: a PDF viewer or browser is in front
+ * and no show runs, so Start puts it in full screen.
  */
-data class Show(val running: Boolean, val current: Int, val total: Int, val laserAnywhere: Boolean = false)
+data class Show(
+    val running: Boolean,
+    val current: Int,
+    val total: Int,
+    val laserAnywhere: Boolean = false,
+    val viewer: Boolean = false,
+)
 
 /** What the watch's laser is on the computer ([WearProtocol.KEY_POINTER]). */
 enum class Pointer {

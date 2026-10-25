@@ -47,7 +47,8 @@ import kotlin.math.min
  * While no show runs there is one thing to do: one large Start. Starting
  * turns to the slide buttons; they and the tools are a swipe away for what
  * runs without a slideshow (a PDF in full screen). Start is green in
- * every theme, as on the phone.
+ * every theme, as on the phone; with a PDF viewer or browser in front
+ * ([Show.viewer]) it is "Full screen", which START is there.
  *
  * Under it the talk's length ([duration], seconds, 0: none), which a tap
  * opens to pick by the minute ([onEditDuration], [DurationScreen]); the
@@ -81,15 +82,18 @@ fun StartPage(show: Show?, onPress: (RemoteAction) -> Unit, duration: Int?, onEd
                 )
                 drawCircle(palette.border, 23.5f * unit, at, style = Stroke(1.dp.toPx()))
             }
+            // A PDF viewer or browser in front: Start is its full screen, as on the phone.
+            val viewer = show?.viewer == true
+            val startLabel = stringResource(if (viewer) R.string.action_full_screen else R.string.action_start)
             RoundButton(
                 onClick = { onPress(RemoteAction.START) },
                 fill = StartFill,
                 diameter = diameter,
-                label = stringResource(R.string.action_start),
+                label = startLabel,
                 modifier = Modifier.align(Alignment.TopCenter).offset(y = screen * 0.53f - diameter / 2),
             ) {
                 Icon(
-                    Icons.Rounded.PlayArrow,
+                    if (viewer) WearIcons.Fullscreen else Icons.Rounded.PlayArrow,
                     contentDescription = null,
                     tint = WearColors.onSuccess,
                     modifier = Modifier.size(diameter * 0.55f),
@@ -101,7 +105,7 @@ fun StartPage(show: Show?, onPress: (RemoteAction) -> Unit, duration: Int?, onEd
             ) {
                 if (duration == null) {
                     Text(
-                        stringResource(R.string.action_start),
+                        startLabel,
                         fontSize = with(LocalDensity.current) { (screen * 0.058f).toSp() },
                         fontWeight = FontWeight.SemiBold,
                         color = palette.text,

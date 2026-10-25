@@ -18,6 +18,7 @@ class FakeConnection extends WebSocketService {
   String address = '';
   bool running = false;
   bool overlay = false;
+  String? front;
   int current = 0;
   int total = 0;
   Failure? error;
@@ -42,6 +43,8 @@ class FakeConnection extends WebSocketService {
   bool get isPptRunning => running;
   @override
   bool get toolsAnywhere => overlay;
+  @override
+  String? get frontWindow => front;
   @override
   int get currentSlide => current;
   @override
@@ -191,7 +194,7 @@ void main() {
 
     await fromWatch('hello');
     expect(states(), [
-      {'link': 'connected', 'mode': 'wifi', 'pc': '192.168.1.20', 'running': false, 'laserAnywhere': false, 'current': 0, 'total': 0, 'pointer': 'laser', ...noClock},
+      {'link': 'connected', 'mode': 'wifi', 'pc': '192.168.1.20', 'running': false, 'laserAnywhere': false, 'viewer': false, 'current': 0, 'total': 0, 'pointer': 'laser', ...noClock},
     ]);
   });
 
@@ -231,6 +234,7 @@ void main() {
       'pc': '192.168.1.20',
       'running': true,
       'laserAnywhere': false,
+      'viewer': false,
       'current': 5,
       'total': 20,
       'pointer': 'laser',
@@ -250,6 +254,26 @@ void main() {
       ..overlay = true
       ..change();
     expect(states().last['laserAnywhere'], isTrue);
+  });
+
+  test('a PDF viewer or browser in front without a show makes Start full screen on the watch', () async {
+    await fromWatch('hello');
+    ws
+      ..connect192()
+      ..front = FrontWindow.browser
+      ..change();
+    expect(states().last['viewer'], isTrue);
+
+    // A show in front of it, or another window: Start is Start again.
+    ws
+      ..running = true
+      ..change();
+    expect(states().last['viewer'], isFalse);
+    ws
+      ..running = false
+      ..front = FrontWindow.editor
+      ..change();
+    expect(states().last['viewer'], isFalse);
   });
 
   group('the color theme', () {
@@ -407,6 +431,7 @@ void main() {
         'pc': 'berat-cachyos',
         'running': false,
         'laserAnywhere': false,
+        'viewer': false,
         'current': 0,
         'total': 0,
         'pointer': 'laser',

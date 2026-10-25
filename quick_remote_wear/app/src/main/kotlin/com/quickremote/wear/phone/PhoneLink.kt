@@ -197,6 +197,7 @@ class PhoneLink(context: Context) :
                     current = map.getInt(WearProtocol.KEY_CURRENT, 0),
                     total = map.getInt(WearProtocol.KEY_TOTAL, 0),
                     laserAnywhere = map.getBoolean(WearProtocol.KEY_LASER_ANYWHERE, false),
+                    viewer = map.getBoolean(WearProtocol.KEY_VIEWER, false),
                 )
             },
             pointer = Pointer.of(map.getString(WearProtocol.KEY_POINTER)),

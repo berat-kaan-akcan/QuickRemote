@@ -108,6 +108,10 @@ fun ConnectedScreen(
         startedAt = null
     }
 
+    // With a PDF viewer or browser in front Start puts it in full screen,
+    // no show comes: the slide buttons, a page on, turn its pages.
+    var toRemote by remember { mutableStateOf(0) }
+
     // Start is a page only while no show runs; the pages are made anew when
     // that changes. A show that starts keeps the page (Start becomes the
     // slide buttons), one that ends goes back to Start.
@@ -136,6 +140,11 @@ fun ConnectedScreen(
             LaunchedEffect(pagerState) {
                 snapshotFlow { pagerState.currentPage }.collect { onPageChange(pages[it]) }
             }
+            LaunchedEffect(pagerState, toRemote) {
+                if (toRemote == 0) return@LaunchedEffect
+                pagerState.animateScrollToPage(pages.indexOf(Page.REMOTE))
+                toRemote = 0
+            }
             HorizontalPagerScaffold(
                 pagerState = pagerState,
                 pageIndicator = { HorizontalPageIndicator(pagerState) },
@@ -161,7 +170,11 @@ fun ConnectedScreen(
                             show = show,
                             onPress = { action ->
                                 press(action)
-                                if (action == RemoteAction.START) startedAt = System.currentTimeMillis()
+                                when {
+                                    action != RemoteAction.START -> Unit
+                                    show?.viewer == true -> toRemote++
+                                    else -> startedAt = System.currentTimeMillis()
+                                }
                             },
                             duration = duration,
                             onEditDuration = onEditDuration,
