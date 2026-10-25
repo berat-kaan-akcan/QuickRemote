@@ -2066,12 +2066,6 @@ abstract class AppLocalizations {
   /// **'Telefon, {device} için klavye ve fare'**
   String btModeSubtitle(String device);
 
-  /// No description provided for @btScreenKeys.
-  ///
-  /// In tr, this message translates to:
-  /// **'Siyah · Beyaz ekran'**
-  String get btScreenKeys;
-
   /// No description provided for @btPreparingBody.
   ///
   /// In tr, this message translates to:

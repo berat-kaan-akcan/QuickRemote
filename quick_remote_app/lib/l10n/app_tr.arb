@@ -613,7 +613,6 @@
       }
     }
   },
-  "btScreenKeys": "Siyah · Beyaz ekran",
   "btPreparingBody": "Telefon klavye ve fare olarak kaydediliyor.",
   "btConnectingBody": "Bağlanınca kumanda kendiliğinden açılır.",
   "btRetryingBody": "{device} açık ve Bluetooth'u açıksa birkaç saniye içinde bağlanır.",

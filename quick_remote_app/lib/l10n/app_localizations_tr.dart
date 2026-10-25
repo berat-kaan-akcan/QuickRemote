@@ -1155,9 +1155,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get btScreenKeys => 'Siyah · Beyaz ekran';
-
-  @override
   String get btPreparingBody => 'Telefon klavye ve fare olarak kaydediliyor.';
 
   @override

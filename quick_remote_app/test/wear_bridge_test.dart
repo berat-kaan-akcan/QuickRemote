@@ -529,7 +529,13 @@ void main() {
       keyboard.set(BtHidConnectionState.connected, computer: 'PC');
       await fromWatch('command', RemoteCommands.modeLaser);
       await tester.pump(WearBridge.laserSilence);
-      expect(keyboard.sent, [(ctrl, BtKeyMapping.keyL), (ctrl, BtKeyMapping.keyA), (ctrl, BtKeyMapping.keyA)]);
+      // LASER_OFF, then MODE_ARROW: PowerPoint's arrow that hides by itself.
+      expect(keyboard.sent, [
+        (ctrl, BtKeyMapping.keyL),
+        (ctrl, BtKeyMapping.keyA),
+        (ctrl, BtKeyMapping.keyA),
+        (ctrl, BtKeyMapping.keyU),
+      ]);
     });
   });
 
@@ -609,6 +615,32 @@ void main() {
       expect(states().last, containsPair('timerRunning', true));
       await fromWatch('command', RemoteCommands.end);
       expect(states().last, containsPair('timerRunning', false));
+    });
+
+    test('over Bluetooth the phone\'s own Start and End run the timer it shows', () async {
+      keyboard.set(BtHidConnectionState.connected, computer: 'PC');
+      await fromWatch('hello');
+      final timer = PresentationTimerController(clock: () => clock);
+      addTearDown(timer.dispose);
+      bridge.attachTimer(timer);
+      await fromWatch('duration', 600);
+
+      bridge.bluetoothKey(RemoteCommands.start);
+      expect(timer.isRunning, isTrue);
+      expect(states().last, containsPair('timerStart', clock.millisecondsSinceEpoch));
+      bridge.bluetoothKey(RemoteCommands.end);
+      expect(timer.isRunning, isFalse);
+      expect(states().last, containsPair('timerRunning', false));
+    });
+
+    test('over Wi-Fi the Bluetooth keys do not touch the clock', () async {
+      await fromWatch('hello');
+      ws.connect192();
+      final timer = PresentationTimerController(clock: () => clock);
+      addTearDown(timer.dispose);
+      bridge.attachTimer(timer);
+      bridge.bluetoothKey(RemoteCommands.start);
+      expect(timer.isRunning, isFalse);
     });
 
     test('the phone\'s timer is the clock while it runs, and the length is shared', () async {
