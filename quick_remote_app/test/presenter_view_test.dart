@@ -193,7 +193,7 @@ void main() {
       );
     await pumpView(tester, ws, const Size(400, 860));
     expect(tester.takeException(), isNull);
-    expect(find.text("The PC's screen"), findsOneWidget);
+    expect(find.text('PC screen'), findsOneWidget);
     expect(find.text('NEXT UP'), findsNothing);
     expect(find.text('No slideshow is running.'), findsNothing);
     await tester.tap(find.bySemanticsLabel('Next'));

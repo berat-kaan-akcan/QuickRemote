@@ -63,6 +63,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get screenPreviewLabel => 'Bilgisayarın ekranı';
 
   @override
+  String get screenPreviewShort => 'PC ekranı';
+
+  @override
   String get settingsLanguageTitle => 'Dil';
 
   @override
@@ -430,6 +433,15 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String viewerName(String front) {
+    String _temp0 = intl.Intl.selectLogic(front, {
+      'browser': 'Tarayıcı',
+      'other': 'PDF',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get blackScreen => 'Siyah Ekran';
 
   @override
@@ -554,7 +566,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get btUnsupportedLong =>
-      'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWiFi modunu kullanın.';
+      'Bu cihaz Bluetooth HID özelliğini desteklemiyor.\nWi-Fi modunu kullanın.';
 
   @override
   String get btPermissionTitle => 'İzin gerekiyor';
@@ -729,7 +741,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get btUnsupportedShort => 'Bu cihaz Bluetooth HID\'i desteklemiyor.';
 
   @override
-  String get btUseWifi => 'WiFi Modunu Kullan';
+  String get btUseWifi => 'Wi-Fi modunu kullan';
 
   @override
   String get errorTitle => 'Hata';
@@ -761,7 +773,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get btMediaLimits =>
-      'Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için WiFi modunu kullanın.';
+      'Bluetooth modunda medya bilgisi, ses seviyesi göstergesi ve PowerPoint medya kontrolleri kullanılamaz. Tam özellik için Wi-Fi modunu kullanın.';
 
   @override
   String get btNoMediaInfo => 'BT modunda medya bilgisi alınamaz';
