@@ -1,11 +1,11 @@
 ﻿# QuickRemote: Windows Bluetooth klavye (HID) onarım denemesi.
 #
-# docs/raporlar/ACIK_ISLER_RAPOR.md, 2. iş. Windows, telefonun SDP kayıtlarını eşleşirken bir
+# docs/raporlar/YAPILANLAR.md, "Windows Bluetooth denemesi". Windows, telefonun SDP kayıtlarını eşleşirken bir
 # kez okuyor; telefon QuickRemote'un klavye kaydı yokken eşleştiyse Windows onu
 # klavye olarak kabul etmiyor. Bu betik şunu dener: telefonun HID hizmetini
 # BluetoothSetServiceState ile kapatıp açmak Windows'a kaydı yeniden okutuyor mu?
 #
-# Adımlar ve sorular: WINDOWS-DENEME.md, "Bluetooth klavye onarımı (BtHidRepair)".
+# Sonuçlar (2026-10-25): docs/raporlar/YAPILANLAR.md, "Windows Bluetooth denemesi".
 #
 # Çalıştırma (betiğin klasöründe):
 #   powershell -ExecutionPolicy Bypass -File .\windows_bt_hid_trial.ps1
@@ -458,7 +458,7 @@ Write-Host "  ENABLE:  $(Get-ErrorText $e2)"
 Write-Host "  HID kurulu, önce: $hidBefore, sonra: $hidAfter"
 Write-Host "  Önbellekteki HID kaydı, önce: $cachedBefore, sonra: $cachedAfter; telefondan taze okunan: $freshBefore"
 Write-Host ''
-Write-Host '  Şimdi telefonda QuickRemote''un Bluetooth kumandası bağlanıyor mu, tuşlar slaytı değiştiriyor mu? Sonucu WINDOWS-DENEME.md''deki tabloya yazın.' -ForegroundColor Green
+Write-Host '  Şimdi telefonda QuickRemote''un Bluetooth kumandası bağlanıyor mu, tuşlar slaytı değiştiriyor mu? Sonucu docs/raporlar/YAPILANLAR.md''deki tabloya yazın.' -ForegroundColor Green
 Write-Host "  Bu çıktının tamamı şu dosyada: $log"
 
 [QrBt]::Close($radio)

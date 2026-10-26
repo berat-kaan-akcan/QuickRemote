@@ -50,7 +50,7 @@ Bu oturumda yazılan ama telefonda hiç çalışmamış özellikler:
 - [ ] **[Sen + Kod]** Slayt önizleme ve ekran görüntüsü kartı.
 - [ ] **[Sen + Kod]** `caps` ile soluk araçlar; PDF önde iken "Tam ekran".
 - [ ] **[Sen + Kod]** Saat: tema eşitleme, gösterisiz lazer, ekran açılınca kumandanın dönmesi.
-- [ ] **[Sen + Kod]** Kaplama denemelerinin tam listesi: `docs/raporlar/OVERLAY_RAPOR.md`, "Bekleyen denemeler".
+- [ ] **[Sen + Kod]** Kaplama denemelerinden kalanlar: [docs/raporlar/YAPILMAYANLAR.md](docs/raporlar/YAPILMAYANLAR.md).
 
 ---
 
