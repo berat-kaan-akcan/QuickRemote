@@ -70,7 +70,7 @@ Telefon zaten "klavye olarak tanınmıyor" durumundaysa bu bölümü atlayın.
    - Normal PowerShell'de reddedilip yöneticide çalıştığını da not edin; bu 2. sorunun cevabı.
 9. İlk deneme olumsuzsa bir kez daha deneyin, bu sefer telefonda Bluetooth kumanda ekranının açık ve "bağlanıyor" durumunda olduğundan emin olun.
 
-Betik tüm çıktıyı masaüstüne `quickremote-bt-deneme-<tarih>.txt` adıyla da kaydeder. Bu dosyayı saklayın; sonucu değerlendirirken gerekecek.
+Betik tüm çıktıyı geçici klasöre (`%TEMP%`) `quickremote-bt-deneme-<tarih>.txt` adıyla da kaydeder ve dosyanın yolunu en sonda yazar. Sonucu değerlendirirken gerekecek, Windows geçici klasörü temizlemeden önce bir yere kopyalayın.
 
 Başka seçenekler:
 

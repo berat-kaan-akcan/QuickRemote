@@ -13,7 +13,8 @@
 #   ... -ListOnly       yalnızca eşleşmiş cihazları listeler
 #   ... -NoToggle       yalnızca durumu okur (kapat/aç yapmaz)
 #
-# Her şey masaüstüne quickremote-bt-deneme-<tarih>.txt olarak da yazılır.
+# Her şey geçici klasöre (%TEMP%) quickremote-bt-deneme-<tarih>.txt olarak da yazılır;
+# dosyanın yolu en sonda yazdırılır.
 # Windows PowerShell 5.1 ile çalışır (Windows'ta hazır gelir).
 
 param(
@@ -24,7 +25,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$log = Join-Path ([Environment]::GetFolderPath('Desktop')) ("quickremote-bt-deneme-{0}.txt" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$log = Join-Path ([System.IO.Path]::GetTempPath()) ("quickremote-bt-deneme-{0}.txt" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
 Start-Transcript -Path $log | Out-Null
 
 # -IgnoreWarnings: otherwise compiler warnings (fields only the marshaller sets) fail Add-Type.
