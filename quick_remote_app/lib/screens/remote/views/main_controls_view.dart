@@ -152,8 +152,10 @@ class _MainControlsViewState extends State<MainControlsView> {
                                 ? InlineAlert(
                                     key: const ValueKey('viewer'),
                                     tone: AppTone.info,
-                                    icon: Icons.picture_as_pdf_rounded,
-                                    message: context.l10n.viewerInFront(show.front!),
+                                    icon: show.site != null ? Icons.language_rounded : Icons.picture_as_pdf_rounded,
+                                    message: show.site != null
+                                        ? context.l10n.siteInFront(PresentationState.nameOf(show.site!))
+                                        : context.l10n.viewerInFront(show.front!),
                                   )
                                 : InlineAlert(
                                     tone: AppTone.danger,
@@ -170,8 +172,8 @@ class _MainControlsViewState extends State<MainControlsView> {
                     child: ShowToggleButton(
                       running: show.running,
                       // START puts a PDF viewer or a browser in full screen.
-                      startLabel: show.viewer ? context.l10n.actionFullScreen : context.l10n.actionStart,
-                      startIcon: show.viewer ? Icons.fullscreen_rounded : Icons.play_arrow_rounded,
+                      startLabel: show.startsFullScreen ? context.l10n.actionFullScreen : context.l10n.actionStart,
+                      startIcon: show.startsFullScreen ? Icons.fullscreen_rounded : Icons.play_arrow_rounded,
                       endLabel: context.l10n.actionEnd,
                       onTap: !connected
                           ? null
@@ -423,8 +425,9 @@ class SlideCard extends StatelessWidget {
                     : () => onScreen!(RemoteCommands.whiteScreen),
               ),
               const Spacer(),
-              // A PDF has no slides to jump to.
-              if (!show.viewer) _GoToSlideKey(onTap: onGoTo),
+              // A PDF has no slides to jump to, nor PowerPoint for the web a
+              // key that jumps.
+              if (!show.viewer || show.canJump) _GoToSlideKey(onTap: onGoTo),
             ],
           ),
         ],

@@ -9,6 +9,7 @@ import '../../input_simulator.dart'; // For InputSimulator.onCommandError
 import '../input_service.dart' show FrontWindow, RemoteError;
 import '../pdf_viewers.dart';
 import 'presenter_com.dart';
+import 'window_capture.dart';
 
 /// PowerPoint and WPS Presentation: the same COM object model and mostly the
 /// same slideshow keys. [PresenterCom.lookup] finds the running one.
@@ -110,6 +111,13 @@ class PptController {
     if (viewer != null) return viewer;
     if (_editorWindowKind(hwnd) != null) return FrontWindow.editor;
     return FrontWindow.other;
+  }
+
+  /// SLIDE_STATE's `site`: the presentation site in the foreground browser
+  /// window (from its title), or null.
+  static String? frontSite() {
+    final hwnd = GetForegroundWindow();
+    return hwnd.isNull ? null : PdfViewers.presenterOf(_programOf(hwnd));
   }
 
   static String _className(HWND hwnd) {
@@ -218,6 +226,34 @@ try {
     return true;
   }
 
+  /// Jumps to [slideNumber] in the viewer in front whose show takes a typed
+  /// number (Google Slides): its show is started first unless its window
+  /// covers the monitor already, and the number is typed only once it does
+  /// (in the editor the digits would go into the slide). Returns whether the
+  /// viewer in front is such a one.
+  static Future<bool> _jumpInViewer(int slideNumber) async {
+    final hwnd = GetForegroundWindow();
+    final viewer = PdfViewers.forProgram(_programOf(hwnd));
+    if (viewer == null || !viewer.typesSlideNumber) return false;
+    if (!WindowCapture.coversMonitor(hwnd)) {
+      KeyboardSimulator.pressKeyCombo(viewer.start);
+      for (var i = 0; i < 30 && !WindowCapture.coversMonitor(hwnd); i++) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      if (!WindowCapture.coversMonitor(hwnd) || GetForegroundWindow() != hwnd) {
+        debugPrint('START_AT: the show did not come up in full screen');
+        return true;
+      }
+      // The show's first frame takes the keys only once it has loaded.
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    for (final digit in '$slideNumber'.codeUnits) {
+      KeyboardSimulator.pressKey(digit); // VK '0'..'9' are the ASCII codes
+    }
+    KeyboardSimulator.pressKey(VK_RETURN);
+    return true;
+  }
+
   static Future<void> slideStart() async {
     if (_startViewer()) return;
     await _startPresenter();
@@ -304,6 +340,7 @@ Write-Output $qrPresenter
   /// number + Enter (PowerPoint's own shortcut) would land in whatever window
   /// has the focus when the show did not open.
   static Future<void> slideStartAt(int slideNumber) async {
+    if (await _jumpInViewer(slideNumber)) return;
     // A PDF viewer has no slide to jump to: it starts where it is.
     if (_startViewer()) return;
     await _startPresenter();

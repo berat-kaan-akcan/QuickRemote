@@ -3,11 +3,14 @@ import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'bt_hid_service.dart';
 
 /// Presentation program the phone sends keyboard shortcuts to in BT HID mode.
-/// Over Bluetooth the phone cannot detect it, so the user picks it.
+/// Over Bluetooth the phone cannot detect it, so the user picks it. The two
+/// sites in a browser are named as the PC's `WebPresenters`.
 enum BtTarget {
   powerpoint,
   impress,
-  wps;
+  wps,
+  powerpointWeb,
+  googleSlides;
 
   static BtTarget fromName(String? name) =>
       values.firstWhere((t) => t.name == name, orElse: () => powerpoint);
@@ -38,6 +41,8 @@ abstract class BtKeyMapping {
   static const int keyPageDown   = 0x4E;
   static const int keyHome       = 0x4A;
   static const int keyEnd        = 0x4D;
+  static const int keyRight      = 0x4F;
+  static const int keyLeft       = 0x50;
 
   // ── Modifier bits ─────────────────────────────────────────────────────────
   static const int modLCtrl  = 0x01;
@@ -63,6 +68,8 @@ abstract class BtKeyMapping {
       BtTarget.powerpoint => _powerpointOverrides,
       BtTarget.impress => _impressOverrides,
       BtTarget.wps => _wpsOverrides,
+      BtTarget.powerpointWeb => _powerpointWebOverrides,
+      BtTarget.googleSlides => _googleSlidesOverrides,
     };
     return overrides[command] ?? _map[command];
   }
@@ -107,6 +114,43 @@ abstract class BtKeyMapping {
   static final Map<String, BtAction> _wpsOverrides = {
     RemoteCommands.modeLaser:   _wpsLaser,
     RemoteCommands.laserCursor: _wpsLaser,
+  };
+
+  /// PowerPoint for the web (Microsoft's list of its keys): Ctrl+F5 starts
+  /// the show (F5 alone reloads the page), Esc ends it, PageDown/PageUp turn
+  /// slides. It has no key for black or white screen, the laser or ink, so
+  /// those are no-ops and the laser is the mouse cursor. Not tried yet.
+  static final Map<String, BtAction> _powerpointWebOverrides = {
+    RemoteCommands.start:           _KeyAction(modLCtrl, [keyF5]),
+    RemoteCommands.blackScreen:     _NoopAction(),
+    RemoteCommands.whiteScreen:     _NoopAction(),
+    RemoteCommands.eraseAll:        _NoopAction(),
+    RemoteCommands.modeArrow:       _NoopAction(),
+    RemoteCommands.modeLaser:       _NoopAction(),
+    RemoteCommands.laserCursor:     _NoopAction(),
+    RemoteCommands.laserOff:        _NoopAction(),
+    RemoteCommands.modePen:         _NoopAction(),
+    RemoteCommands.modeHighlighter: _NoopAction(),
+    RemoteCommands.modeEraser:      _NoopAction(),
+  };
+
+  /// Google Slides (Google's list of its keys): Ctrl+F5 presents, Esc
+  /// stops, the arrows turn slides, B and W blank the screen, L turns its
+  /// laser on and off. L is a toggle, so only MODE_LASER and LASER_OFF press
+  /// it (the touchpad's finger down and up), not the MODE_ARROW after LASER_OFF.
+  /// No ink. Not tried yet.
+  static final Map<String, BtAction> _googleSlidesOverrides = {
+    RemoteCommands.start:           _KeyAction(modLCtrl, [keyF5]),
+    RemoteCommands.next:            _KeyAction(0, [keyRight]),
+    RemoteCommands.prev:            _KeyAction(0, [keyLeft]),
+    RemoteCommands.eraseAll:        _NoopAction(),
+    RemoteCommands.modeArrow:       _NoopAction(),
+    RemoteCommands.modeLaser:       _KeyAction(0, [keyL]),
+    RemoteCommands.laserCursor:     _KeyAction(0, [keyL]),
+    RemoteCommands.laserOff:        _KeyAction(0, [keyL]),
+    RemoteCommands.modePen:         _NoopAction(),
+    RemoteCommands.modeHighlighter: _NoopAction(),
+    RemoteCommands.modeEraser:      _NoopAction(),
   };
 
   static final BtAction _wpsLaser = _SequenceAction([

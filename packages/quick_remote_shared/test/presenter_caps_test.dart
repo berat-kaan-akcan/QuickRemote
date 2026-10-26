@@ -48,4 +48,20 @@ void main() {
     expect(more.hashCode, const PresenterCaps(front: FrontWindow.other, caps: {RemoteCaps.spotlight, RemoteCaps.laser}).hashCode);
     expect(more == base, isFalse);
   });
+
+  test('a presentation site in front goes along, and plus keeps it', () {
+    const caps = PresenterCaps(front: FrontWindow.browser, caps: {RemoteCaps.goto}, site: WebPresenters.googleSlides);
+    final json = caps.toJson();
+    expect(json, {
+      'front': 'browser',
+      'caps': ['goto'],
+      'site': 'googleSlides',
+    });
+    expect(PresenterCaps.fromJson(json), caps);
+    expect(caps.plus([RemoteCaps.laser]).site, WebPresenters.googleSlides);
+    expect(caps == const PresenterCaps(front: FrontWindow.browser, caps: {RemoteCaps.goto}), isFalse);
+    // A site this version does not know is left out; so is no site.
+    expect(PresenterCaps.fromJson({'front': 'browser', 'caps': <Object>[], 'site': 'prezi'})!.site, isNull);
+    expect(const PresenterCaps(front: FrontWindow.browser).toJson().containsKey('site'), isFalse);
+  });
 }

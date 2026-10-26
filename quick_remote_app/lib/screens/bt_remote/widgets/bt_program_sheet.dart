@@ -43,8 +43,14 @@ class _BtProgramList extends StatelessWidget {
           ProgramOption(
             program: target.name,
             selected: target == settings.btTarget,
-            // Impress has no laser, highlighter or eraser shortcut.
-            status: target == BtTarget.impress ? context.l10n.btToolsImpress : context.l10n.btToolsFull,
+            // Impress has no laser, highlighter or eraser shortcut, the sites
+            // in a browser no ink.
+            status: switch (target) {
+              BtTarget.impress => context.l10n.btToolsImpress,
+              BtTarget.powerpointWeb => context.l10n.btToolsPowerpointWeb,
+              BtTarget.googleSlides => context.l10n.btToolsGoogleSlides,
+              BtTarget.powerpoint || BtTarget.wps => context.l10n.btToolsFull,
+            },
             onTap: () {
               HapticFeedback.selectionClick();
               settings.setBtTarget(target);

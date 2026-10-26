@@ -113,6 +113,9 @@ class ProgramOption extends StatelessWidget {
     final (icon, color) = switch (program) {
       'wps' => (Icons.co_present_rounded, p.danger),
       'impress' => (Icons.present_to_all_rounded, p.success),
+      // The sites in a browser (the Bluetooth remote's targets).
+      'powerpointWeb' => (Icons.language_rounded, p.accent),
+      'googleSlides' => (Icons.language_rounded, p.warning),
       _ => (Icons.slideshow_rounded, p.accent),
     };
     final radius = AppRadius.all(AppRadius.md);

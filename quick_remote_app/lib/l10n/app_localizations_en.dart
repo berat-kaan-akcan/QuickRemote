@@ -445,6 +445,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String siteInFront(String name) {
+    return '$name open · Start opens the show, no slide number';
+  }
+
+  @override
   String get blackScreen => 'Black Screen';
 
   @override
@@ -1197,6 +1202,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'In WPS the laser opens with Ctrl+R; in WPS on Windows the eraser may do something else.';
 
   @override
+  String get btToolsPowerpointWeb => 'In a browser · page turns, cursor';
+
+  @override
+  String get btToolsGoogleSlides => 'In a browser · laser, black/white screen';
+
+  @override
+  String get btPowerpointWebToolsNote =>
+      'PowerPoint in a browser has no laser, pen or black screen shortcut; the cursor is the pointer. Start sends Ctrl+F5.';
+
+  @override
+  String get btGoogleSlidesToolsNote =>
+      'Google Slides has no pen; L turns its laser on and off. Start sends Ctrl+F5.';
+
+  @override
   String get verifyIntro =>
       'This is your first connection to this PC. The security code on the PC screen should be:';
 
@@ -1475,6 +1494,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get capNoteWpsNoMedia => 'Videos in WPS cannot be played remotely.';
+
+  @override
+  String get capNoteWebStart =>
+      'Starts with Ctrl+F5 (F5 would reload the page); the site\'s tab must be in front.';
+
+  @override
+  String get capNoteWebTitle =>
+      'Told by the browser window\'s title; a browser running natively on Wayland is not recognized and gets F11.';
 
   @override
   String get capLevelYes => 'Works';

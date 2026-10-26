@@ -848,6 +848,12 @@ abstract class AppLocalizations {
   /// **'{front, select, browser{Tarayıcı} other{PDF}}'**
   String viewerName(String front);
 
+  /// Shown instead of 'no presentation open' while a presentation site (name = PowerPoint (web) or Google Slides, not translated) is in front in the PC's browser: START starts its show, but the PC cannot read its slide number.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} açık · Başlat sunuyu açar, slayt numarası görünmez'**
+  String siteInFront(String name);
+
   /// No description provided for @blackScreen.
   ///
   /// In tr, this message translates to:
@@ -2126,6 +2132,30 @@ abstract class AppLocalizations {
   /// **'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.'**
   String get btWpsToolsNote;
 
+  /// No description provided for @btToolsPowerpointWeb.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcıda · yalnız sayfa geçişi, imleç'**
+  String get btToolsPowerpointWeb;
+
+  /// No description provided for @btToolsGoogleSlides.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcıda · lazer, siyah/beyaz ekran'**
+  String get btToolsGoogleSlides;
+
+  /// No description provided for @btPowerpointWebToolsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcıdaki PowerPoint\'te lazer, kalem ve siyah ekran kısayolu yok; imleç işaretçi olur. Başlat Ctrl+F5 gönderir.'**
+  String get btPowerpointWebToolsNote;
+
+  /// No description provided for @btGoogleSlidesToolsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Slides\'ta kalem yok; lazer L ile açılıp kapanır. Başlat Ctrl+F5 gönderir.'**
+  String get btGoogleSlidesToolsNote;
+
   /// No description provided for @verifyIntro.
   ///
   /// In tr, this message translates to:
@@ -2628,6 +2658,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'WPS\'teki video uzaktan oynatılamıyor.'**
   String get capNoteWpsNoMedia;
+
+  /// No description provided for @capNoteWebStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ctrl+F5 ile başlar (F5 sayfayı yenilerdi); sitenin sekmesi önde olmalı.'**
+  String get capNoteWebStart;
+
+  /// No description provided for @capNoteWebTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcı penceresinin başlığından tanınır; Wayland\'de yerel çalışan bir tarayıcıda tanınmaz, F11 basılır.'**
+  String get capNoteWebTitle;
 
   /// No description provided for @capLevelYes.
   ///

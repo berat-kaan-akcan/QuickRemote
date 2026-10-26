@@ -91,6 +91,32 @@ void main() {
     }
   });
 
+  test('the sites in a browser start with Ctrl+F5 and have no ink', () async {
+    Future<(int, int)?> key(String command, BtTarget target) {
+      calls.clear();
+      return keyReport(command, target);
+    }
+
+    for (final t in [BtTarget.powerpointWeb, BtTarget.googleSlides]) {
+      expect(await key('START', t), (ctrl, BtKeyMapping.keyF5), reason: '$t');
+      expect(await key('END', t), (0, BtKeyMapping.keyEscape), reason: '$t');
+      for (final command in ['MODE_PEN', 'MODE_HIGHLIGHTER', 'MODE_ERASER', 'ERASE_ALL', 'MODE_ARROW']) {
+        expect(await key(command, t), isNull, reason: '$command $t');
+      }
+    }
+    // PowerPoint for the web: no blank screen, no laser key (the cursor).
+    for (final command in ['BLACK_SCREEN', 'WHITE_SCREEN', 'MODE_LASER', 'LASER_OFF']) {
+      expect(await key(command, BtTarget.powerpointWeb), isNull, reason: command);
+    }
+    // Google Slides: the arrows, B and W, and L, which toggles its laser.
+    const slides = BtTarget.googleSlides;
+    expect(await key('NEXT', slides), (0, BtKeyMapping.keyRight));
+    expect(await key('PREV', slides), (0, BtKeyMapping.keyLeft));
+    expect(await key('BLACK_SCREEN', slides), (0, BtKeyMapping.keyB));
+    expect(await key('MODE_LASER', slides), (0, BtKeyMapping.keyL));
+    expect(await key('LASER_OFF', slides), (0, BtKeyMapping.keyL));
+  });
+
   test('BtTarget.fromName falls back to PowerPoint', () {
     expect(BtTarget.fromName('impress'), BtTarget.impress);
     expect(BtTarget.fromName('wps'), BtTarget.wps);

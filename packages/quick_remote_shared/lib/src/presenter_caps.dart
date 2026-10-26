@@ -1,3 +1,5 @@
+import 'web_presenters.dart';
+
 /// What kind of window is in front on the PC: SLIDE_STATE's `front`.
 abstract class FrontWindow {
   /// A slideshow of a program the PC drives (PowerPoint, Impress, WPS).
@@ -85,22 +87,27 @@ abstract class RemoteCaps {
 /// tools missing from [caps] faded; a SLIDE_STATE without `caps` (an older
 /// PC) leaves the phone as it was before them.
 class PresenterCaps {
-  const PresenterCaps({this.front, this.caps = const {}});
+  const PresenterCaps({this.front, this.caps = const {}, this.site});
 
   /// A [FrontWindow] value; null when unknown (a native Wayland window).
   final String? front;
   final Set<String> caps;
 
+  /// The presentation site in the browser in front (a [WebPresenters]
+  /// value, `front` is then [FrontWindow.browser]); null for anything else.
+  final String? site;
+
   bool has(String cap) => caps.contains(cap);
 
   /// These caps and [more].
   PresenterCaps plus(Iterable<String> more) =>
-      PresenterCaps(front: front, caps: {...caps, ...more});
+      PresenterCaps(front: front, caps: {...caps, ...more}, site: site);
 
   /// The fields for a SLIDE_STATE message; `front` only when known.
   Map<String, Object> toJson() => {
         if (front != null) 'front': front!,
         'caps': (caps.toList()..sort()),
+        if (site != null) 'site': site!,
       };
 
   /// From a SLIDE_STATE message; null without `caps` (an older PC). Values
@@ -109,6 +116,7 @@ class PresenterCaps {
     final caps = message['caps'];
     if (caps is! List) return null;
     final front = message['front'];
+    final site = message['site'];
     return PresenterCaps(
       front:
           front is String && FrontWindow.values.contains(front) ? front : null,
@@ -116,6 +124,7 @@ class PresenterCaps {
         for (final cap in caps)
           if (cap is String && RemoteCaps.values.contains(cap)) cap
       },
+      site: WebPresenters.isWeb(site) ? site as String : null,
     );
   }
 
@@ -123,12 +132,13 @@ class PresenterCaps {
   bool operator ==(Object other) =>
       other is PresenterCaps &&
       other.front == front &&
+      other.site == site &&
       other.caps.length == caps.length &&
       other.caps.containsAll(caps);
 
   @override
-  int get hashCode => Object.hash(front, Object.hashAllUnordered(caps));
+  int get hashCode => Object.hash(front, site, Object.hashAllUnordered(caps));
 
   @override
-  String toString() => 'PresenterCaps($front, $caps)';
+  String toString() => 'PresenterCaps($front, $caps${site == null ? '' : ', $site'})';
 }

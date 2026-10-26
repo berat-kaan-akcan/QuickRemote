@@ -55,6 +55,15 @@ class ShowInfo {
   /// and full screen work (START puts the viewer in full screen).
   bool get viewer => !running && FrontWindow.isViewer(front);
 
+  /// The presentation site in the browser in front (a [WebPresenters]
+  /// value; [viewer] is then true): START starts its show, which the PC
+  /// sees no slide of. Null for anything else.
+  String? get site => viewer ? caps?.site : null;
+
+  /// START only puts the viewer in front in full screen (Start reads "Full
+  /// screen"): a PDF viewer or a browser without a presentation site.
+  bool get startsFullScreen => viewer && site == null;
+
   bool _can(String cap, bool guess) => caps == null ? guess : caps!.has(cap);
 
   /// Without a show only the PC's overlay draws the tools.
@@ -82,8 +91,9 @@ class ShowInfo {
 
   bool get colorsAvailable => _can(RemoteCaps.colors, !userWps);
 
-  /// Jump to a slide; never with a viewer in front, which has no slides.
-  bool get canJump => !viewer && _can(RemoteCaps.goto, !userWps);
+  /// Jump to a slide; with a viewer in front only on a site that takes a
+  /// slide number (Google Slides; a PDF has no slides).
+  bool get canJump => (!viewer || site != null) && _can(RemoteCaps.goto, !userWps);
 
   bool get notes => _can(RemoteCaps.notes, true);
   bool get previews => _can(RemoteCaps.previews, true);

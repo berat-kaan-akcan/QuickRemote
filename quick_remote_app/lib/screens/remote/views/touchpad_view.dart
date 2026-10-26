@@ -96,8 +96,8 @@ class _TouchpadViewState extends State<TouchpadView> {
                     compact: true,
                     running: show.running,
                     // START puts a PDF viewer or a browser in full screen.
-                    startLabel: show.viewer ? context.l10n.actionFullScreen : context.l10n.actionStart,
-                    startIcon: show.viewer ? Icons.fullscreen_rounded : Icons.play_arrow_rounded,
+                    startLabel: show.startsFullScreen ? context.l10n.actionFullScreen : context.l10n.actionStart,
+                    startIcon: show.startsFullScreen ? Icons.fullscreen_rounded : Icons.play_arrow_rounded,
                     endLabel: context.l10n.actionEnd,
                     onTap: !connected
                         ? null

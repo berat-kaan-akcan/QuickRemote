@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
-export 'package:quick_remote_shared/quick_remote_shared.dart' show FrontWindow, PresenterCaps, RemoteCaps, RemoteError;
+export 'package:quick_remote_shared/quick_remote_shared.dart' show FrontWindow, PresenterCaps, RemoteCaps, RemoteError, WebPresenters;
 
 typedef VolumeState = ({int volume, bool muted});
 
