@@ -442,6 +442,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String siteInFront(String name) {
+    return '$name açık · Başlat sunuyu açar, slayt numarası görünmez';
+  }
+
+  @override
   String get blackScreen => 'Siyah Ekran';
 
   @override
@@ -1204,6 +1209,20 @@ class AppLocalizationsTr extends AppLocalizations {
       'WPS\'te lazer Ctrl+R ile açılır; Windows\'taki WPS\'te Silgi başka bir iş yapabilir.';
 
   @override
+  String get btToolsPowerpointWeb => 'Tarayıcıda · yalnız sayfa geçişi, imleç';
+
+  @override
+  String get btToolsGoogleSlides => 'Tarayıcıda · lazer, siyah/beyaz ekran';
+
+  @override
+  String get btPowerpointWebToolsNote =>
+      'Tarayıcıdaki PowerPoint\'te lazer, kalem ve siyah ekran kısayolu yok; imleç işaretçi olur. Başlat Ctrl+F5 gönderir.';
+
+  @override
+  String get btGoogleSlidesToolsNote =>
+      'Google Slides\'ta kalem yok; lazer L ile açılıp kapanır. Başlat Ctrl+F5 gönderir.';
+
+  @override
   String get verifyIntro =>
       'Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:';
 
@@ -1483,6 +1502,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get capNoteWpsNoMedia => 'WPS\'teki video uzaktan oynatılamıyor.';
+
+  @override
+  String get capNoteWebStart =>
+      'Ctrl+F5 ile başlar (F5 sayfayı yenilerdi); sitenin sekmesi önde olmalı.';
+
+  @override
+  String get capNoteWebTitle =>
+      'Tarayıcı penceresinin başlığından tanınır; Wayland\'de yerel çalışan bir tarayıcıda tanınmaz, F11 basılır.';
 
   @override
   String get capLevelYes => 'Çalışır';

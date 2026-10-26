@@ -8,3 +8,4 @@ export 'src/presenter_caps.dart';
 export 'src/remote_commands.dart';
 export 'src/remote_error.dart';
 export 'src/slide_image_frame.dart';
+export 'src/web_presenters.dart';

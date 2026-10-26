@@ -51,7 +51,7 @@ void main() {
     }
   });
 
-  test('navigation and show keys are identical for every target', () async {
+  test('navigation and show keys are identical for every desktop program', () async {
     final expected = {
       RemoteCommands.next: (0, BtKeyMapping.keyPageDown),
       RemoteCommands.prev: (0, BtKeyMapping.keyPageUp),
@@ -60,7 +60,8 @@ void main() {
       RemoteCommands.blackScreen: (0, BtKeyMapping.keyB),
       RemoteCommands.whiteScreen: (0, BtKeyMapping.keyW),
     };
-    for (final t in BtTarget.values) {
+    // The sites in a browser have keys of their own (the next test).
+    for (final t in [BtTarget.powerpoint, BtTarget.impress, BtTarget.wps]) {
       for (final e in expected.entries) {
         final c = await run(e.key, t);
         expect(c.single.method, 'sendKeyReport', reason: '${e.key} $t');
@@ -69,6 +70,45 @@ void main() {
             reason: '${e.key} $t');
       }
     }
+  });
+
+  test('the sites in a browser start with Ctrl+F5 and have no ink', () async {
+    Future<(Object?, Object?)?> key(String command, BtTarget target) async {
+      final calls = await run(command, target);
+      if (calls.isEmpty) return null;
+      final a = calls.single.arguments as Map;
+      return (a['modifier'], (a['keyCodes'] as List).single);
+    }
+
+    for (final t in [BtTarget.powerpointWeb, BtTarget.googleSlides]) {
+      expect(await key(RemoteCommands.start, t), (BtKeyMapping.modLCtrl, BtKeyMapping.keyF5), reason: '$t');
+      expect(await key(RemoteCommands.end, t), (0, BtKeyMapping.keyEscape), reason: '$t');
+      for (final command in [
+        RemoteCommands.modePen,
+        RemoteCommands.modeHighlighter,
+        RemoteCommands.modeEraser,
+        RemoteCommands.eraseAll,
+        RemoteCommands.modeArrow,
+      ]) {
+        expect(await key(command, t), isNull, reason: '$command $t');
+      }
+    }
+    // PowerPoint for the web: no blank screen, no laser key (the cursor).
+    for (final command in [
+      RemoteCommands.blackScreen,
+      RemoteCommands.whiteScreen,
+      RemoteCommands.modeLaser,
+      RemoteCommands.laserOff,
+    ]) {
+      expect(await key(command, BtTarget.powerpointWeb), isNull, reason: command);
+    }
+    // Google Slides: the arrows, B and W, and L, which toggles its laser.
+    const slides = BtTarget.googleSlides;
+    expect(await key(RemoteCommands.next, slides), (0, BtKeyMapping.keyRight));
+    expect(await key(RemoteCommands.prev, slides), (0, BtKeyMapping.keyLeft));
+    expect(await key(RemoteCommands.blackScreen, slides), (0, BtKeyMapping.keyB));
+    expect(await key(RemoteCommands.modeLaser, slides), (0, BtKeyMapping.keyL));
+    expect(await key(RemoteCommands.laserOff, slides), (0, BtKeyMapping.keyL));
   });
 
   test('lock is Win+L, on every target', () async {

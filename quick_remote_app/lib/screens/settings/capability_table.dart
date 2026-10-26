@@ -20,6 +20,11 @@ enum CapProgram {
 
   /// A PDF in a viewer or a browser.
   pdf,
+
+  /// PowerPoint for the web and Google Slides in a browser, told by the
+  /// window's title.
+  powerpointWeb,
+  googleSlides,
 }
 
 enum CapFeature {
@@ -61,6 +66,8 @@ enum CapNote {
   noAnswer,
   keysOnly,
   wpsNoMedia,
+  webStart,
+  webTitle,
 }
 
 class CapCell {
@@ -87,19 +94,36 @@ class CapabilityTable {
           CapProgram.powerpoint,
           CapProgram.impress,
           CapProgram.wps,
+          CapProgram.powerpointWeb,
+          CapProgram.googleSlides,
         ],
         (CapLink.wifi, CapOs.windows) => const [
           CapProgram.powerpoint,
           CapProgram.wps,
+          CapProgram.powerpointWeb,
+          CapProgram.googleSlides,
           CapProgram.pdf,
         ],
         (CapLink.wifi, CapOs.linux) => const [
           CapProgram.impress,
           CapProgram.wpsApp,
           CapProgram.wpsOwn,
+          CapProgram.powerpointWeb,
+          CapProgram.googleSlides,
           CapProgram.pdf,
         ],
       };
+
+  /// The programs of the compare table: [programs] without the sites in a
+  /// browser, whose columns a phone has no room for (they are much as PDF).
+  static List<CapProgram> comparePrograms(CapLink link, CapOs os) => [
+    for (final program in programs(link, os))
+      if (!isWeb(program)) program,
+  ];
+
+  /// PowerPoint for the web or Google Slides.
+  static bool isWeb(CapProgram program) =>
+      program == CapProgram.powerpointWeb || program == CapProgram.googleSlides;
 
   static CapCell cell(
     CapLink link,
@@ -179,6 +203,26 @@ class CapabilityTable {
         CapFeature.spotlight: spotlight,
         CapFeature.volume: _yes,
       },
+      CapProgram.powerpointWeb || CapProgram.googleSlides => {
+        CapFeature.nextPrev: _yes,
+        // Linux reads the title of X11 windows only.
+        CapFeature.startEnd: os == CapOs.linux
+            ? _p(CapNote.webTitle)
+            : _y(CapNote.webStart),
+        // Google Slides takes a typed number, PowerPoint has no such key.
+        CapFeature.goTo: program == CapProgram.googleSlides
+            ? _yes
+            : _n(CapNote.noJump),
+        CapFeature.laser: _y(CapNote.overlay),
+        CapFeature.ink: _y(CapNote.overlay),
+        CapFeature.eraser: _y(CapNote.overlay),
+        CapFeature.blank: _y(CapNote.overlay),
+        CapFeature.slideInfo: _no,
+        CapFeature.preview: _p(CapNote.fullscreenOnly),
+        CapFeature.slideMedia: _no,
+        CapFeature.spotlight: spotlight,
+        CapFeature.volume: _yes,
+      },
       _ => {
         CapFeature.nextPrev: _yes,
         CapFeature.startEnd: _y(CapNote.fullscreen),
@@ -197,14 +241,18 @@ class CapabilityTable {
   }
 
   /// Whether the cell was written from the code but not yet tried on a
-  /// real device, as the site's "What we tried" section and DURUM.md say.
+  /// real device, as the site's "What we tried" section and
+  /// docs/raporlar/YAPILMAYANLAR.md say.
   /// Remove an entry once it has been tried.
   static bool untried(
     CapLink link,
     CapOs os,
     CapProgram program,
     CapFeature feature,
-  ) => _untried.contains((link, os, program, feature));
+  ) =>
+      // The sites in a browser: written from their lists of keys only.
+      (isWeb(program) && cell(link, os, program, feature).level != CapLevel.no) ||
+      _untried.contains((link, os, program, feature));
 
   static const _untried = {
     // Windows: the program's own eraser, the media of a slide and the
@@ -230,6 +278,25 @@ class CapabilityTable {
   /// program's own shortcuts, no answer from the computer.
   static Map<CapFeature, CapCell> _bluetooth(CapOs os, CapProgram program) {
     final impress = program == CapProgram.impress;
+    // In a browser: PowerPoint has no key for the laser, ink or a blank
+    // screen, Google Slides has its laser (L) and B/W but no ink.
+    if (isWeb(program)) {
+      final slides = program == CapProgram.googleSlides;
+      return {
+        CapFeature.nextPrev: _yes,
+        CapFeature.startEnd: _y(CapNote.webStart),
+        CapFeature.goTo: _n(CapNote.noAnswer),
+        CapFeature.laser: slides ? _yes : _p(CapNote.cursor),
+        CapFeature.ink: _no,
+        CapFeature.eraser: _no,
+        CapFeature.blank: slides ? _yes : _no,
+        CapFeature.slideInfo: _n(CapNote.noAnswer),
+        CapFeature.preview: _n(CapNote.noAnswer),
+        CapFeature.slideMedia: _n(CapNote.noAnswer),
+        CapFeature.spotlight: _no,
+        CapFeature.volume: _p(CapNote.keysOnly),
+      };
+    }
     return {
       CapFeature.nextPrev: _yes,
       CapFeature.startEnd: _yes,

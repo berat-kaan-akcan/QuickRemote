@@ -57,13 +57,14 @@ class LinuxInputService implements InputService {
     WpsTakeOver? takeOver,
     ScreenArea? Function()? rootArea,
     void Function(double fx, double fy)? moveCursor,
+    String? Function(int window)? windowTitle,
   })  : _impress = impress,
         _wps = wps,
         _activeWindow = activeWindow,
         _clientWindows = clientWindows,
         _windowArea = windowArea ?? ((_) => null),
         _captureWindow = captureWindow ?? ((_) => null),
-        _windowTitle = ((_) => null),
+        _windowTitle = windowTitle ?? ((_) => null),
         _closeWindow = ((_) => false),
         _kwinWindow = kwinWindow ?? (() => null),
         _rootArea = rootArea ?? (() => null),
@@ -331,6 +332,7 @@ class LinuxInputService implements InputService {
   Future<PresenterCaps> capabilities() async {
     final window = _frontWindow();
     final front = window == null ? null : _frontOf(window);
+    final site = _showBy == null && window != null ? _siteOf(window) : null;
     final Set<String> caps;
     switch (_showBy) {
       case 'impress':
@@ -357,6 +359,9 @@ class LinuxInputService implements InputService {
           // Impress (or Draw with a PDF) and the bridge's WPS start a show at
           // a slide; the WPS the user started only from its first (F5).
           caps = {RemoteCaps.goto};
+        } else if (site == WebPresenters.googleSlides) {
+          // Its show takes a typed slide number.
+          caps = {RemoteCaps.goto};
         } else {
           caps = {};
         }
@@ -364,7 +369,7 @@ class LinuxInputService implements InputService {
     if (_wpsRpc && WpsTakeOver.userWindows(_clientWindows(), _wpsRpcPid).isNotEmpty) {
       caps.add(RemoteCaps.takeOver);
     }
-    return PresenterCaps(front: front, caps: caps);
+    return PresenterCaps(front: front, caps: caps, site: site);
   }
 
   /// What every show the bridges drive has.
@@ -555,6 +560,11 @@ class LinuxInputService implements InputService {
       return;
     }
     final viewer = window == null ? null : _viewerOf(window);
+    final slide = args['slide'];
+    if (viewer != null && viewer.typesSlideNumber && slide is int) {
+      await _jumpInViewer(window!, viewer, slide);
+      return;
+    }
     if (viewer != null) {
       _keys(_evdev(viewer.start));
       final end = viewer.end;
@@ -573,10 +583,52 @@ class LinuxInputService implements InputService {
   /// and the keys with which END toggles it off there.
   (int, List<int>)? _toggled;
 
-  static ViewerKeys? _viewerOf(X11Window window) {
-    for (final name in window.wmClass) {
+  /// Jumps to [slide] in [window]'s viewer, whose show takes a typed number
+  /// (Google Slides): its show is started first unless the window is in full
+  /// screen, and the number is typed only once it is (in the editor the
+  /// digits would go into the slide).
+  Future<void> _jumpInViewer(X11Window window, ViewerKeys viewer, int slide) async {
+    bool showing() {
+      final front = _frontWindow();
+      return front != null && front.id == window.id && front.fullscreen;
+    }
+
+    if (!window.fullscreen) {
+      _keys(_evdev(viewer.start));
+      for (var i = 0; i < 30 && !showing(); i++) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      if (!showing()) {
+        debugPrint('START_AT: the show did not come up in full screen');
+        return;
+      }
+      // The show's first frame takes the keys only once it has loaded.
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    for (final digit in '$slide'.codeUnits) {
+      _keys([Evdev.fromVk(digit)!]);
+    }
+    _keys([Evdev.keyEnter]);
+  }
+
+  /// [window]'s names for [PdfViewers]: the presentation site its title
+  /// names first (X11 only: KWin's Wayland windows come without a title).
+  List<String> _programsOf(X11Window window) =>
+      PdfViewers.linuxPrograms(window.wmClass, window.id < 0 ? null : _windowTitle(window.id));
+
+  ViewerKeys? _viewerOf(X11Window window) {
+    for (final name in _programsOf(window)) {
       final viewer = PdfViewers.forProgram(name);
       if (viewer != null) return viewer;
+    }
+    return null;
+  }
+
+  /// SLIDE_STATE's `site`: the presentation site in [window], or null.
+  String? _siteOf(X11Window window) {
+    for (final name in _programsOf(window)) {
+      final site = PdfViewers.presenterOf(name);
+      if (site != null) return site;
     }
     return null;
   }

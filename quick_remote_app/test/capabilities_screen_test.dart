@@ -41,6 +41,8 @@ void main() {
         CapProgram.powerpoint,
         CapProgram.impress,
         CapProgram.wps,
+        CapProgram.powerpointWeb,
+        CapProgram.googleSlides,
       ]);
     }
     final eraser = CapabilityTable.cell(

@@ -57,16 +57,20 @@ class WindowsInputService implements InputService {
   /// foreground window, read with a few Win32 calls (no PowerShell), so it
   /// is cheap enough to poll. Both programs do everything but WPS's media
   /// rewind (its COM `Player` does nothing); their editors start a show at a
-  /// slide (COM GotoSlide).
+  /// slide (COM GotoSlide). Google Slides in the browser in front takes a
+  /// typed slide number.
   @override
   Future<PresenterCaps> capabilities() async {
     final front = PptController.frontWindow();
+    final site = PresenterCom.active == null ? PptController.frontSite() : null;
     final caps = switch (PresenterCom.active) {
       'powerpoint' => {..._showCaps, RemoteCaps.rewind, RemoteCaps.previews},
       'wps' => {..._showCaps, RemoteCaps.previews},
-      _ => front == FrontWindow.editor ? const {RemoteCaps.goto} : const <String>{},
+      _ => front == FrontWindow.editor || site == WebPresenters.googleSlides
+          ? const {RemoteCaps.goto}
+          : const <String>{},
     };
-    return PresenterCaps(front: front, caps: caps);
+    return PresenterCaps(front: front, caps: caps, site: site);
   }
 
   static const _showCaps = {

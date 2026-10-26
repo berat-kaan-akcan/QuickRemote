@@ -70,6 +70,7 @@ void main() {
   X11Window? active;
   KWinWindow? kwin;
   List<X11Window> windows = const [];
+  Map<int, String> titles = const {};
 
   /// The windows captureScreen took a picture of.
   late List<int> captured;
@@ -82,6 +83,7 @@ void main() {
       clientWindows: () => windows,
       keys: keys.add,
       kwinWindow: () => kwin,
+      windowTitle: (id) => titles[id],
       windowArea: (id) => id == 7 ? (x: 1920, y: 0, width: 1920, height: 1080) : null,
       captureWindow: (id) {
         captured.add(id);
@@ -100,6 +102,7 @@ void main() {
     active = null;
     kwin = null;
     windows = const [];
+    titles = const {};
     captured = [];
   });
 
@@ -439,6 +442,60 @@ void main() {
       active = null;
       await s.slideEnd();
       expect(keys.last, [Evdev.keyEsc]);
+    });
+
+    group('a presentation site in the browser', () {
+      test('PowerPoint for the web starts with Ctrl+F5 and ends with Esc', () async {
+        active = chrome;
+        titles = {5: 'Sunu1.pptx - PowerPoint - Google Chrome'};
+        final s = service();
+        await s.slideStart();
+        await s.slideEnd();
+        expect(keys, [
+          [Evdev.keyLeftCtrl, Evdev.keyF5],
+          [Evdev.keyEsc],
+        ]);
+        final caps = await s.capabilities();
+        expect(caps.front, FrontWindow.browser);
+        expect(caps.site, WebPresenters.powerpointWeb);
+        expect(caps.has(RemoteCaps.goto), isFalse);
+      });
+
+      test('Google Slides in full screen jumps to a typed slide number', () async {
+        active = const X11Window(4, ['Navigator', 'firefox'], fullscreen: true);
+        titles = {4: 'Ders 3 - Google Slides — Mozilla Firefox'};
+        final s = service();
+        expect((await s.capabilities()).site, WebPresenters.googleSlides);
+        expect((await s.capabilities()).has(RemoteCaps.goto), isTrue);
+        await s.slideStartAt(12);
+        expect(keys, [
+          [Evdev.fromVk(0x31)],
+          [Evdev.fromVk(0x32)],
+          [Evdev.keyEnter],
+        ]);
+        expect(impress.requests, isEmpty);
+      });
+
+      test('Google Slides not yet presenting types no number when the show does not come', () async {
+        active = firefox;
+        titles = {4: 'Ders 3 - Google Slaytlar - Mozilla Firefox'};
+        await service().slideStartAt(3);
+        // Ctrl+F5, then nothing: the digits would go into the slide.
+        expect(keys, [
+          [Evdev.keyLeftCtrl, Evdev.keyF5],
+        ]);
+      });
+
+      test('a page about PowerPoint is a browser like any other', () async {
+        active = chrome;
+        titles = {5: 'PowerPoint - Wikipedia - Google Chrome'};
+        final s = service();
+        await s.slideStart();
+        expect(keys, [
+          [Evdev.fromVk(0x7A)],
+        ]);
+        expect((await s.capabilities()).site, isNull);
+      });
     });
 
     group('a native Wayland browser KWin reports', () {

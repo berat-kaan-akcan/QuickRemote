@@ -67,8 +67,9 @@ class _BtTouchpadViewState extends State<BtTouchpadView> with SingleTickerProvid
   late final AnimationController _fade = AnimationController(vsync: this)
     ..addListener(() => _trail.setFade(_fade.value));
 
-  /// Impress has no laser shortcut: the "laser" is the mouse cursor.
-  bool get _cursorLaser => widget.target == BtTarget.impress;
+  /// Impress and PowerPoint for the web have no laser shortcut: the "laser"
+  /// is the mouse cursor.
+  bool get _cursorLaser => widget.target == BtTarget.impress || widget.target == BtTarget.powerpointWeb;
 
   /// Tools with a shortcut in the target (see BtKeyMapping). Without the pen
   /// a click advances the slide, so a tool without one cannot stand in.
@@ -76,9 +77,15 @@ class _BtTouchpadViewState extends State<BtTouchpadView> with SingleTickerProvid
         BtTarget.powerpoint => DrawTool.values.toSet(),
         BtTarget.impress => const {DrawTool.laser, DrawTool.pen},
         BtTarget.wps => DrawTool.values.toSet(),
+        // The sites in a browser have no ink.
+        BtTarget.powerpointWeb || BtTarget.googleSlides => const {DrawTool.laser},
       };
 
-  DrawTool get _selectedTool => _availableTools.contains(_drawTool) ? _drawTool : DrawTool.pen;
+  DrawTool get _selectedTool => _availableTools.contains(_drawTool)
+      ? _drawTool
+      : _availableTools.contains(DrawTool.pen)
+      ? DrawTool.pen
+      : _availableTools.first;
 
   /// In Impress the "laser" is just the mouse cursor.
   String get _laserLabel => _cursorLaser ? context.l10n.toolCursor : context.l10n.toolLaser;
@@ -100,6 +107,8 @@ class _BtTouchpadViewState extends State<BtTouchpadView> with SingleTickerProvid
     final note = switch (widget.target) {
       BtTarget.impress => context.l10n.btImpressToolsNote,
       BtTarget.wps => context.l10n.btWpsToolsNote,
+      BtTarget.powerpointWeb => context.l10n.btPowerpointWebToolsNote,
+      BtTarget.googleSlides => context.l10n.btGoogleSlidesToolsNote,
       BtTarget.powerpoint => null,
     };
     return ContentWidth(

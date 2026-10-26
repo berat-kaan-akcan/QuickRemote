@@ -179,6 +179,8 @@ String capProgramName(AppLocalizations l10n, CapProgram program) =>
       CapProgram.wpsApp => l10n.capProgramWpsApp,
       CapProgram.wpsOwn => l10n.capProgramWpsOwn,
       CapProgram.pdf => l10n.capProgramPdf,
+      CapProgram.powerpointWeb => 'PowerPoint (web)',
+      CapProgram.googleSlides => 'Google Slides',
     };
 
 /// The program's name in a compare column, in two short lines at most.
@@ -242,6 +244,8 @@ String capNoteText(AppLocalizations l10n, CapNote note) => switch (note) {
   CapNote.noAnswer => l10n.capNoteNoAnswer,
   CapNote.keysOnly => l10n.capNoteKeysOnly,
   CapNote.wpsNoMedia => l10n.capNoteWpsNoMedia,
+  CapNote.webStart => l10n.capNoteWebStart,
+  CapNote.webTitle => l10n.capNoteWebTitle,
 };
 
 String _levelName(AppLocalizations l10n, CapLevel level) => switch (level) {
@@ -417,7 +421,7 @@ class _CompareTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final programs = CapabilityTable.programs(link, os);
+    final programs = CapabilityTable.comparePrograms(link, os);
     Widget header() => Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 6, 10),
       child: Row(

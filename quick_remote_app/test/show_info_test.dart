@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_app/providers/settings_provider.dart';
 import 'package:quick_remote_app/screens/remote/utils/show_info.dart';
 import 'package:quick_remote_app/services/websocket_service.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The state the PC reported, without a connection.
@@ -27,6 +28,9 @@ class _Ws extends WebSocketService {
   String? front;
   @override
   String? get frontPresenter => front;
+  PresenterCaps? caps;
+  @override
+  PresenterCaps? get presenterCaps => caps;
   @override
   String get serverAddress => '192.168.1.24:8443';
   @override
@@ -93,5 +97,31 @@ void main() {
     final reloaded = SettingsProvider();
     await Future.delayed(Duration.zero);
     expect(reloaded.presenterFor('192.168.1.24:8443'), 'impress');
+  });
+
+  test('a presentation site in the browser starts its show; only Google Slides jumps', () {
+    final ws = _Ws(running: false, current: 0, total: 0)
+      ..caps = const PresenterCaps(front: FrontWindow.browser, site: WebPresenters.powerpointWeb);
+    var show = ShowInfo.of(ws);
+    expect(show.viewer, isTrue);
+    expect(show.site, WebPresenters.powerpointWeb);
+    expect(show.startsFullScreen, isFalse);
+    expect(show.canJump, isFalse);
+
+    ws.caps = const PresenterCaps(
+      front: FrontWindow.browser,
+      caps: {RemoteCaps.goto},
+      site: WebPresenters.googleSlides,
+    );
+    show = ShowInfo.of(ws);
+    expect(show.site, WebPresenters.googleSlides);
+    expect(show.canJump, isTrue);
+
+    // A plain browser goes full screen and never jumps, whatever caps say.
+    ws.caps = const PresenterCaps(front: FrontWindow.browser, caps: {RemoteCaps.goto});
+    show = ShowInfo.of(ws);
+    expect(show.site, isNull);
+    expect(show.startsFullScreen, isTrue);
+    expect(show.canJump, isFalse);
   });
 }

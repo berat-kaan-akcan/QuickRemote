@@ -216,6 +216,15 @@
       }
     }
   },
+  "siteInFront": "{name} açık · Başlat sunuyu açar, slayt numarası görünmez",
+  "@siteInFront": {
+    "description": "Shown instead of 'no presentation open' while a presentation site (name = PowerPoint (web) or Google Slides, not translated) is in front in the PC's browser: START starts its show, but the PC cannot read its slide number.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "blackScreen": "Siyah Ekran",
   "whiteScreen": "Beyaz Ekran",
   "actionPrev": "Önceki",
@@ -643,6 +652,10 @@
   "btToolsImpress": "İmleç, kalem",
   "btImpressToolsNote": "Impress'te lazer, vurgulayıcı ve silgi kısayolu yok; imleç işaretçi olur.",
   "btWpsToolsNote": "WPS'te lazer Ctrl+R ile açılır; Windows'taki WPS'te Silgi başka bir iş yapabilir.",
+  "btToolsPowerpointWeb": "Tarayıcıda · yalnız sayfa geçişi, imleç",
+  "btToolsGoogleSlides": "Tarayıcıda · lazer, siyah/beyaz ekran",
+  "btPowerpointWebToolsNote": "Tarayıcıdaki PowerPoint'te lazer, kalem ve siyah ekran kısayolu yok; imleç işaretçi olur. Başlat Ctrl+F5 gönderir.",
+  "btGoogleSlidesToolsNote": "Google Slides'ta kalem yok; lazer L ile açılıp kapanır. Başlat Ctrl+F5 gönderir.",
   "verifyIntro": "Bu PC ile ilk kez bağlanıyorsunuz. PC ekranındaki güvenlik kodu şu olmalı:",
   "verifyNote": "Kodlar aynı değilse bağlanmayın: ağdaki başka bir cihaz PC gibi davranıyor olabilir. QR kodu okutarak bu adımı atlayabilirsiniz.",
   "certWarningIntro": "Bu cihazın kimliği (sertifikası) daha önce kaydettiğimizden farklı. PC'nizi yeniden kurduysanız veya sertifikayı yenilediyseniz bu normaldir. PC ekranındaki güvenlik kodu şu olmalı:",
@@ -755,6 +768,8 @@
   "capNoteNoAnswer": "Bluetooth'ta bilgisayar telefona bilgi göndermez.",
   "capNoteKeysOnly": "Yalnızca tuşlar; ses seviyesi ve şarkı adı görünmez.",
   "capNoteWpsNoMedia": "WPS'teki video uzaktan oynatılamıyor.",
+  "capNoteWebStart": "Ctrl+F5 ile başlar (F5 sayfayı yenilerdi); sitenin sekmesi önde olmalı.",
+  "capNoteWebTitle": "Tarayıcı penceresinin başlığından tanınır; Wayland'de yerel çalışan bir tarayıcıda tanınmaz, F11 basılır.",
   "capLevelYes": "Çalışır",
   "capLevelPartial": "Kısmen",
   "capLevelNo": "Çalışmaz",
