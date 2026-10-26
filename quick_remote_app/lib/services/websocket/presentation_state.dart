@@ -22,6 +22,8 @@ class PresentationState {
   static String nameOf(String presenter) => switch (presenter) {
         'impress' => 'LibreOffice Impress',
         'wps' => 'WPS Office',
+        WebPresenters.powerpointWeb => 'PowerPoint (web)',
+        WebPresenters.googleSlides => 'Google Slides',
         _ => 'PowerPoint',
       };
 
@@ -30,6 +32,8 @@ class PresentationState {
   static String shortNameOf(String presenter) => switch (presenter) {
         'impress' => 'Impress',
         'wps' => 'WPS',
+        WebPresenters.powerpointWeb => 'PowerPoint (web)',
+        WebPresenters.googleSlides => 'Google Slides',
         _ => 'PowerPoint',
       };
 

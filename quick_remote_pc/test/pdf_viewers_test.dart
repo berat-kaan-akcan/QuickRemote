@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/input/pdf_viewers.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart' show WebPresenters;
 
 void main() {
   test('finds viewers by Windows executable and Linux WM_CLASS', () {
@@ -86,5 +87,71 @@ void main() {
       expect(viewer.next, isNull);
       expect(viewer.prev, isNull);
     }
+  });
+
+  group('presentation sites in a browser tab', () {
+    final zwsp = String.fromCharCode(0x200B);
+    final emDash = String.fromCharCode(0x2014);
+
+    test('are told by the last part of the page title, before the browser\'s name', () {
+      final titles = {
+        // Measured: Chrome 156, Edge 156 (Turkish profile and tab count).
+        'Ders 3 - Google Slaytlar - Google Chrome': WebPresenters.googleSlides,
+        'Ders 3 - Google Slaytlar ve diğer 1 sayfa - Kişisel - Microsoft$zwsp Edge': WebPresenters.googleSlides,
+        'Deck - Google Slides and 2 more pages - Work - Microsoft$zwsp Edge': WebPresenters.googleSlides,
+        'Deck - Google Slides $emDash Mozilla Firefox': WebPresenters.googleSlides,
+        'Sunu1.pptx - PowerPoint - Google Chrome': WebPresenters.powerpointWeb,
+        'Sunu1 - Microsoft PowerPoint Online - Microsoft$zwsp Edge': WebPresenters.powerpointWeb,
+        'Sunu1.pptx - PowerPoint - Kişisel - Microsoft$zwsp Edge': WebPresenters.powerpointWeb,
+        // A Linux WM title without the browser's name.
+        'Deck - Google Slides': WebPresenters.googleSlides,
+      };
+      titles.forEach((title, site) => expect(PdfViewers.webPresenterOf(title), site, reason: title));
+    });
+
+    test('are not pages about them', () {
+      for (final title in [
+        'PowerPoint - Wikipedia - Google Chrome',
+        'Microsoft PowerPoint - Vikipedi - Kişisel - Microsoft$zwsp Edge',
+        'powerpoint - Google\'da Ara - Google Chrome',
+        'Google Slides - Google Chrome',
+        'PowerPoint',
+        'How to present in PowerPoint - Blog - Google Chrome',
+        'Sunu1.pptx - Google Chrome',
+        '',
+      ]) {
+        expect(PdfViewers.webPresenterOf(title), isNull, reason: title);
+      }
+    });
+
+    test('only in browser windows', () {
+      expect(PdfViewers.windowsProgram('msedge.exe', 'Sunu1.pptx - PowerPoint - Kişisel - Microsoft$zwsp Edge'),
+          WebPresenters.powerpointWeb);
+      expect(PdfViewers.windowsProgram('chrome.exe', 'Deck - Google Slides - Google Chrome'), WebPresenters.googleSlides);
+      // PowerPoint's own editor is titled so too.
+      expect(PdfViewers.windowsProgram('POWERPNT.EXE', 'Sunu1 - PowerPoint'), 'powerpnt.exe');
+      expect(PdfViewers.linuxPrograms(['Navigator', 'firefox'], 'Deck - Google Slides $emDash Mozilla Firefox'),
+          [WebPresenters.googleSlides, 'Navigator', 'firefox']);
+      expect(PdfViewers.linuxPrograms(['konsole'], 'Deck - Google Slides'), ['konsole']);
+      expect(PdfViewers.linuxPrograms(['google-chrome'], null), ['google-chrome']);
+    });
+
+    test('count as browsers and get their show keys', () {
+      const ctrl = 0x11, f5 = 0x74, esc = 0x1B;
+      for (final site in WebPresenters.values) {
+        expect(PdfViewers.kindOf(site), 'browser', reason: site);
+        expect(PdfViewers.presenterOf(site), site);
+        final keys = PdfViewers.forProgram(site)!;
+        // Ctrl+F5: F5 alone reloads the page. END keeps its Esc.
+        expect(keys.start, [ctrl, f5], reason: site);
+        expect(keys.end, isNull, reason: site);
+        expect(keys.start, isNot(contains(esc)));
+        expect(keys.next, [0x27]);
+        expect(keys.prev, [0x25]);
+      }
+      expect(PdfViewers.googleSlides.typesSlideNumber, isTrue);
+      expect(PdfViewers.powerpointWeb.typesSlideNumber, isFalse);
+      expect(PdfViewers.presenterOf('chrome.exe'), isNull);
+    });
   });
 }

@@ -270,9 +270,14 @@ class _RemoteScreenState extends State<RemoteScreen> {
       titleSpacing: AppSpace.md,
       title: RemoteHeader(
         title: ws.pcLabel,
-        // A PDF viewer or a browser in front: that, not the PC's program.
+        // A PDF viewer, a browser or a presentation site in front: that,
+        // not the PC's program.
         subtitle: Text(
-          show.viewer ? context.l10n.viewerName(show.front!) : PresentationState.shortNameOf(program),
+          show.site != null
+              ? PresentationState.shortNameOf(show.site!)
+              : show.viewer
+              ? context.l10n.viewerName(show.front!)
+              : PresentationState.shortNameOf(program),
         ),
         onSubtitleTap: () => ProgramSheet.show(context),
         isConnected: ws.isConnected,
