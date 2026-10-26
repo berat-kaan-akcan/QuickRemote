@@ -2,7 +2,7 @@
 
 Sınırlar: ad 30, kısa açıklama 80, tam açıklama 4000, "yenilikler" 500 karakter. Karakter sayıları aşağıda elle sayıldı; Console yine de kontrol eder.
 Marka kuralı: PowerPoint, Impress, WPS adları yalnız "ile çalışır" anlamında geçer, logo kullanılmaz; "bağlı değildir" notu tam açıklamanın sonundadır.
-Henüz **gerçek cihazda denenmemiş** özellikler (Windows'ta lazer katmanı ve büyüteç, Windows'ta slayt resmi) metne konmadı; Windows denemesi bitince eklenebilir. Konanların hepsi koda ve `KALANLAR.md`'ye göre denenmiş ya da çalışır durumda.
+Henüz **gerçek cihazda denenmemiş** özellikler (Windows'ta lazer katmanı ve büyüteç, Windows'ta slayt resmi) metne konmadı; Windows denemesi bitince eklenebilir. Konanların hepsi koda ve `docs/raporlar/YAPILANLAR.md`'ye göre denenmiş ya da çalışır durumda.
 
 ---
 
