@@ -188,7 +188,9 @@ void main() {
       final ws = _Ws()..noShow(front: FrontWindow.browser);
       await pumpControls(tester, ws);
       expect(
-        find.text('Browser in front · page turns and full screen only'),
+        find.text(
+          'Browser in front · page turns and full screen only. If the PDF page does not fit the screen, set the zoom to “Fit to page” on the computer.',
+        ),
         findsOneWidget,
       );
       expect(find.text('Full screen'), findsOneWidget);

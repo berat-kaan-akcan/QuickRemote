@@ -274,7 +274,7 @@ class WebSocketService extends ChangeNotifier {
         _autoStopTracking();
         final caps = _state.caps;
         final screen = _state.rawScreenImage;
-        _state.reset();
+        _state.resetShow();
         // The STATUS just before may have told what is in front now.
         _state.caps = caps;
         _state.rawScreenImage = screen;

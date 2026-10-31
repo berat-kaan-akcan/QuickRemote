@@ -123,7 +123,7 @@
   "presentationNotOpen": "No Presentation Open, start {programs}",
   "actionEnd": "End",
   "actionFullScreen": "Full screen",
-  "viewerInFront": "{front, select, browser{Browser in front · page turns and full screen only} other{PDF open · page turns and full screen only}}",
+  "viewerInFront": "{front, select, browser{Browser in front · page turns and full screen only. If the PDF page does not fit the screen, set the zoom to “Fit to page” on the computer.} other{PDF open · page turns and full screen only}}",
   "viewerName": "{front, select, browser{Browser} other{PDF}}",
   "siteInFront": "{name} open · Start opens the show, no slide number",
   "blackScreen": "Black Screen",

@@ -426,7 +426,8 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String viewerInFront(String front) {
     String _temp0 = intl.Intl.selectLogic(front, {
-      'browser': 'Tarayıcı önde · yalnız sayfa geçişi ve tam ekran',
+      'browser':
+          'Tarayıcı önde · yalnız sayfa geçişi ve tam ekran. PDF ekrana tam sığmıyorsa bilgisayarda yakınlaştırmayı “Sayfaya sığdır” olarak ayarlayın.',
       'other': 'PDF açık · yalnız sayfa geçişi ve tam ekran',
     });
     return '$_temp0';

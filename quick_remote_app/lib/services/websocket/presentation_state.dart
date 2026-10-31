@@ -172,13 +172,9 @@ class PresentationState {
   int systemVolume = -1; // 0-100; -1 = bilinmiyor
   bool systemMuted = false;
 
+  /// Everything known about the PC, for a new or a lost connection.
   void reset() {
-    currentSlide = 0;
-    totalSlides = 0;
-    slideNotes = '';
-    isPptRunning = false;
-    pptHasMedia = false;
-    pptIsMediaPlaying = false;
+    resetShow();
     // Without a connection there is no "now playing" to show.
     hasMedia = false;
     mediaTitle = null;
@@ -189,6 +185,19 @@ class PresentationState {
     isPlaying = false;
     systemVolume = -1;
     systemMuted = false;
+  }
+
+  /// The slideshow's state, for a show that ended (the empty SLIDE_STATE).
+  /// What plays on the PC and its volume stay: the PC sends the cover and
+  /// the volume only when they change, so a reset here lost them until the
+  /// next change, and the cover came and went (2026-10-28).
+  void resetShow() {
+    currentSlide = 0;
+    totalSlides = 0;
+    slideNotes = '';
+    isPptRunning = false;
+    pptHasMedia = false;
+    pptIsMediaPlaying = false;
     deck = null;
     caps = null;
     clearImages();
