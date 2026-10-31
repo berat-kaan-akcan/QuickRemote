@@ -429,7 +429,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String viewerInFront(String front) {
     String _temp0 = intl.Intl.selectLogic(front, {
-      'browser': 'Browser in front · page turns and full screen only',
+      'browser':
+          'Browser in front · page turns and full screen only. If the PDF page does not fit the screen, set the zoom to “Fit to page” on the computer.',
       'other': 'PDF open · page turns and full screen only',
     });
     return '$_temp0';

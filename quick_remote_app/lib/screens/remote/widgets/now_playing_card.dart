@@ -170,7 +170,10 @@ class _NowPlayingCardState extends State<NowPlayingCard> {
                           thumbnail,
                           fit: BoxFit.cover,
                           gaplessPlayback: true,
-                          errorBuilder: (_, _, _) => placeholderIcon,
+                          errorBuilder: (_, error, _) {
+                            debugPrint('Now playing cover not shown: $error');
+                            return placeholderIcon;
+                          },
                         ),
                       )
                     : placeholderIcon,

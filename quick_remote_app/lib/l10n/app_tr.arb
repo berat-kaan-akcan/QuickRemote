@@ -198,7 +198,7 @@
   "@actionFullScreen": {
     "description": "Replaces Start while a PDF viewer or a browser is in front on the PC: START puts it in full screen."
   },
-  "viewerInFront": "{front, select, browser{Tarayıcı önde · yalnız sayfa geçişi ve tam ekran} other{PDF açık · yalnız sayfa geçişi ve tam ekran}}",
+  "viewerInFront": "{front, select, browser{Tarayıcı önde · yalnız sayfa geçişi ve tam ekran. PDF ekrana tam sığmıyorsa bilgisayarda yakınlaştırmayı “Sayfaya sığdır” olarak ayarlayın.} other{PDF açık · yalnız sayfa geçişi ve tam ekran}}",
   "@viewerInFront": {
     "description": "Shown instead of 'no presentation open' while a PDF viewer (front = pdf) or a browser (front = browser) is in front on the PC.",
     "placeholders": {

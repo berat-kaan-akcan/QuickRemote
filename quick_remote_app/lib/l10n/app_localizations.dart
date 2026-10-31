@@ -839,7 +839,7 @@ abstract class AppLocalizations {
   /// Shown instead of 'no presentation open' while a PDF viewer (front = pdf) or a browser (front = browser) is in front on the PC.
   ///
   /// In tr, this message translates to:
-  /// **'{front, select, browser{Tarayıcı önde · yalnız sayfa geçişi ve tam ekran} other{PDF açık · yalnız sayfa geçişi ve tam ekran}}'**
+  /// **'{front, select, browser{Tarayıcı önde · yalnız sayfa geçişi ve tam ekran. PDF ekrana tam sığmıyorsa bilgisayarda yakınlaştırmayı “Sayfaya sığdır” olarak ayarlayın.} other{PDF açık · yalnız sayfa geçişi ve tam ekran}}'**
   String viewerInFront(String front);
 
   /// The remote's header line under the PC's name while a PDF viewer (front = pdf) or a browser (front = browser) is in front and no show runs, in place of the program's name.
