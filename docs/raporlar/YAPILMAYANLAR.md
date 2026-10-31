@@ -1,6 +1,6 @@
 # QuickRemote: yapılmayanlar
 
-Son güncelleme: 2026-10-26. Bütün açık işler bu dosyada: denenmemiş özellikler, yazılmamış kod, bekleyen kararlar ve bilerek sonraya bırakılanlar. Bitenler [YAPILANLAR.md](YAPILANLAR.md)'de.
+Son güncelleme: 2026-10-28. Bütün açık işler bu dosyada: denenmemiş özellikler, yazılmamış kod, bekleyen kararlar ve bilerek sonraya bırakılanlar. Bitenler [YAPILANLAR.md](YAPILANLAR.md)'de.
 
 Bir madde bitince buradan silinir ve YAPILANLAR.md'deki ilgili bölüme sonucuyla (tarih, sürüm, ne görüldü) yazılır.
 
@@ -104,7 +104,7 @@ Windows denemesi (2026-10-25) olumsuz çıktı: HID hizmetini kapatıp açmak te
 
 - [ ] **PC'nin sürümü `auth` yanıtında**: telefon eski bir PC'ye "PC uygulamasını güncelleyin" diyebilsin diye (önizleme, `caps`, `site` gibi protokol farklarında kullanıcı nedenini anlar).
 - [ ] **Telefonda PDF tam ekranından çıkış tuşu**: PC tam ekran olup olmadığını bildirmiyor.
-- [ ] **Saat, gösteri dışında siyah/beyaz ekranı soluk gösteriyor**: kaplama orada çalıştığı hâlde. Saate ayrı bir bayrak gerekiyor (`laserAnywhere` gibi).
+- [ ] **Saat, gösteri dışında siyah/beyaz ekranı soluk gösteriyor**: kaplama orada çalıştığı hâlde. Saate ayrı bir bayrak gerekiyor (`laserAnywhere` gibi). 2026-10-28'de WPS PDF önündeyken saatte yine görüldü.
 - [ ] **Siyah ekran açıkken kaplamanın mürekkebi**: programın siyah ekranından dönünce mürekkep yoklama süresi kadar (≤2 sn) gecikmeyle yeniden çiziliyor.
 - [ ] **Küçük uç durum**: PC `caps`'te kalemi listeleyip lazeri listelemezse dokunmatik alandaki tek dokunuş başarısız olur.
 - [ ] **WPS'in ana sayfası Windows'ta "editor" sayılıyor** (`front`). START artık orada F5 basmıyor (`START_FAILED`), ama telefon "düzenleyici önde" sanıyor.
@@ -171,8 +171,7 @@ Denetimin kendisi ve düzelttikleri PR #3'te (aşağıda). Bu maddeler `main`'de
 **Kurulum engeli (2026-10-21):** telefondaki uygulama başka bir anahtarla imzalıydı; bu makinede derlenen release APK üstüne kurulamadı (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`). Ya imzalayan makineden kurulur ya da uygulama kaldırılıp kurulur (kayıtlı PC'ler ve ayarlar gider). versionCode o zamankinden büyük olmalı (`--build-number`).
 
 - [ ] **Son PC'ye bağlanma**: PC'nin IP'si değişince mDNS'te adıyla bulunuyor mu? (Kayıtlı PIN'le bağlanma ve yanlış PIN'de PIN sorma çalışıyor; IP değiştirmek yönetici parolası istedi.)
-- [ ] **Sunucu görünümünde dokunulan yere giden lazer** (`LASER_ABS`): PowerPoint/WPS'te imleç, kaplama ve Impress; 16:9 olmayan ekranda kayma.
-- [ ] **PowerPoint gösterisinde** kart, Sunucu görünümü ve "Slayta git" ızgarası telefon ekranında (PC tarafı Windows'ta doğrulandı).
+- [ ] **Sunucu görünümünde dokunulan yere giden lazer** (`LASER_ABS`): PowerPoint'te denendi (2026-10-28, YAPILANLAR); WPS'te imleç, kaplama ve Impress, 16:9 olmayan ekranda kayma kaldı.
 
 ---
 
@@ -180,7 +179,7 @@ Denetimin kendisi ve düzelttikleri PR #3'te (aşağıda). Bu maddeler `main`'de
 
 APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur (bir kez telefona kurulup telefon uygulamasının yerine geçmişti).
 
-- [ ] Saat bölümü PowerPoint ile Windows'ta (aşağıdaki "Yeni arayüzün tam denemesi").
+- [ ] Saat bölümü PowerPoint ile Windows'ta. WPS PDF ile denendi (2026-10-28: Tam ekran, İleri/Geri, lazer, Bitir).
 - [ ] Bağlantı sertleştirmesi (2026-10-24, `49d92a6`: `DirectLink` `SecurityException` yakalıyor, kapanan oturum soket almıyor, yazıcı iş parçacığı oturum başına, `PresentingService` reddedilen `startForeground`'u atlatıyor): saatte bir oturum boyunca, izin oturum ortasında geri alınarak.
 
 ---
@@ -191,23 +190,25 @@ APK'yı yalnızca `adb -s <saatin seri numarası>` ile kur (bir kez telefona kur
 
 Eski deneme listesi `~/Masaüstü/QuickRemote-tasarim-ornekleri/WINDOWS-DENEME.md` (Linux makinesinde, 16 bölüm). Telefonsuz denemede (2026-10-22, deneme istemcisiyle) yapılanlar YAPILANLAR.md'de. Telefonla kalanlar:
 
-- [ ] PC penceresinin geniş düzeni (760 px ve üstü).
-- [ ] Ortak ağ uyarısı, Görünüm ve Dil ayarları.
-- [ ] Güvenlik kodu penceresi.
-- [ ] Touchpad: kalem renkleri ve silgi.
-- [ ] Medya ve "şu an çalan" (SMTC hiç denenmedi).
-- [ ] QR ile bağlanma ve telefonu çıkarma.
-- [ ] Saat bölümü (WIN-UI 15).
+- [ ] Ortak ağ uyarısı (ağ profilini değiştirmek gerekir). Görünüm ve Dil denendi (2026-10-28).
+- [ ] Güvenlik kodu penceresi (telefonda kayıtlı parmak izi olmayan bir bağlantı gerekir; uygulama verisini silmeden çıkmıyor).
+- [ ] Touchpad: kalem renkleri ve silgi, telefonun kendi düğmeleriyle (katmanda komutlarla denendi, 2026-10-28).
+- [ ] QR ile bağlanma (kamera PC ekranına tutulmalı). Telefonu çıkarma denendi (2026-10-28).
 
 ### Diğerleri
 
-- [ ] **Slayt resmi**: WPS 12.2'de `Slides(n).Export` (12.1'de çalışıyor).
+- [ ] **Slayt resmi**: WPS 12.2'de `Slides(n).Export` (12.1'de çalışıyor). Bu makinede şu an WPS 12.1.0.29162 kurulu; 12.2 klasörü boş.
 - [ ] **Kaplama**: DPI %150 ve iki monitör (%125'te doğru).
-- [ ] **Tepsi simgesine tıklama** (sol tık pencere, sağ tık menü). Tek örnek, `--minimized` ve HKCU Run çalışıyor.
-- [ ] **"Sorun bildir" tarayıcıda açılıyor mu** (`url_launcher`'a geçildi, sonrası görülmedi). Günlüğü dışa aktarma çalışıyor.
-- [ ] **Edge'de tam ekran PDF** (Edge kullanıcı profilinde PDF yerine eklenti sayfaları açtığı için denenmedi; Chrome'da doğrulandı).
-- [ ] **WPS 12'nin PDF sekmesi**: başlığında dosya adı görünüyor mu (`PdfViewers.windowsProgram`)? WPS 12.2 test PDF'ini açarken çöktü.
-- [ ] **Tarayıcıda PowerPoint ve Google Slaytlar**: [PPT_WEB_PLAN.md](PPT_WEB_PLAN.md), 6. bölüm.
+- [ ] **WPS PDF öndeyken Başlat bir kez arkadaki PowerPoint gösterisini açtı** (2026-10-27): WPS 12.1'in PDF sekmesi öndeydi (`fg` doğru okundu), arkada PowerPoint'te Korumalı Görünüm'de bir sunu vardı. F11 yerine `_startPresenter` çalıştı, ~15 sn sonra PowerPoint gösterisi açıldı. Hemen ardından aynı durumda tekrarlanınca F11 doğru basıldı; neden bulunamadı. Kullanıcı o sırada bilgisayarı kullanıyordu, odak bir an başka pencereye geçmiş olabilir. Tekrar görülürse `_startViewer`'a öndeki pencerenin adını yazan bir günlük satırı ekle. 2026-10-28'de aynı durumda üç kez denendi (Shift+F5 sürümüyle), PowerPoint açılmadı.
+- [ ] **WPS PDF'te QuickRemote'tan ikinci Başlat Oynat yerine araç çubuklu tam ekranı açtı** (2026-10-28): Başlat → Bitir → Başlat sırasında ikinci ve üçüncü Başlat'ta üstte WPS araç çubuğu olan tam ekran görüldü. Tuşlarla doğrudan (Shift+F5, Esc, tekrar Shift+F5; araya Alt da kondu) her seferinde doğru Oynat geldi. Bitir'in Esc'inden sonra kalan bir durum olabilir; Bitir'den sonra öndeki pencerenin hâline bakılmalı.
+- [ ] **Katmanda Hepsini sil bir kez çizgileri silmedi** (2026-10-28): kırmızı/mavi/yeşil kalem, sarı fosforlu, silgi, geri al, hemen ardından ERASE_ALL; sunucu `ack` verdi ve günlükte çalıştı, ama 1,5 sn sonra kırmızı ve mavi çizgi ekrandaydı. Aynı sırayla iki kez daha denendi, silindi.
+- [ ] **Chrome ve Edge'de PDF tam ekranda bir sayfaya sığmıyor** (2026-10-27): F11 pencereyi büyütür ama yakınlaştırma pencere küçükkenki gibi kalır, araç çubuğu (Chrome'da sayfa resimleri paneli de) durur; ekranda bir sayfa ve bir sonrakinin yarısı görünür. Denenenler:
+  - Edge'in PDF araç çubuğundaki "PDF'yi tam ekrana girin" düğmesi tam istenen şey (tek sayfa ekranı doldurur, oklar ve Page Down sayfa çevirir, Esc çıkar), ama kısayolu yok; UI Automation'da yalnızca tarayıcının kendi düğmeleri görünüyor, PDF görüntüleyicinin düğmeleri görünmüyor.
+  - Chrome'un PDF menüsündeki "Sunum" araç çubuklarını gizler ama yakınlaştırmayı değiştirmez; kısayolu bulunamadı.
+  - "Sayfaya sığdır" (Ctrl+\): Türkçe Q klavyede sanal tuş koduyla gitmiyor (Chrome tuşun karakterine bakıyor), Ctrl basılıyken Unicode `\` (SendInput `KEYEVENTF_UNICODE`) gidiyor. Ama aç/kapa: durumu bilmeden basmak ters çevirebilir.
+  - Geçici Edge profili Windows hesabıyla kendiliğinden oturum açıp uzantıları eşitliyor (sekmeyi bir uzantı sayfası alıyor); denemeler `--inprivate` ile ya da Chrome'la yapılmalı.
+  - Şimdilik telefonda uyarı var (2026-10-28, `viewerInFront`, tarayıcı öndeyken): "PDF ekrana tam sığmıyorsa bilgisayarda yakınlaştırmayı “Sayfaya sığdır” olarak ayarlayın." Telefonda henüz görülmedi. Kendiliğinden düzeltme zorlanmayacak (kullanıcının kararı).
+- [ ] **Tarayıcıda PowerPoint ve Google Slaytlar**: Chrome'da denendi (2026-10-28, YAPILANLAR); Edge, Firefox, Bluetooth modu ve Google'ın Sunucu görünümü kaldı: [PPT_WEB_PLAN.md](PPT_WEB_PLAN.md), 6. bölüm.
 
 ---
 
