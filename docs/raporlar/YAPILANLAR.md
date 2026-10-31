@@ -160,6 +160,47 @@ Windows 11 Home 26300, %125, tek monitör, PowerPoint 365 16.0.20430, WPS 12.1.0
   - `wps_take_over_test.dart` (7 test) ve 3 Python köprü testi Windows'ta düşüyordu (Linux'a özgü); Windows'ta atlanıyor.
 - PC Ayarlar'ının küçük bulguları (Lazer seçeneği "QuickRem…" diye kesiliyordu, "Kapat" düğmesi "Kapatınca tepsiye küçült"ün üstüne biniyordu): 2026-10-25'te ikisi de yok (440×760'ta gerçek fontlarla bakıldı).
 
+### Windows 11, deneme istemcisiyle (2026-10-27)
+
+Windows 11 Home 26300, %125, tek monitör, WPS 12.1.0.29162, Edge 156, Chrome 156. `main`'den (`6abb9b5`) derlenen PC; telefon yerine TLS + PIN'li bir deneme istemcisi, ekran görüntüleriyle bakıldı.
+
+- **WPS'in PDF sekmesi** (`wps.exe`, sınıf `OpusApp`): başlık `qr-test.pdf - WPS Office`, `front` `pdf`. Başlat F11 ile tam ekran, Sonraki ×2 ve Önceki sayfa sayfa (1 → 3 → 2), Bitir tam ekrandan çıkıyor. Telefona ekran resmi (kind 3) gidiyor, sayfa doğru.
+- **WPS PDF sekmesinde Oynat modu** (kullanıcının bulgusu): F11 yakınlaştırmayı korur, ekranda bir sayfa ve bir sonrakinin yarısı görünür. Başlat artık Shift+F5 basıyor (Oynat: tek sayfa ekranı doldurur), oklar sayfa çevirir, Bitir Esc. Son sayfadan sonraki bir Sağ ok WPS'in klavye odağını Oynat görünümünden alıyor, sonra Esc dahil hiçbir tuş gitmiyordu; her tuştan önce pencerenin ortasındaki görünüme odak veriliyor (`ViewerKeys.refocus`, `PptController._focusViewerContent`). Uçtan uca denendi: Başlat, Sonraki (son sayfa) ×2, Önceki, lazer, Bitir. Linux'ta F11 kaldı (WPS 11.1'de Shift+F5 denenmedi).
+- **Edge'de tam ekran PDF** (geçici profil, ardından silindi): başlık `qr-test.pdf - Profil 1 - Microsoft​ Edge`. Başlat F11, oklarla 1 → 3 → 2, Bitir F11; ekran resmi geliyor.
+- **"Sorun bildir"**: Chrome'da önde, `[PC]` başlıklı, sürüm, platform ve programlar dolu GitHub "New issue" sayfası açıyor (issue açılmadı, sekme kapatıldı).
+- **Tepsi**: sağ tık menüsü Göster, Sunucuyu durdur, "Bağlı telefon: 1", Çıkış; pencere kapatılınca görev çubuğundan kalkıp tepsiye iniyor, simgeye sol tık onu geri açıp öne getiriyor.
+- **Katman, WPS'in tam ekran PDF'inin üstünde**: lazer noktası, kırmızı kalem çizgisi (tıklama PDF'e geçmedi), Sonraki'de çizginin silinmesi, siyah ekran ve tekrar basınca geri açılması. Kullanıcı izlerken, ekranda adım yazısıyla yeniden oynatıldı.
+- **Şu an çalan (SMTC), PC tarafı**: Spotify'ın başlığı (Türkçe harfler doğru), sanatçısı, konumu, çalıyor bilgisi ve kapağı `SMTC_STATE`'te geliyor.
+- Açık kalan bir bulgu (WPS PDF öndeyken Başlat'ın bir kez PowerPoint'i başlatması) YAPILMAYANLAR.md'de.
+
+### Windows 11, telefon ve saatle (2026-10-28)
+
+Galaxy S23 FE (QuickRemote 1000020, bu makinede derlendi), Galaxy Watch 6 (2000020), PowerPoint 365, WPS 12.1.
+
+- **PC penceresi**: 1300 px genişlikte solda durum, bağlı cihazlar ve Durdur, sağda eşleştirme kartı; "Kodu göster" geniş düzende doğru. Ayarlar'da Açık ve Koyu tema ile İngilizce anında uygulanıyor ve kaydediliyor (`theme_mode`, `language`), metinler taşmıyor; sonra Sistem'e döndürüldü.
+- **Telefonu çıkarma**: "Çıkar" bağlantıyı kesiyor, PIN değişiyor (günlük: "disconnected by the user — PIN replaced").
+- **Telefon**: kayıtlı ama eski PIN'le dokunulunca "PC'nin PIN'i değişti" ve PIN kutusu, yeni PIN'le bağlanma; güncel PIN'le doğrudan bağlanma. Tarayıcı öndeyken bilgi satırı ve "Sayfaya sığdır" uyarısı. Medya sekmesinde Spotify'ın başlığı, sanatçısı, ilerlemesi ve ses düzeyi (kapak yok, YAPILMAYANLAR).
+- **PowerPoint, telefondan**: Başlat öndeki deneme sunumunu açtı (arkadaki başka sunumu değil); kartta numara, slayt resmi, not ve ilerleme; "Slayta git" küçük resim ızgarasıyla 5. slayda atladı; not satırından Sunucu görünümü (slayt, sıradaki, notlar); Lazer tuşuyla resme dokunulan yere giden lazer (`LASER_ABS`): parmak resmin alt kısmında soldan sağa giderken PowerPoint'in lazeri slaytta aynı oranlarda (yatay ~%40 → %70, dikey %85 → %91) göründü; Bitir.
+- **Saat** (WPS PDF önde): "Bağlı · PDF önde", Başlat yerine Tam ekran; basınca WPS Oynat moduna geçti ve saat sayfa tuşlarına döndü; İleri/Geri sayfa çevirdi; lazer ekranında parmakla nokta PC'de hareket etti; araçlar sayfasında basılı tutulan Bitir Oynat modundan çıkardı.
+- **Katman komutları** (deneme istemcisi, gösteri yokken): kırmızı, mavi, yeşil kalem, sarı fosforlu kalem, silgi, geri al, Hepsini sil, spot ışığı, büyüteç.
+- **WPS PDF önde, arkada PowerPoint açıkken Başlat**: üç denemede de PowerPoint gösterisi açılmadı.
+
+### Tarayıcıda Google Slaytlar ve PowerPoint web (2026-10-28)
+
+Chrome 156, telefon (1000023) ve deneme istemcisi; kullanıcının hesaplarında 12 slaytlık deneme sunusu (Google Slaytlar'a dönüştürülmüş; PowerPoint web okul hesabının SharePoint'inde).
+
+- **Google Slaytlar**: başlık `QuickRemote-deneme - Google Slaytlar - Google Chrome`; telefonda "Google Slides", bilgi satırı, Başlat ve Slayta git. Başlat sunuyu geçerli slayttan açıyor (Ctrl+F5; Ctrl+Shift+F5 baştan), sayfa yenilenmiyor. Sonraki/Önceki, animasyonlu slaytta önce animasyon adımı. Slayta git sunuda 5, 9, 12; sunu kapalıyken 7 seçiliyken 3 (sunu açılıp 3'e atladı, düzenleyiciye rakam yazılmadı). Bitir. Katman: lazer, spot ışığı, kalem (tıklama sunuya geçmedi), Sonraki'de çizgi silindi, siyah/beyaz ekran; telefona ekran resmi.
+- **PowerPoint web**: okul hesabında başlık yalnızca dosya adı (`QuickRemote-deneme.pptx - Google Chrome`), "PowerPoint" yok; tanınmıyordu. Artık sayfa kısmı .pptx/.ppt/.pptm/.ppsx ile biten tarayıcı başlığı PowerPoint web sayılıyor (`PdfViewers.webPresenterOf`, testli). Telefonda "PowerPoint (web)", Slayta git gizli. Başlat gösteriyi 1. slayttan açıyor (Ctrl+F5; Ctrl+Shift+F5 geçerli slayttan), Sonraki/Önceki, animasyon adımı, lazer, spot ışığı, kalem, Sonraki'de çizgi silindi, siyah ekran, Bitir; ikinci Bitir zararsız.
+- **Sunu açıkken Başlat sayfayı yeniliyordu**: telefon sitelerde gösteriyi bilmediği için tuş hep Başlat kalıyor; ikinci basışta Ctrl+F5 sayfayı yeniden yüklüyordu. Artık site penceresi monitörü kaplıyorsa Başlat Esc basıyor (`PptController._startViewer(endShowing: true)`, yalnızca START'ta; Slayta git sunuyu kapatmaz). İki sitede denendi: Başlat açtı, ikinci Başlat kapattı, sayfa yenilenmedi.
+- Deneme düzeneğinin bulgusu: pencereyi öne almak için basılan Alt, Chrome'da odağı sayfadan alıyor ve Ctrl+F5 sayfayı yeniliyordu (gerçek kullanımda Alt basılmaz).
+
+### Şu an çalanın kapağı ve Medya sekmesi (2026-10-28)
+
+- **Kapak gelip gidiyordu**: gösteri yokken PC ara ara boş SLIDE_STATE gönderiyor (öndeki pencere ya da araçlar değişince); telefon bunda `PresentationState.reset()` çağırıyordu, o da şu an çalanı (kapak dahil) ve ses düzeyini siliyordu. Başlık sonraki SMTC_STATE ile dönüyordu, ama PC kapağı ve sesi yalnızca değişince gönderdiği için kapak bir sonraki şarkıya kadar gelmiyordu. Gösteri bitince artık yalnızca gösteri bilgisi sıfırlanıyor (`resetShow()`); testi `media_play_key_test.dart`. Telefonda denendi: öndeki pencere üç kez değişti, kapak ve ses kaldı.
+- PC'nin kapak okuması da sağlamlaştırıldı (`smtc_controller.dart`): okuma başarısız ya da boş olursa aynı şarkının son kapağı kalıyor (boş kapak telefonda kapağı siliyordu), şarkı değişince hâlâ önceki şarkının kapağı okunursa yeni şarkınınki sayılmıyor ve bir sonraki yoklamada yeniden okunuyor (en fazla 10 sn). Ölçüm: kapak okuması 10-70 ms, üç şarkı değişiminde Spotify ad ve kapağı aynı anda (300 ms içinde) güncelledi.
+- Kart kapağı çözemezse günlüğe yazıyor (`Now playing cover not shown`).
+- **Medya sekmesi** (Wi-Fi ve Bluetooth kumandası) dikeyde ortalandı (kullanıcının isteği; 2026-10-25'te yukarı yaslanmıştı), kısa ekranda kayıyor.
+
 ### Windows Bluetooth denemesi (2026-10-25)
 
 Soru: Telefon QuickRemote'un Bluetooth ekranı kapalıyken eşleştiyse Windows onu klavye olarak tanımıyor. HID hizmetini kapatıp açmak (`BluetoothSetServiceState`) Windows'a kayıtları yeniden okutur mu? Betik: `quick_remote_pc/tool/windows_bt_hid_trial.ps1` (`-ListOnly`, `-NoToggle`, `-Address` seçenekleri; çıktıyı `%TEMP%\quickremote-bt-deneme-<tarih>.txt`'e yazar).
