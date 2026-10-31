@@ -56,12 +56,18 @@ try {
         } catch {}
         
         # The polling PowerShell process persists: reuse the cover while the
-        # same track plays instead of reading it on every poll. Players may
-        # update the title before the cover, so a cached cover lives 10 s.
+        # same track plays instead of reading it on every poll, and read it
+        # again every 10 s. A read that fails or comes back empty keeps the
+        # track's last cover: an empty one made the phone drop it. Players
+        # update the title before the cover, so right after a track change
+        # the old track's cover is not taken for the new one's: it is shown
+        # meanwhile and read again on the next poll, for up to 10 s.
         \$trackKey = "\$(\$props.Title)|\$(\$props.Artist)|\$(\$props.AlbumTitle)"
         \$thumbBase64 = ""
-        if (\$global:qrThumbKey -eq \$trackKey -and ((Get-Date) - \$global:qrThumbAt).TotalSeconds -lt 10) {
-            \$thumbBase64 = \$global:qrThumb
+        \$sameTrack = \$global:qrThumbKey -eq \$trackKey
+        if (\$sameTrack) { \$thumbBase64 = \$global:qrThumb }
+        if (\$sameTrack -and ((Get-Date) - \$global:qrThumbAt).TotalSeconds -lt 10) {
+            # cached
         } elseif (\$props.Thumbnail -ne \$null) {
             try {
                 \$thumbAsync = \$props.Thumbnail.OpenReadAsync()
@@ -75,13 +81,24 @@ try {
 
                 \$memoryStream = New-Object System.IO.MemoryStream
                 \$dotNetStream.CopyTo(\$memoryStream)
-                \$thumbBase64 = [Convert]::ToBase64String(\$memoryStream.ToArray())
+                \$read = [Convert]::ToBase64String(\$memoryStream.ToArray())
 
                 \$dotNetStream.Close()
                 \$memoryStream.Close()
-                \$global:qrThumbKey = \$trackKey
-                \$global:qrThumb = \$thumbBase64
-                \$global:qrThumbAt = Get-Date
+                if (\$read.Length -gt 0) {
+                    \$thumbBase64 = \$read
+                    if (-not \$sameTrack) {
+                        \$global:qrPrevThumb = \$global:qrThumb
+                        \$global:qrThumbKey = \$trackKey
+                        \$global:qrThumbFirst = Get-Date
+                    }
+                    \$global:qrThumb = \$read
+                    \$global:qrThumbAt = Get-Date
+                    # Still the previous track's cover: read again next poll.
+                    if (\$read -eq \$global:qrPrevThumb -and ((Get-Date) - \$global:qrThumbFirst).TotalSeconds -lt 10) {
+                        \$global:qrThumbAt = [DateTime]::MinValue
+                    }
+                }
             } catch {}
         }
         
