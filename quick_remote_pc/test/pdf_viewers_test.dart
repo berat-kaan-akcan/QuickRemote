@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_pc/services/input/pdf_viewers.dart';
-import 'package:quick_remote_shared/quick_remote_shared.dart' show WebPresenters;
+import 'package:quick_remote_shared/quick_remote_shared.dart' show FrontWindow, WebPresenters;
 
 void main() {
   test('finds viewers by Windows executable and Linux WM_CLASS', () {
@@ -47,8 +47,11 @@ void main() {
   });
 
   test('a WPS window on Windows whose title names a PDF is WPS PDF', () {
-    expect(PdfViewers.windowsProgram('wps.exe', 'rapor.PDF - WPS Office'), 'wpspdf');
-    expect(PdfViewers.forProgram(PdfViewers.windowsProgram('wps.exe', 'rapor.pdf - WPS Office')), PdfViewers.wpsPdf);
+    expect(PdfViewers.windowsProgram('wps.exe', 'rapor.PDF - WPS Office'), 'wpspdftab');
+    expect(PdfViewers.forProgram(PdfViewers.windowsProgram('wps.exe', 'rapor.pdf - WPS Office')), PdfViewers.wpsPdfPlay);
+    expect(PdfViewers.kindOf(PdfViewers.windowsProgram('wps.exe', 'qr-test.pdf - WPS Office')), FrontWindow.pdf);
+    expect(PdfViewers.wpsPdfPlay.refocus, isTrue);
+    expect(PdfViewers.wpsPdf.refocus, isFalse);
     expect(PdfViewers.windowsProgram('wps.exe', 'sunum.pptx - WPS Office'), 'wps.exe');
     expect(PdfViewers.windowsProgram('wps.exe', 'pdfler.pptx'), 'wps.exe');
     expect(PdfViewers.windowsProgram('Chrome.exe', 'a.pdf'), 'chrome.exe');
@@ -79,7 +82,7 @@ void main() {
 
   test('browsers and WPS PDF turn pages with the arrows, the others with PageDown/PageUp', () {
     const right = 0x27, left = 0x25;
-    for (final viewer in [PdfViewers.fullScreen, PdfViewers.firefox, PdfViewers.wpsPdf]) {
+    for (final viewer in [PdfViewers.fullScreen, PdfViewers.firefox, PdfViewers.wpsPdf, PdfViewers.wpsPdfPlay]) {
       expect(viewer.next, [right]);
       expect(viewer.prev, [left]);
     }
@@ -103,6 +106,10 @@ void main() {
         'Sunu1.pptx - PowerPoint - Google Chrome': WebPresenters.powerpointWeb,
         'Sunu1 - Microsoft PowerPoint Online - Microsoft$zwsp Edge': WebPresenters.powerpointWeb,
         'Sunu1.pptx - PowerPoint - Kişisel - Microsoft$zwsp Edge': WebPresenters.powerpointWeb,
+        // Measured 2026-10-28: PowerPoint for the web on a school account
+        // (SharePoint) names only the file.
+        'QuickRemote-deneme.pptx - Google Chrome': WebPresenters.powerpointWeb,
+        'Sunu1.pptx - Kişisel - Microsoft$zwsp Edge': WebPresenters.powerpointWeb,
         // A Linux WM title without the browser's name.
         'Deck - Google Slides': WebPresenters.googleSlides,
       };
@@ -117,7 +124,8 @@ void main() {
         'Google Slides - Google Chrome',
         'PowerPoint',
         'How to present in PowerPoint - Blog - Google Chrome',
-        'Sunu1.pptx - Google Chrome',
+        'Sunu1.pptx - Google Drive - Google Chrome',
+        'Sunu1.pdf - Google Chrome',
         '',
       ]) {
         expect(PdfViewers.webPresenterOf(title), isNull, reason: title);
