@@ -18,7 +18,12 @@ class ViewerKeys {
   /// show on screen (Google Slides).
   final bool typesSlideNumber;
 
-  const ViewerKeys(this.start, {this.end, this.next, this.prev, this.typesSlideNumber = false});
+  /// The view at the window's center is given the keyboard focus before
+  /// every key: WPS's PDF Play mode loses it after a key past the last page,
+  /// and then takes no key at all, not even Esc.
+  final bool refocus;
+
+  const ViewerKeys(this.start, {this.end, this.next, this.prev, this.typesSlideNumber = false, this.refocus = false});
 }
 
 /// PDF viewers, browsers and the presentation sites in a browser tab. Their
@@ -51,9 +56,14 @@ class PdfViewers {
   /// WPS PDF: its F5 does nothing, F11 is full screen (Esc leaves it).
   /// PageDown scrolls by a screen, the arrows jump to the next page's top,
   /// also in full screen. Verified on WPS 11.1 (Linux), whose window class
-  /// is "pdf". WPS 12 on Windows opens PDFs in a tab of its wps.exe window,
-  /// told apart by the window's title ([windowsProgram]; not tried there).
+  /// is "pdf".
   static const wpsPdf = ViewerKeys([_f11], next: [_right], prev: [_left]);
+
+  /// WPS 12's PDF tab on Windows ([windowsProgram]): Shift+F5 is its Play
+  /// mode, one page filling the screen, which F11 is not (it keeps the
+  /// zoom, so a page and half the next show). The arrows turn pages, Esc
+  /// leaves it. Verified on WPS 12.1 (2026-10-27). Not tried on Linux.
+  static const wpsPdfPlay = ViewerKeys([_shift, _f5], next: [_right], prev: [_left], refocus: true);
 
   /// PowerPoint for the web: Ctrl+F5 starts the show from the first slide
   /// (F5 is the browser's reload), Esc ends it (Microsoft's list of its
@@ -101,14 +111,14 @@ class PdfViewers {
   /// The name [forProgram] and [kindOf] get for a Windows window of
   /// [executable] ("wps.exe") titled [title]. WPS 12 opens PDFs in a tab of
   /// its wps.exe window, beside its presentations and documents, so a WPS
-  /// window whose title names a PDF counts as WPS PDF ("wpspdf"), whose
-  /// PageDown scrolls by a screen and whose F5 does not start anything.
-  /// Not tried on WPS 12: its title format is assumed to carry the file name.
+  /// window whose title names a PDF counts as WPS PDF ("wpspdftab", not a
+  /// Linux WM_CLASS name), whose F5 does not start anything.
+  /// Measured on WPS 12.1: the title is "name.pdf - WPS Office".
   /// A browser window whose title names a presentation site is that site
   /// ([webPresenterOf]).
   static String windowsProgram(String executable, String title) {
     final exe = executable.toLowerCase();
-    if (exe == 'wps.exe' && RegExp(r'\.pdf\b', caseSensitive: false).hasMatch(title)) return 'wpspdf';
+    if (exe == 'wps.exe' && RegExp(r'\.pdf\b', caseSensitive: false).hasMatch(title)) return 'wpspdftab';
     if (kindOf(exe) == FrontWindow.browser) return webPresenterOf(title) ?? exe;
     return exe;
   }
@@ -178,12 +188,19 @@ class PdfViewers {
             ? [parts.length - 2, parts.length - 3]
             : [parts.length - 2];
     for (final i in candidates) {
+      if (i < 0) continue;
+      // PowerPoint for the web on a work or school account (SharePoint)
+      // names only the file: "Deck.pptx - Google Chrome" (measured,
+      // 2026-10-28). A file name may be the title's first part.
+      if (_powerpointFile.hasMatch(parts[i])) return WebPresenters.powerpointWeb;
       if (i < 1) continue;
       final site = _siteNames[parts[i]];
       if (site != null) return site;
     }
     return null;
   }
+
+  static final _powerpointFile = RegExp(r'\.(pptx|pptm|ppt|ppsx|pps)$');
 
   static bool _isBrowserName(String part) {
     final words = _words(part);
@@ -219,6 +236,7 @@ class PdfViewers {
     if (_isChromium(words)) return fullScreen;
     if (name.startsWith('acrobat') || name.startsWith('acrord')) return acrobat;
     if (words.contains('okular')) return okular;
+    if (name == 'wpspdftab') return wpsPdfPlay;
     if (name == 'pdf' || name.startsWith('wpspdf')) return wpsPdf;
     return null;
   }

@@ -25,13 +25,46 @@ class PptController {
   static Future<void> slideNext({bool keepInk = false}) async {
     restoreShowFocus();
     if (!keepInk) await _clearInkBeforeMove();
-    KeyboardSimulator.pressKeyCombo(_viewerInFront()?.next ?? [VK_NEXT]);
+    final viewer = _viewerInFront();
+    if (viewer != null && viewer.refocus) _focusViewerContent();
+    KeyboardSimulator.pressKeyCombo(viewer?.next ?? [VK_NEXT]);
   }
 
   static Future<void> slidePrev({bool keepInk = false}) async {
     restoreShowFocus();
     if (!keepInk) await _clearInkBeforeMove();
-    KeyboardSimulator.pressKeyCombo(_viewerInFront()?.prev ?? [VK_PRIOR]);
+    final viewer = _viewerInFront();
+    if (viewer != null && viewer.refocus) _focusViewerContent();
+    KeyboardSimulator.pressKeyCombo(viewer?.prev ?? [VK_PRIOR]);
+  }
+
+  /// Gives the keyboard focus to the child window at the center of the
+  /// foreground window ([ViewerKeys.refocus]), without a click (a click turns
+  /// the page) and without changing the foreground window. Measured on WPS
+  /// 12.1: after a Right past the last page of its PDF Play mode the focus
+  /// sits on another of its windows, and SetFocus on the view brings the
+  /// arrows and Esc back.
+  static void _focusViewerContent() {
+    final front = GetForegroundWindow();
+    if (front.isNull) return;
+    final rect = calloc<RECT>();
+    final HWND view;
+    try {
+      if (!GetWindowRect(front, rect).value) return;
+      final center = calloc<POINT>()
+        ..ref.x = (rect.ref.left + rect.ref.right) ~/ 2
+        ..ref.y = (rect.ref.top + rect.ref.bottom) ~/ 2;
+      view = WindowFromPoint(center.ref);
+      calloc.free(center);
+    } finally {
+      calloc.free(rect);
+    }
+    if (view.isNull || GetAncestor(view, GA_ROOT) != front) return;
+    final thread = GetWindowThreadProcessId(front, nullptr);
+    final current = GetCurrentThreadId();
+    final attached = AttachThreadInput(current, thread, true);
+    SetFocus(view);
+    if (attached) AttachThreadInput(current, thread, false);
   }
 
   /// COM `Slide.Export` during a show leaves PowerPoint's thread without a
@@ -58,7 +91,7 @@ class PptController {
   static ViewerKeys? _viewerInFront() => PdfViewers.forProgram(_programOf(GetForegroundWindow()));
 
   /// [hwnd]'s program as [PdfViewers] names it: its executable's file name,
-  /// or "wpspdf" for a WPS window showing a PDF.
+  /// or "wpspdftab" for a WPS window showing a PDF.
   static String _programOf(HWND hwnd) =>
       PdfViewers.windowsProgram(_windowExecutable(hwnd).split(r'\').last, _windowTitle(hwnd));
 
@@ -216,10 +249,20 @@ try {
 
   /// Presses the start keys of the PDF viewer or browser in front, instead
   /// of F5 (which reloads a browser page). Returns whether it did.
-  static bool _startViewer() {
+  static bool _startViewer({bool endShowing = false}) {
     final hwnd = GetForegroundWindow();
-    final viewer = PdfViewers.forProgram(_programOf(hwnd));
+    final program = _programOf(hwnd);
+    final viewer = PdfViewers.forProgram(program);
     if (viewer == null) return false;
+    // A presentation site whose window covers the monitor is showing: START
+    // ends it, as it leaves a PDF viewer's full screen. Its Ctrl+F5 there
+    // reloaded the page (Chrome 156, Google Slides, 2026-10-28), and the
+    // phone, which knows no show on a site, offers no other key.
+    if (endShowing && PdfViewers.presenterOf(program) != null && WindowCapture.coversMonitor(hwnd)) {
+      KeyboardSimulator.pressKey(VK_ESCAPE);
+      _toggled = null;
+      return true;
+    }
     KeyboardSimulator.pressKeyCombo(viewer.start);
     final end = viewer.end;
     _toggled = end == null ? null : (hwnd, end);
@@ -255,7 +298,7 @@ try {
   }
 
   static Future<void> slideStart() async {
-    if (_startViewer()) return;
+    if (_startViewer(endShowing: true)) return;
     await _startPresenter();
   }
 
@@ -391,7 +434,11 @@ try {
     // without one, the Esc is for the program in front (a PDF viewer).
     if (_showWindowKind(GetForegroundWindow()) == null) {
       final show = _findShowWindow();
-      if (show != null) await _focusWindow(show);
+      if (show != null) {
+        await _focusWindow(show);
+      } else if (_viewerInFront()?.refocus ?? false) {
+        _focusViewerContent();
+      }
     }
     // With the pen, highlighter, eraser or laser on, the first Esc only puts
     // the tool away (PowerPoint 365 and WPS 12.2), and in WPS a video clicked
