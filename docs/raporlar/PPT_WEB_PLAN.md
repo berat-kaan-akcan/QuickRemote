@@ -152,7 +152,7 @@ Her denemenin "Sonuç" sütununa ✅ / ❌ / ⚠️ ve kısa bir not yazılır. 
 | C5 | Sunu **kapalıyken** (düzenleyici önde) Slayta git → 7. | Sunu açılır, yarım saniye sonra 7. slayta atlar; düzenleyicide hiçbir metin kutusuna **"7" yazılmaz** | | Bekleme süreleri (`30 × 100 ms`, `500 ms`) |
 | C6 | Düzenleyicide bir metin kutusunun içine tıkla (yazma imleci orada), sonra Slayta git → 5. | Kutuya **rakam yazılmaz**; ya sunu açılıp 5'e gider ya da hiçbir şey olmaz | | En riskli durum: tam ekran denetimini sıkılaştır |
 | C7 | Bitir. | Sunu kapanır | | |
-| C8 | Sunucu görünümüyle sunma (Google'ın "Sunucu görünümü"). Ön pencere hangisi, tuşlar nereye gidiyor? | Yaz | | Gerekirse sunucu penceresinin başlığını da tanı |
+| C8 | Sunucu görünümüyle sunma (Google'ın "Sunucu görünümü"). Ön pencere hangisi, tuşlar nereye gidiyor? | Yaz | ✅ Linux, Firefox 159 (2026-11-04): ön pencere küçük görünüm, tuşlar ona gidiyor; bulunan Ctrl+F5 hatası düzeltildi (YAPILANLAR). Windows kaldı | Gerekirse sunucu penceresinin başlığını da tanı |
 
 ### D. QuickRemote katmanının araçları (tarayıcı sunusunun üstünde)
 

@@ -185,6 +185,24 @@ Galaxy S23 FE (QuickRemote 1000020, bu makinede derlendi), Galaxy Watch 6 (20000
 - **Katman komutları** (deneme istemcisi, gösteri yokken): kırmızı, mavi, yeşil kalem, sarı fosforlu kalem, silgi, geri al, Hepsini sil, spot ışığı, büyüteç.
 - **WPS PDF önde, arkada PowerPoint açıkken Başlat**: üç denemede de PowerPoint gösterisi açılmadı.
 
+### Tarayıcı siteleri ve WPS PDF: kod incelemesinde bulunanlar (2026-11-04)
+
+Windows ve Bluetooth tarafı yalnız birim testlerinden geçti, gerçek cihazda denenmedi; Linux tarafı aşağıda denendi.
+
+- Linux'ta tam ekrandaki sitede Başlat Ctrl+F5 basıyordu (sayfa yenilenir); artık Windows'taki gibi Esc.
+- Bluetooth ve saatte sitedeki ikinci Başlat Bitir sayılıyor (`BtSiteShow`).
+- Saatte sessizlikten sonra gelen ikinci LASER_OFF, Google Slaytlar'ın L aç/kapa tuşunu yeniden açıyordu; artık gönderilmiyor.
+- Profil adı olmayan Edge başlıkları: `Deck.pptx - OneDrive - Microsoft Edge` gibi başlıklar site sayılmıyor (`_notProfiles`, bir liste: listede olmayan siteler hâlâ yanlış eşleşebilir).
+- WPS PDF (Windows): Başlat'tan önce odak görünüme veriliyor, Başlat öndeki pencerenin adını günlüğe yazıyor.
+
+**Linux'ta denendi** (CachyOS KDE, Firefox 159 XWayland ile, QuickRemote PC'nin debug derlemesi ve TLS üzerinden deneme istemcisi; telefon yok):
+
+- **PowerPoint web** (kişisel hesap, OneDrive): başlık `Presentation.pptx — Mozilla Firefox`, tanındı. Başlat, Sonraki (tek slaytta "Slayt gösterisi bitti"), Önceki, ikinci Başlat, Bitir.
+- **Google Slaytlar**: başlık `Portföy - Google Slaytlar — Mozilla Firefox`. Başlat geçerli slayttan, Sonraki/Önceki, Slayta git sunuda 5, sunu kapalıyken 4 (düzenleyiciye rakam yazılmadı), ikinci Başlat sayfayı yenilemeden düzenleyiciye döndü, Bitir.
+- **Google'ın Sunucu görünümü**: başlık `Sunucu görünümü - Portföy - Google Slaytlar — Mozilla Firefox`, küçük bir pencere, odak onda, seyirci görünümü asıl sekmede. Oklar slayt çeviriyor, numara + Enter atlıyor, Esc kapatıyor. **Bulunan hata**: Başlat ve Slayta git Ctrl+F5 basıyordu, Google Slaytlar bozuluyordu ("Bir sorun var", yeniden yükleme gerekti). Artık bu pencere sunu sayılıyor (`PdfViewers.isSitePresenterView`; yalnız Türkçe başlık görüldü, İngilizcesi varsayım): Başlat Esc, Slayta git numara + Enter. Düzeltmeden sonra aynı yerde denendi.
+- **WPS PDF 11.1**: Başlat (F11), Sonraki/Önceki, Bitir (Esc) üç kez üst üste aynı sonuç; Linux'ta araç çubuğu sorunu görülmedi.
+- Görülen ama düzeltilmeyen: PowerPoint web tam ekrandayken START_AT yine Ctrl+F5 basıyor (telefon bu sitede Slayta git göstermediği için ulaşılamıyor). Sunucu görünümü açıkken asıl sekme tıklanırsa Başlat yine Ctrl+F5 basar (denenmedi).
+
 ### Tarayıcıda Google Slaytlar ve PowerPoint web (2026-10-28)
 
 Chrome 156, telefon (1000023) ve deneme istemcisi; kullanıcının hesaplarında 12 slaytlık deneme sunusu (Google Slaytlar'a dönüştürülmüş; PowerPoint web okul hesabının SharePoint'inde).
