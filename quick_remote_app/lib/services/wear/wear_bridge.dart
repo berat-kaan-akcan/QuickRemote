@@ -204,6 +204,7 @@ class WearBridge {
     _watchSeen = true;
     if (!watchCommands.contains(command) || !_hasPc) return;
     _commandAt = _now();
+    if (_overBluetooth) command = _bt.siteShow.commandFor(command, _btTarget());
     if (command == RemoteCommands.modeLaser) {
       // The first movement comes over the watch's socket and the command
       // over the Data Layer, so the movement can come first and have turned
@@ -218,6 +219,9 @@ class WearBridge {
       _mouseY = 0;
       _armLaserTimer();
     } else if (command == RemoteCommands.laserOff) {
+      // The silence put it away already, and Google Slides' L is a toggle: a
+      // second LASER_OFF would turn its laser on with nobody pointing.
+      if (!_laserOn) return;
       _laserOn = false;
       _laserTimer?.cancel();
     } else if (_overBluetooth && command == RemoteCommands.start) {

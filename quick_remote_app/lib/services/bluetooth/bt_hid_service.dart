@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:quick_remote_shared/quick_remote_shared.dart';
 
+import 'bt_key_mapping.dart';
+
 /// Flutter ↔ Android Kotlin bridge for Bluetooth Classic HID.
 ///
 /// Allows the phone to act as a Bluetooth keyboard + mouse + consumer device.
@@ -24,6 +26,9 @@ class BtHidService {
   // ── Singleton ──────────────────────────────────────────────────────────────
   static final BtHidService instance = BtHidService._();
   BtHidService._();
+
+  /// Shared by the Bluetooth remote's keys and the watch's.
+  final BtSiteShow siteShow = BtSiteShow();
 
   // ── State ──────────────────────────────────────────────────────────────────
   BtHidConnectionState _state = BtHidConnectionState.disconnected;

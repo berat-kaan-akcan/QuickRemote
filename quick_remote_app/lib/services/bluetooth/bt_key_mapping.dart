@@ -272,3 +272,23 @@ class _NoopAction extends BtAction {
   @override
   Future<void> execute(BtHidService service) async {}
 }
+
+/// Whether a presentation site's show was started over Bluetooth. Ctrl+F5 in a
+/// running show reloads the page (Chrome 156, Google Slides), and a keyboard
+/// is told nothing, so a second START of the phone or the watch ends the show,
+/// as it does over Wi-Fi. A show ended on the computer costs one harmless Esc.
+class BtSiteShow {
+  bool _showing = false;
+
+  /// The command to act on for [command], with [target] picked.
+  String commandFor(String command, BtTarget target) {
+    if (target != BtTarget.powerpointWeb && target != BtTarget.googleSlides) {
+      _showing = false;
+      return command;
+    }
+    if (command == RemoteCommands.end) _showing = false;
+    if (command != RemoteCommands.start) return command;
+    _showing = !_showing;
+    return _showing ? RemoteCommands.start : RemoteCommands.end;
+  }
+}

@@ -142,6 +142,7 @@ class _BtRemoteScreenState extends State<BtRemoteScreen>
 
   Future<void> _send(String command) async {
     HapticFeedback.mediumImpact();
+    command = _bt.siteShow.commandFor(command, context.read<SettingsProvider>().btTarget);
 
     // Update local screen toggle state
     if (command == RemoteCommands.blackScreen) {

@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quick_remote_app/services/bluetooth/bt_hid_service.dart';
 import 'package:quick_remote_app/services/bluetooth/bt_key_mapping.dart';
+import 'package:quick_remote_shared/quick_remote_shared.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -115,6 +116,42 @@ void main() {
     expect(await key('BLACK_SCREEN', slides), (0, BtKeyMapping.keyB));
     expect(await key('MODE_LASER', slides), (0, BtKeyMapping.keyL));
     expect(await key('LASER_OFF', slides), (0, BtKeyMapping.keyL));
+  });
+
+  group('BtSiteShow: Ctrl+F5 reloads a site whose show runs', () {
+    const start = RemoteCommands.start, end = RemoteCommands.end;
+
+    test('START while its show runs becomes END', () {
+      final show = BtSiteShow();
+      for (final target in [BtTarget.powerpointWeb, BtTarget.googleSlides]) {
+        expect(show.commandFor(start, target), start);
+        expect(show.commandFor(start, target), end);
+        expect(show.commandFor(start, target), start);
+        show.commandFor(end, target);
+      }
+    });
+
+    test('END leaves the next START a START', () {
+      final show = BtSiteShow();
+      show.commandFor(start, BtTarget.googleSlides);
+      expect(show.commandFor(end, BtTarget.googleSlides), end);
+      expect(show.commandFor(start, BtTarget.googleSlides), start);
+    });
+
+    test('other commands pass and keep the show', () {
+      final show = BtSiteShow();
+      show.commandFor(start, BtTarget.googleSlides);
+      expect(show.commandFor(RemoteCommands.next, BtTarget.googleSlides), RemoteCommands.next);
+      expect(show.commandFor(start, BtTarget.googleSlides), end);
+    });
+
+    test('a desktop program keeps its START, and forgets the site', () {
+      final show = BtSiteShow();
+      show.commandFor(start, BtTarget.googleSlides);
+      expect(show.commandFor(start, BtTarget.powerpoint), start);
+      expect(show.commandFor(start, BtTarget.powerpoint), start);
+      expect(show.commandFor(start, BtTarget.googleSlides), start);
+    });
   });
 
   test('BtTarget.fromName falls back to PowerPoint', () {

@@ -89,6 +89,8 @@ class FakeKeyboard implements BtHidService {
   }
 
   @override
+  final siteShow = BtSiteShow();
+  @override
   Stream<BtHidConnectionState> get stateStream => _states.stream;
   @override
   BtHidConnectionState get connectionState => state;
@@ -514,6 +516,30 @@ void main() {
       await fromWatch('command', RemoteCommands.next);
       expect(ws.sent, [RemoteCommands.next]);
       expect(keyboard.sent, isEmpty);
+    });
+
+    testWidgets('Google Slides\' laser key, a toggle, stays off when the finger lifts after a silence', (tester) async {
+      keyboard.set(BtHidConnectionState.connected, computer: 'PC');
+      program = BtTarget.googleSlides;
+      await fromWatch('command', RemoteCommands.modeLaser);
+      await tester.pump(WearBridge.laserSilence);
+      await fromWatch('command', RemoteCommands.laserOff);
+      await fromWatch('command', RemoteCommands.modeArrow);
+      // On, off; a third L would turn it on with nobody pointing.
+      expect(keyboard.sent, [(0, BtKeyMapping.keyL), (0, BtKeyMapping.keyL)]);
+    });
+
+    test('a second Start on a site ends its show', () async {
+      keyboard.set(BtHidConnectionState.connected, computer: 'PC');
+      program = BtTarget.googleSlides;
+      await fromWatch('command', RemoteCommands.start);
+      await fromWatch('command', RemoteCommands.start);
+      await fromWatch('command', RemoteCommands.start);
+      expect(keyboard.sent, [
+        (ctrl, BtKeyMapping.keyF5),
+        (0, BtKeyMapping.keyEscape),
+        (ctrl, BtKeyMapping.keyF5),
+      ]);
     });
 
     testWidgets('the laser goes out when the watch falls silent', (tester) async {
