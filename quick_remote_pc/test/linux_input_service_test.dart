@@ -452,6 +452,41 @@ void main() {
         expect(caps.has(RemoteCaps.goto), isFalse);
       });
 
+      test('START in a site showing in full screen ends it: its Ctrl+F5 reloads the page', () async {
+        for (final title in ['Ders 3 - Google Slides — Mozilla Firefox', 'Sunu1.pptx - PowerPoint — Mozilla Firefox']) {
+          keys.clear();
+          active = const X11Window(4, ['Navigator', 'firefox'], fullscreen: true);
+          titles = {4: title};
+          await service().slideStart();
+          expect(keys, [
+            [Evdev.keyEsc],
+          ], reason: title);
+        }
+      });
+
+      group('Google Slides\' presenter view, a small window on a running show', () {
+        setUp(() {
+          active = firefox;
+          titles = {4: 'Sunucu görünümü - Portföy - Google Slaytlar — Mozilla Firefox'};
+        });
+
+        // Its Ctrl+F5 broke the page: "Bir sorun var", reload (Firefox 159).
+        test('START ends the show', () async {
+          await service().slideStart();
+          expect(keys, [
+            [Evdev.keyEsc],
+          ]);
+        });
+
+        test('a jump types the number at once', () async {
+          await service().slideStartAt(7);
+          expect(keys, [
+            [Evdev.fromVk(0x37)],
+            [Evdev.keyEnter],
+          ]);
+        });
+      });
+
       test('Google Slides in full screen jumps to a typed slide number', () async {
         active = const X11Window(4, ['Navigator', 'firefox'], fullscreen: true);
         titles = {4: 'Ders 3 - Google Slides — Mozilla Firefox'};

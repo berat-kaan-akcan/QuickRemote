@@ -126,9 +126,34 @@ void main() {
         'How to present in PowerPoint - Blog - Google Chrome',
         'Sunu1.pptx - Google Drive - Google Chrome',
         'Sunu1.pdf - Google Chrome',
+        // Edge without a profile's name: the part before its name is the
+        // page's, not a profile.
+        'Sunu1.pptx - OneDrive - Microsoft$zwsp Edge',
+        'Sunu1.pptx - Outlook - Microsoft$zwsp Edge',
+        'Slaytlar - PowerPoint - Wikipedia - Microsoft$zwsp Edge',
         '',
       ]) {
         expect(PdfViewers.webPresenterOf(title), isNull, reason: title);
+      }
+    });
+
+    test('Google Slides\' presenter view is told by its title', () {
+      // Measured: Firefox 159, Turkish page (2026-11-04).
+      for (final title in [
+        'Sunucu görünümü - Portföy - Google Slaytlar $emDash Mozilla Firefox',
+        'Presenter view - Deck - Google Slides - Google Chrome',
+        'Presenter view - Deck - Google Slides - Work - Microsoft$zwsp Edge',
+      ]) {
+        expect(PdfViewers.isSitePresenterView(title), isTrue, reason: title);
+      }
+      for (final title in [
+        'Portföy - Google Slaytlar $emDash Mozilla Firefox',
+        // A deck with that name, in its editor.
+        'Sunucu görünümü - Google Slaytlar $emDash Mozilla Firefox',
+        'Presenter view - How to use it - Blog - Google Chrome',
+        '',
+      ]) {
+        expect(PdfViewers.isSitePresenterView(title), isFalse, reason: title);
       }
     });
 

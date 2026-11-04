@@ -555,6 +555,15 @@ class LinuxInputService implements InputService {
       await _jumpInViewer(window!, viewer, slide);
       return;
     }
+    // A presentation site in full screen, or Google Slides' presenter view,
+    // is showing: START ends it, as on
+    // Windows. Its Ctrl+F5 there reloaded the page (Chrome 156, Windows), and
+    // the phone, which knows no show on a site, offers no other key.
+    if (viewer != null && cmd == 'start' && _siteOf(window!) != null && (window.fullscreen || _inPresenterView(window))) {
+      _keys([Evdev.keyEsc]);
+      _toggled = null;
+      return;
+    }
     if (viewer != null) {
       _keys(_evdev(viewer.start));
       final end = viewer.end;
@@ -583,7 +592,7 @@ class LinuxInputService implements InputService {
       return front != null && front.id == window.id && front.fullscreen;
     }
 
-    if (!window.fullscreen) {
+    if (!window.fullscreen && !_inPresenterView(window)) {
       _keys(_evdev(viewer.start));
       for (var i = 0; i < 30 && !showing(); i++) {
         await Future.delayed(const Duration(milliseconds: 100));
@@ -600,6 +609,9 @@ class LinuxInputService implements InputService {
     }
     _keys([Evdev.keyEnter]);
   }
+
+  bool _inPresenterView(X11Window window) =>
+      window.id >= 0 && PdfViewers.isSitePresenterView(_windowTitle(window.id) ?? '');
 
   /// [window]'s names for [PdfViewers]: the presentation site its title
   /// names first (X11 only: KWin's Wayland windows come without a title).

@@ -176,7 +176,7 @@ class PdfViewers {
   static String? webPresenterOf(String title) {
     final parts = title
         .replaceAll(_invisible, '')
-        .split(RegExp(r'\s+[-\u2013\u2014|]\s+'))
+        .split(_titleParts)
         .map((p) => p.trim().toLowerCase().replaceFirst(_morePages, ''))
         .toList();
     final browser = _isBrowserName(parts.last);
@@ -189,6 +189,9 @@ class PdfViewers {
             : [parts.length - 2];
     for (final i in candidates) {
       if (i < 0) continue;
+      // Edge without a profile's name: this part is the page's, so the one
+      // before it is no longer the page title's last.
+      if (i < parts.length - 2 && _notProfiles.contains(parts[i + 1])) return null;
       // PowerPoint for the web on a work or school account (SharePoint)
       // names only the file: "Deck.pptx - Google Chrome" (measured,
       // 2026-10-28). A file name may be the title's first part.
@@ -199,6 +202,40 @@ class PdfViewers {
     }
     return null;
   }
+
+  /// Sites that name an open file or an article in their titles. In Edge the
+  /// part before its name may be a profile's, of any name, so these are told
+  /// apart by a list: "Deck.pptx - OneDrive - Microsoft Edge" is no show, and
+  /// its Ctrl+F5 would reload the page.
+  static const _notProfiles = {
+    'onedrive',
+    'sharepoint',
+    'outlook',
+    'gmail',
+    'google drive',
+    'microsoft teams',
+    'teams',
+    'wikipedia',
+    'vikipedi',
+    'youtube',
+  };
+
+  /// Whether a browser window titled [title] is Google Slides' presenter view
+  /// ("Sunucu g\u00f6r\u00fcn\u00fcm\u00fc - Deck - Google Slaytlar \u2014 Mozilla Firefox",
+  /// measured on Firefox 159; other languages not seen): a small window with
+  /// the focus while the show runs, so nothing tells the show but its title.
+  /// Esc ends the show, a number and Enter jump, and its Ctrl+F5 breaks the
+  /// page ("Bir sorun var", reload).
+  static bool isSitePresenterView(String title) {
+    if (webPresenterOf(title) != WebPresenters.googleSlides) return false;
+    final parts =
+        title.replaceAll(_invisible, '').split(_titleParts).map((p) => p.trim().toLowerCase()).toList();
+    return _presenterViewNames.contains(parts.first) && !_siteNames.containsKey(parts[1]);
+  }
+
+  static const _presenterViewNames = {'sunucu g\u00f6r\u00fcn\u00fcm\u00fc', 'presenter view'};
+
+  static final _titleParts = RegExp(r'\s+[-\u2013\u2014|]\s+');
 
   static final _powerpointFile = RegExp(r'\.(pptx|pptm|ppt|ppsx|pps)$');
 

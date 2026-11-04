@@ -253,21 +253,30 @@ try {
     final hwnd = GetForegroundWindow();
     final program = _programOf(hwnd);
     final viewer = PdfViewers.forProgram(program);
+    // Tells a START that went to the presenter while a viewer seemed to be in
+    // front (2026-10-27, WPS PDF, not repeated since).
+    debugPrint('START: window in front is $program, ${viewer == null ? 'not a viewer' : 'a viewer'}');
     if (viewer == null) return false;
     // A presentation site whose window covers the monitor is showing: START
     // ends it, as it leaves a PDF viewer's full screen. Its Ctrl+F5 there
     // reloaded the page (Chrome 156, Google Slides, 2026-10-28), and the
     // phone, which knows no show on a site, offers no other key.
-    if (endShowing && PdfViewers.presenterOf(program) != null && WindowCapture.coversMonitor(hwnd)) {
+    if (endShowing && PdfViewers.presenterOf(program) != null && _siteShowing(hwnd)) {
       KeyboardSimulator.pressKey(VK_ESCAPE);
       _toggled = null;
       return true;
     }
+    if (viewer.refocus) _focusViewerContent();
     KeyboardSimulator.pressKeyCombo(viewer.start);
     final end = viewer.end;
     _toggled = end == null ? null : (hwnd, end);
     return true;
   }
+
+  /// A site's show runs: its window covers the monitor, or it is the small
+  /// presenter view of Google Slides, whose Ctrl+F5 breaks the page.
+  static bool _siteShowing(HWND hwnd) =>
+      WindowCapture.coversMonitor(hwnd) || PdfViewers.isSitePresenterView(_windowTitle(hwnd));
 
   /// Jumps to [slideNumber] in the viewer in front whose show takes a typed
   /// number (Google Slides): its show is started first unless its window
@@ -278,7 +287,7 @@ try {
     final hwnd = GetForegroundWindow();
     final viewer = PdfViewers.forProgram(_programOf(hwnd));
     if (viewer == null || !viewer.typesSlideNumber) return false;
-    if (!WindowCapture.coversMonitor(hwnd)) {
+    if (!_siteShowing(hwnd)) {
       KeyboardSimulator.pressKeyCombo(viewer.start);
       for (var i = 0; i < 30 && !WindowCapture.coversMonitor(hwnd); i++) {
         await Future.delayed(const Duration(milliseconds: 100));
