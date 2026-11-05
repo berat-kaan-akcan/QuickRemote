@@ -7,77 +7,11 @@ Bir madde bitince buradan silinir ve YAPILANLAR.md'deki ilgili bölüme sonucuyl
 Bu dosyanın dışında kalan iki liste:
 
 - [PPT_WEB_PLAN.md](PPT_WEB_PLAN.md): tarayıcıda PowerPoint ve Google Slaytlar. Kodu yazıldı; deneme listesi (6. bölüm) orada.
-- [../../PLAY_STORE_YAPILACAKLAR.md](../../PLAY_STORE_YAPILACAKLAR.md): Play Store'a çıkış (`store/` klasörü PR #3'teydi, `main`'de yok).
+- [../../PLAY_STORE_YAPILACAKLAR.md](../../PLAY_STORE_YAPILACAKLAR.md): Play Store'a çıkış.
 
-Bu dosya şunlardan toplandı (2026-10-26, eskileri silindi, geçmişi git'te; denetim raporları PR #3'le gelmişti): `DURUM.md`, `KALANLAR.md`, `WINDOWS-DENEME.md`, `docs/raporlar/` içindeki ACIK_ISLER, ALTYAPI, OVERLAY, SLIDE_PREVIEW (rapor ve görev), SITE_YENILEME, CI_RAPOR, GUVENLIK_DENETIMI ve KULLANICI_DENETIMI raporları.
+Bu dosya şunlardan toplandı (2026-10-26, eskileri silindi, geçmişi git'te): `DURUM.md`, `KALANLAR.md`, `WINDOWS-DENEME.md`, `docs/raporlar/` içindeki ACIK_ISLER, ALTYAPI, OVERLAY, SLIDE_PREVIEW (rapor ve görev), SITE_YENILEME, CI_RAPOR, GUVENLIK_DENETIMI ve KULLANICI_DENETIMI raporları.
 
 **Uyarı:** Linux'taki ekran denemeleri tuşlara basar ve tam ekran açar. Başlamadan önce açık olan her şeyi kapat ya da küçült.
-
----
-
-## 0. PR #3: yapıldı, `main`'e alınmadı
-
-PR #3 (`feature/exciting-babbage-7f2lji` → `main`) 2026-10-24'te birleşip aynı gün geri çekildi (`cc41c91`). İşleri `main`'de yok; hepsi `fix/pressable-layout-and-ppt-pointer` dalında duruyor (`446b20e` "Reapply"). Yeniden istenirse o daldan alınır. İçindeki commit'ler (hepsi 2026-10-22, son ikisi 2026-10-24):
-
-- `6c524a5` Play Store dosyaları (`store/`: metinler, Veri güvenliği formu, izin denetimi, gizlilik metinleri, `derleme-ve-imza.md`, kontrol listesi), pil optimizasyonu izninin kaldırılması.
-- `22d35b1` sitede gizlilik politikası sayfaları (TR/EN), 404, robots, sitemap ve `site/tools/site.url`, denenme durumunun dürüst gösterilmesi, daha sıkı `verify.mjs`.
-- `1c9437e` güvenlik denetiminin düzeltmeleri, CI'da `persist-credentials: false`.
-- `1c29419` kullanıcı denetiminin düzeltmeleri (48 dp hedefler, TalkBack, kontrast, taşmalar, kamera izni reddi, hata metinleri, Hakkında).
-- `254df09` CI: eylemlerin SHA'ya sabitlenmesi, Gradle sağlaması, AAB adımı, Inno Setup sürümü.
-- `495a119` saatin hareketinin ±2000'e sınırlanması, bildirim izni reddi notu, saatin soluk metin renkleri.
-- `f36638d`, `3f69826` gösteri yokken öndeki programın adı (Devral'dan sonra telefonun "Impress'i başlatın" demesi bununla düzelmişti), köprü JSON sertleştirmesi, bozuk son-PC kayıtlarını atlama, güvenli bağımlılık güncellemeleri.
-- `39246e8` yeni köprü ve slayt dosyası testlerinin Windows'ta çalışması.
-
-PR #3'ten sonraki iki düzeltme de `main`'e alınmadı, çünkü PR #3'ün kodunu düzeltiyorlar: `Pressable`'ın 48 dp alanının uzatılmış tuşları küçültmesi (`7e08558`'in telefon kısmı) ve Ayarlar'daki dil kutusunun genişliği (`49d92a6`'nın PC Ayarlar kısmı). Bluetooth tuş eşleme tablosunun testi (`bt_key_mapping_matrix_test.dart`) de PR #3'teydi.
-
-PR #3'le birlikte açılan denemeler:
-
-- [ ] **Pil izni kaldırıldı**: kilitli telefonla, ekran kapalı, yarım saatten uzun oturumda Doze bağlantıyı koparıyor mu? Koparırsa geri alma `store/izinler.md` bölüm 4.
-- [ ] **Bildirim izni reddi**: Android 13+'ta reddedince kumandada bir kez "Bildirim izni kapalı" notu ve "Ayarları aç" çıkıyor mu, ikinci kez çıkmıyor mu (`NotificationDeniedHost`)? Yalnızca widget testinden geçti.
-- [ ] **48 dp hedefler ve kontrast**: küçük tuşlar bitişik mi, soluk metinler okunuyor mu (göz ile). Kontrast testi gradyanlı kartlarda yanlış alarm verdiği için gerçek ekranlar bir kez taranmalı. TalkBack elle denenmedi.
-- [ ] **`usesCleartextTraffic="false"`**: birleştirilmiş manifest okunmadı; derleyip bir bağlantı denemesi.
-- Bilerek böyle: zamanlayıcı rakamları ve PC üst çubuk hapı büyük yazıda 1.3 ölçekte sınırlı (yer yok). PC'de 48 dp kuralı uygulanmadı (fare arayüzü).
-- [ ] Soluk metin renkleri telefonla eşitlendi (`Theme.kt`: `paperTextMuted` 8087A9, `inkTextMuted` 686E91, yüksek karşıtlık kenarlığı 3A3A3A): saati derleyip `WearProtocolTest`'i çalıştır ve ekranda bak.
-- [ ] **CI raporunun (2026-10-22) gerçek GitHub koşusu isteyenleri** (bu makinede `gh` yok, son koşuların durumu buradan görülemedi):
-  - Sabitlenen SHA'ların Actions'ta çözülmesi (`setup-java` 4.9.1, `setup-python` 5.6.0 girdileri).
-  - Gradle sarmalayıcı sağlaması (`distributionSha256Sum`): ilk `./gradlew` kabul ediyor mu. Değer indirilen zip'ten hesaplandı; resmî `gradle-9.3.1-all.zip.sha256` ile bir kez elle karşılaştır.
-  - `choco install innosetup --version=6.7.3` Chocolatey'de var mı (yalnız runner'da Inno yoksa önemli; yoksa son 6.x'e çek).
-  - AAB: `flutter build appbundle` ve `:app:bundleRelease` imzayla çıkıyor mu, `keytool` imzacıyı gösteriyor mu, Play Console kabul ediyor mu (etiketli `v1.0.0` koşusu gerekir; `-test` sürümleri AAB üretmez).
-- [ ] `quick_remote_wear/gradle/wrapper/gradle-wrapper.jar`'ı resmî jar'la karşılaştırmak; `SHA256SUMS.txt` imzası; `actions/attest-build-provenance`.
-- [ ] **Gizlilik politikası**: `store/privacy-policy.*.md`'de yayıncının adı ve e-postası boş.
-
-PR #3'teki işlerin ayrıntısı (o dalın hâli):
-
-#### Play Store hazırlığı (2026-10-22, `6c524a5`)
-
-`store/` klasöründe metinler, Veri güvenliği formu, izin denetimi (`izinler.md`), gizlilik politikası metinleri, `derleme-ve-imza.md` (targetSdk, 16 KB, R8, AAB, imza), grafikler ve sıralı kontrol listesi. Pil optimizasyonu izni kaldırıldı (`tools:node="remove"`, `shouldRequestBatteryOptimizationsOff: false`). Kalanlar PLAY_STORE_YAPILACAKLAR.md'de.
-
-#### Güvenlik denetimi (2026-10, `1c9437e`)
-
-Çekirdek tasarım sağlam bulundu (TLS + parmak izi pini, sabit zamanlı PIN, hız sınırları, yerel ağ filtresi, handshake kapısı, ön-kimlik bayt bütçesi, Origin reddi, sıkıştırma kapalı); telefonun gönderdiği hiçbir metin PowerShell/Python/kabuğa girmiyor, yol gezinmesi ve komut enjeksiyonu yok. Düzeltilenler:
-
-| # | Önem | Sorun | Düzeltme |
-|---|---|---|---|
-| 1 | Orta | TLS bitip HTTP isteği gelmeyen bağlantılar sınırsız tutulabiliyordu; sonsuz başlık ~1 MB bellek | `TlsHandshakeGate`: istek başı 10 sn ve 16 KB içinde; bekleyen bağlantı IP başına 16, toplam 128 |
-| 2 | Orta | `LEFT_UP`/`MODE_ARROW`/`LASER_OFF` hız sınırsızdı; allowlist dışı komutlar sayılmıyordu | Bırakma komutlarına ayrı 30/sn bütçe; reddedilenler de sayılıyor; 300/sn üstü 4008 ile kesilir |
-| 3 | Düşük | Önekli komut değerleri gevşekti (900 karakter yankı, `START_AT:0x10`, `+5`) | `RemoteCommands.isValid`: tam allowlist ya da önek + 1-9 rakam; reddedilen metin günlüğe yazılmıyor |
-| 4 | Düşük | `redact` parola, sır, token, `Bearer` biçimlerini temizlemiyordu | `_secretWord`, `_bearer` (öne `\w*` konmadan; 100 KB girdiler <70 ms) |
-| 5 | Düşük | `_failedAttempts` tablosu farklı /64'lerden büyüyebiliyordu | 1024 adresi aşınca eski kayıtlar unutulur |
-| 6 | Düşük | Manifestte düz metin trafik açıkça kapalı değildi | `usesCleartextTraffic="false"` |
-| 7 | Düşük | CI: checkout token'ı `.git/config`'te, `GH_TOKEN` bütün işe açık | `persist-credentials: false`, `GH_TOKEN` adım düzeyinde |
-
-Raporun "yapılmadı" listesinden sonradan yapılanlar: Gradle sağlaması ve SHA sabitlemesi (2026-10-22, yukarıda), saatin hareketini ±2000'e sınırlama (`WearBridge.maxMove`, `495a119`). Kalanlar YAPILMAYANLAR.md'de.
-
-#### Kullanıcı denetimi (Play öncesi, 2026-10, `1c29419`)
-
-- **Erişilebilirlik**: dokunma hedefleri 48 dp (`Pressable.minTarget`; `AppButton`, `AppSegmented`); TalkBack'in etiketleri iki kez okuması (`ExcludeSemantics`); zamanlayıcı düğmelerinin adları; `textMuted` kontrastı 4.5:1 (`inkTextMuted 686E91`, `paperTextMuted 8087A9`, `sunsetTextMuted 846B5C`) ve bunu bütün paletlerde denetleyen `palette_contrast_test.dart`; çizim aracı etiketleri.
-- **Büyük yazı, küçük ekran, yatay, tablet taşmaları**: telefonda kontroller ve medya sekmesi, "PC bulunamadı" kutusu; PC'de durmuş panel, PIN kutuları, Ayarlar diyaloğu.
-- **İlk çalıştırma ve hatalar**: kamera izni reddinde siyah ekran yerine `ScanErrorView`; "QuickRemote PC'yi indir" düğmesi; ham istisna metinleri yerine eylem öneren metinler; PC'de port hatası "8090-8099 portları kullanımda".
-- **Hakkında**: telefonda ve PC'de sürüm, gizlilik notu, açık kaynak lisansları.
-- Raporun "düzeltilmedi" listesinden sonradan yapılanlar: bildirim izni reddi notu (`NotificationDeniedHost`, 2026-10-22), saatin soluk metin renkleri (2026-10-22).
-
-
-- **CI sertleştirme (2026-10-22, `254df09`)**: birinci taraf eylemler commit SHA'sına sabitlendi (`checkout` 4.4.0, `upload-artifact` 4.6.2, `download-artifact` 4.3.0, `setup-java` 4.9.1, `setup-python` 5.6.0; her satırda `# vX.Y.Z`); iki Gradle sarmalayıcısına `distributionSha256Sum` (gradle-9.3.1-all.zip, `17f27786…6e43`, indirilen zip'ten hesaplandı); release'e AAB adımı (yalnız ön sürüm olmayan etiketlerde, telefon/saat imzacı karşılaştırması); Inno Setup 6.7.3'e sabitlendi. `actionlint` temiz. Checkout'larda `persist-credentials: false` (paths-filter işi hariç), `GH_TOKEN` yalnızca "Draft release" adımında.
 
 ---
 
@@ -113,8 +47,6 @@ Windows denemesi (2026-10-25) olumsuz çıktı: HID hizmetini kapatıp açmak te
 - [ ] Kaplama planında kalan komutlar: `SET_PEN_WIDTH:n` (kalem kalınlığı), `SET_LASER_STYLE` (lazer rengi, boyutu, izi). Çoklu telefonda her telefona ayrı renkli lazer (fikir).
 
 ### Güvenlik denetiminden açık kalanlar (2026-10)
-
-Denetimin kendisi ve düzelttikleri PR #3'te (aşağıda). Bu maddeler `main`'deki kod için de geçerli.
 
 - [ ] **`MainActivity` başka bir uygulamadan açılabiliyor** (düşük): `quickremote://connect/last|scan|bluetooth` açık (explicit) bir intent'le gönderilip son bilgisayara bağlanma ya da kamera açtırılabilir. Etkisi küçük (kendi bilgisayarına bağlanır). Öneri: `ShortcutActivity`/`QuickTileService` intent'ine süreç ömürlü rastgele bir jeton koyup `LaunchLink.linkOf`'ta denetlemek. Kotlin ve cihaz denemesi ister.
 - [ ] **Windows sertifika parolası `cert_pwd.txt` olarak `.pfx`'in yanında**: koruma yalnızca dosya izinleri. DPAPI ile korunabilir; Windows'ta yazılıp denenmeli.
@@ -155,7 +87,7 @@ Denetimin kendisi ve düzelttikleri PR #3'te (aşağıda). Bu maddeler `main`'de
 
 ### WPS
 
-- [ ] Devral'dan sonra gösteri yokken telefon "LibreOffice Impress'i başlatın" diyor, öndeki WPS düzenleyicisi olduğu hâlde (program adı ilk programdan geliyor). PR #3'te düzeltilmişti (`f36638d`, `3f69826`).
+- [ ] Devral'dan sonra gösteri yokken telefon "LibreOffice Impress'i başlatın" diyor, öndeki WPS düzenleyicisi olduğu hâlde (program adı ilk programdan geliyor).
 - [ ] PC'deki "Devral" düğmesine gerçek tıklama (telefondaki denendi; Wayland'de yapay tıklama yok).
 
 ### Destek tablosu
@@ -223,7 +155,7 @@ Eski deneme listesi `~/Masaüstü/QuickRemote-tasarim-ornekleri/WINDOWS-DENEME.m
 
 ## 8. Web sitesi
 
-- [ ] **Play rozeti** ve gizlilik politikası sayfaları (PR #3'te yazılmıştı, aşağıda).
+- [ ] **Play rozeti** ve gizlilik politikası sayfaları.
 - [ ] **Alan adı belli olunca**: og:image ve hreflang için tam adresler, gerçek indirme bağlantıları.
 - [ ] `node site/tools/verify.mjs`'i 2026-10-26'daki iki satırlık değişiklikten sonra çalıştır (bu makinede Playwright kurulu değil).
 
@@ -240,4 +172,3 @@ Eski deneme listesi `~/Masaüstü/QuickRemote-tasarim-ornekleri/WINDOWS-DENEME.m
 - **Windows**: Microsoft Store/MSIX ve winget sonra.
 - **Telefonda uygulama içi güncelleme** (`in_app_update`): acil değil.
 - **WPS'i katmana geçirmek**: gerekirse, tek tek durumlarla.
-- `quick_remote_pc/tool_tmp/` (kaplama deneme düzeneği) hiç commit edilmeyecek.

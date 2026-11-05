@@ -2,9 +2,7 @@
 
 Son güncelleme: 2026-10-26. Bitmiş işler, denemelerin sonuçları ve verilen kararlar bu dosyada. Açık işler [YAPILMAYANLAR.md](YAPILMAYANLAR.md)'de; tarayıcıda PowerPoint ve Google Slaytlar için ayrı plan [PPT_WEB_PLAN.md](PPT_WEB_PLAN.md).
 
-Bu dosya şunlardan toplandı (2026-10-26, eskileri silindi, geçmişi git'te; denetim raporları PR #3'le gelmişti): `DURUM.md`, `KALANLAR.md`, `WINDOWS-DENEME.md`, `docs/raporlar/` içindeki ACIK_ISLER, ALTYAPI, OVERLAY, SLIDE_PREVIEW (rapor ve görev), SITE_YENILEME, CI_RAPOR, GUVENLIK_DENETIMI ve KULLANICI_DENETIMI raporları. Kodun nasıl çalıştığının ayrıntısı NOTES.md'de; burada ne yapıldığı, neyin nerede denendiği ve neden öyle karar verildiği var.
-
-**PR #3** (güvenlik ve kullanıcı denetimi, Play hazırlığı, sitenin gizlilik sayfaları, CI sabitlemesi; 2026-10-22) `main`'e alınmadı (2026-10-24'te geri çekildi); onun işleri burada değil, YAPILMAYANLAR.md'nin "PR #3" bölümünde.
+Bu dosya şunlardan toplandı (2026-10-26, eskileri silindi, geçmişi git'te): `DURUM.md`, `KALANLAR.md`, `WINDOWS-DENEME.md`, `docs/raporlar/` içindeki ACIK_ISLER, ALTYAPI, OVERLAY, SLIDE_PREVIEW (rapor ve görev), SITE_YENILEME, CI_RAPOR, GUVENLIK_DENETIMI ve KULLANICI_DENETIMI raporları. Kodun nasıl çalıştığının ayrıntısı NOTES.md'de; burada ne yapıldığı, neyin nerede denendiği ve neden öyle karar verildiği var.
 
 "Denendi" yalnızca gerçek programda, cihazda ya da ekranda görülen şey için yazıldı. "Kodu yazıldı" birim testlerinden geçti ama gerçek ortamda görülmedi demek.
 
