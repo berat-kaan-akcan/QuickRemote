@@ -1,0 +1,14 @@
+
+<section class="s trust" id="trust" aria-labelledby="trust-h">
+  <i class="way" data-b="0.5,0.02 0.012,0.06"></i>
+  <h2 id="trust-h"><span>{{Hesap yok.||No account.}}</span> <span>{{Bulut yok.||No cloud.}}</span> <span data-b="0,1.02 1,1.02">{{Komutların salonda kalır.||Your commands stay in the room.}}</span></h2>
+  <i class="way" data-b="0.985,0.42 0.985,1"></i>
+  <ol class="chain">
+    <li><b>{{Yalnızca yerel ağ||Local network only}}</b> {{Dışarıdan gelen adresler, şifreleme başlamadan reddedilir.||Outside addresses are refused before encryption even starts.}}</li>
+    <li><b>{{TLS||TLS}}</b> {{Her komut şifrelenir, PIN de bu kanalın içinden gider.||Every command is encrypted, and the PIN travels inside that channel.}}</li>
+    <li><b>{{Sertifika||Certificate}}</b> {{QR kod parmak izini taşır. QR yoksa PIN’den önce güvenlik kodunu karşılaştırırsın.||The QR code carries its fingerprint. Without one you compare the security code before the PIN is sent.}}</li>
+    <li><b>{{6 haneli PIN||A 6-digit PIN}}</b> {{Her başlatışta yenilenir. 5 yanlış denemede o cihaz 60 saniye bekler.||New at every start. After 5 wrong tries that device waits 60 seconds.}}</li>
+    <li><b>{{Perdede görünmez||Off the screen}}</b> {{İlk telefon bağlanınca QR ve PIN gizlenir.||When the first phone connects, the QR code and PIN are hidden.}}</li>
+  </ol>
+  <p class="aside">{{Çökme raporu ya da kullanım istatistiği gönderilmez, hata günlüğü cihazında kalır. Güncelleme denetimi açıkken PC uygulaması GitHub’a yeni sürümü sorar; ayarlardan kapatılır.||No crash reports or usage statistics are sent, and the error log stays on your device. With the update check on, the PC app asks GitHub for a new version; you can turn that off.}}</p>
+</section>

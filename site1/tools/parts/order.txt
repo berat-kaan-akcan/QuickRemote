@@ -1,0 +1,13 @@
+# The page, top to bottom. Edit a part, then run python3 site1/tools/build_pages.py
+head
+s1-hero
+s2-before
+s3-stage
+s4-laser
+s5-wrist
+s6-programs
+s7-trust
+s8-after
+status
+s9-faq
+s10-get

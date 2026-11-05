@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickRemote: run your talk from your phone</title>
+  <meta name="description" content="Your Android phone becomes a remote, touchpad and laser for PowerPoint, LibreOffice Impress, WPS and PDF. Notes and timer in your pocket; run it from a Wear OS watch too. No account, and everything stays on your network.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="QuickRemote">
+  <meta property="og:title" content="The room goes dark. The screen is yours.">
+  <meta property="og:description" content="Your phone becomes the remote, the touchpad and the laser. Notes and timer in your pocket, everything on your own network.">
+  <meta property="og:image" content="../assets/og/og-en.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="alternate" hreflang="tr" href="../">
+  <link rel="alternate" hreflang="en" href="./">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="preload" href="../assets/fonts/SofiaExtraCond-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../css/site.css">
+  <script>document.documentElement.className = 'js';</script>
+  <script src="../js/beam.js" defer></script>
+  <script src="../js/scenes.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="mark" viewBox="0 0 512 512"><defs><mask id="mk-dot" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#FFFFFF"/><circle cx="388" cy="166" r="38" fill="#000000"/></mask><linearGradient id="mk-next" x1="0" y1="0" x2=".55" y2="1"><stop offset="0" stop-color="#3E63F5"/><stop offset=".55" stop-color="#2F4BE0"/><stop offset="1" stop-color="#1B28A3"/></linearGradient><linearGradient id="mk-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".28"/><stop offset=".3" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><radialGradient id="mk-light" cx=".1" cy="0" r=".9"><stop offset="0" stop-color="#3E63F5" stop-opacity="0.22"/><stop offset="1" stop-color="#3E63F5" stop-opacity="0"/></radialGradient></defs><g transform="scale(1)"><defs><linearGradient id="mk-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141A33"/><stop offset="1" stop-color="#0A0D18"/></linearGradient><clipPath id="mk-tile"><rect width="512" height="512" rx="118"/></clipPath></defs><g clip-path="url(#mk-tile)"><rect width="512" height="512" fill="url(#mk-bg)"/><rect width="512" height="512" fill="url(#mk-light)"/><g transform="translate(256 256) scale(1.12) translate(-233 -276)"><rect x="70" y="196" width="100" height="150" rx="30" fill="#1A1F36" stroke="#323A62" stroke-width="5"/><path d="M132 245 L106 271 L132 297" fill="none" stroke="#C9CEE6" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><g mask="url(#mk-dot)"><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-next)"/><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-sheen)"/><path d="M274 232 L318 276 L274 320" fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/></g><circle cx="388" cy="166" r="28" fill="#FF6A3D"/></g></g><rect x="1.5" y="1.5" width="509" height="509" rx="116.5" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/></g></symbol>
+<symbol id="i-arrow-forward" viewBox="0 -960 960 960"><path d="M686-450H190q-13 0-21.5-8.5T160-480q0-13 8.5-21.5T190-510h496L459-737q-9-9-9-21t9-21q9-9 21-9t21 9l278 278q5 5 7 10t2 11q0 6-2 11t-7 10L501-181q-9 9-21 9t-21-9q-9-9-9-21t9-21l227-227Z"/></symbol>
+<symbol id="i-check" viewBox="0 -960 960 960"><path d="m378-332 363-363q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L399-267q-9 9-21 9t-21-9L175-449q-9-9-8.5-21.5T176-492q9-9 21.5-9t21.5 9l159 160Z"/></symbol>
+<symbol id="i-content-copy" viewBox="0 -960 960 960"><path d="M300-200q-24 0-42-18t-18-42v-560q0-24 18-42t42-18h440q24 0 42 18t18 42v560q0 24-18 42t-42 18H300Zm0-60h440v-560H300v560ZM180-80q-24 0-42-18t-18-42v-590q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v590h470q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32Q662.75-80 650-80H180Zm120-180v-560 560Z"/></symbol>
+<symbol id="i-contrast" viewBox="0 -960 960 960"><path d="M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM500-140q137-10 228.5-106T820-480q0-138-91.5-234T500-820v680Z"/></symbol>
+<symbol id="i-menu" viewBox="0 -960 960 960"><path d="M150-240q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z"/></symbol>
+<symbol id="i-play" viewBox="0 -960 960 960"><path d="M320-258v-450q0-14 9-22t21-8q4 0 8 1t8 3l354 226q7 5 10.5 11t3.5 14q0 8-3.5 14T720-458L366-232q-4 2-8 3t-8 1q-12 0-21-8t-9-22Z"/></symbol>
+<symbol id="i-remove" viewBox="0 -960 960 960"><path d="M240-440q-17 0-28.5-11.5T200-480q0-17 11.5-28.5T240-520h480q17 0 28.5 11.5T760-480q0 17-11.5 28.5T720-440H240Z"/></symbol>
+</svg>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top" data-top>
+  <a class="brand" href="#top" aria-label="QuickRemote"><svg aria-hidden="true"><use href="#mark"/></svg><span translate="no">QuickRemote</span></a>
+  <nav id="nav" aria-label="Sections">
+    <a href="#stage">On stage</a>
+    <a href="#laser">Laser</a>
+    <a href="#wrist">Watch</a>
+    <a href="#programs">Programs</a>
+    <a href="#trust">Trust</a>
+    <a href="#faq">Questions</a>
+  </nav>
+  <a class="lang" href="../" hreflang="tr" lang="tr" aria-label="Türkçe sürüm">TR</a>
+  <a class="top-cta" href="#get">Install</a>
+  <button class="menu" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+</header>
+<main id="main">
+<svg class="beam" data-beam aria-hidden="true"><path class="b-glow"/><path class="b-line"/><circle class="b-halo" r="26"/><circle class="b-head" r="7"/><defs><radialGradient id="halo"><stop offset="0" stop-color="#FF6A3D" stop-opacity=".6"/><stop offset="1" stop-color="#FF6A3D" stop-opacity="0"/></radialGradient></defs></svg>
+
+<section class="s hero" id="top" aria-labelledby="h1">
+  <div class="throw" aria-hidden="true"></div>
+  <h1 id="h1"><span>The room goes dark.</span> <span data-b="1,.82">The screen is yours.</span></h1>
+  <div class="hero-foot">
+    <p class="lede">QuickRemote turns your Android phone into the remote, touchpad and laser for your talk. It works with PowerPoint, Impress, WPS and PDF, and runs from a Wear OS watch too.</p>
+    <div class="cta">
+      <a class="btn btn-fill" href="https://github.com/berat-kaan-akcan/QuickRemote">See it on GitHub</a>
+      <a class="btn btn-ghost" href="#before">How it works</a>
+    </div>
+  </div>
+  <i class="way" data-only="wide" data-b="0.62,.86 0.62,1"></i>
+  <i class="way" data-only="narrow" data-b="0.985,.92 0.985,1"></i>
+</section>
+
+<section class="s before" id="before" aria-labelledby="before-h">
+  <i class="way" data-b="0.3,0.03 0.012,0.09"></i>
+  <div class="before-copy">
+    <h2 id="before-h" data-b="-.02,1.04 1,1.04">First, a handshake.</h2>
+    <p class="lede">Open QuickRemote PC and scan the QR code with your phone. The code also carries the computer’s certificate, so the phone knows it reached the right machine.</p>
+    <p class="aside">Or find the computer on the network, or type its IP and PIN. Without Wi-Fi the phone becomes the computer’s Bluetooth keyboard and mouse: nothing to install, but no slide number and no notes.</p>
+  </div>
+  <i class="way" data-only="narrow" data-b="0.985,0.2 0.985,1"></i>
+  <figure class="pc">
+    <img src="../assets/shots/pc.webp" width="1502" height="964" loading="lazy" alt="The QuickRemote PC window: server on, QR code, IP address, port and the 6-digit PIN.">
+    <span class="qr-mark" data-only="wide" data-ring="1.08" data-ring-a="-2.6" aria-hidden="true"></span>
+  </figure>
+</section>
+
+<section class="s stage" id="stage" aria-labelledby="stage-h">
+  <h2 id="stage-h" data-b="1.01,.5">Eyes on the room, notes in your pocket.</h2>
+  <div class="story">
+    <div class="story-phone" aria-hidden="true">
+      <div class="handset" data-shots>
+        <img class="on" src="../assets/shots/phone-controls.webp" width="541" height="1186" alt="" data-shot="0">
+        <img src="../assets/shots/phone-touch.webp" width="541" height="1186" alt="" loading="lazy" data-shot="1">
+        <img src="../assets/shots/phone-media.webp" width="541" height="1186" alt="" loading="lazy" data-shot="2">
+      </div>
+    </div>
+    <div class="beats">
+      <article class="beat" data-beat="0" data-b="-.05,.5">
+        <img class="beat-shot" src="../assets/shots/phone-controls.webp" width="541" height="1186" loading="lazy" alt="The remote: slide number, timer, note, Previous and Next.">
+        <h3>The biggest key is Next.</h3>
+        <p>You press it without looking. Slide number, speaker note and timer share the screen; the presenter view shows the next slide and your full notes.</p>
+        <p class="note">Slide pictures show the slide as saved, without the animation step or ink. In a full-screen show the current slide shows what is on screen.</p>
+      </article>
+      <article class="beat" data-beat="1" data-b="-.05,.5">
+        <img class="beat-shot" src="../assets/shots/phone-touch.webp" width="541" height="1186" loading="lazy" alt="The touchpad: laser, pen, highlighter, eraser and clear.">
+        <h3>The screen becomes a touchpad.</h3>
+        <p>Slide your finger and the laser moves on the screen. Double-tap and draw over the slide with the pen or highlighter you picked. Colors are chosen on the phone.</p>
+      </article>
+      <article class="beat" data-beat="2" data-b="-.05,.5">
+        <img class="beat-shot" src="../assets/shots/phone-media.webp" width="541" height="1186" loading="lazy" alt="The media tab: slide video, system volume and now playing.">
+        <h3>The sound is at hand too.</h3>
+        <p>Play the video on the slide, turn the computer’s volume down, stop the music that is playing. No walk back to the computer.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="s laser" id="laser" aria-labelledby="laser-h">
+  <i class="way" data-b="0.5,0.012 0.012,0.06"></i>
+  <h2 id="laser-h" data-b="0,1.02 1,1.02">The laser does not stop at the slide.</h2>
+  <p class="lede">QuickRemote PC draws a see-through layer above every window. Clicks pass through and it never takes the focus. The laser, spotlight and pen work over a video, in a PDF, in a browser and outside a slideshow. Try it below.</p>
+  <div class="perde-wrap" data-room data-tool="spot">
+    <i class="way" data-b="0.985,-.02 0.985,1"></i>
+    <div class="perde" data-perde tabindex="0" role="application" aria-label="Sample screen: move the pointer or your finger; the arrow keys move the light too.">
+      <div class="tri" aria-hidden="true">
+        <div class="t t-pdf"><small>Quarterly report.pdf</small><b>Quarter results</b><div class="bars"><i style="height:42%"></i><i style="height:58%"></i><i style="height:48%"></i><i class="hot" style="height:92%"></i><i style="height:64%"></i></div></div>
+        <div class="t t-web"><small>Lesson 3 - Google Slides</small><b>How do volcanoes form?</b><p>Plates part, magma rises, the crust splits.</p><span class="cone"></span></div>
+        <div class="t t-vid"><span class="sun"></span><span class="hill"></span><small><svg class="i"><use href="#i-play"/></svg>The video on the slide</small></div>
+      </div>
+      <svg class="pink" data-ink aria-hidden="true" preserveAspectRatio="none"></svg>
+      <div class="veil" data-veil></div>
+      <div class="kara" data-blank></div>
+      <i class="pdot" data-pdot aria-hidden="true"></i>
+    </div>
+    <div class="tools" role="toolbar" aria-label="Tools">
+      <button type="button" data-tool-pick="spot" aria-pressed="true">Spotlight</button>
+      <button type="button" data-tool-pick="laser" aria-pressed="false">Laser</button>
+      <button type="button" data-tool-pick="pen" aria-pressed="false">Pen</button>
+      <button type="button" data-act="undo">Undo</button>
+      <button type="button" data-act="black" aria-pressed="false">Black screen</button>
+    </div>
+  </div>
+  <div class="fine">
+    <p>You choose who draws: on Automatic, PowerPoint and WPS keep their own laser and pen; in Impress, PDFs, browsers and outside a show the layer draws.</p>
+    <p>Windows also has a magnifier. On Linux the layer needs X11 or XWayland and a compositor. Two monitors and scales other than 125% are not tried yet.</p>
+  </div>
+</section>
+
+<section class="s wrist" id="wrist" aria-labelledby="wrist-h">
+  <i class="way" data-b="0.975,0.05"></i>
+  <h2 id="wrist-h">Leave the phone in your pocket.</h2>
+  <div class="wrist-row">
+    <ul class="w-l">
+      <li>Turn the bezel and the slide moves.</li>
+      <li>Hold Next and your finger is the laser.</li>
+    </ul>
+    <figure class="timepiece" data-ring="1.13" data-ring-a="-.75">
+      <img src="../assets/shots/watch.webp" width="437" height="433" loading="lazy" alt="The watch app: slide 8 of 24, time left, Previous, laser and a large Next key.">
+    </figure>
+    <i class="way" data-b="1.03,0.16 1.03,1"></i>
+    <ul class="w-r">
+      <li>Time warnings vibrate on your wrist.</li>
+      <li>The watch pairs with nothing. It uses the phone’s connection.</li>
+    </ul>
+  </div>
+  <p class="aside center">Wear OS 3 and up. Tried on a Galaxy Watch 6.</p>
+</section>
+
+<section class="s programs" id="programs" aria-labelledby="programs-h">
+  <i class="way" data-b="0.985,0.02 0.985,1"></i>
+  <p class="kick" id="programs-h">With whatever you present from.</p>
+  <div class="names" data-names>
+    <button type="button" aria-expanded="true" aria-controls="pn-1">PowerPoint</button>
+    <p id="pn-1"><b>Windows.</b> Slide number, notes, slide picture, the program’s own laser and pen, the video on the slide: all of it works.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-2">Impress</button>
+    <p id="pn-2" hidden><b>Linux.</b> QuickRemote’s layer draws the laser and pen, so they stay above a video. The video on the slide plays and pauses. It also turns a PDF open in LibreOffice into a presentation.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-3">WPS</button>
+    <p id="pn-3" hidden><b>Windows, Linux.</b> Full control on Windows; the video only plays and pauses. On Linux, a talk opened with “Open presentation with WPS” gets full control; in a WPS you opened yourself the keys work while its window is in front, and “Take over” brings it under full control.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-4">PDF</button>
+    <p id="pn-4" hidden><b>Windows, Linux.</b> In Acrobat, SumatraPDF, WPS PDF and browsers, Start opens full screen and the pages turn; the layer draws the laser and pen. Okular’s keys are written but not tried yet. No slide number and no notes.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-5">In a browser</button>
+    <p id="pn-5" hidden><b>PowerPoint web, Google Slides.</b> Told by the window’s title; Start opens the show, and go to slide works in Google Slides too. Tried in Chrome and in Firefox on Linux; Edge, Firefox on Windows and Bluetooth are not tried yet.</p>
+  </div>
+  <details class="all">
+    <summary>Open the full table</summary>
+    <div class="tbl-wrap" tabindex="0" role="region" aria-labelledby="programs-h">
+      <table class="tbl">
+        <caption class="sr">Features by program in Wi-Fi mode, with the PC’s Laser setting on Automatic</caption>
+        <thead>
+          <tr><td></td><th scope="col" colspan="2" class="os">Windows</th><th scope="col" colspan="3" class="os">Linux</th><th scope="col" colspan="2" class="os">Windows and Linux</th></tr>
+          <tr><td></td><th scope="col">PowerPoint</th><th scope="col">WPS</th><th scope="col">Impress</th><th scope="col">WPS<small>opened from QuickRemote</small></th><th scope="col">WPS<small>opened by you</small></th><th scope="col">PDF</th><th scope="col">Slides in a browser<small>PowerPoint web, Google Slides</small></th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Next, previous</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td></tr>
+          <tr><th scope="row">Start, end</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td></tr>
+          <tr><th scope="row">Go to slide</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td></tr>
+          <tr><th scope="row">Laser</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td></tr>
+          <tr><th scope="row">Pen, highlighter</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td></tr>
+          <tr><th scope="row">Eraser</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td></tr>
+          <tr><th scope="row">Black, white screen</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td></tr>
+          <tr><th scope="row">Slide number, notes</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td></tr>
+          <tr><th scope="row">Slide picture</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td></tr>
+          <tr><th scope="row">Video on the slide</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td><td><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span></td></tr>
+          <tr><th scope="row">Volume, media</th><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td><td><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="legend"><span><span class="m m-yes" title="Works"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Works</span></span> Works</span><span><span class="m m-part" title="Partly"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Partly</span></span> Partly</span><span><span class="m m-no" title="No"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">No</span></span> No</span> <span>Wi-Fi mode, the PC’s Laser setting on Automatic.</span></p>
+  </details>
+</section>
+
+<section class="s trust" id="trust" aria-labelledby="trust-h">
+  <i class="way" data-b="0.5,0.02 0.012,0.06"></i>
+  <h2 id="trust-h"><span>No account.</span> <span>No cloud.</span> <span data-b="0,1.02 1,1.02">Your commands stay in the room.</span></h2>
+  <i class="way" data-b="0.985,0.42 0.985,1"></i>
+  <ol class="chain">
+    <li><b>Local network only</b> Outside addresses are refused before encryption even starts.</li>
+    <li><b>TLS</b> Every command is encrypted, and the PIN travels inside that channel.</li>
+    <li><b>Certificate</b> The QR code carries its fingerprint. Without one you compare the security code before the PIN is sent.</li>
+    <li><b>A 6-digit PIN</b> New at every start. After 5 wrong tries that device waits 60 seconds.</li>
+    <li><b>Off the screen</b> When the first phone connects, the QR code and PIN are hidden.</li>
+  </ol>
+  <p class="aside">No crash reports or usage statistics are sent, and the error log stays on your device. With the update check on, the PC app asks GitHub for a new version; you can turn that off.</p>
+</section>
+
+<section class="s after" id="after" aria-labelledby="after-h">
+  <i class="way" data-b="0.5,0.02 0.012,0.16"></i>
+  <div class="after-copy">
+    <h2 id="after-h" data-b="-.02,1.04 1,1.04">When the lights come up, see where the time went.</h2>
+    <p class="lede">Every talk goes into the history: total time, time per slide, the longest and the shortest. Copy the report and prepare for the next one.</p>
+  </div>
+  <div class="handset handset-solo"><img src="../assets/shots/phone-report.webp" width="541" height="1186" loading="lazy" alt="The presentation report: total time, slide count and bars of time per slide."></div>
+  <i class="way" data-b="0.985,1"></i>
+</section>
+
+  <section class="s status" id="status" aria-labelledby="status-title">
+    <i class="way" data-b="0.985,0"></i>
+    <h2 id="status-title">What we tried, and what we have not.</h2>
+    <p class="lede">QuickRemote is a personal project. We say plainly which features have been tried on a real device.</p>
+    <div class="st">
+      <section class="st-ok"><h3>Tried on real devices</h3><ul>
+            <li>Basic control, notes, black and white screen with PowerPoint and WPS (Windows)</li>
+            <li>PDF viewers: Acrobat, SumatraPDF, Chrome, Edge, Firefox, WPS PDF (Windows)</li>
+            <li>Control of Impress and WPS (Linux)</li>
+            <li>Control and laser from the watch, on a Galaxy Watch 6</li>
+            <li>Bluetooth keyboard and mouse mode</li>
+          </ul></section>
+      <section class="st-part"><h3>Partly tried</h3><ul>
+            <li>Laser and ink layer: tried on screen on Linux and Windows&nbsp;11 (on Windows also the magnifier, the spotlight and the blank screen); over a video, several monitors, other scale settings and GNOME are not tried yet</li>
+            <li>Slide picture: verified on Windows with PowerPoint and WPS, in a show and outside, and on Linux outside a show; on the phone the card, the go-to-slide grid and the presenter view were tried with PowerPoint</li>
+            <li>The laser that goes where you touch in the presenter view: tried on Windows with PowerPoint; WPS, Impress and QuickRemote’s layer are not tried yet</li>
+            <li>The slide picture is the slide as saved: the animation step, drawings and a playing video do not show. In a full-screen show the screen picture does show them.</li>
+          </ul></section>
+      <section class="st-todo"><h3>Written and tested in code, not tried yet</h3><ul>
+            <li>Recognising a PDF in a browser on KDE Wayland</li>
+            <li>The tray, start at login and the update check</li>
+            <li>On the phone: app shortcuts and the Quick Settings tile</li>
+            <li>The Windows installer, the .deb and the AUR package</li>
+            <li>Full screen with Okular</li>
+            <li>PowerPoint and Google Slides in a browser: Edge, Firefox on Windows and Bluetooth (tried in Chrome on Windows and Firefox on Linux)</li>
+          </ul></section>
+    </div>
+    <i class="way" data-b="0.985,1"></i>
+  </section>
+
+<section class="s faq" id="faq" aria-labelledby="faq-h">
+  <h2 id="faq-h">Questions</h2>
+  <div class="faq-list">
+    <details><summary>Do I need the internet?</summary><p>No. In Wi-Fi mode the phone and computer only need the same network. In Bluetooth mode you do not even need a network.</p></details>
+    <details><summary>Do I install anything on the computer?</summary><p>Wi-Fi mode needs QuickRemote PC. In Bluetooth mode you install nothing; the computer sees the phone as a keyboard.</p></details>
+    <details><summary>Does it work with an iPhone or Apple Watch?</summary><p>Not for now. The remote runs on Android, and the watch app on Wear OS.</p></details>
+    <details><summary>Can more than one phone connect?</summary><p>Yes. The phone that picks up the laser or pen keeps it until its gesture ends. If two people press Next at once, the slide moves once.</p></details>
+    <details><summary>Does it drop when the phone locks?</summary><p>No. While the remote screen is open, the connection carries on in the background even if you lock the phone.</p></details>
+    <details><summary>What if something goes wrong?</summary><p>On the phone: Settings, Help. On the PC: Settings, Troubleshooting. “Report a problem” opens a pre-filled page on GitHub, and you attach the error log yourself.</p></details>
+  </div>
+  <i class="way" data-b="0.985,1"></i>
+</section>
+
+<section class="nextkey" id="get" aria-labelledby="get-h" data-b="1,0,-46,46">
+  <div class="nk-arrow" aria-hidden="true"><svg class="i"><use href="#i-arrow-forward"/></svg></div>
+  <h2 id="get-h">The first release is on its way.</h2>
+  <p class="lede">Ready-made packages are not published yet, so for now it is built from source. When the release is out, the same page will have APKs for the phone and watch, an installer for Windows, and a .deb, a .tar.gz and an AUR package for Linux.</p>
+  <div class="cta">
+    <a class="btn btn-paper" href="https://github.com/berat-kaan-akcan/QuickRemote">See it on GitHub</a>
+    <a class="btn btn-rim" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">Releases</a>
+  </div>
+  <div class="build">
+    <pre tabindex="0"><code>git clone https://github.com/berat-kaan-akcan/QuickRemote.git
+cd QuickRemote/quick_remote_pc
+flutter pub get
+flutter run -d linux   <span># or -d windows</span></code></pre>
+    <button type="button" data-copy data-done="Copied"><svg class="i" aria-hidden="true"><use href="#i-content-copy"/></svg><span>Copy the commands</span></button>
+  </div>
+</section>
+</main>
+<footer class="foot">
+  <span translate="no">QuickRemote</span>
+  <span>A presentation remote for Android, Wear OS, Windows and Linux.</span>
+  <span class="foot-links"><a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub</a><a href="https://github.com/berat-kaan-akcan/QuickRemote/issues">Report a problem</a><a href="../" hreflang="tr">Türkçe</a></span>
+</footer>
+</body>
+</html>

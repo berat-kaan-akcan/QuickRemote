@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="tr" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickRemote: sunumunu telefonundan yönet</title>
+  <meta name="description" content="Android telefonun PowerPoint, LibreOffice Impress, WPS ve PDF için kumanda, touchpad ve lazer olur. Notların ve süren cebinde; Wear OS saatinle de yönetirsin. Hesap gerekmez, her şey kendi ağında kalır.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="QuickRemote">
+  <meta property="og:title" content="Salon karardı. Perde senin.">
+  <meta property="og:description" content="Telefonun kumanda, touchpad ve lazer olur. Notların ve süren cebinde, her şey kendi ağında.">
+  <meta property="og:image" content="assets/og/og-tr.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="alternate" hreflang="tr" href="./">
+  <link rel="alternate" hreflang="en" href="en/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/SofiaExtraCond-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/site.css">
+  <script>document.documentElement.className = 'js';</script>
+  <script src="js/beam.js" defer></script>
+  <script src="js/scenes.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="mark" viewBox="0 0 512 512"><defs><mask id="mk-dot" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#FFFFFF"/><circle cx="388" cy="166" r="38" fill="#000000"/></mask><linearGradient id="mk-next" x1="0" y1="0" x2=".55" y2="1"><stop offset="0" stop-color="#3E63F5"/><stop offset=".55" stop-color="#2F4BE0"/><stop offset="1" stop-color="#1B28A3"/></linearGradient><linearGradient id="mk-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".28"/><stop offset=".3" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><radialGradient id="mk-light" cx=".1" cy="0" r=".9"><stop offset="0" stop-color="#3E63F5" stop-opacity="0.22"/><stop offset="1" stop-color="#3E63F5" stop-opacity="0"/></radialGradient></defs><g transform="scale(1)"><defs><linearGradient id="mk-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141A33"/><stop offset="1" stop-color="#0A0D18"/></linearGradient><clipPath id="mk-tile"><rect width="512" height="512" rx="118"/></clipPath></defs><g clip-path="url(#mk-tile)"><rect width="512" height="512" fill="url(#mk-bg)"/><rect width="512" height="512" fill="url(#mk-light)"/><g transform="translate(256 256) scale(1.12) translate(-233 -276)"><rect x="70" y="196" width="100" height="150" rx="30" fill="#1A1F36" stroke="#323A62" stroke-width="5"/><path d="M132 245 L106 271 L132 297" fill="none" stroke="#C9CEE6" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><g mask="url(#mk-dot)"><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-next)"/><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-sheen)"/><path d="M274 232 L318 276 L274 320" fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/></g><circle cx="388" cy="166" r="28" fill="#FF6A3D"/></g></g><rect x="1.5" y="1.5" width="509" height="509" rx="116.5" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/></g></symbol>
+<symbol id="i-arrow-forward" viewBox="0 -960 960 960"><path d="M686-450H190q-13 0-21.5-8.5T160-480q0-13 8.5-21.5T190-510h496L459-737q-9-9-9-21t9-21q9-9 21-9t21 9l278 278q5 5 7 10t2 11q0 6-2 11t-7 10L501-181q-9 9-21 9t-21-9q-9-9-9-21t9-21l227-227Z"/></symbol>
+<symbol id="i-check" viewBox="0 -960 960 960"><path d="m378-332 363-363q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L399-267q-9 9-21 9t-21-9L175-449q-9-9-8.5-21.5T176-492q9-9 21.5-9t21.5 9l159 160Z"/></symbol>
+<symbol id="i-content-copy" viewBox="0 -960 960 960"><path d="M300-200q-24 0-42-18t-18-42v-560q0-24 18-42t42-18h440q24 0 42 18t18 42v560q0 24-18 42t-42 18H300Zm0-60h440v-560H300v560ZM180-80q-24 0-42-18t-18-42v-590q0-12.75 8.68-21.38 8.67-8.62 21.5-8.62 12.82 0 21.32 8.62 8.5 8.63 8.5 21.38v590h470q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32Q662.75-80 650-80H180Zm120-180v-560 560Z"/></symbol>
+<symbol id="i-contrast" viewBox="0 -960 960 960"><path d="M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM500-140q137-10 228.5-106T820-480q0-138-91.5-234T500-820v680Z"/></symbol>
+<symbol id="i-menu" viewBox="0 -960 960 960"><path d="M150-240q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Zm0-210q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h660q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H150Z"/></symbol>
+<symbol id="i-play" viewBox="0 -960 960 960"><path d="M320-258v-450q0-14 9-22t21-8q4 0 8 1t8 3l354 226q7 5 10.5 11t3.5 14q0 8-3.5 14T720-458L366-232q-4 2-8 3t-8 1q-12 0-21-8t-9-22Z"/></symbol>
+<symbol id="i-remove" viewBox="0 -960 960 960"><path d="M240-440q-17 0-28.5-11.5T200-480q0-17 11.5-28.5T240-520h480q17 0 28.5 11.5T760-480q0 17-11.5 28.5T720-440H240Z"/></symbol>
+</svg>
+<a class="skip" href="#main">İçeriğe geç</a>
+<header class="top" data-top>
+  <a class="brand" href="#top" aria-label="QuickRemote"><svg aria-hidden="true"><use href="#mark"/></svg><span translate="no">QuickRemote</span></a>
+  <nav id="nav" aria-label="Bölümler">
+    <a href="#stage">Sahnede</a>
+    <a href="#laser">Lazer</a>
+    <a href="#wrist">Saat</a>
+    <a href="#programs">Programlar</a>
+    <a href="#trust">Güven</a>
+    <a href="#faq">Sorular</a>
+  </nav>
+  <a class="lang" href="en/" hreflang="en" lang="en" aria-label="English version">EN</a>
+  <a class="top-cta" href="#get">Kurulum</a>
+  <button class="menu" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menü"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+</header>
+<main id="main">
+<svg class="beam" data-beam aria-hidden="true"><path class="b-glow"/><path class="b-line"/><circle class="b-halo" r="26"/><circle class="b-head" r="7"/><defs><radialGradient id="halo"><stop offset="0" stop-color="#FF6A3D" stop-opacity=".6"/><stop offset="1" stop-color="#FF6A3D" stop-opacity="0"/></radialGradient></defs></svg>
+
+<section class="s hero" id="top" aria-labelledby="h1">
+  <div class="throw" aria-hidden="true"></div>
+  <h1 id="h1"><span>Salon karardı.</span> <span data-b="1,.82">Perde senin.</span></h1>
+  <div class="hero-foot">
+    <p class="lede">QuickRemote, Android telefonunu sunumunun kumandası, touchpad’i ve lazeri yapar. PowerPoint, Impress, WPS ve PDF ile çalışır; Wear OS saatinden de yönetilir.</p>
+    <div class="cta">
+      <a class="btn btn-fill" href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da gör</a>
+      <a class="btn btn-ghost" href="#before">Nasıl çalışır</a>
+    </div>
+  </div>
+  <i class="way" data-only="wide" data-b="0.62,.86 0.62,1"></i>
+  <i class="way" data-only="narrow" data-b="0.985,.92 0.985,1"></i>
+</section>
+
+<section class="s before" id="before" aria-labelledby="before-h">
+  <i class="way" data-b="0.3,0.03 0.012,0.09"></i>
+  <div class="before-copy">
+    <h2 id="before-h" data-b="-.02,1.04 1,1.04">Önce bir el sıkışma.</h2>
+    <p class="lede">Bilgisayarında QuickRemote PC’yi aç, ekrandaki QR kodu telefonla tara. Kod, bilgisayarın sertifikasını da taşır; telefon doğru makineye bağlandığını bilir.</p>
+    <p class="aside">Ya da aynı ağda bilgisayarı bul veya IP ve PIN’i elle gir. Wi-Fi yoksa telefon, Bluetooth üzerinden bilgisayarın klavyesi ve faresi olur: bilgisayara hiçbir şey kurmazsın, ama slayt numarası ve notlar gelmez.</p>
+  </div>
+  <i class="way" data-only="narrow" data-b="0.985,0.2 0.985,1"></i>
+  <figure class="pc">
+    <img src="assets/shots/pc.webp" width="1502" height="964" loading="lazy" alt="QuickRemote PC penceresi: sunucu açık, QR kod, IP adresi, port ve 6 haneli PIN.">
+    <span class="qr-mark" data-only="wide" data-ring="1.08" data-ring-a="-2.6" aria-hidden="true"></span>
+  </figure>
+</section>
+
+<section class="s stage" id="stage" aria-labelledby="stage-h">
+  <h2 id="stage-h" data-b="1.01,.5">Gözün salonda, notun cebinde.</h2>
+  <div class="story">
+    <div class="story-phone" aria-hidden="true">
+      <div class="handset" data-shots>
+        <img class="on" src="assets/shots/phone-controls.webp" width="541" height="1186" alt="" data-shot="0">
+        <img src="assets/shots/phone-touch.webp" width="541" height="1186" alt="" loading="lazy" data-shot="1">
+        <img src="assets/shots/phone-media.webp" width="541" height="1186" alt="" loading="lazy" data-shot="2">
+      </div>
+    </div>
+    <div class="beats">
+      <article class="beat" data-beat="0" data-b="-.05,.5">
+        <img class="beat-shot" src="assets/shots/phone-controls.webp" width="541" height="1186" loading="lazy" alt="Kumanda ekranı: slayt numarası, süre, not, Önceki ve Sonraki.">
+        <h3>En büyük tuş Sonraki.</h3>
+        <p>Bakmadan basarsın. Slayt numarası, konuşmacı notu ve süre aynı ekranda; sıradaki slaydı ve notların tamamını sunucu görünümünde görürsün.</p>
+        <p class="note">Slayt resimleri kaydedilmiş hâlidir: animasyon adımı ve çizim görünmez. Tam ekran gösteride o anki slayt, ekranda görüneni gösterir.</p>
+      </article>
+      <article class="beat" data-beat="1" data-b="-.05,.5">
+        <img class="beat-shot" src="assets/shots/phone-touch.webp" width="541" height="1186" loading="lazy" alt="Touchpad ekranı: lazer, kalem, vurgulayıcı, silgi ve temizle araçları.">
+        <h3>Ekran touchpad olur.</h3>
+        <p>Parmağını kaydır, lazer perdede gezsin. Çift dokun, seçtiğin kalem ya da vurgulayıcıyla slaytın üstüne çiz. Renkler telefonda seçilir.</p>
+      </article>
+      <article class="beat" data-beat="2" data-b="-.05,.5">
+        <img class="beat-shot" src="assets/shots/phone-media.webp" width="541" height="1186" loading="lazy" alt="Medya ekranı: slayt videosu, sistem sesi ve şu an çalan.">
+        <h3>Ses de elinin altında.</h3>
+        <p>Slayttaki videoyu oynat, bilgisayarın sesini kıs, çalan müziği durdur. Bilgisayara yürümek gerekmez.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="s laser" id="laser" aria-labelledby="laser-h">
+  <i class="way" data-b="0.5,0.012 0.012,0.06"></i>
+  <h2 id="laser-h" data-b="0,1.02 1,1.02">Lazer slaytta bitmez.</h2>
+  <p class="lede">QuickRemote PC, her pencerenin üstüne şeffaf bir katman çizer. Tıklamalar geçer, odak alınmaz. Lazer, spot ışığı ve kalem videonun üstünde, PDF’te, tarayıcıda ve gösteri dışında da çalışır. Aşağıda dene.</p>
+  <div class="perde-wrap" data-room data-tool="spot">
+    <i class="way" data-b="0.985,-.02 0.985,1"></i>
+    <div class="perde" data-perde tabindex="0" role="application" aria-label="Örnek ekran: fareyi ya da parmağını gezdir, ok tuşları da ışığı taşır.">
+      <div class="tri" aria-hidden="true">
+        <div class="t t-pdf"><small>Çeyrek raporu.pdf</small><b>Çeyrek sonuçları</b><div class="bars"><i style="height:42%"></i><i style="height:58%"></i><i style="height:48%"></i><i class="hot" style="height:92%"></i><i style="height:64%"></i></div></div>
+        <div class="t t-web"><small>Ders 3 - Google Slaytlar</small><b>Yanardağlar nasıl oluşur?</b><p>Levhalar ayrılır, magma yükselir, kabuk yarılır.</p><span class="cone"></span></div>
+        <div class="t t-vid"><span class="sun"></span><span class="hill"></span><small><svg class="i"><use href="#i-play"/></svg>Slayttaki video</small></div>
+      </div>
+      <svg class="pink" data-ink aria-hidden="true" preserveAspectRatio="none"></svg>
+      <div class="veil" data-veil></div>
+      <div class="kara" data-blank></div>
+      <i class="pdot" data-pdot aria-hidden="true"></i>
+    </div>
+    <div class="tools" role="toolbar" aria-label="Araçlar">
+      <button type="button" data-tool-pick="spot" aria-pressed="true">Spot ışığı</button>
+      <button type="button" data-tool-pick="laser" aria-pressed="false">Lazer</button>
+      <button type="button" data-tool-pick="pen" aria-pressed="false">Kalem</button>
+      <button type="button" data-act="undo">Geri al</button>
+      <button type="button" data-act="black" aria-pressed="false">Siyah ekran</button>
+    </div>
+  </div>
+  <div class="fine">
+    <p>Kimin çizeceğini sen seçersin: Otomatik ayarda PowerPoint ve WPS kendi lazerini ve kalemini kullanır; Impress, PDF, tarayıcı ve gösteri dışında katman çizer.</p>
+    <p>Windows’ta bir de büyüteç var. Linux’ta katman X11 ya da XWayland ve bileşik pencere yöneticisi ister. İki monitör ve %125 dışındaki ölçekler henüz denenmedi.</p>
+  </div>
+</section>
+
+<section class="s wrist" id="wrist" aria-labelledby="wrist-h">
+  <i class="way" data-b="0.975,0.05"></i>
+  <h2 id="wrist-h">Telefon cebinde kalsın.</h2>
+  <div class="wrist-row">
+    <ul class="w-l">
+      <li>Çerçeveyi çevir, slayt değişsin.</li>
+      <li>İleri’yi basılı tut, parmağın lazer olsun.</li>
+    </ul>
+    <figure class="timepiece" data-ring="1.13" data-ring-a="-.75">
+      <img src="assets/shots/watch.webp" width="437" height="433" loading="lazy" alt="Saat uygulaması: slayt 8/24, kalan süre, Önceki, lazer ve büyük İleri tuşu.">
+    </figure>
+    <i class="way" data-b="1.03,0.16 1.03,1"></i>
+    <ul class="w-r">
+      <li>Süre uyarıları bileğinde titrer.</li>
+      <li>Saat hiçbir şeyle eşleşmez, telefonun bağlantısını kullanır.</li>
+    </ul>
+  </div>
+  <p class="aside center">Wear OS 3 ve üzeri. Bir Galaxy Watch 6 ile denendi.</p>
+</section>
+
+<section class="s programs" id="programs" aria-labelledby="programs-h">
+  <i class="way" data-b="0.985,0.02 0.985,1"></i>
+  <p class="kick" id="programs-h">Hangi programla sunuyorsan onunla.</p>
+  <div class="names" data-names>
+    <button type="button" aria-expanded="true" aria-controls="pn-1">PowerPoint</button>
+    <p id="pn-1"><b>Windows.</b> Slayt numarası, notlar, slayt resmi, programın kendi lazeri ve kalemi, slayttaki video: hepsi çalışır.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-2">Impress</button>
+    <p id="pn-2" hidden><b>Linux.</b> Lazer ve kalemi QuickRemote’un katmanı çizer, videonun üstünde de görünür. Slayttaki video oynatılır ve duraklatılır. LibreOffice’te açık bir PDF’i sunuma da çevirir.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-3">WPS</button>
+    <p id="pn-3" hidden><b>Windows, Linux.</b> Windows’ta tam kontrol; video yalnızca oynar ve durur. Linux’ta “Sunumu WPS ile aç” ile açılan sunum tam kontrol edilir, kendi açtığın WPS’te tuşlar pencere öndeyken çalışır ve “Devral” onu tam kontrole alır.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-4">PDF</button>
+    <p id="pn-4" hidden><b>Windows, Linux.</b> Acrobat, SumatraPDF, WPS PDF ve tarayıcılarda Başlat tam ekranı açar, sayfalar çevrilir; lazer ve kalemi katman çizer. Okular’ın tuşları yazıldı, henüz denenmedi. Slayt numarası ve notlar gelmez.</p>
+    <button type="button" aria-expanded="false" aria-controls="pn-5">Tarayıcıda</button>
+    <p id="pn-5" hidden><b>PowerPoint web, Google Slaytlar.</b> Pencere başlığından tanınır; Başlat sunuyu açar, Google Slaytlar’da slayta gitme de çalışır. Chrome’da ve Linux’ta Firefox’ta denendi; Edge, Windows’ta Firefox ve Bluetooth henüz denenmedi.</p>
+  </div>
+  <details class="all">
+    <summary>Tam tabloyu aç</summary>
+    <div class="tbl-wrap" tabindex="0" role="region" aria-labelledby="programs-h">
+      <table class="tbl">
+        <caption class="sr">Wi-Fi modunda, PC’nin Lazer ayarı Otomatik iken programlara göre özellikler</caption>
+        <thead>
+          <tr><td></td><th scope="col" colspan="2" class="os">Windows</th><th scope="col" colspan="3" class="os">Linux</th><th scope="col" colspan="2" class="os">Windows ve Linux</th></tr>
+          <tr><td></td><th scope="col">PowerPoint</th><th scope="col">WPS</th><th scope="col">Impress</th><th scope="col">WPS<small>QuickRemote’tan açılan</small></th><th scope="col">WPS<small>kendi açtığın</small></th><th scope="col">PDF</th><th scope="col">Tarayıcıda sunum<small>PowerPoint web, Google Slaytlar</small></th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Sonraki, önceki</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td></tr>
+          <tr><th scope="row">Başlat, bitir</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td></tr>
+          <tr><th scope="row">Slayta git</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td></tr>
+          <tr><th scope="row">Lazer</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td></tr>
+          <tr><th scope="row">Kalem, vurgulayıcı</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td></tr>
+          <tr><th scope="row">Silgi</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td></tr>
+          <tr><th scope="row">Siyah, beyaz ekran</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td></tr>
+          <tr><th scope="row">Slayt numarası, notlar</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td></tr>
+          <tr><th scope="row">Slayt resmi</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td></tr>
+          <tr><th scope="row">Slayttaki video</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td><td><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span></td></tr>
+          <tr><th scope="row">Ses, medya</th><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td><td><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="legend"><span><span class="m m-yes" title="Çalışır"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span class="sr">Çalışır</span></span> Çalışır</span><span><span class="m m-part" title="Kısmen"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg><span class="sr">Kısmen</span></span> Kısmen</span><span><span class="m m-no" title="Yok"><svg class="i" aria-hidden="true"><use href="#i-remove"/></svg><span class="sr">Yok</span></span> Yok</span> <span>Wi-Fi modu, PC’nin Lazer ayarı Otomatik.</span></p>
+  </details>
+</section>
+
+<section class="s trust" id="trust" aria-labelledby="trust-h">
+  <i class="way" data-b="0.5,0.02 0.012,0.06"></i>
+  <h2 id="trust-h"><span>Hesap yok.</span> <span>Bulut yok.</span> <span data-b="0,1.02 1,1.02">Komutların salonda kalır.</span></h2>
+  <i class="way" data-b="0.985,0.42 0.985,1"></i>
+  <ol class="chain">
+    <li><b>Yalnızca yerel ağ</b> Dışarıdan gelen adresler, şifreleme başlamadan reddedilir.</li>
+    <li><b>TLS</b> Her komut şifrelenir, PIN de bu kanalın içinden gider.</li>
+    <li><b>Sertifika</b> QR kod parmak izini taşır. QR yoksa PIN’den önce güvenlik kodunu karşılaştırırsın.</li>
+    <li><b>6 haneli PIN</b> Her başlatışta yenilenir. 5 yanlış denemede o cihaz 60 saniye bekler.</li>
+    <li><b>Perdede görünmez</b> İlk telefon bağlanınca QR ve PIN gizlenir.</li>
+  </ol>
+  <p class="aside">Çökme raporu ya da kullanım istatistiği gönderilmez, hata günlüğü cihazında kalır. Güncelleme denetimi açıkken PC uygulaması GitHub’a yeni sürümü sorar; ayarlardan kapatılır.</p>
+</section>
+
+<section class="s after" id="after" aria-labelledby="after-h">
+  <i class="way" data-b="0.5,0.02 0.012,0.16"></i>
+  <div class="after-copy">
+    <h2 id="after-h" data-b="-.02,1.04 1,1.04">Işıklar yanınca, zamanın nereye gittiğini gör.</h2>
+    <p class="lede">Her sunum geçmişe yazılır: toplam süre, slayt başına süre, en uzun ve en kısa slayt. Raporu kopyalar, bir sonrakine hazırlanırsın.</p>
+  </div>
+  <div class="handset handset-solo"><img src="assets/shots/phone-report.webp" width="541" height="1186" loading="lazy" alt="Sunum raporu: toplam süre, slayt sayısı ve slayt başına süre çubukları."></div>
+  <i class="way" data-b="0.985,1"></i>
+</section>
+
+  <section class="s status" id="status" aria-labelledby="status-title">
+    <i class="way" data-b="0.985,0"></i>
+    <h2 id="status-title">Neyi denedik, neyi denemedik.</h2>
+    <p class="lede">QuickRemote kişisel bir proje. Hangi özelliğin gerçek bir cihazda denendiğini açıkça yazıyoruz.</p>
+    <div class="st">
+      <section class="st-ok"><h3>Gerçek cihazda denendi</h3><ul>
+            <li>PowerPoint ve WPS ile temel kumanda, notlar, siyah ve beyaz ekran (Windows)</li>
+            <li>PDF görüntüleyiciler: Acrobat, SumatraPDF, Chrome, Edge, Firefox, WPS PDF (Windows)</li>
+            <li>Impress ve WPS ile kumanda (Linux)</li>
+            <li>Saatten kumanda ve lazer, bir Galaxy Watch 6 ile</li>
+            <li>Bluetooth klavye ve fare modu</li>
+          </ul></section>
+      <section class="st-part"><h3>Kısmen denendi</h3><ul>
+            <li>Lazer ve mürekkep katmanı: Linux’ta ve Windows&nbsp;11’de ekranda denendi (Windows’ta büyüteç, spot ışığı ve boş ekran da); videonun üstü, birden çok monitör, başka ölçek ayarları ve GNOME henüz denenmedi</li>
+            <li>Slayt resmi: Windows’ta PowerPoint ve WPS ile gösteride ve dışında, Linux’ta gösteri dışında doğrulandı; telefonda PowerPoint ile kart, slayta git ızgarası ve sunucu görünümü denendi</li>
+            <li>Sunucu görünümünde dokunulan yere giden lazer: Windows’ta PowerPoint ile denendi; WPS, Impress ve QuickRemote’un katmanı henüz denenmedi</li>
+            <li>Slayt resmi, slaytın kaydedilmiş hâlidir: animasyon adımı, çizim ve oynayan video görünmez. Tam ekran gösteride ekran resmi bunları da gösterir.</li>
+          </ul></section>
+      <section class="st-todo"><h3>Yazıldı, testlerden geçti, henüz denenmedi</h3><ul>
+            <li>KDE Wayland’da tarayıcıdaki PDF’in tanınması</li>
+            <li>Tepsi, oturum açılınca başlatma ve güncelleme denetimi</li>
+            <li>Telefonda uygulama kısayolları ve Hızlı Ayarlar kutucuğu</li>
+            <li>Windows kurulum paketi, .deb ve AUR paketi</li>
+            <li>Okular ile tam ekran</li>
+            <li>Tarayıcıda PowerPoint ve Google Slaytlar: Edge, Windows’ta Firefox ve Bluetooth (Windows’ta Chrome’da, Linux’ta Firefox’ta denendi)</li>
+          </ul></section>
+    </div>
+    <i class="way" data-b="0.985,1"></i>
+  </section>
+
+<section class="s faq" id="faq" aria-labelledby="faq-h">
+  <h2 id="faq-h">Sorular</h2>
+  <div class="faq-list">
+    <details><summary>İnternet gerekir mi?</summary><p>Hayır. Wi-Fi modunda telefonla bilgisayarın aynı ağda olması yeter. Bluetooth modunda bir ağa bile gerek yok.</p></details>
+    <details><summary>Bilgisayara bir şey kurmam gerekir mi?</summary><p>Wi-Fi modunda QuickRemote PC gerekir. Bluetooth modunda hiçbir şey kurmazsın; bilgisayar telefonu klavye olarak görür.</p></details>
+    <details><summary>iPhone ya da Apple Watch ile çalışır mı?</summary><p>Şimdilik hayır. Kumanda Android’de, saat uygulaması Wear OS’ta çalışır.</p></details>
+    <details><summary>Aynı anda birden fazla telefon bağlanabilir mi?</summary><p>Evet. Lazeri ya da kalemi ilk alan telefon, hareketi bitene kadar onu kullanır. İki kişi aynı anda Sonraki’ye basarsa slayt bir kez ilerler.</p></details>
+    <details><summary>Telefon kilitlenince bağlantı kopar mı?</summary><p>Hayır. Kumanda ekranı açıkken telefonu kilitlesen de bağlantı arka planda sürer.</p></details>
+    <details><summary>Sorun çıkarsa ne yaparım?</summary><p>Telefonda Ayarlar, Yardım; PC’de Ayarlar, Sorun giderme. “Sorun bildir” GitHub’da hazır bir sayfa açar, hata günlüğünü oraya sen eklersin.</p></details>
+  </div>
+  <i class="way" data-b="0.985,1"></i>
+</section>
+
+<section class="nextkey" id="get" aria-labelledby="get-h" data-b="1,0,-46,46">
+  <div class="nk-arrow" aria-hidden="true"><svg class="i"><use href="#i-arrow-forward"/></svg></div>
+  <h2 id="get-h">İlk sürüm hazırlanıyor.</h2>
+  <p class="lede">Hazır paketler henüz yayımlanmadı, şimdilik kaynak koddan derlenir. Sürüm çıkınca telefon ve saat için APK, Windows için kurulum paketi, Linux için .deb, .tar.gz ve AUR paketi aynı sayfada olacak.</p>
+  <div class="cta">
+    <a class="btn btn-paper" href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub’da gör</a>
+    <a class="btn btn-rim" href="https://github.com/berat-kaan-akcan/QuickRemote/releases">Sürümler</a>
+  </div>
+  <div class="build">
+    <pre tabindex="0"><code>git clone https://github.com/berat-kaan-akcan/QuickRemote.git
+cd QuickRemote/quick_remote_pc
+flutter pub get
+flutter run -d linux   <span># ya da -d windows</span></code></pre>
+    <button type="button" data-copy data-done="Kopyalandı"><svg class="i" aria-hidden="true"><use href="#i-content-copy"/></svg><span>Komutları kopyala</span></button>
+  </div>
+</section>
+</main>
+<footer class="foot">
+  <span translate="no">QuickRemote</span>
+  <span>Android, Wear OS, Windows ve Linux için sunum kumandası.</span>
+  <span class="foot-links"><a href="https://github.com/berat-kaan-akcan/QuickRemote">GitHub</a><a href="https://github.com/berat-kaan-akcan/QuickRemote/issues">Sorun bildir</a><a href="en/" hreflang="en">English</a></span>
+</footer>
+</body>
+</html>

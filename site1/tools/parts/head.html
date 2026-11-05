@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="@LANG@" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{QuickRemote: sunumunu telefonundan yönet||QuickRemote: run your talk from your phone}}</title>
+  <meta name="description" content="{{Android telefonun PowerPoint, LibreOffice Impress, WPS ve PDF için kumanda, touchpad ve lazer olur. Notların ve süren cebinde; Wear OS saatinle de yönetirsin. Hesap gerekmez, her şey kendi ağında kalır.||Your Android phone becomes a remote, touchpad and laser for PowerPoint, LibreOffice Impress, WPS and PDF. Notes and timer in your pocket; run it from a Wear OS watch too. No account, and everything stays on your network.}}">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="QuickRemote">
+  <meta property="og:title" content="{{Salon karardı. Perde senin.||The room goes dark. The screen is yours.}}">
+  <meta property="og:description" content="{{Telefonun kumanda, touchpad ve lazer olur. Notların ve süren cebinde, her şey kendi ağında.||Your phone becomes the remote, the touchpad and the laser. Notes and timer in your pocket, everything on your own network.}}">
+  <meta property="og:image" content="@ROOT@assets/og/og-@LANG@.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="alternate" hreflang="tr" href="{{./||../}}">
+  <link rel="alternate" hreflang="en" href="{{en/||./}}">
+  <link rel="icon" href="@ROOT@assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="@ROOT@assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="@ROOT@assets/apple-touch-icon.png">
+  <link rel="preload" href="@ROOT@assets/fonts/SofiaExtraCond-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="@ROOT@css/site.css">
+  <script>document.documentElement.className = 'js';</script>
+  <script src="@ROOT@js/beam.js" defer></script>
+  <script src="@ROOT@js/scenes.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="mark" viewBox="0 0 512 512"><defs><mask id="mk-dot" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#FFFFFF"/><circle cx="388" cy="166" r="38" fill="#000000"/></mask><linearGradient id="mk-next" x1="0" y1="0" x2=".55" y2="1"><stop offset="0" stop-color="#3E63F5"/><stop offset=".55" stop-color="#2F4BE0"/><stop offset="1" stop-color="#1B28A3"/></linearGradient><linearGradient id="mk-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".28"/><stop offset=".3" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><radialGradient id="mk-light" cx=".1" cy="0" r=".9"><stop offset="0" stop-color="#3E63F5" stop-opacity="0.22"/><stop offset="1" stop-color="#3E63F5" stop-opacity="0"/></radialGradient></defs><g transform="scale(1)"><defs><linearGradient id="mk-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141A33"/><stop offset="1" stop-color="#0A0D18"/></linearGradient><clipPath id="mk-tile"><rect width="512" height="512" rx="118"/></clipPath></defs><g clip-path="url(#mk-tile)"><rect width="512" height="512" fill="url(#mk-bg)"/><rect width="512" height="512" fill="url(#mk-light)"/><g transform="translate(256 256) scale(1.12) translate(-233 -276)"><rect x="70" y="196" width="100" height="150" rx="30" fill="#1A1F36" stroke="#323A62" stroke-width="5"/><path d="M132 245 L106 271 L132 297" fill="none" stroke="#C9CEE6" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><g mask="url(#mk-dot)"><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-next)"/><rect x="196" y="158" width="200" height="236" rx="52" fill="url(#mk-sheen)"/><path d="M274 232 L318 276 L274 320" fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/></g><circle cx="388" cy="166" r="28" fill="#FF6A3D"/></g></g><rect x="1.5" y="1.5" width="509" height="509" rx="116.5" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/></g></symbol>
+@SPRITE@
+</svg>
+<a class="skip" href="#main">{{İçeriğe geç||Skip to content}}</a>
+<header class="top" data-top>
+  <a class="brand" href="#top" aria-label="QuickRemote"><svg aria-hidden="true"><use href="#mark"/></svg><span translate="no">QuickRemote</span></a>
+  <nav id="nav" aria-label="{{Bölümler||Sections}}">
+    <a href="#stage">{{Sahnede||On stage}}</a>
+    <a href="#laser">{{Lazer||Laser}}</a>
+    <a href="#wrist">{{Saat||Watch}}</a>
+    <a href="#programs">{{Programlar||Programs}}</a>
+    <a href="#trust">{{Güven||Trust}}</a>
+    <a href="#faq">{{Sorular||Questions}}</a>
+  </nav>
+  <a class="lang" href="@OTHER_HREF@" hreflang="@OTHER@" lang="@OTHER@" aria-label="{{English version||Türkçe sürüm}}">{{EN||TR}}</a>
+  <a class="top-cta" href="#get">{{Kurulum||Install}}</a>
+  <button class="menu" type="button" aria-expanded="false" aria-controls="nav" aria-label="{{Menü||Menu}}"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+</header>
+<main id="main">
+<svg class="beam" data-beam aria-hidden="true"><path class="b-glow"/><path class="b-line"/><circle class="b-halo" r="26"/><circle class="b-head" r="7"/><defs><radialGradient id="halo"><stop offset="0" stop-color="#FF6A3D" stop-opacity=".6"/><stop offset="1" stop-color="#FF6A3D" stop-opacity="0"/></radialGradient></defs></svg>
