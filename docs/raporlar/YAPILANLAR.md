@@ -12,12 +12,12 @@ Bu dosya şunlardan toplandı (2026-10-26, eskileri silindi, geçmişi git'te): 
 
 | Proje | Sonuç | Tarih |
 |---|---|---|
-| Ortak paket | 43 test geçti | 2026-10-26 |
-| PC | 333 test geçti (7 atlandı) | 2026-10-26 |
-| Telefon | 191 test geçti | 2026-10-26 |
-| Python köprüleri | 71 test geçti (11 atlandı, Windows) | 2026-10-26 |
-| Saat | 37 test geçti | 2026-10-20 |
-| `dart analyze` (üç Dart projesi) | sorun yok | 2026-10-26 |
+| Ortak paket | 43 test geçti | 2026-11-17 |
+| PC | 373 test geçti | 2026-11-17 |
+| Telefon | 206 test geçti | 2026-11-17 |
+| Python köprüleri | 71 test geçti | 2026-11-17 |
+| Saat | 37 test geçti | 2026-11-17 |
+| `dart analyze` (üç Dart projesi) | sorun yok | 2026-11-17 |
 
 ---
 
@@ -118,6 +118,15 @@ Mutlak konum: `LASER_ABS` (ikili çerçeve türü 2, gösterinin kesirleri), yal
 - `AppLog` ortak pakette: dosya, 1 MB'ta döndürme, 3 dosya, arabellekli yazma; `debugPrint`, yakalanmayan hatalar ve Linux köprülerinin stderr'i ona gidiyor. `AppLog.redact` PIN, QR, parmak izi, güvenlik kodu, not/başlık, dosya yolları ve parolaları gizliyor (testli). Uzak çökme raporu yok (karar).
 - PC: Ayarlar → Sorun giderme ("Günlüğü dışa aktar", "Sorun bildir"). Telefon: Ayarlar → Yardım ("Hata günlüğünü paylaş", "Sorun bildir").
 - **Denendi**: Linux'ta günlük yazılıyor, yol `<path>`, PIN yok; dışa aktarma kaydetme penceresini açıyor; "Sorun bildir" tarayıcıyı arkada açıyordu, GTK üzerinden açılıyor ve öne geliyor `70fb0ef` (2026-10-21). Telefonda paylaşım menüsü günlükle açılıyor, "Sorun bildir" dolu bir issue sayfası açıyor (2026-10-21). Windows'ta dışa aktarma çalışıyor, dosyada PIN, kullanıcı adı, dosya adı yok (2026-10-22).
+
+### Güvenlik denetiminden kalan dört madde (2026-11-17, `guvenlik/2026-11` dalı)
+
+Hepsi Linux'ta yazıldı ve birim testleri geçti; cihazda ve Windows'ta **denenmedi** (liste YAPILMAYANLAR 4. ve 6. bölümde).
+
+- **`MainActivity`'ye dışarıdan gelen bağlantılar**: `LaunchLink.intent` her intent'e süreç ömürlü rastgele bir jeton koyuyor (`SecureRandom`, 128 bit), `LaunchLink.linkOf` bağlantıyı yalnızca jetonla alıyor (`MessageDigest.isEqual`). Başka bir uygulamanın gönderdiği `quickremote://connect/last|scan|bluetooth` yalnızca uygulamayı açar. Kutucuk jetonu kendisi ekler; kısayollar (statik ve dinamik) jeton taşımaz, dışa kapalı `ShortcutActivity`'ye gider, o da bağlantıyı aktarırken ekler. Süreç ölünce eski jeton geçmez (görevin kök intent'i bağlanmayı yinelemez). `quickremote://watch` bu bağlantılardan değil, etkilenmedi. Kotlin derlendi; birim testi yok, cihazda denenmedi.
+- **Windows sertifika parolası**: `CertPasswordStore` parolayı DPAPI ile (kullanıcıya özel, sabit entropi, `CRYPTPROTECT_UI_FORBIDDEN`) `cert_pwd.dpapi`'de tutuyor. Eski `cert_pwd.txt` bir kez okunup şifreli yazılıyor ve siliniyor; şifreleme başarısızsa düz dosya kalıyor ve sertifika korunuyor. Dosya yanına yazılıp yeniden adlandırılıyor (yarım dosya kalmaz). FFI'da giriş ve çıkış tamponları sıfırlanıp serbest bırakılıyor. **Beklenen davranış:** DPAPI parolayı çözemezse (klasör başka bilgisayara ya da kullanıcıya taşındı, kullanıcının parolası yönetici tarafından sıfırlandı, ya da dosyayı tanımayan eski sürüme dönüldü) yeni sertifika üretilir ve telefonlar güvenlik kodunu yeniden sorar. 10 birim testi (DPAPI yerine sahte dönüşümle); `Dpapi` Windows'ta çalıştırılmadı.
+- **PowerShell çıktı işareti**: sabit `___PS_DONE___` yerine her iş için rastgele `___PS_DONE_<32 onaltılık>___`. Yalnızca o anki işin işareti işi bitirir: notlardaki bir satır da, zaman aşımına uğramış bir işin geç gelen işareti de bitirmez; iki iş arasında gelen satırlar sonraki yanıta karışmaz. `PowerShellRunner` süreç başlatıcıyı ve süreleri dışarıdan alabiliyor; 6 birim testi sahte süreçle (işareti taklit eden ve satır bölmeleriyle parçalanan notlar, zaman aşımı, ölen süreç). Gerçek `powershell.exe` ile denenmedi.
+- **Hız sınırları**: `TlsHandshakeGate` 10 saniyede istemci başına 20, toplam 100 yeni el sıkışma başlatıyor; fazlası TLS'ten önce kapanıyor, pencere geçince yeniden alınıyor, kimse kalıcı engellenmiyor. İstemci anahtarı `AuthManager.clientKey` (IPv4-mapped düz IPv4, IPv6 /64); tablo toplam sınırla sınırlı. Reddedilenler pencere başına bir satır günlüğe yazılıyor (sel günlük dosyalarını döndürmesin). Kimliği doğrulanmış telefon saniyede 1000 hareket çerçevesi gönderebilir, fazlası düşer, bağlantı kalır; komut sınırı (30/sn, LEFT_UP, MODE_ARROW ve LASER_OFF hariç) ayrı sayılır. Telefon touchpad'i 16 ms'de en çok bir çerçeve, saat saniyede en çok 40 gönderir. Sayılar gerçek ağda ölçülmedi.
 
 ### CI, release ve paketler
 

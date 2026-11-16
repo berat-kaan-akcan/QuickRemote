@@ -48,11 +48,11 @@ Windows denemesi (2026-10-25) olumsuz çıktı: HID hizmetini kapatıp açmak te
 
 ### Güvenlik denetiminden açık kalanlar (2026-10)
 
-- [ ] **`MainActivity` başka bir uygulamadan açılabiliyor** (düşük): `quickremote://connect/last|scan|bluetooth` açık (explicit) bir intent'le gönderilip son bilgisayara bağlanma ya da kamera açtırılabilir. Etkisi küçük (kendi bilgisayarına bağlanır). Öneri: `ShortcutActivity`/`QuickTileService` intent'ine süreç ömürlü rastgele bir jeton koyup `LaunchLink.linkOf`'ta denetlemek. Kotlin ve cihaz denemesi ister.
-- [ ] **Windows sertifika parolası `cert_pwd.txt` olarak `.pfx`'in yanında**: koruma yalnızca dosya izinleri. DPAPI ile korunabilir; Windows'ta yazılıp denenmeli.
-- [ ] **İkili hareket çerçeveleri sınırsız işleniyor** (kimliği doğrulanmış istemci; birleştirici ucuz). Gerçek bir dokunmatik akışı 250 Hz'e çıkabildiği için eşik cihazda ölçülmeden konmadı.
-- [ ] **Saniyedeki yeni TLS bağlantısı sınırsız**: eşzamanlı handshake sınırlı, ama yerel ağdaki biri RSA el sıkışmalarıyla işlemci harcatabilir. Gerçek ağda ölçülmeli.
-- [ ] **PowerShell çıktı işareti (`___PS_DONE___`)**: bir sunumun notlarında bu satır varsa köprü kayabilir (yalnızca bozuk durum, yetki yok; telefondan tetiklenemez).
+Dört madde yazıldı (2026-11-17, YAPILANLAR "Güvenlik denetiminden kalan dört madde"); cihazda ve Windows'ta denenecek kısımları aşağıda 4. ve 6. bölümde. Kalanlar:
+
+- [ ] **Hız sınırlarının sayıları ölçülmedi**: saniyede 1000 hareket çerçevesi ve 10 saniyede 20 (istemci) / 100 (toplam) yeni TLS bağlantısı hesapla kondu, gerçek ağda ve gerçek telefonla ölçülmedi. Bilinen sınır: toplam sınırı birkaç adresle dolduran biri, sürdürdüğü sürece telefonların bağlanmasını engeller; aynı IPv6 /64'teki telefonlar tek istemci sayılır.
+- [ ] **`FlutterActivity` dış intent'ten ekstra okuyor** (düşük, 2026-11-17'de görüldü): `MainActivity` dışa açık olduğu için başka bir uygulama `cached_engine_id`, `background_mode`, `route` ya da `dart_entrypoint` ekstrasıyla açabilir. Uygulamada rota ve ikinci giriş noktası yok; görülen etki açılışta çökme. Öneri: `MainActivity`'de `getCachedEngineId`, `getInitialRoute`, `getDartEntrypointFunctionName`, `getBackgroundMode`'u intent'e bakmayacak biçimde ezmek. Cihazda denenmeli.
+- [ ] `LaunchLink` jetonunun Kotlin birim testi yok (telefonun Android modülünde test altyapısı yok).
 - Bilerek böyle: udev kuralı (`TAG+="uaccess"`) oturumdaki her uygulamaya sanal klavye verir; ürünün işi bu, belgelendi, paket kaldırılınca kural gider.
 
 ---
@@ -103,6 +103,14 @@ Windows denemesi (2026-10-25) olumsuz çıktı: HID hizmetini kapatıp açmak te
 **Kurulum engeli (2026-10-21):** telefondaki uygulama başka bir anahtarla imzalıydı; bu makinede derlenen release APK üstüne kurulamadı (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`). Ya imzalayan makineden kurulur ya da uygulama kaldırılıp kurulur (kayıtlı PC'ler ve ayarlar gider). versionCode o zamankinden büyük olmalı (`--build-number`).
 
 - [ ] **Son PC'ye bağlanma**: PC'nin IP'si değişince mDNS'te adıyla bulunuyor mu? (Kayıtlı PIN'le bağlanma ve yanlış PIN'de PIN sorma çalışıyor; IP değiştirmek yönetici parolası istedi.)
+- [ ] **Kısayol ve kutucuk jetonu** (`LaunchLink`, 2026-11-17; cihazda denenmedi):
+  - Uygulama kapalıyken ve açıkken: "Bluetooth kumanda" ve "QR tara" kısayolları, "Bağlan: <PC>" kısayolu, ana ekrana sabitlenmiş kısayol ve Hızlı Ayarlar kutucuğu eskisi gibi çalışıyor mu (kilitli ekranda kutucuk dahil)?
+  - Kumanda açıkken bir kısayola basınca çalışan kumanda kapanmıyor mu?
+  - Kutucukla bağlandıktan sonra uygulamayı son uygulamalardan kapatıp yeniden aç, ya da "Etkinlikleri saklama" geliştirici seçeneğiyle arka plandan geri getir: bağlanma kendiliğinden yinelenmemeli.
+  - Jetonsuz intent: `adb shell am start -n com.quickremote.quick_remote_app/.MainActivity -a android.intent.action.VIEW -d quickremote://connect/last` (aynısı `quickremote://scan` ve `quickremote://bluetooth` ile; uygulama kapalıyken ve açıkken). Uygulama yalnızca açılmalı: bağlanmamalı, kamera ya da Bluetooth ekranı gelmemeli.
+  - Yanlış jeton: aynı komuta `--es com.quickremote.quick_remote_app.LAUNCH_TOKEN 00000000000000000000000000000000` ekle; sonuç aynı olmalı.
+  - `adb shell am start -n com.quickremote.quick_remote_app/.ShortcutActivity -d quickremote://scan` reddedilmeli (dışa kapalı).
+  - Saat: "Telefonda QuickRemote'u aç" düğmesi (`quickremote://watch`) uygulamayı açıyor mu?
 - [ ] **Sunucu görünümünde dokunulan yere giden lazer** (`LASER_ABS`): PowerPoint'te denendi (2026-10-28, YAPILANLAR); WPS'te imleç, kaplama ve Impress, 16:9 olmayan ekranda kayma kaldı.
 
 ---
@@ -129,6 +137,12 @@ Eski deneme listesi `~/Masaüstü/QuickRemote-tasarim-ornekleri/WINDOWS-DENEME.m
 
 ### Diğerleri
 
+- [ ] **Sertifika parolası DPAPI ile** (2026-11-17; Linux'ta yazıldı, `Dpapi` Windows'ta hiç çalıştırılmadı):
+  - Eski sürümden güncelleme: `%APPDATA%` altındaki uygulama klasöründe `cert_pwd.txt` gidip `cert_pwd.dpapi` geliyor mu, sertifika aynı kalıyor mu (telefon güvenlik kodu sormadan bağlanmalı)?
+  - Temiz kurulum: yalnızca `cert_pwd.dpapi` oluşuyor mu, içinde parola düz metin değil mi? İkinci açılışta sertifika aynı mı?
+  - `cert_pwd.dpapi`'yi bozup (birkaç bayt değiştir) ya da klasörü başka bir Windows kullanıcısına kopyalayıp aç: yeni sertifika üretilmeli, telefon güvenlik kodunu sormalı (beklenen davranış). Günlükte "Certificate password could not be decrypted" olmalı, pencere çıkmamalı.
+- [ ] **PowerShell iş işareti** (2026-11-17; sahte süreçle testli, gerçek `powershell.exe` ile denenmedi): notlarında tek başına `___PS_DONE___` satırı olan bir sunuda notlar tam geliyor mu, slayt durumu ve ses kaymıyor mu? Normal kullanımda komutlar ve yoklama eskisi gibi mi (ilk iş 15 sn, sonrakiler 5 sn sınırı)?
+- [ ] **Hız sınırları, gerçek telefonla** (2026-11-17): touchpad, lazer ve Sunucu görünümündeki lazerle hızlı hareket ederken günlükte reddedilen bağlantı ya da takılma var mı? Telefon ağ değiştirip yeniden bağlanırken "too many new connections" görülmemeli.
 - [ ] **Slayt resmi**: WPS 12.2'de `Slides(n).Export` (12.1'de çalışıyor). Bu makinede şu an WPS 12.1.0.29162 kurulu; 12.2 klasörü boş.
 - [ ] **Kaplama**: DPI %150 ve iki monitör (%125'te doğru).
 - [ ] **WPS PDF öndeyken Başlat bir kez arkadaki PowerPoint gösterisini açtı** (2026-10-27): WPS 12.1'in PDF sekmesi öndeydi (`fg` doğru okundu), arkada PowerPoint'te Korumalı Görünüm'de bir sunu vardı. F11 yerine `_startPresenter` çalıştı, ~15 sn sonra PowerPoint gösterisi açıldı. Hemen ardından aynı durumda tekrarlanınca F11 doğru basıldı; neden bulunamadı. Kullanıcı o sırada bilgisayarı kullanıyordu, odak bir an başka pencereye geçmiş olabilir. `_startViewer` artık öndeki pencerenin adını günlüğe yazıyor (2026-11-04): tekrar görülürse günlüğe bak. 2026-10-28'de aynı durumda üç kez denendi (Shift+F5 sürümüyle), PowerPoint açılmadı.

@@ -5,6 +5,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dart:math';
 import '../../powershell_runner.dart';
+import 'cert_password_store.dart';
+import 'dpapi.dart';
 import 'platform_network.dart';
 
 class WindowsNetwork implements PlatformNetwork {
@@ -100,13 +102,14 @@ class WindowsNetwork implements PlatformNetwork {
   Future<SecurityContext> loadOrGenerateCert() async {
     final dir = await getApplicationSupportDirectory();
     final certPath = p.join(dir.path, 'server_cert.pfx');
-    final pwdPath = p.join(dir.path, 'cert_pwd.txt');
     final file = File(certPath);
-    final pwdFile = File(pwdPath);
+    // The password encrypted for the user (DPAPI); not tried on Windows yet.
+    final passwords = CertPasswordStore(dir.path, protect: Dpapi.protect, unprotect: Dpapi.unprotect);
 
-    if (file.existsSync() && pwdFile.existsSync()) {
+    if (file.existsSync()) {
       try {
-        return _context(certPath, pwdFile.readAsStringSync().trim());
+        final stored = passwords.read();
+        if (stored != null) return _context(certPath, stored);
       } catch (e) {
         debugPrint('Stored TLS certificate unusable, generating a new one: $e');
       }
@@ -115,7 +118,7 @@ class WindowsNetwork implements PlatformNetwork {
     debugPrint('Generating new self-signed TLS certificate...');
     final certPassword = generateSecurePassword();
     if (file.existsSync()) file.deleteSync();
-    pwdFile.writeAsStringSync(certPassword);
+    passwords.write(certPassword);
 
     // Path and password go in through the environment: a user name with
     // `$` or a backtick would break them inside a PowerShell string.

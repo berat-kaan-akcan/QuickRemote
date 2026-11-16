@@ -12,7 +12,15 @@ import 'package:flutter/foundation.dart';
 /// the phone. The pending-auth limits of the server only start once the
 /// handshake and the HTTP upgrade request are through. Here each handshake
 /// gets [handshakeTimeout], and only [maxPerClient] (per [clientKey]) and
-/// [maxTotal] may be under way at once; the rest are closed at once.
+/// [maxTotal] may be under way at once; the rest are closed at once. And
+/// each handshake costs the server an RSA signature, so only
+/// [maxStartsPerClient] (per [clientKey]) and [maxStartsTotal] may begin
+/// within [startWindow]: a client opening and dropping connections in a
+/// loop cannot keep the CPU busy. A refused connection is closed before
+/// any TLS; nobody is blocked for longer than the window. Phones behind one
+/// key (the same IPv6 /64) share its count, and [maxStartsTotal] is for
+/// everyone: a few addresses that fill it keep phones from connecting
+/// while they go on. The numbers are not measured on a real network.
 ///
 /// dart:io cannot cancel the handshake of a [SecureSocket], so it runs on a
 /// [RawSecureSocket] and the result is wrapped in [_RawSocketAdapter].
@@ -25,6 +33,9 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
     required this.maxTotal,
     required this.accepts,
     required this.clientKey,
+    required this.maxStartsPerClient,
+    required this.maxStartsTotal,
+    required this.startWindow,
   }) {
     _subscription = _server.listen(_onConnection, onError: _controller.addError, onDone: _controller.close);
   }
@@ -38,6 +49,11 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
     int maxTotal = 64,
     bool Function(InternetAddress remote) accepts = _acceptAll,
     required String Function(InternetAddress remote) clientKey,
+    // A phone makes one or two a connection (two when it checks the
+    // certificate first); reconnecting with backoff stays far below.
+    int maxStartsPerClient = 20,
+    int maxStartsTotal = 100,
+    Duration startWindow = const Duration(seconds: 10),
   }) async {
     final server = await RawServerSocket.bind(address, port);
     return TlsHandshakeGate._(
@@ -48,6 +64,9 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
       maxTotal: maxTotal,
       accepts: accepts,
       clientKey: clientKey,
+      maxStartsPerClient: maxStartsPerClient,
+      maxStartsTotal: maxStartsTotal,
+      startWindow: startWindow,
     );
   }
 
@@ -64,6 +83,57 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
 
   /// The key handshakes are counted under (see `AuthManager.clientKey`).
   final String Function(InternetAddress remote) clientKey;
+
+  final int maxStartsPerClient;
+  final int maxStartsTotal;
+  final Duration startWindow;
+
+  final _clock = Stopwatch()..start();
+
+  /// When the handshakes of the last [startWindow] began, per key and in all.
+  final Map<String, List<Duration>> _starts = {};
+  final List<Duration> _startsTotal = [];
+
+  /// Keys with a handshake counted in the window (at most [maxStartsTotal],
+  /// one more until the next sweep).
+  @visibleForTesting
+  int get trackedClients => _starts.length;
+
+  /// When a refused start was last logged, and how many came since: a
+  /// flood must not fill the log files, one line a window tells enough.
+  Duration? _refusalLogged;
+  int _refusedSince = 0;
+
+  void _logRefusal(String key) {
+    final now = _clock.elapsed;
+    final last = _refusalLogged;
+    if (last != null && now - last < startWindow) {
+      _refusedSince++;
+      return;
+    }
+    final more = _refusedSince > 0 ? ' ($_refusedSince more refused since the last line)' : '';
+    debugPrint('Refused connection from $key: too many new connections$more');
+    _refusalLogged = now;
+    _refusedSince = 0;
+  }
+
+  /// Whether a handshake from [key] may begin now; counts it when it may.
+  bool _mayStart(String key) {
+    final now = _clock.elapsed;
+    final since = now - startWindow;
+    _startsTotal.removeWhere((t) => t <= since);
+    final mine = _starts[key];
+    mine?.removeWhere((t) => t <= since);
+    if (mine != null && mine.isEmpty) _starts.remove(key);
+    if ((mine?.length ?? 0) >= maxStartsPerClient || _startsTotal.length >= maxStartsTotal) return false;
+    // Old keys go once their window has passed; bounded by maxStartsTotal.
+    if (_starts.length > maxStartsTotal) {
+      _starts.removeWhere((_, times) => times.every((t) => t <= since));
+    }
+    _starts.putIfAbsent(key, () => []).add(now);
+    _startsTotal.add(now);
+    return true;
+  }
 
   final _controller = StreamController<Socket>();
   late final StreamSubscription<RawSocket> _subscription;
@@ -90,6 +160,11 @@ class TlsHandshakeGate extends Stream<Socket> implements ServerSocket {
     final current = _handshaking[key] ?? 0;
     if (current >= maxPerClient || _handshakingTotal >= maxTotal) {
       debugPrint('Refused connection from $key: too many TLS handshakes under way');
+      raw.close();
+      return;
+    }
+    if (!_mayStart(key)) {
+      _logRefusal(key);
       raw.close();
       return;
     }

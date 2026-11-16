@@ -117,6 +117,7 @@ class WebSocketServer {
   final Map<WebSocket, PreAuthByteLimit> _byteLimits = {};
   /// Start and count of each client's current one-second command window.
   final Map<WebSocket, (Duration, int)> _commandWindows = {};
+  final Map<WebSocket, (Duration, int)> _moveWindows = {};
 
   /// Each phone's "keep the ink on slide change" (SET_KEEP_INK), passed
   /// with its own NEXT, PREV, START and START_AT. A phone that never sent
@@ -159,6 +160,13 @@ class WebSocketServer {
   /// (the volume slider one per 150 ms); more would only fill the PowerShell
   /// and bridge queues. Motion goes in binary frames and is not counted.
   static const _maxCommandsPerSecond = 30;
+
+  /// Move frames a phone may send a second; more are dropped, the phone
+  /// stays connected. Far above what a phone sends: its touchpad one frame
+  /// every 16 ms, the watch 40 a second, and only LASER_ABS at the finger's
+  /// rate (up to 240 Hz). Not measured on a real device.
+  @visibleForTesting
+  static const maxMovesPerSecond = 1000;
 
   /// Never dropped by the rate limit: they release a button or end a mode.
   static const _releaseCommands = {
@@ -467,6 +475,7 @@ class WebSocketServer {
     _releasePending(ws);
     _invalidMessageCount.remove(ws);
     _commandWindows.remove(ws);
+    _moveWindows.remove(ws);
     _keepInk.remove(ws);
     _moves.remove(ws)?.dispose();
     _byteLimits.remove(ws);
@@ -686,6 +695,7 @@ class WebSocketServer {
   void _handleMoveFrame(WebSocket ws, List<int> data) {
     final frame = MoveFrame.decode(data);
     if (frame == null) return;
+    if (!_withinRate(_moveWindows, ws, maxMovesPerSecond)) return;
     if (!_allowsMotion(ws)) return;
     _moves
         .putIfAbsent(ws, () => MoveCoalescer(minInterval: _moveInterval, onMove: _applyMove))
@@ -790,15 +800,18 @@ class WebSocketServer {
 
   /// Counts a command of [ws]; false once it sent [_maxCommandsPerSecond]
   /// this second.
-  bool _withinCommandRate(WebSocket ws) {
+  bool _withinCommandRate(WebSocket ws) => _withinRate(_commandWindows, ws, _maxCommandsPerSecond);
+
+  /// Counts an entry of [ws] in [windows]; false once it had [max] this second.
+  bool _withinRate(Map<WebSocket, (Duration, int)> windows, WebSocket ws, int max) {
     final now = _clock.elapsed;
-    final (start, count) = _commandWindows[ws] ?? (now, 0);
+    final (start, count) = windows[ws] ?? (now, 0);
     if (now - start >= const Duration(seconds: 1)) {
-      _commandWindows[ws] = (now, 1);
+      windows[ws] = (now, 1);
       return true;
     }
-    if (count >= _maxCommandsPerSecond) return false;
-    _commandWindows[ws] = (start, count + 1);
+    if (count >= max) return false;
+    windows[ws] = (start, count + 1);
     return true;
   }
 
