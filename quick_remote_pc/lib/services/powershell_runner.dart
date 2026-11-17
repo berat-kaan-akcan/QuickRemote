@@ -1,18 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 class PSJob {
   final String script;
   final Completer<String> completer;
+
+  /// The line that ends this job's output, see [PowerShellRunner.newMarker].
+  final String marker = PowerShellRunner.newMarker();
   PSJob(this.script, this.completer);
 }
 
+/// Runs scripts in one persistent `powershell.exe`, one job at a time. A
+/// job's output ends at its marker line, which the runner makes PowerShell
+/// print after the script. The marker is random for every job: a script's
+/// own output (a slide's notes, a file name) cannot hold it, so a line of
+/// text never ends a job early and shifts every later answer by one. A
+/// fixed `___PS_DONE___` did that until 2026-11.
 class PowerShellRunner {
   Process? _process;
   bool _isStarting = false;
   Completer<String>? _currentCompleter;
+
+  /// The marker of the job in flight; no other line ends it, not even the
+  /// marker of an earlier job that arrives late.
+  String? _currentMarker;
   final StringBuffer _currentOutput = StringBuffer();
   final List<PSJob> _jobQueue = [];
   bool _isProcessing = false;
@@ -25,7 +39,32 @@ class PowerShellRunner {
   bool _fresh = false;
   final String name;
 
-  PowerShellRunner(this.name);
+  /// Starts the process; a fake one in tests.
+  final Future<Process> Function() _start;
+
+  /// How long a job may take, and the first job of a new process.
+  final Duration _timeout;
+  final Duration _firstTimeout;
+
+  PowerShellRunner(
+    this.name, {
+    @visibleForTesting Future<Process> Function()? start,
+    @visibleForTesting Duration timeout = const Duration(seconds: 5),
+    @visibleForTesting Duration firstTimeout = const Duration(seconds: 15),
+  }) : _start = start ?? _startPowerShell,
+       _timeout = timeout,
+       _firstTimeout = firstTimeout;
+
+  static final _random = Random.secure();
+
+  /// `___PS_DONE_<128 random bits>___`, new for every job.
+  static String newMarker() {
+    final hex = [for (var i = 0; i < 16; i++) _random.nextInt(256).toRadixString(16).padLeft(2, '0')].join();
+    return '___PS_DONE_${hex}___';
+  }
+
+  static Future<Process> _startPowerShell() =>
+      Process.start(executable, ['-NoProfile', '-NonInteractive', '-Command', '-']);
 
   static final PowerShellRunner _commandRunner = PowerShellRunner('Command');
   static final PowerShellRunner _pollingRunner = PowerShellRunner('Polling');
@@ -58,12 +97,7 @@ class PowerShellRunner {
 
     _isStarting = true;
     try {
-      final process = await Process.start(executable, [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        '-',
-      ]);
+      final process = await _start();
       _process = process;
       _fresh = true;
 
@@ -82,6 +116,7 @@ class PowerShellRunner {
         _executionTimeout?.cancel();
         if (!current.isCompleted) current.complete('');
         _currentCompleter = null;
+        _currentMarker = null;
         _currentOutput.clear();
         _isProcessing = false;
         _processNext();
@@ -92,8 +127,10 @@ class PowerShellRunner {
           .transform(const LineSplitter())
           .listen((line) {
             if (!identical(_process, process)) return;
-            if (line.trim() == '___PS_DONE___') {
+            final marker = _currentMarker;
+            if (marker != null && line.trim() == marker) {
               _executionTimeout?.cancel();
+              _currentMarker = null;
               if (_currentCompleter != null &&
                   !_currentCompleter!.isCompleted) {
                 _currentCompleter!.complete(_currentOutput.toString().trim());
@@ -101,7 +138,9 @@ class PowerShellRunner {
                 _currentOutput.clear();
                 _processNext();
               }
-            } else {
+            } else if (marker != null) {
+              // Lines between jobs belong to none (a late line of a job
+              // that was given up); they must not lead the next answer.
               _currentOutput.writeln(line);
             }
           });
@@ -118,6 +157,11 @@ class PowerShellRunner {
       _isStarting = false;
     }
   }
+
+  /// Runs [script] after the jobs already waiting; its output, or '' when
+  /// it timed out or the process could not run it.
+  @visibleForTesting
+  Future<String> run(String script) => _executeInternal(script);
 
   Future<String> _executeInternal(String script) async {
     final completer = Completer<String>();
@@ -138,6 +182,7 @@ class PowerShellRunner {
       _currentCompleter!.complete('');
     }
     _currentCompleter = null;
+    _currentMarker = null;
     _currentOutput.clear();
 
     _isProcessing = false;
@@ -162,24 +207,26 @@ class PowerShellRunner {
 
     final job = _jobQueue.removeAt(0);
     _currentCompleter = job.completer;
+    _currentMarker = job.marker;
 
     try {
       _executionTimeout?.cancel();
-      final limit = Duration(seconds: _fresh ? 15 : 5);
+      final limit = _fresh ? _firstTimeout : _timeout;
       _fresh = false;
       _executionTimeout = Timer(limit, () {
-        debugPrint('PowerShell script execution timed out (${limit.inSeconds}s) in [$name] runner. Killing process.');
+        debugPrint('PowerShell script execution timed out (${limit.inMilliseconds} ms) in [$name] runner. Killing process.');
         _killProcessAndReset();
       });
 
       process.stdin.writeln(job.script);
-      process.stdin.writeln('Write-Output "___PS_DONE___"');
+      process.stdin.writeln('Write-Output "${job.marker}"');
     } catch (e) {
       debugPrint('PowerShell stdin error in [$name]: $e');
       _executionTimeout?.cancel();
       _process = null;
       process.kill(ProcessSignal.sigkill);
       _currentCompleter = null;
+      _currentMarker = null;
       _currentOutput.clear();
       // Retry the job on a fresh process
       _jobQueue.insert(0, job);

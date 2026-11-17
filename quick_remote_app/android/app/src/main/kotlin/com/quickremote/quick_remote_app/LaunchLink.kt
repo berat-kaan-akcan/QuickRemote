@@ -12,6 +12,8 @@ import android.os.Build
 import android.os.Bundle
 import android.service.quicksettings.TileService
 import io.flutter.plugin.common.MethodChannel
+import java.security.MessageDigest
+import java.security.SecureRandom
 
 /**
  * The ways into the app from outside it: the launcher's app shortcuts
@@ -20,7 +22,10 @@ import io.flutter.plugin.common.MethodChannel
  * Dart reads over [CHANNEL] (lib/services/launch_actions.dart):
  * quickremote://connect/last, quickremote://bluetooth, quickremote://scan.
  * The links are sent only as explicit intents; MainActivity has no filter for
- * them, so a web page cannot open them.
+ * them, so a web page cannot open them. MainActivity is exported (the
+ * launcher starts it), so another app could still send it one: each intent
+ * made here carries [token], random for the process's life, and [linkOf]
+ * takes only those.
  */
 object LaunchLink {
     const val CHANNEL = "com.quickremote.quick_remote_app/launch"
@@ -30,6 +35,12 @@ object LaunchLink {
     private const val KEY_LAST_PC = "last_pc"
     private const val SHORTCUT_LAST_PC = "connect_last"
     private val HOSTS = setOf("connect", "bluetooth", "scan")
+    private const val EXTRA_TOKEN = "com.quickremote.quick_remote_app.LAUNCH_TOKEN"
+
+    /** Known only inside this process: ShortcutActivity and the tile make
+     *  their intents here, another app cannot. */
+    private val token: String = ByteArray(16).also { SecureRandom().nextBytes(it) }
+        .joinToString("") { "%02x".format(it) }
 
     /** Whether the phone has a Wi-Fi connection to a PC; the tile shows it.
      *  Kept in memory only: a killed app is no longer connected. */
@@ -48,14 +59,20 @@ object LaunchLink {
         if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return null
         val data = intent.data ?: return null
         if (data.scheme != "quickremote" || data.host !in HOSTS) return null
+        if (!isOurs(intent.getStringExtra(EXTRA_TOKEN))) return null
         return data.toString()
     }
 
+    /** Whether [candidate] is this process's [token] (compared in constant time). */
+    internal fun isOurs(candidate: String?): Boolean =
+        candidate != null && MessageDigest.isEqual(candidate.toByteArray(), token.toByteArray())
+
     /** An intent that opens MainActivity with [link], in its existing task
-     *  when it has one (singleTop: onNewIntent). */
+     *  when it has one (singleTop: onNewIntent), carrying [token]. */
     fun intent(context: Context, link: String): Intent =
         Intent(Intent.ACTION_VIEW, Uri.parse(link), context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(EXTRA_TOKEN, token)
 
     fun lastPcName(context: Context): String? =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_LAST_PC, null)

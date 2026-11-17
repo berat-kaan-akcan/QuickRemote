@@ -35,7 +35,11 @@ void main() {
     Duration handshakeTimeout = const Duration(seconds: 10),
     int maxPerClient = 8,
     int maxTotal = 64,
+    int maxStartsPerClient = 20,
+    int maxStartsTotal = 100,
+    Duration startWindow = const Duration(seconds: 10),
     bool Function(InternetAddress)? accepts,
+    String Function(InternetAddress)? clientKey,
   }) =>
       TlsHandshakeGate.bind(
         InternetAddress.loopbackIPv4,
@@ -45,7 +49,10 @@ void main() {
         maxPerClient: maxPerClient,
         maxTotal: maxTotal,
         accepts: accepts ?? (_) => true,
-        clientKey: (a) => a.address,
+        clientKey: clientKey ?? (a) => a.address,
+        maxStartsPerClient: maxStartsPerClient,
+        maxStartsTotal: maxStartsTotal,
+        startWindow: startWindow,
       );
 
   HttpClient trustingClient() => HttpClient()..badCertificateCallback = (_, _, _) => true;
@@ -131,6 +138,105 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 10));
     }
     third.destroy();
+    await server.close(force: true);
+    await gate.close();
+  });
+
+  test('refuses new connections beyond the per-client rate', () async {
+    final gate = await bind(maxStartsPerClient: 2);
+    final server = HttpServer.listenOn(gate);
+
+    // Two connections dropped at once still count.
+    for (var i = 0; i < 2; i++) {
+      final s = await Socket.connect(InternetAddress.loopbackIPv4, gate.port);
+      while (gate.handshakesInProgress < 1) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      s.destroy();
+      while (gate.handshakesInProgress > 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    }
+    final third = await Socket.connect(InternetAddress.loopbackIPv4, gate.port);
+    await closedByPeer(third).timeout(const Duration(seconds: 5));
+    expect(gate.handshakesInProgress, 0);
+
+    third.destroy();
+    await server.close(force: true);
+    await gate.close();
+  });
+
+  /// Opens a connection and drops it once the gate has counted it.
+  Future<void> openAndDrop(TlsHandshakeGate gate) async {
+    final s = await Socket.connect(InternetAddress.loopbackIPv4, gate.port);
+    while (gate.handshakesInProgress < 1) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    s.destroy();
+    while (gate.handshakesInProgress > 0) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+  }
+
+  test('takes new connections again once the window has passed', () async {
+    final gate = await bind(maxStartsPerClient: 1, startWindow: const Duration(milliseconds: 300));
+    final server = HttpServer.listenOn(gate);
+    server.listen((request) => request.response.close());
+
+    await openAndDrop(gate);
+    final refused = await Socket.connect(InternetAddress.loopbackIPv4, gate.port);
+    await closedByPeer(refused).timeout(const Duration(seconds: 5));
+    refused.destroy();
+
+    // A refused connection does not count: the window is not pushed on.
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    final client = trustingClient();
+    final response = await (await client.getUrl(Uri.parse('https://127.0.0.1:${gate.port}/'))).close();
+    expect(response.statusCode, 200);
+
+    client.close(force: true);
+    await server.close(force: true);
+    await gate.close();
+  });
+
+  test('refuses new connections beyond the total rate, whoever they come from', () async {
+    var n = 0;
+    // Every connection counts as another client.
+    final gate = await bind(maxStartsTotal: 3, clientKey: (_) => 'client-${n++}');
+    final server = HttpServer.listenOn(gate);
+
+    for (var i = 0; i < 3; i++) {
+      await openAndDrop(gate);
+    }
+    final fourth = await Socket.connect(InternetAddress.loopbackIPv4, gate.port);
+    await closedByPeer(fourth).timeout(const Duration(seconds: 5));
+    expect(gate.trackedClients, 3);
+
+    fourth.destroy();
+    await server.close(force: true);
+    await gate.close();
+  });
+
+  test('forgets clients once their window has passed', () async {
+    var n = 0;
+    final gate = await bind(
+      maxStartsTotal: 4,
+      startWindow: const Duration(milliseconds: 200),
+      clientKey: (_) => 'client-${n++}',
+    );
+    final server = HttpServer.listenOn(gate);
+
+    // Many more clients than the total allows, over several windows: the
+    // table never holds more than the total plus the one being added.
+    for (var round = 0; round < 4; round++) {
+      for (var i = 0; i < 4; i++) {
+        await openAndDrop(gate);
+        expect(gate.trackedClients, lessThanOrEqualTo(5));
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    expect(n, greaterThanOrEqualTo(16));
+
     await server.close(force: true);
     await gate.close();
   });

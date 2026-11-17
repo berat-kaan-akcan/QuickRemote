@@ -78,7 +78,7 @@ Hangi programda neyin çalıştığı uygulamada da yazar: **Ayarlar → Yardım
 | **QR Kod ile Eşleşme** | PC uygulamasındaki QR kodu telefonunuzla tarayarak anında bağlanın |
 | **mDNS Otomatik Keşif** | Aynı ağdaki PC'ler otomatik olarak listelenir (`_quickremote._tcp`) |
 | **Manuel Bağlantı** | IP adresi ve port ile doğrudan bağlanın |
-| **Bluetooth Bağlantısı** | Wi-Fi olmadan doğrudan Bluetooth (HID) üzerinden PC'nizi kontrol edin. PC bu telefonu klavye olarak reddederse (SDP kaydı eksik), PC uygulaması çalışıyorsa Linux'ta otomatik onarılır; aksi halde telefon, bilgisayarda cihazı yeniden bağlama/eşleştirme adımlarını gösterir |
+| **Bluetooth Bağlantısı** | Wi-Fi olmadan doğrudan Bluetooth (HID) üzerinden PC'nizi kontrol edin. PC bu telefonu klavye olarak reddederse (SDP kaydı eksik), PC uygulaması çalışıyorsa Linux'ta otomatik onarılır; Windows'ta PC uygulamasının Ayarlar → Bluetooth kumanda → "Telefonu yeniden eşleştir" tuşu telefonu kaldırıp Bluetooth ayarlarını açar (Windows'ta henüz denenmedi); aksi halde telefon, bilgisayarda cihazı yeniden bağlama/eşleştirme adımlarını gösterir |
 | **Kayıtlı PC'ler** | Son 5 PC PIN'iyle saklanır; ağda bulunan kayıtlı bir PC "Kayıtlı" işaretiyle görünür ve doğrudan bağlanır |
 | **Kısayollar ve Hızlı Ayarlar** | Uygulama kısayolları (Bluetooth kumanda, QR tara, son PC) ve son PC'ye bağlanan Hızlı Ayarlar kutucuğu |
 | **Otomatik Yeniden Bağlanma** | Bağlantı koptuğunda otomatik olarak yeniden bağlanma desteği |

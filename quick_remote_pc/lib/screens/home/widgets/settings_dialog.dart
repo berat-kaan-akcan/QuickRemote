@@ -8,9 +8,11 @@ import '../../../l10n/app_language.dart';
 import '../../../providers/appearance_provider.dart';
 import '../../../providers/desktop_provider.dart';
 import '../../../providers/language_provider.dart';
+import '../../../services/desktop/bluetooth_pairing.dart';
 import '../../../services/desktop/problem_report.dart';
 import '../../../widgets/status_snack_bar.dart';
 import '../../../widgets/ui/ui.dart';
+import 'bt_repair_section.dart';
 import 'laser_setting_section.dart';
 
 class SettingsDialog extends StatefulWidget {
@@ -290,6 +292,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
               const LaserSettingSection(),
             ],
             ..._desktopSection(context),
+            if (BluetoothPairing.instance case final pairing?) ...[
+              Divider(color: p.border, height: AppSpace.lg),
+              BtRepairSection(pairing: pairing),
+            ],
             ..._troubleshootingSection(context),
           ],
         ),

@@ -979,6 +979,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nProgramlar: {presenters}\n\nGünlüğü (Ayarlar → Günlüğü dışa aktar) bu sayfaya sürükleyip bırakabilirsin.'**
   String issueBody(String version, String platform, String presenters);
+
+  /// No description provided for @btRepairTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bluetooth kumanda'**
+  String get btRepairTitle;
+
+  /// No description provided for @btRepairBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon bu bilgisayara Bluetooth klavye olarak bağlanmıyorsa (bilgisayar onu daha önce başka bir iş için, ör. ses için, eşleştirdiyse) Windows onu yeniden eşleştirmeli. Telefonu buradan kaldır, sonra açılan Bluetooth ayarlarında \"Cihaz ekle\" ile yeniden ekle; o sırada telefonda QuickRemote\'un Bluetooth ekranı açık olsun.'**
+  String get btRepairBody;
+
+  /// No description provided for @btRepairAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonu yeniden eşleştir'**
+  String get btRepairAction;
+
+  /// No description provided for @btRepairPickTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi telefon?'**
+  String get btRepairPickTitle;
+
+  /// No description provided for @btRepairPickBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçtiğin cihaz Windows\'tan kaldırılır (sesi de kesilir, yeniden eklenince geri gelir), ardından Bluetooth ayarları açılır.'**
+  String get btRepairPickBody;
+
+  /// No description provided for @btRepairNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu bilgisayarla eşleştirilmiş bir Bluetooth cihazı yok. Telefonu Windows\'un Bluetooth ayarlarından ekle.'**
+  String get btRepairNone;
+
+  /// No description provided for @btRepairRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kaldırıldı. Açılan Bluetooth ayarlarında \"Cihaz ekle\" ile telefonu yeniden ekle; telefonda QuickRemote\'un Bluetooth ekranı açık kalsın.'**
+  String btRepairRemoved(String name);
+
+  /// No description provided for @btRepairRemovedNoSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kaldırıldı. Windows\'un Bluetooth ayarlarını aç ve \"Cihaz ekle\" ile telefonu yeniden ekle; telefonda QuickRemote\'un Bluetooth ekranı açık kalsın.'**
+  String btRepairRemovedNoSettings(String name);
+
+  /// No description provided for @btRepairRemoveFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kaldırılamadı. Windows\'un Bluetooth ayarlarından kaldırıp yeniden ekle.'**
+  String btRepairRemoveFailed(String name);
 }
 
 class _AppLocalizationsDelegate

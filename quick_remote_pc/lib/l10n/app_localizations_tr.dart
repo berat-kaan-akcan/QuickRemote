@@ -519,4 +519,40 @@ class AppLocalizationsTr extends AppLocalizations {
   String issueBody(String version, String platform, String presenters) {
     return '**Ne oldu?**\n\n\n**Nasıl tekrarlanır?**\n\n\n---\nQuickRemote PC $version\nPlatform: $platform\nProgramlar: $presenters\n\nGünlüğü (Ayarlar → Günlüğü dışa aktar) bu sayfaya sürükleyip bırakabilirsin.';
   }
+
+  @override
+  String get btRepairTitle => 'Bluetooth kumanda';
+
+  @override
+  String get btRepairBody =>
+      'Telefon bu bilgisayara Bluetooth klavye olarak bağlanmıyorsa (bilgisayar onu daha önce başka bir iş için, ör. ses için, eşleştirdiyse) Windows onu yeniden eşleştirmeli. Telefonu buradan kaldır, sonra açılan Bluetooth ayarlarında \"Cihaz ekle\" ile yeniden ekle; o sırada telefonda QuickRemote\'un Bluetooth ekranı açık olsun.';
+
+  @override
+  String get btRepairAction => 'Telefonu yeniden eşleştir';
+
+  @override
+  String get btRepairPickTitle => 'Hangi telefon?';
+
+  @override
+  String get btRepairPickBody =>
+      'Seçtiğin cihaz Windows\'tan kaldırılır (sesi de kesilir, yeniden eklenince geri gelir), ardından Bluetooth ayarları açılır.';
+
+  @override
+  String get btRepairNone =>
+      'Bu bilgisayarla eşleştirilmiş bir Bluetooth cihazı yok. Telefonu Windows\'un Bluetooth ayarlarından ekle.';
+
+  @override
+  String btRepairRemoved(String name) {
+    return '$name kaldırıldı. Açılan Bluetooth ayarlarında \"Cihaz ekle\" ile telefonu yeniden ekle; telefonda QuickRemote\'un Bluetooth ekranı açık kalsın.';
+  }
+
+  @override
+  String btRepairRemovedNoSettings(String name) {
+    return '$name kaldırıldı. Windows\'un Bluetooth ayarlarını aç ve \"Cihaz ekle\" ile telefonu yeniden ekle; telefonda QuickRemote\'un Bluetooth ekranı açık kalsın.';
+  }
+
+  @override
+  String btRepairRemoveFailed(String name) {
+    return '$name kaldırılamadı. Windows\'un Bluetooth ayarlarından kaldırıp yeniden ekle.';
+  }
 }

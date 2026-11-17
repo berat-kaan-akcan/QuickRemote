@@ -273,6 +273,25 @@ void main() {
       expect(mouse.moves.single, (12.5, -4.0));
     });
 
+    test('drops move frames beyond the per-second limit', () async {
+      final client = await authed();
+      const sent = WebSocketServer.maxMovesPerSecond + 500;
+      for (var i = 0; i < sent; i++) {
+        client.ws.add(moveFrame(0, 1, 0));
+      }
+      double moved() => mouse.moves.fold(0.0, (sum, m) => sum + m.$1);
+      await eventually(() => moved() >= WebSocketServer.maxMovesPerSecond);
+      await settle();
+      expect(moved(), WebSocketServer.maxMovesPerSecond);
+      // Frames are dropped, the phone stays connected: its commands (their
+      // limit is counted apart) and, a second later, its motion still work.
+      client.send({'command': RemoteCommands.next});
+      await eventually(() => input.calls.contains('slideNext'));
+      await Future<void>.delayed(const Duration(milliseconds: 1050));
+      client.ws.add(moveFrame(0, 1, 0));
+      await eventually(() => moved() == WebSocketServer.maxMovesPerSecond + 1);
+    });
+
     test('TOUCH frames draw the stroke when the presenter draws it', () async {
       input.handlesDrawPointer = true;
       final client = await authed();
