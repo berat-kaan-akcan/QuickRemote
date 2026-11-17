@@ -146,5 +146,14 @@
   "settingsLogPrivacy": "The log stays on this computer and is never sent anywhere by itself. PINs, pairing codes, security codes, notes and file paths are not written; IP addresses and device names are. \"Report a problem\" opens a new issue on GitHub; you attach the log there yourself.",
   "logExported": "Log saved.",
   "logExportFailed": "Could not save the log.",
-  "issueBody": "**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nPrograms: {presenters}\n\nYou can drag the log (Settings → Export log) onto this page."
+  "issueBody": "**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote PC {version}\nPlatform: {platform}\nPrograms: {presenters}\n\nYou can drag the log (Settings → Export log) onto this page.",
+  "btRepairTitle": "Bluetooth remote",
+  "btRepairBody": "If the phone does not connect to this computer as a Bluetooth keyboard (the computer paired it earlier for something else, such as audio), Windows has to pair it again. Remove the phone here, then add it again with \"Add device\" in the Bluetooth settings that open, with QuickRemote's Bluetooth screen open on the phone.",
+  "btRepairAction": "Pair the phone again",
+  "btRepairPickTitle": "Which phone?",
+  "btRepairPickBody": "The device you pick is removed from Windows (its audio drops too and comes back once it is added again), then the Bluetooth settings open.",
+  "btRepairNone": "No Bluetooth device is paired with this computer. Add the phone in Windows' Bluetooth settings.",
+  "btRepairRemoved": "{name} was removed. Add the phone again with \"Add device\" in the Bluetooth settings that opened, with QuickRemote's Bluetooth screen open on the phone.",
+  "btRepairRemovedNoSettings": "{name} was removed. Open Windows' Bluetooth settings and add the phone again with \"Add device\", with QuickRemote's Bluetooth screen open on the phone.",
+  "btRepairRemoveFailed": "{name} could not be removed. Remove it in Windows' Bluetooth settings and add it again."
 }

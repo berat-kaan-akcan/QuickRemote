@@ -28,11 +28,12 @@ Bu dosya şunlardan toplandı (2026-10-26, eskileri silindi, geçmişi git'te): 
 
 ### Windows'ta Bluetooth klavye onarımı
 
-Windows denemesi (2026-10-25) olumsuz çıktı: HID hizmetini kapatıp açmak telefonu klavye yapmadı, ama kaldırıp yeniden eşleştirmek yaptı (ayrıntı YAPILANLAR.md, "Windows Bluetooth denemesi"). Yazılacak olan, şunlardan biri:
+Yolların karşılaştırması, deneme listesi ve sonuç tablosu: [WINDOWS_BT_ONARIM.md](WINDOWS_BT_ONARIM.md) (2026-11-17). Seçilen yol: telefonu Windows'tan kaldırıp yeniden eşleştirmek.
 
-- [ ] PC penceresinde **"Telefonu yeniden eşleştir"** tuşu: `BluetoothRemoveDevice`, ardından eşleştirme. Programla eşleştirme (`BluetoothAuthenticateDeviceEx`) denemede 1244 verdi ve iki cihazın onayı aynı ana denk gelmedi; tuş belki yalnızca kaldırıp Windows'un "Cihaz ekle" penceresini açmalı.
-- [ ] Ya da hayalet HID aygıtını (`CM_PROB_PHANTOM`) silmek, ya da BLE klavye (HID over GATT).
-- O zamana kadar uygulamanın bugünkü Windows talimatı (kaldır, yeniden eşleştir) doğru.
+- [ ] **"Telefonu yeniden eşleştir" tuşu Windows'ta denenmedi.** Kod yazıldı ve birim testlerinden geçti (2026-11-17): PC'de Ayarlar → Bluetooth kumanda, `BtRepair` + `WindowsBluetooth` (`BluetoothRemoveDevice`, ardından `ms-settings:bluetooth`); telefonun "bilgisayar kabul etmiyor" ekranındaki Windows sekmesi bu tuşu anlatıyor. Linux'ta yazıldı; Windows'ta derlenmedi, çalıştırılmadı. Deneme: rapordaki liste, 1. bölüm.
+- [ ] **Programla eşleştirme (adım sayısını ~7'den 3-4'e indirir) denenmedi.** Uygulamada yok; `quick_remote_pc/tool/windows_bt_pair_trial.ps1` iki değişkeni dener (Win32 + kimlik doğrulama geri çağrısı, WinRT özel eşleştirme). Biri çalışırsa Windows çalıştırıcısına (C++, MethodChannel) yazılacak; 6 haneli kod QuickRemote PC penceresinde gösterilip kullanıcıya onaylatılacak. Deneme: rapordaki liste, 2. bölüm.
+- [ ] Fikir: PC, Linux'taki `BtHidRepair` RFCOMM hizmetini Windows'ta da sunarsa reddedilen telefonu kendisi fark edip "Yeniden eşleştir?" diye sorar (rapor, 3. bölümün sonu). Yazılmadı.
+- Bırakıldı: hayalet HID aygıtını silmek (yönetici izni ister, denemedeki bulgu aleyhine) ve BLE klavye (telefonda ikinci bir Bluetooth yığını; Windows 11'de görünmeme riski). Gerekçe raporda.
 
 ### Küçük işler ve fikirler
 

@@ -631,6 +631,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'In Settings → Bluetooth & devices → Devices, find the phone and choose “Remove device” from its “…” menu. Then add it again with “Add device” while this screen is open.';
 
   @override
+  String get btHostUnawareWindowsPc =>
+      'If QuickRemote PC is open on the computer, it removes the phone for you: Settings → Bluetooth remote → “Pair the phone again”. Then add it again with “Add device” in the Bluetooth settings that open.';
+
+  @override
   String get btHostUnawareLinux =>
       'In the Bluetooth settings, disconnect the phone and connect it again. If that doesn\'t help, remove the phone and pair it again while this screen is open.';
 

@@ -178,6 +178,7 @@
   "btHostUnawareTitle": "The computer doesn't accept the phone as a keyboard",
   "btHostUnawareBody": "This mostly happens when the phone was paired with this computer before, while QuickRemote was not open (for audio or file transfer, say): the computer doesn't know it as a keyboard. Do this once on the computer:",
   "btHostUnawareWindows": "In Settings → Bluetooth & devices → Devices, find the phone and choose “Remove device” from its “…” menu. Then add it again with “Add device” while this screen is open.",
+  "btHostUnawareWindowsPc": "If QuickRemote PC is open on the computer, it removes the phone for you: Settings → Bluetooth remote → “Pair the phone again”. Then add it again with “Add device” in the Bluetooth settings that open.",
   "btHostUnawareLinux": "In the Bluetooth settings, disconnect the phone and connect it again. If that doesn't help, remove the phone and pair it again while this screen is open.",
   "btHostUnawareAuto": "If QuickRemote PC is open on the computer, it does this by itself.",
   "btHostUnawareWaiting": "The remote opens by itself once the computer accepts it.",

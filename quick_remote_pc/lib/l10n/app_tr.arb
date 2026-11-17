@@ -228,5 +228,29 @@
         "type": "String"
       }
     }
+  },
+  "btRepairTitle": "Bluetooth kumanda",
+  "btRepairBody": "Telefon bu bilgisayara Bluetooth klavye olarak bağlanmıyorsa (bilgisayar onu daha önce başka bir iş için, ör. ses için, eşleştirdiyse) Windows onu yeniden eşleştirmeli. Telefonu buradan kaldır, sonra açılan Bluetooth ayarlarında \"Cihaz ekle\" ile yeniden ekle; o sırada telefonda QuickRemote'un Bluetooth ekranı açık olsun.",
+  "btRepairAction": "Telefonu yeniden eşleştir",
+  "btRepairPickTitle": "Hangi telefon?",
+  "btRepairPickBody": "Seçtiğin cihaz Windows'tan kaldırılır (sesi de kesilir, yeniden eklenince geri gelir), ardından Bluetooth ayarları açılır.",
+  "btRepairNone": "Bu bilgisayarla eşleştirilmiş bir Bluetooth cihazı yok. Telefonu Windows'un Bluetooth ayarlarından ekle.",
+  "btRepairRemoved": "{name} kaldırıldı. Açılan Bluetooth ayarlarında \"Cihaz ekle\" ile telefonu yeniden ekle; telefonda QuickRemote'un Bluetooth ekranı açık kalsın.",
+  "@btRepairRemoved": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "btRepairRemovedNoSettings": "{name} kaldırıldı. Windows'un Bluetooth ayarlarını aç ve \"Cihaz ekle\" ile telefonu yeniden ekle; telefonda QuickRemote'un Bluetooth ekranı açık kalsın.",
+  "@btRepairRemovedNoSettings": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "btRepairRemoveFailed": "{name} kaldırılamadı. Windows'un Bluetooth ayarlarından kaldırıp yeniden ekle.",
+  "@btRepairRemoveFailed": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
   }
 }

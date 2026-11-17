@@ -7,7 +7,8 @@
 /// a keyboard and refuses the HID connection, and nothing the phone can do
 /// makes it read the records again. QuickRemote PC offers this service and,
 /// when the phone connects to it, makes the computer read the phone's records
-/// again (on Linux; Windows has no counterpart yet).
+/// again (on Linux; on Windows the user removes the phone with a key in
+/// QuickRemote PC's settings and pairs it again).
 class BtHidRepair {
   BtHidRepair._();
 

@@ -1166,6 +1166,12 @@ abstract class AppLocalizations {
   /// **'Ayarlar → Bluetooth ve cihazlar → Cihazlar’da telefonu bulun ve “…” menüsünden “Cihazı kaldır”ı seçin. Sonra bu ekran açıkken “Cihaz ekle” ile yeniden ekleyin.'**
   String get btHostUnawareWindows;
 
+  /// No description provided for @btHostUnawareWindowsPc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgisayarda QuickRemote PC açıksa telefonu sizin yerinize o kaldırır: Ayarlar → Bluetooth kumanda → “Telefonu yeniden eşleştir”. Sonra açılan Bluetooth ayarlarında “Cihaz ekle” ile yeniden ekleyin.'**
+  String get btHostUnawareWindowsPc;
+
   /// No description provided for @btHostUnawareLinux.
   ///
   /// In tr, this message translates to:

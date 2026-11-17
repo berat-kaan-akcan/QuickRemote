@@ -182,31 +182,28 @@ class _BtHostSetupViewState extends State<BtHostSetupView> {
                   ),
                 ),
               ),
-              // Only QuickRemote PC on Linux makes the computer read the
-              // phone's records again (BtHidRepair).
-              if (_linux) ...[
-                const SizedBox(height: AppSpace.sm),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.auto_fix_high_rounded,
-                      color: p.success,
-                      size: 18,
-                    ),
-                    const SizedBox(width: AppSpace.xs),
-                    Expanded(
-                      child: Text(
-                        context.l10n.btHostUnawareAuto,
-                        style: AppType.bodySmall.copyWith(
-                          color: p.textSecondary,
-                          fontSize: 12.5,
-                        ),
+              // QuickRemote PC on Linux makes the computer read the phone's
+              // records again by itself (BtHidRepair); on Windows it only
+              // removes the phone, on a key in its settings.
+              const SizedBox(height: AppSpace.sm),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.auto_fix_high_rounded, color: p.success, size: 18),
+                  const SizedBox(width: AppSpace.xs),
+                  Expanded(
+                    child: Text(
+                      _linux
+                          ? context.l10n.btHostUnawareAuto
+                          : context.l10n.btHostUnawareWindowsPc,
+                      style: AppType.bodySmall.copyWith(
+                        color: p.textSecondary,
+                        fontSize: 12.5,
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
               // Adding the phone again needs it visible.
               const SizedBox(height: AppSpace.md),
               const BtMakeVisibleButton(),

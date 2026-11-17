@@ -524,4 +524,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String issueBody(String version, String platform, String presenters) {
     return '**What happened?**\n\n\n**How can it be reproduced?**\n\n\n---\nQuickRemote PC $version\nPlatform: $platform\nPrograms: $presenters\n\nYou can drag the log (Settings → Export log) onto this page.';
   }
+
+  @override
+  String get btRepairTitle => 'Bluetooth remote';
+
+  @override
+  String get btRepairBody =>
+      'If the phone does not connect to this computer as a Bluetooth keyboard (the computer paired it earlier for something else, such as audio), Windows has to pair it again. Remove the phone here, then add it again with \"Add device\" in the Bluetooth settings that open, with QuickRemote\'s Bluetooth screen open on the phone.';
+
+  @override
+  String get btRepairAction => 'Pair the phone again';
+
+  @override
+  String get btRepairPickTitle => 'Which phone?';
+
+  @override
+  String get btRepairPickBody =>
+      'The device you pick is removed from Windows (its audio drops too and comes back once it is added again), then the Bluetooth settings open.';
+
+  @override
+  String get btRepairNone =>
+      'No Bluetooth device is paired with this computer. Add the phone in Windows\' Bluetooth settings.';
+
+  @override
+  String btRepairRemoved(String name) {
+    return '$name was removed. Add the phone again with \"Add device\" in the Bluetooth settings that opened, with QuickRemote\'s Bluetooth screen open on the phone.';
+  }
+
+  @override
+  String btRepairRemovedNoSettings(String name) {
+    return '$name was removed. Open Windows\' Bluetooth settings and add the phone again with \"Add device\", with QuickRemote\'s Bluetooth screen open on the phone.';
+  }
+
+  @override
+  String btRepairRemoveFailed(String name) {
+    return '$name could not be removed. Remove it in Windows\' Bluetooth settings and add it again.';
+  }
 }
